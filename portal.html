@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fruicey — My Membership</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;
+  --text:#111111;--text2:#666666;--text3:#999999;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.2);
+  --success-bg:#eaf3de;--success-text:#3b6d11;
+  --warn-bg:#faeeda;--warn-text:#854f0b;
+  --info-bg:#e6f1fb;--info-text:#185fa5;
+  --pink-bg:#fbeaf0;--pink-text:#72243e;
+  --radius:8px;--radius-lg:12px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;
+    --text:#f0f0f0;--text2:#aaaaaa;
+    --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+    --success-bg:#1a2e0d;--success-text:#97c459;
+    --warn-bg:#2e1f00;--warn-text:#ef9f27;
+    --info-bg:#0a1e35;--info-text:#85b7eb;
+    --pink-bg:#2a0f18;--pink-text:#ed93b1;
+  }
+}
+body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.portal{width:100%;max-width:400px}
+.header{text-align:center;margin-bottom:2rem}
+.logo{font-size:28px;font-weight:600;color:var(--text)}
+.sub{font-size:14px;color:var(--text2);margin-top:4px}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
+input{width:100%;padding:9px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:var(--font);outline:none;margin-bottom:12px}
+input:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,221,0.15)}
+.btn{width:100%;padding:10px;border-radius:var(--radius);cursor:pointer;font-size:14px;font-weight:500;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--text);color:var(--bg);border:none}
+.btn-outline{background:none;border:0.5px solid var(--border2);color:var(--text);margin-top:10px}
+.tier-badge{display:inline-block;font-size:12px;padding:3px 12px;border-radius:20px;font-weight:500}
+.tier-gold{background:#FAC775;color:#633806}
+.tier-platinum{background:#D3D1C7;color:#2C2C2A}
+.tier-diamond{background:#B5D4F4;color:#0C447C}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1rem 0}
+.stat{background:var(--bg2);border-radius:var(--radius);padding:12px;text-align:center}
+.stat-val{font-size:22px;font-weight:500;color:var(--text)}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:2px}
+.perk-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.perk-row:last-child{border-bottom:none}
+.progress-wrap{margin:1rem 0}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:6px}
+.progress-bar{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:#378ADD;transition:width .4s}
+.error{font-size:13px;color:#c0392b;text-align:center;padding:8px;background:#fde8e8;border-radius:var(--radius);margin-bottom:10px;display:none}
+.bday-banner{background:var(--pink-bg);border-radius:var(--radius);padding:12px;font-size:13px;color:var(--pink-text);margin-bottom:10px;display:none}
+.result{display:none}
+</style>
+</head>
+<body>
+<div class="portal">
+  <div class="header">
+    <div class="logo">🍓 Fruicey</div>
+    <div class="sub">Check your membership & points</div>
+  </div>
+
+  <div class="card" id="lookup-card">
+    <label>Your phone number</label>
+    <input type="tel" id="lookup-phone" placeholder="+65 9xxx xxxx" onkeydown="if(event.key==='Enter')lookup()">
+    <label>Or your email address</label>
+    <input type="email" id="lookup-email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')lookup()">
+    <div class="error" id="lookup-error">Member not found. Please check your details or visit us in store.</div>
+    <button class="btn btn-primary" onclick="lookup()"><i class="ti ti-search"></i> Check my membership</button>
+  </div>
+
+  <div class="card result" id="result-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div>
+        <div style="font-size:17px;font-weight:500" id="res-name"></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px" id="res-since"></div>
+      </div>
+      <span class="tier-badge" id="res-tier-badge"></span>
+    </div>
+
+    <div class="bday-banner" id="bday-banner">
+      <strong><i class="ti ti-cake"></i> Happy Birthday!</strong><br>
+      Your free birthday treat is waiting. Show this screen to our crew in store to redeem — valid this month only, once per year.
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="stat-val" id="res-pts"></div><div class="stat-lbl">Points</div></div>
+      <div class="stat"><div class="stat-val" id="res-disc"></div><div class="stat-lbl">Your discount</div></div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><span id="prog-label">Spending progress</span><span id="prog-val"></span></div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <div style="font-size:11px;color:var(--text2);margin-top:5px" id="prog-hint"></div>
+    </div>
+
+    <div style="font-size:13px;font-weight:500;margin-bottom:8px">Your perks</div>
+    <div id="perks-list"></div>
+
+    <button class="btn btn-outline" onclick="reset()"><i class="ti ti-arrow-left"></i> Back</button>
+  </div>
+
+  <div style="text-align:center;margin-top:1.5rem;font-size:12px;color:var(--text2)">
+    Powered by Fruicey · <a href="index.html" style="color:var(--text2)">Staff login</a>
+  </div>
+</div>
+
+<script>
+const MK='fruicey_members_v1';
+const TK='fruicey_txns_v1';
+const TIERS=[
+  {name:'Gold',cls:'tier-gold',min:0,max:99,discount:5,next:'Platinum',nextMin:100},
+  {name:'Platinum',cls:'tier-platinum',min:100,max:399,discount:10,next:'Diamond',nextMin:400},
+  {name:'Diamond',cls:'tier-diamond',min:400,max:Infinity,discount:20,next:null,nextMin:null}
+];
+function getTierObj(n){return TIERS.find(t=>t.name===n)||TIERS[0];}
+function getTierExpiry(s){const d=new Date(s);d.setMonth(d.getMonth()+2);return d;}
+function getPeriodSpend(txns,mid,ts){
+  const c=new Date(ts),now=new Date();
+  const mo=((now.getFullYear()-c.getFullYear())*12+(now.getMonth()-c.getMonth()));
+  const ps=new Date(c);ps.setMonth(ps.getMonth()+Math.floor(mo/2)*2);
+  return txns.filter(t=>t.memberId===mid&&new Date(t.date)>=ps).reduce((s,t)=>s+t.amount,0);
+}
+function getMemberPoints(txns,id){return txns.filter(t=>t.memberId===id).reduce((s,t)=>s+t.points,0);}
+function isBdayMonth(b){if(!b)return false;return parseInt(b.split('-')[0])===new Date().getMonth()+1;}
+
+function lookup(){
+  const phone=document.getElementById('lookup-phone').value.trim().replace(/\s/g,'');
+  const email=document.getElementById('lookup-email').value.trim().toLowerCase();
+  document.getElementById('lookup-error').style.display='none';
+  let members=[],transactions=[];
+  try{const m=localStorage.getItem(MK);if(m)members=JSON.parse(m);}catch(e){}
+  try{const t=localStorage.getItem(TK);if(t)transactions=JSON.parse(t);}catch(e){}
+  const member=members.find(m=>{
+    const mp=(m.phone||'').replace(/\s/g,'');
+    const me=(m.email||'').toLowerCase();
+    return(phone&&mp===phone)||(email&&me===email);
+  });
+  if(!member){document.getElementById('lookup-error').style.display='block';return;}
+  const ts=member.tierSince||member.since;
+  const tierObj=getTierObj(member.tier||'Gold');
+  const pts=getMemberPoints(transactions,member.id);
+  const spend=getPeriodSpend(transactions,member.id,ts);
+  const expiry=getTierExpiry(ts);
+  const bdayThis=isBdayMonth(member.bday);
+
+  document.getElementById('res-name').textContent=member.first+' '+member.last;
+  document.getElementById('res-since').textContent='Member since '+member.since+' · Renews '+expiry.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
+  const badge=document.getElementById('res-tier-badge');
+  badge.textContent=tierObj.name;badge.className='tier-badge '+tierObj.cls;
+  document.getElementById('res-pts').textContent=pts.toLocaleString();
+  document.getElementById('res-disc').textContent=tierObj.discount+'%';
+  document.getElementById('bday-banner').style.display=bdayThis?'block':'none';
+
+  const progMax=tierObj.nextMin||tierObj.max+1;
+  const pct=Math.min(100,Math.round((spend/progMax)*100));
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-val').textContent='$'+spend.toFixed(0);
+  if(tierObj.next){
+    const need=Math.max(0,tierObj.nextMin-spend);
+    document.getElementById('prog-hint').textContent=need>0?`Spend $${need.toFixed(0)} more this period to reach ${tierObj.next}`:`You qualify for ${tierObj.next}!`;
+    document.getElementById('prog-label').textContent='Progress to '+tierObj.next;
+    document.getElementById('prog-fill').style.background='#378ADD';
+  } else {
+    document.getElementById('prog-hint').textContent="You're at our highest tier — Diamond! 💎";
+    document.getElementById('prog-label').textContent='Diamond tier';
+    document.getElementById('prog-fill').style.background='#85B7EB';
+  }
+
+  document.getElementById('perks-list').innerHTML=[
+    {icon:'ti-discount',text:tierObj.discount+'% off all products'},
+    {icon:'ti-cake',text:'Free birthday treat — 1 product in store'+(member.bdayRedeemed?' (redeemed this year)':' (active)')}
+  ].map(p=>`<div class="perk-row"><i class="ti ${p.icon}" style="color:var(--success-text)"></i><span>${p.text}</span></div>`).join('');
+
+  document.getElementById('lookup-card').style.display='none';
+  document.getElementById('result-card').style.display='block';
+}
+
+function reset(){
+  document.getElementById('lookup-phone').value='';
+  document.getElementById('lookup-email').value='';
+  document.getElementById('lookup-card').style.display='block';
+  document.getElementById('result-card').style.display='none';
+}
+</script>
+</body>
+</html>

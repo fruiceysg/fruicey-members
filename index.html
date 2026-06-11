@@ -19,23 +19,15 @@
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 @media(prefers-color-scheme:dark){
-  :root{
-    --bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;
-    --text:#f0f0f0;--text2:#aaaaaa;--text3:#666666;
-    --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
-    --success-bg:#1a2e0d;--success-text:#97c459;
-    --warn-bg:#2e1f00;--warn-text:#ef9f27;
-    --info-bg:#0a1e35;--info-text:#85b7eb;
-    --pink-bg:#2a0f18;--pink-text:#ed93b1;
-  }
+  :root{--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--text:#f0f0f0;--text2:#aaaaaa;--text3:#666666;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);--success-bg:#1a2e0d;--success-text:#97c459;--warn-bg:#2e1f00;--warn-text:#ef9f27;--info-bg:#0a1e35;--info-text:#85b7eb;--pink-bg:#2a0f18;--pink-text:#ed93b1;}
 }
 body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:100vh}
 .app-shell{max-width:720px;margin:0 auto;background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
-.top-bar{padding:14px 20px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--bg);z-index:100}
-.top-bar-title{font-size:18px;font-weight:500;color:var(--text)}
+.top-bar{padding:10px 20px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--bg);z-index:100}
+.logo-img{height:36px;width:auto}
 .top-bar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .top-date{font-size:12px;color:var(--text2)}
-.tabs{display:flex;border-bottom:0.5px solid var(--border);overflow-x:auto;background:var(--bg);position:sticky;top:53px;z-index:99}
+.tabs{display:flex;border-bottom:0.5px solid var(--border);overflow-x:auto;background:var(--bg);position:sticky;top:57px;z-index:99}
 .tab{padding:10px 14px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-family:var(--font)}
 .tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
 .content{padding:20px;flex:1}
@@ -44,8 +36,11 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .form-row.full{grid-template-columns:1fr}
 label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
+label .req{color:#c0392b;margin-left:2px}
 input,select{width:100%;padding:8px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:var(--font);outline:none}
 input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,221,0.15)}
+input.error-field{border-color:#c0392b !important}
+.field-hint{font-size:11px;color:var(--text2);margin-top:-8px;margin-bottom:10px}
 .btn{padding:9px 20px;border-radius:var(--radius);cursor:pointer;font-size:14px;font-weight:500;font-family:var(--font);display:inline-flex;align-items:center;gap:6px;transition:opacity .15s}
 .btn-primary{background:var(--text);color:var(--bg);border:none}
 .btn-primary:hover{opacity:.85}
@@ -101,8 +96,7 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
 <body>
 <div class="app-shell">
   <div class="top-bar">
-    <i class="ti ti-award" style="font-size:20px"></i>
-    <span class="top-bar-title">Fruicey Members</span>
+    <img class="logo-img" src="data:image/jpeg;base64,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" alt="Fruicey">
     <div class="top-bar-right">
       <span class="top-date" id="top-date"></span>
       <a href="portal.html" target="_blank" class="btn btn-outline" style="font-size:12px;padding:5px 12px"><i class="ti ti-external-link"></i> Customer Portal</a>
@@ -124,29 +118,21 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
     <div id="sec-dashboard" class="section active">
       <div class="metrics">
         <div class="metric"><div class="metric-val" id="m-members">0</div><div class="metric-label">Members</div></div>
-        <div class="metric"><div class="metric-val" id="m-spend">$0</div><div class="metric-label">Total Spend</div></div>
+        <div class="metric"><div class="metric-val" id="m-spend">/bin/sh</div><div class="metric-label">Total Spend</div></div>
         <div class="metric"><div class="metric-val" id="m-points">0</div><div class="metric-label">Points Issued</div></div>
       </div>
       <div class="card" id="bday-card" style="display:none;border-color:#F4C0D1">
         <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px"><i class="ti ti-cake"></i> Birthday members this month</div>
         <div id="bday-list"></div>
       </div>
-      <div class="card">
-        <div class="section-title">Recent transactions</div>
-        <div id="dash-txns"><div class="empty">No transactions yet</div></div>
-      </div>
-      <div class="card">
-        <div class="section-title">Top members by points</div>
-        <div id="dash-top"><div class="empty">No members yet</div></div>
-      </div>
+      <div class="card"><div class="section-title">Recent transactions</div><div id="dash-txns"><div class="empty">No transactions yet</div></div></div>
+      <div class="card"><div class="section-title">Top members by points</div><div id="dash-top"><div class="empty">No members yet</div></div></div>
     </div>
 
     <!-- MEMBERS -->
     <div id="sec-members" class="section">
       <div style="margin-bottom:1rem"><input type="text" placeholder="Search members..." oninput="renderMembers(this.value)"></div>
-      <div class="card" style="padding:0.75rem 1.25rem">
-        <div id="member-list"><div class="empty">No members registered yet</div></div>
-      </div>
+      <div class="card" style="padding:0.75rem 1.25rem"><div id="member-list"><div class="empty">No members registered yet</div></div></div>
     </div>
 
     <!-- TRANSACTIONS -->
@@ -154,20 +140,17 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
       <div class="card" style="margin-bottom:1rem">
         <div class="section-title">Add transaction</div>
         <div class="form-row">
-          <div><label>Member</label><select id="txn-member" onchange="showDiscount()"><option value="">Select member</option></select></div>
-          <div><label>Amount ($)</label><input type="number" id="txn-amount" placeholder="0.00" min="0" step="0.01" oninput="showDiscount()"></div>
+          <div><label>Member <span class="req">*</span></label><select id="txn-member" onchange="showDiscount()"><option value="">Select member</option></select></div>
+          <div><label>Amount ($) <span class="req">*</span></label><input type="number" id="txn-amount" placeholder="0.00" min="0" step="0.01" oninput="showDiscount()"></div>
         </div>
         <div class="discount-hint" id="discount-hint"></div>
         <div class="form-row">
           <div><label>Description</label><input type="text" id="txn-desc" placeholder="e.g. Juice, Purchase"></div>
-          <div><label>Date</label><input type="date" id="txn-date"></div>
+          <div><label>Date <span class="req">*</span></label><input type="date" id="txn-date"></div>
         </div>
         <button class="btn btn-primary" onclick="addTransaction()"><i class="ti ti-plus"></i> Add transaction</button>
       </div>
-      <div class="card" style="padding:0.75rem 1.25rem">
-        <div class="section-title">Transaction history</div>
-        <div id="txn-list"><div class="empty">No transactions yet</div></div>
-      </div>
+      <div class="card" style="padding:0.75rem 1.25rem"><div class="section-title">Transaction history</div><div id="txn-list"><div class="empty">No transactions yet</div></div></div>
     </div>
 
     <!-- REGISTER -->
@@ -175,15 +158,23 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
       <div class="card">
         <div class="section-title">Register new member</div>
         <div class="form-row">
-          <div><label>First name</label><input type="text" id="reg-first" placeholder="Jane"></div>
-          <div><label>Last name</label><input type="text" id="reg-last" placeholder="Smith"></div>
+          <div><label>First name <span class="req">*</span></label><input type="text" id="reg-first" placeholder="Jane"></div>
+          <div><label>Last name <span class="req">*</span></label><input type="text" id="reg-last" placeholder="Smith"></div>
         </div>
-        <div class="form-row full"><label>Email</label><input type="email" id="reg-email" placeholder="jane@example.com"></div>
+        <div class="form-row full"><label>Email <span class="req">*</span></label><input type="email" id="reg-email" placeholder="jane@example.com"></div>
         <div class="form-row">
-          <div><label>Phone</label><input type="tel" id="reg-phone" placeholder="+65 9xxx xxxx"></div>
-          <div><label>Birthday (MM-DD)</label><input type="text" id="reg-bday" placeholder="e.g. 06-15" maxlength="5"></div>
+          <div>
+            <label>Phone (digits only) <span class="req">*</span></label>
+            <input type="tel" id="reg-phone" placeholder="e.g. 91234567">
+            <div class="field-hint">Enter without country code</div>
+          </div>
+          <div>
+            <label>Birthday (MM-DD) <span class="req">*</span></label>
+            <input type="text" id="reg-bday" placeholder="e.g. 06-15" maxlength="5">
+            <div class="field-hint">Month-Day format</div>
+          </div>
         </div>
-        <div class="form-row full"><label>Member since</label><input type="date" id="reg-date"></div>
+        <div class="form-row full"><label>Member since <span class="req">*</span></label><input type="date" id="reg-date"></div>
         <button class="btn btn-primary" onclick="registerMember()"><i class="ti ti-user-plus"></i> Register member</button>
       </div>
     </div>
@@ -191,26 +182,17 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
     <!-- TIERS -->
     <div id="sec-tiers" class="section">
       <div class="reward-card" style="border-color:#FAC775;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span class="tier-badge tier-gold">Gold</span>
-          <span style="font-size:13px;color:var(--text2)">$0 – $99 spend / 2 months</span>
-        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-gold">Gold</span><span style="font-size:13px;color:var(--text2)">/bin/sh – 9 spend / 2 months</span></div>
         <div style="font-size:14px;font-weight:500;color:var(--text)">5% off any products</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px">+ Free birthday treat — redeem any 1 product in store (once per year)</div>
       </div>
       <div class="reward-card" style="border-color:#B4B2A9;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span class="tier-badge tier-platinum">Platinum</span>
-          <span style="font-size:13px;color:var(--text2)">$100 – $399 spend / 2 months</span>
-        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-platinum">Platinum</span><span style="font-size:13px;color:var(--text2)">00 – 99 spend / 2 months</span></div>
         <div style="font-size:14px;font-weight:500;color:var(--text)">10% off any products</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px">+ Free birthday treat — redeem any 1 product in store (once per year)</div>
       </div>
       <div class="reward-card" style="border-color:#85B7EB;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span class="tier-badge tier-diamond">Diamond</span>
-          <span style="font-size:13px;color:var(--text2)">$400+ spend / 2 months</span>
-        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-diamond">Diamond</span><span style="font-size:13px;color:var(--text2)">00+ spend / 2 months</span></div>
         <div style="font-size:14px;font-weight:500;color:var(--text)">20% off any products</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px">+ Free birthday treat — redeem any 1 product in store (once per year)</div>
       </div>
@@ -223,7 +205,7 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
     <div id="sec-backup" class="section">
       <div class="card">
         <div class="section-title">Export data</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">Download your membership data as a JSON file. Keep this as a backup or to restore data on another device.</p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">Download your membership data as a JSON backup or members list as CSV.</p>
         <div class="backup-row">
           <button class="btn btn-primary" onclick="exportData()"><i class="ti ti-download"></i> Export all data</button>
           <button class="btn btn-outline" onclick="exportCSV()"><i class="ti ti-table"></i> Export members CSV</button>
@@ -233,17 +215,17 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
         <div class="section-title">Import / Restore data</div>
         <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">Restore from a previously exported JSON file. This will <strong>replace</strong> all current data.</p>
         <div class="form-row full" style="margin-bottom:12px"><label>Select backup file (.json)</label><input type="file" id="import-file" accept=".json"></div>
-        <button class="btn btn-outline" onclick="importData()"><i class="ti ti-upload"></i> Import & restore</button>
+        <button class="btn btn-outline" onclick="importData()"><i class="ti ti-upload"></i> Import &amp; restore</button>
       </div>
       <div class="card info-card">
-        <p style="font-size:13px;color:var(--text2);line-height:1.6"><i class="ti ti-info-circle"></i> <strong>Tip:</strong> Export your data weekly and save it to Google Drive or your phone as a backup. Data is stored in your browser — exporting keeps it safe.</p>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6"><i class="ti ti-info-circle"></i> <strong>Tip:</strong> Export weekly and save to Google Drive. Data is stored in this browser — exporting keeps it safe.</p>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- MEMBER DETAIL MODAL -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal-box">
     <div class="modal-header">
@@ -253,27 +235,20 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
     <div id="modal-body"></div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 const MK='fruicey_members_v1';
 const TK='fruicey_txns_v1';
 let members=[],transactions=[];
-
 const TIERS=[
   {name:'Gold',cls:'tier-gold',min:0,max:99,discount:5,next:'Platinum',nextMin:100},
   {name:'Platinum',cls:'tier-platinum',min:100,max:399,discount:10,next:'Diamond',nextMin:400},
   {name:'Diamond',cls:'tier-diamond',min:400,max:Infinity,discount:20,next:null,nextMin:null}
 ];
-
-function getTierObj(name){return TIERS.find(t=>t.name===name)||TIERS[0];}
-
-function save(){
-  localStorage.setItem(MK,JSON.stringify(members));
-  localStorage.setItem(TK,JSON.stringify(transactions));
-}
-
+function getTierObj(n){return TIERS.find(t=>t.name===n)||TIERS[0];}
+function normalisePhone(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
+function save(){localStorage.setItem(MK,JSON.stringify(members));localStorage.setItem(TK,JSON.stringify(transactions));}
 function load(){
   try{const m=localStorage.getItem(MK);if(m)members=JSON.parse(m);}catch(e){members=[];}
   try{const t=localStorage.getItem(TK);if(t)transactions=JSON.parse(t);}catch(e){transactions=[];}
@@ -283,23 +258,18 @@ function load(){
   document.getElementById('top-date').textContent=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
   render();
 }
-
-function getTierExpiry(tierSince){const d=new Date(tierSince);d.setMonth(d.getMonth()+2);return d;}
-
-function getPeriodSpend(memberId,tierSince){
-  const cutoff=new Date(tierSince);
-  const now=new Date();
-  const mo=((now.getFullYear()-cutoff.getFullYear())*12+(now.getMonth()-cutoff.getMonth()));
-  const pStart=new Date(cutoff);
-  pStart.setMonth(pStart.getMonth()+Math.floor(mo/2)*2);
-  return transactions.filter(t=>t.memberId===memberId&&new Date(t.date)>=pStart).reduce((s,t)=>s+t.amount,0);
+function getTierExpiry(s){const d=new Date(s);d.setMonth(d.getMonth()+2);return d;}
+function getPeriodSpend(mid,ts){
+  const c=new Date(ts),now=new Date();
+  const mo=((now.getFullYear()-c.getFullYear())*12+(now.getMonth()-c.getMonth()));
+  const ps=new Date(c);ps.setMonth(ps.getMonth()+Math.floor(mo/2)*2);
+  return transactions.filter(t=>t.memberId===mid&&new Date(t.date)>=ps).reduce((s,t)=>s+t.amount,0);
 }
-
 function evaluateTier(member){
-  const tierSince=member.tierSince||member.since;
-  const expiry=getTierExpiry(tierSince);
+  const ts=member.tierSince||member.since;
+  const expiry=getTierExpiry(ts);
   if(new Date()>=expiry){
-    const spend=getPeriodSpend(member.id,tierSince);
+    const spend=getPeriodSpend(member.id,ts);
     const earned=TIERS.slice().reverse().find(t=>spend>=t.min)||TIERS[0];
     const curIdx=TIERS.findIndex(t=>t.name===(member.tier||'Gold'));
     const earnedIdx=TIERS.findIndex(t=>t.name===earned.name);
@@ -308,7 +278,6 @@ function evaluateTier(member){
   }
   return{tier:member.tier||'Gold',tierSince:member.tierSince||member.since};
 }
-
 function getMemberTierInfo(member){
   const ev=evaluateTier(member);
   const tierObj=getTierObj(ev.tier);
@@ -317,17 +286,10 @@ function getMemberTierInfo(member){
   const periodSpend=getPeriodSpend(member.id,ev.tierSince);
   return{...ev,tierObj,expiry,daysLeft,periodSpend};
 }
-
 function getMemberPoints(id){return transactions.filter(t=>t.memberId===id).reduce((s,t)=>s+t.points,0);}
 function initials(f,l){return(f[0]||'').toUpperCase()+(l[0]||'').toUpperCase();}
-function isBdayMonth(bday){if(!bday)return false;return parseInt(bday.split('-')[0])===new Date().getMonth()+1;}
-
-function showToast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),2800);
-}
-
+function isBdayMonth(b){if(!b)return false;return parseInt(b.split('-')[0])===new Date().getMonth()+1;}
+function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
 function switchTab(tab,e){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -337,120 +299,79 @@ function switchTab(tab,e){
   if(tab==='dashboard')renderDashboard();
   if(tab==='members')renderMembers();
 }
-
 function render(){renderDashboard();renderMembers();renderTransactions();populateMemberSelect();}
-
 function renderDashboard(){
   const totalSpend=transactions.reduce((s,t)=>s+t.amount,0);
   const totalPts=transactions.reduce((s,t)=>s+t.points,0);
   document.getElementById('m-members').textContent=members.length;
   document.getElementById('m-spend').textContent='$'+totalSpend.toFixed(0);
   document.getElementById('m-points').textContent=totalPts.toLocaleString();
-
   const bdayM=members.filter(m=>isBdayMonth(m.bday));
   const bc=document.getElementById('bday-card');
-  if(bdayM.length){
-    bc.style.display='block';
-    document.getElementById('bday-list').innerHTML=bdayM.map(m=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)">
-        <div class="avatar" style="width:28px;height:28px;font-size:11px">${initials(m.first,m.last)}</div>
-        <span style="font-size:13px">${m.first} ${m.last}</span>
-        <span class="bday-badge">${m.bdayRedeemed?'Redeemed':'Treat available'}</span>
-      </div>`).join('');
-  } else {bc.style.display='none';}
-
+  if(bdayM.length){bc.style.display='block';document.getElementById('bday-list').innerHTML=bdayM.map(m=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)"><div class="avatar" style="width:28px;height:28px;font-size:11px">'+initials(m.first,m.last)+'</div><span style="font-size:13px">'+m.first+' '+m.last+'</span><span class="bday-badge">'+(m.bdayRedeemed?'Redeemed':'Treat available')+'</span></div>').join('');}else{bc.style.display='none';}
   const recent=[...transactions].sort((a,b)=>b.ts-a.ts).slice(0,5);
-  const dtEl=document.getElementById('dash-txns');
-  dtEl.innerHTML=recent.length?recent.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnHTML(t,m?m.first+' '+m.last:'Unknown');}).join(''):'<div class="empty">No transactions yet</div>';
-
+  document.getElementById('dash-txns').innerHTML=recent.length?recent.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnHTML(t,m?m.first+' '+m.last:'Unknown');}).join(''):'<div class="empty">No transactions yet</div>';
   const top=members.map(m=>({...m,pts:getMemberPoints(m.id)})).sort((a,b)=>b.pts-a.pts).slice(0,5);
-  const tmEl=document.getElementById('dash-top');
-  tmEl.innerHTML=top.length?top.map(m=>{
-    const info=getMemberTierInfo(m);
-    return`<div class="member-row">
-      <div class="avatar">${initials(m.first,m.last)}</div>
-      <div class="member-info"><div class="member-name">${m.first} ${m.last}</div><div class="member-meta">$${info.periodSpend.toFixed(0)} this period</div></div>
-      <span class="tier-badge ${info.tierObj.cls}">${info.tier}</span>
-      <span class="points-badge">${getMemberPoints(m.id).toLocaleString()} pts</span>
-    </div>`;}).join(''):'<div class="empty">No members yet</div>';
+  document.getElementById('dash-top').innerHTML=top.length?top.map(m=>{const info=getMemberTierInfo(m);return'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+'</div><div class="member-meta">$'+info.periodSpend.toFixed(0)+' this period</div></div><span class="tier-badge '+info.tierObj.cls+'">'+info.tier+'</span><span class="points-badge">'+getMemberPoints(m.id).toLocaleString()+' pts</span></div>';}).join(''):'<div class="empty">No members yet</div>';
 }
-
-function txnHTML(t,name){
-  return`<div class="txn-row">
-    <div class="txn-icon"><i class="ti ti-shopping-bag" style="font-size:14px;color:var(--text2)"></i></div>
-    <div class="txn-info"><div class="txn-desc">${t.desc||'Purchase'}</div><div class="txn-meta">${name} · ${t.date}</div></div>
-    <div><div class="txn-amt">$${t.amount.toFixed(2)}</div><div class="txn-pts">+${t.points} pts</div></div>
-  </div>`;
-}
-
+function txnHTML(t,name){return'<div class="txn-row"><div class="txn-icon"><i class="ti ti-shopping-bag" style="font-size:14px;color:var(--text2)"></i></div><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+name+' · '+t.date+'</div></div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>';}
 function renderMembers(search=''){
   const q=(search||'').toLowerCase();
   const filtered=members.filter(m=>(m.first+' '+m.last+m.email).toLowerCase().includes(q));
   const el=document.getElementById('member-list');
   if(!filtered.length){el.innerHTML='<div class="empty">No members found</div>';return;}
   el.innerHTML=filtered.map(m=>{
-    const info=getMemberTierInfo(m);
-    const pts=getMemberPoints(m.id);
-    const warn=info.daysLeft<=14&&info.daysLeft>0;
-    const bdayThis=isBdayMonth(m.bday);
-    return`<div class="member-row">
-      <div class="avatar">${initials(m.first,m.last)}</div>
-      <div class="member-info">
-        <div class="member-name">${m.first} ${m.last}${bdayThis?' <span class="bday-badge"><i class="ti ti-cake"></i> Birthday</span>':''}</div>
-        <div class="member-meta">${m.email}${m.phone?' · '+m.phone:''}</div>
-        <div style="margin-top:3px">${warn?`<span class="expiry-warn">Renews in ${info.daysLeft}d · $${info.periodSpend.toFixed(0)} spent</span>`:`<span class="expiry-ok">Renews ${info.expiry.toLocaleDateString('en-SG')} · $${info.periodSpend.toFixed(0)} spent</span>`}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-        <span class="tier-badge ${info.tierObj.cls}">${info.tier}</span>
-        <span class="points-badge">${pts.toLocaleString()} pts</span>
-        <button class="btn-sm" onclick="openModal('${m.id}')">View</button>
-      </div>
-    </div>`;}).join('');
+    const info=getMemberTierInfo(m);const pts=getMemberPoints(m.id);
+    const warn=info.daysLeft<=14&&info.daysLeft>0;const bdayThis=isBdayMonth(m.bday);
+    return'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+(bdayThis?' <span class="bday-badge"><i class="ti ti-cake"></i> Birthday</span>':'')+'</div><div class="member-meta">'+m.email+' · '+m.phone+'</div><div style="margin-top:3px">'+(warn?'<span class="expiry-warn">Renews in '+info.daysLeft+'d · $'+info.periodSpend.toFixed(0)+' spent</span>':'<span class="expiry-ok">Renews '+info.expiry.toLocaleDateString('en-SG')+' · $'+info.periodSpend.toFixed(0)+' spent</span>')+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tier+'</span><span class="points-badge">'+pts.toLocaleString()+' pts</span><button class="btn-sm" onclick="openModal(\''+m.id+'\')">View</button></div></div>';
+  }).join('');
 }
-
 function renderTransactions(){
   const sorted=[...transactions].sort((a,b)=>b.ts-a.ts);
-  const el=document.getElementById('txn-list');
-  el.innerHTML=sorted.length?sorted.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnHTML(t,m?m.first+' '+m.last:'Unknown');}).join(''):'<div class="empty">No transactions yet</div>';
+  document.getElementById('txn-list').innerHTML=sorted.length?sorted.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnHTML(t,m?m.first+' '+m.last:'Unknown');}).join(''):'<div class="empty">No transactions yet</div>';
 }
-
 function populateMemberSelect(){
-  const sel=document.getElementById('txn-member');
-  const cur=sel.value;
-  sel.innerHTML='<option value="">Select member</option>'+members.map(m=>`<option value="${m.id}">${m.first} ${m.last}</option>`).join('');
+  const sel=document.getElementById('txn-member');const cur=sel.value;
+  sel.innerHTML='<option value="">Select member</option>'+members.map(m=>'<option value="'+m.id+'">'+m.first+' '+m.last+'</option>').join('');
   if(cur)sel.value=cur;
 }
-
 function showDiscount(){
   const memberId=document.getElementById('txn-member').value;
   const amount=parseFloat(document.getElementById('txn-amount').value);
   const hint=document.getElementById('discount-hint');
   if(!memberId||isNaN(amount)||amount<=0){hint.style.display='none';return;}
   const m=members.find(x=>x.id===memberId);if(!m){hint.style.display='none';return;}
-  const info=getMemberTierInfo(m);
-  const disc=info.tierObj.discount;
-  const discAmt=(amount*disc/100).toFixed(2);
-  const final=(amount-parseFloat(discAmt)).toFixed(2);
-  hint.style.display='block';
-  hint.textContent=`${info.tier} member: ${disc}% off → Save $${discAmt} · Final: $${final}`;
+  const info=getMemberTierInfo(m);const disc=info.tierObj.discount;
+  const discAmt=(amount*disc/100).toFixed(2);const final=(amount-parseFloat(discAmt)).toFixed(2);
+  hint.style.display='block';hint.textContent=info.tier+' member: '+disc+'% off → Save $'+discAmt+' · Final: $'+final;
 }
-
 function registerMember(){
   const first=document.getElementById('reg-first').value.trim();
   const last=document.getElementById('reg-last').value.trim();
   const email=document.getElementById('reg-email').value.trim();
-  const phone=document.getElementById('reg-phone').value.trim();
+  const phone=normalisePhone(document.getElementById('reg-phone').value.trim());
   const bday=document.getElementById('reg-bday').value.trim();
   const since=document.getElementById('reg-date').value;
-  if(!first||!last||!email){showToast('Please fill in name and email');return;}
+  const fields=[
+    {id:'reg-first',val:first,msg:'First name is required'},
+    {id:'reg-last',val:last,msg:'Last name is required'},
+    {id:'reg-email',val:email,msg:'Email is required'},
+    {id:'reg-phone',val:phone,msg:'Phone number is required'},
+    {id:'reg-bday',val:bday,msg:'Birthday is required (MM-DD)'},
+    {id:'reg-date',val:since,msg:'Member since date is required'}
+  ];
+  for(const f of fields){
+    if(!f.val){showToast(f.msg);document.getElementById(f.id).classList.add('error-field');document.getElementById(f.id).focus();return;}
+    document.getElementById(f.id).classList.remove('error-field');
+  }
+  if(!/^\d{2}-\d{2}$/.test(bday)){showToast('Birthday must be MM-DD format (e.g. 06-15)');document.getElementById('reg-bday').classList.add('error-field');return;}
   if(members.find(m=>m.email===email)){showToast('Email already registered');return;}
+  if(members.find(m=>normalisePhone(m.phone)===phone)){showToast('Phone number already registered');return;}
   members.push({id:Date.now().toString(),first,last,email,phone,bday,since,tier:'Gold',tierSince:since,bdayRedeemed:false});
   save();
   ['reg-first','reg-last','reg-email','reg-phone','reg-bday'].forEach(id=>document.getElementById(id).value='');
-  render();
-  showToast(`${first} ${last} registered as Gold member!`);
+  render();showToast(first+' '+last+' registered as Gold member!');
 }
-
 function addTransaction(){
   const memberId=document.getElementById('txn-member').value;
   const amount=parseFloat(document.getElementById('txn-amount').value);
@@ -461,79 +382,31 @@ function addTransaction(){
   transactions.push({id:Date.now().toString(),memberId,amount,desc,date,points,ts:Date.now()});
   const m=members.find(x=>x.id===memberId);
   if(m){const info=getMemberTierInfo(m);m.tier=info.tier;m.tierSince=info.tierSince;}
-  save();
-  document.getElementById('txn-amount').value='';
-  document.getElementById('txn-desc').value='';
-  document.getElementById('discount-hint').style.display='none';
-  render();
-  showToast(`+${points} points added!`);
+  save();document.getElementById('txn-amount').value='';document.getElementById('txn-desc').value='';document.getElementById('discount-hint').style.display='none';
+  render();showToast('+'+points+' points added!');
 }
-
 function openModal(id){
   const m=members.find(x=>x.id===id);if(!m)return;
-  const info=getMemberTierInfo(m);
-  const pts=getMemberPoints(m.id);
-  const bdayThis=isBdayMonth(m.bday);
+  const info=getMemberTierInfo(m);const pts=getMemberPoints(m.id);const bdayThis=isBdayMonth(m.bday);
   const txns=transactions.filter(t=>t.memberId===id).sort((a,b)=>b.ts-a.ts).slice(0,5);
   document.getElementById('modal-name').textContent=m.first+' '+m.last;
-  document.getElementById('modal-body').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-      <div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center">
-        <div style="font-size:11px;color:var(--text2)">Tier</div>
-        <div style="margin-top:4px"><span class="tier-badge ${info.tierObj.cls}">${info.tier}</span></div>
-        <div style="font-size:11px;color:var(--text2);margin-top:4px">${info.tierObj.discount}% discount</div>
-      </div>
-      <div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center">
-        <div style="font-size:11px;color:var(--text2)">Points</div>
-        <div style="font-size:20px;font-weight:500;color:var(--text)">${pts.toLocaleString()}</div>
-      </div>
-    </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Period spend: <strong style="color:var(--text)">$${info.periodSpend.toFixed(2)}</strong> · Renews: <strong style="color:var(--text)">${info.expiry.toLocaleDateString('en-SG')}</strong></div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Phone: ${m.phone||'—'} · Birthday: ${m.bday||'—'}</div>
-    ${bdayThis?`<div style="margin:8px 0;padding:8px 12px;background:var(--pink-bg);border-radius:var(--radius);font-size:13px;color:var(--pink-text);display:flex;align-items:center;justify-content:space-between">
-      <span><i class="ti ti-cake"></i> Birthday month! Free treat available.</span>
-      ${!m.bdayRedeemed?`<button class="btn-sm" onclick="redeemBday('${id}')">Mark redeemed</button>`:'<span style="font-size:11px">Redeemed ✓</span>'}
-    </div>`:''}
-    <div style="font-size:13px;font-weight:500;margin:12px 0 8px">Recent transactions</div>
-    ${txns.length?txns.map(t=>`<div class="txn-row" style="padding:6px 0">
-      <div class="txn-info"><div class="txn-desc">${t.desc||'Purchase'}</div><div class="txn-meta">${t.date}</div></div>
-      <div><div class="txn-amt">$${t.amount.toFixed(2)}</div><div class="txn-pts">+${t.points} pts</div></div>
-    </div>`).join(''):'<div style="font-size:13px;color:var(--text2)">No transactions yet</div>'}
-  `;
+  document.getElementById('modal-body').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Tier</div><div style="margin-top:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tier+'</span></div><div style="font-size:11px;color:var(--text2);margin-top:4px">'+info.tierObj.discount+'% discount</div></div><div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Points</div><div style="font-size:20px;font-weight:500;color:var(--text)">'+pts.toLocaleString()+'</div></div></div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Period spend: <strong style="color:var(--text)">$'+info.periodSpend.toFixed(2)+'</strong> · Renews: <strong style="color:var(--text)">'+info.expiry.toLocaleDateString('en-SG')+'</strong></div><div style="font-size:12px;color:var(--text2);margin-bottom:10px">Phone: '+(m.phone||'—')+' · Birthday: '+(m.bday||'—')+'</div>'+(bdayThis?'<div style="margin:8px 0;padding:8px 12px;background:var(--pink-bg);border-radius:var(--radius);font-size:13px;color:var(--pink-text);display:flex;align-items:center;justify-content:space-between"><span><i class="ti ti-cake"></i> Birthday month! Free treat available.</span>'+(!m.bdayRedeemed?'<button class="btn-sm" onclick="redeemBday(\''+id+'\')">Mark redeemed</button>':'<span style="font-size:11px">Redeemed ✓</span>')+'</div>':'')+'<div style="font-size:13px;font-weight:500;margin:12px 0 8px">Recent transactions</div>'+(txns.length?txns.map(t=>'<div class="txn-row" style="padding:6px 0"><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+t.date+'</div></div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>').join(''):'<div style="font-size:13px;color:var(--text2)">No transactions yet</div>');
   document.getElementById('modal-overlay').classList.add('open');
 }
-
-function redeemBday(id){
-  const m=members.find(x=>x.id===id);if(!m)return;
-  m.bdayRedeemed=true;save();openModal(id);renderDashboard();
-  showToast('Birthday treat redeemed!');
-}
-
+function redeemBday(id){const m=members.find(x=>x.id===id);if(!m)return;m.bdayRedeemed=true;save();openModal(id);renderDashboard();showToast('Birthday treat redeemed!');}
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
-
 function exportData(){
-  const data={members,transactions,exportedAt:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='fruicey-backup-'+new Date().toISOString().split('T')[0]+'.json';
-  a.click();
-  showToast('Data exported!');
+  const blob=new Blob([JSON.stringify({members,transactions,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fruicey-backup-'+new Date().toISOString().split('T')[0]+'.json';a.click();showToast('Data exported!');
 }
-
 function exportCSV(){
   const rows=[['First','Last','Email','Phone','Birthday','Since','Tier','Points']];
   members.forEach(m=>rows.push([m.first,m.last,m.email,m.phone||'',m.bday||'',m.since,getMemberTierInfo(m).tier,getMemberPoints(m.id)]));
-  const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const csv=rows.map(r=>r.map(v=>'"'+v+'"').join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='fruicey-members-'+new Date().toISOString().split('T')[0]+'.csv';
-  a.click();
-  showToast('CSV exported!');
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fruicey-members-'+new Date().toISOString().split('T')[0]+'.csv';a.click();showToast('CSV exported!');
 }
-
 function importData(){
   const file=document.getElementById('import-file').files[0];
   if(!file){showToast('Please select a file first');return;}
@@ -543,14 +416,11 @@ function importData(){
       const data=JSON.parse(e.target.result);
       if(!data.members||!data.transactions){showToast('Invalid backup file');return;}
       if(!confirm('This will replace all current data. Are you sure?'))return;
-      members=data.members;transactions=data.transactions;
-      save();render();
-      showToast('Data restored successfully!');
+      members=data.members;transactions=data.transactions;save();render();showToast('Data restored!');
     }catch(err){showToast('Error reading file');}
   };
   reader.readAsText(file);
 }
-
 load();
 </script>
 </body>

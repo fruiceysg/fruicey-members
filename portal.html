@@ -356,7 +356,7 @@ function renderPortal(member, transactions){
   // Perks
   document.getElementById('perks-list').innerHTML=[
     {icon:'ti-discount',label:info.tierObj.discount+'% off all products',desc:'Applied automatically at checkout'},
-    {icon:'ti-cake',label:'Free birthday treat',desc:redeemedThisYear?'Redeemed this year ✓':(bdayThis?'Available this month — show this page in store':'Available during your birthday month ('+member.bday+')'}
+    {icon:'ti-cake',label:'Free birthday treat',desc:redeemedThisYear?'Redeemed this year ✓':(bdayThis?'Available this month — show this page in store':'Available during your birthday month ('+member.bday+')')}
   ].map(p=>'<div class="perk-row"><i class="ti '+p.icon+'" style="color:var(--success-text);font-size:18px;flex-shrink:0"></i><div><div style="font-size:13px;font-weight:500">'+p.label+'</div><div style="font-size:11px;color:var(--text2)">'+p.desc+'</div></div></div>').join('');
 }
 

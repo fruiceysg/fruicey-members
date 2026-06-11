@@ -9,17 +9,18 @@
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;
-  --text:#111111;--text2:#666666;--text3:#999999;
+  --text:#111111;--text2:#666666;
   --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.2);
   --success-bg:#eaf3de;--success-text:#3b6d11;
   --warn-bg:#faeeda;--warn-text:#854f0b;
   --info-bg:#e6f1fb;--info-text:#185fa5;
   --pink-bg:#fbeaf0;--pink-text:#72243e;
+  --danger:#c0392b;--danger-bg:#fde8e8;
   --radius:8px;--radius-lg:12px;
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 @media(prefers-color-scheme:dark){
-  :root{--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--text:#f0f0f0;--text2:#aaaaaa;--text3:#666666;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);--success-bg:#1a2e0d;--success-text:#97c459;--warn-bg:#2e1f00;--warn-text:#ef9f27;--info-bg:#0a1e35;--info-text:#85b7eb;--pink-bg:#2a0f18;--pink-text:#ed93b1;}
+  :root{--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--text:#f0f0f0;--text2:#aaaaaa;--border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);--success-bg:#1a2e0d;--success-text:#97c459;--warn-bg:#2e1f00;--warn-text:#ef9f27;--info-bg:#0a1e35;--info-text:#85b7eb;--pink-bg:#2a0f18;--pink-text:#ed93b1;--danger-bg:#3a0f0f;}
 }
 body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:100vh}
 .app-shell{max-width:720px;margin:0 auto;background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
@@ -28,7 +29,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .top-bar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .top-date{font-size:12px;color:var(--text2)}
 .tabs{display:flex;border-bottom:0.5px solid var(--border);overflow-x:auto;background:var(--bg);position:sticky;top:57px;z-index:99}
-.tab{padding:10px 14px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-family:var(--font)}
+.tab{padding:10px 13px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-family:var(--font)}
 .tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
 .content{padding:20px;flex:1}
 .section{display:none}.section.active{display:block}
@@ -36,17 +37,21 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .form-row.full{grid-template-columns:1fr}
 label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
-label .req{color:#c0392b;margin-left:2px}
+label .req{color:var(--danger);margin-left:2px}
 input,select{width:100%;padding:8px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:var(--font);outline:none}
 input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,221,0.15)}
-input.error-field{border-color:#c0392b !important}
+input.error-field{border-color:var(--danger)!important}
 .field-hint{font-size:11px;color:var(--text2);margin-top:-8px;margin-bottom:10px}
 .btn{padding:9px 20px;border-radius:var(--radius);cursor:pointer;font-size:14px;font-weight:500;font-family:var(--font);display:inline-flex;align-items:center;gap:6px;transition:opacity .15s}
 .btn-primary{background:var(--text);color:var(--bg);border:none}
 .btn-primary:hover{opacity:.85}
 .btn-outline{background:none;border:0.5px solid var(--border2);color:var(--text)}
 .btn-outline:hover{background:var(--bg2)}
-.btn-sm{padding:4px 12px;font-size:12px;border-radius:var(--radius);cursor:pointer;border:0.5px solid var(--border2);background:none;color:var(--text);font-family:var(--font)}
+.btn-danger{background:none;border:0.5px solid var(--danger);color:var(--danger)}
+.btn-danger:hover{background:var(--danger-bg)}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:var(--radius);cursor:pointer;border:0.5px solid var(--border2);background:none;color:var(--text);font-family:var(--font)}
+.btn-sm-danger{padding:4px 10px;font-size:11px;border-radius:var(--radius);cursor:pointer;border:0.5px solid var(--danger);background:none;color:var(--danger);font-family:var(--font)}
+.btn-sm-edit{padding:4px 10px;font-size:11px;border-radius:var(--radius);cursor:pointer;border:0.5px solid #378ADD;background:none;color:#378ADD;font-family:var(--font)}
 .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
 .metric{background:var(--bg2);border-radius:var(--radius);padding:1rem;text-align:center}
 .metric-val{font-size:22px;font-weight:500;color:var(--text)}
@@ -66,6 +71,7 @@ input.error-field{border-color:#c0392b !important}
 .txn-meta{font-size:11px;color:var(--text2)}
 .txn-amt{font-size:13px;font-weight:500;color:var(--text);text-align:right}
 .txn-pts{font-size:11px;color:var(--success-text);text-align:right}
+.txn-actions{display:flex;gap:4px;margin-top:4px;justify-content:flex-end}
 .empty{text-align:center;padding:2.5rem;color:var(--text2);font-size:14px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:var(--radius);font-size:13px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
@@ -79,17 +85,18 @@ input.error-field{border-color:#c0392b !important}
 .bday-badge{font-size:11px;color:var(--pink-text);background:var(--pink-bg);padding:2px 8px;border-radius:20px;display:inline-block}
 .discount-hint{font-size:12px;color:var(--success-text);margin-bottom:10px;display:none;padding:8px 12px;background:var(--success-bg);border-radius:var(--radius)}
 .reward-card{border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:8px}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal-box{background:var(--bg);border-radius:var(--radius-lg);padding:1.25rem;width:100%;max-width:420px;max-height:80vh;overflow-y:auto}
+.modal-box{background:var(--bg);border-radius:var(--radius-lg);padding:1.25rem;width:100%;max-width:440px;max-height:85vh;overflow-y:auto}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 .info-card{background:var(--bg2);border:none}
 .backup-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem}
+.edit-inline{display:none;background:var(--bg2);border-radius:var(--radius);padding:10px;margin-top:6px}
 @media(max-width:480px){
   .form-row{grid-template-columns:1fr}
   .metrics{grid-template-columns:1fr 1fr}
   .metrics .metric:last-child{grid-column:1/-1}
-  .tab{padding:10px 10px;font-size:12px}
+  .tab{padding:10px 9px;font-size:11px}
 }
 </style>
 </head>
@@ -122,7 +129,7 @@ input.error-field{border-color:#c0392b !important}
         <div class="metric"><div class="metric-val" id="m-points">0</div><div class="metric-label">Points Issued</div></div>
       </div>
       <div class="card" id="bday-card" style="display:none;border-color:#F4C0D1">
-        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px"><i class="ti ti-cake"></i> Birthday members this month</div>
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px"><i class="ti ti-cake"></i> Birthday members this month</div>
         <div id="bday-list"></div>
       </div>
       <div class="card"><div class="section-title">Recent transactions</div><div id="dash-txns"><div class="empty">No transactions yet</div></div></div>
@@ -150,7 +157,10 @@ input.error-field{border-color:#c0392b !important}
         </div>
         <button class="btn btn-primary" onclick="addTransaction()"><i class="ti ti-plus"></i> Add transaction</button>
       </div>
-      <div class="card" style="padding:0.75rem 1.25rem"><div class="section-title">Transaction history</div><div id="txn-list"><div class="empty">No transactions yet</div></div></div>
+      <div class="card" style="padding:0.75rem 1.25rem">
+        <div class="section-title">Transaction history <span style="font-size:12px;color:var(--text2);font-weight:400">(tap Edit or Delete on any row)</span></div>
+        <div id="txn-list"><div class="empty">No transactions yet</div></div>
+      </div>
     </div>
 
     <!-- REGISTER -->
@@ -166,7 +176,7 @@ input.error-field{border-color:#c0392b !important}
           <div>
             <label>Phone (digits only) <span class="req">*</span></label>
             <input type="tel" id="reg-phone" placeholder="e.g. 91234567">
-            <div class="field-hint">Enter without country code</div>
+            <div class="field-hint">No country code needed</div>
           </div>
           <div>
             <label>Birthday (MM-DD) <span class="req">*</span></label>
@@ -182,22 +192,22 @@ input.error-field{border-color:#c0392b !important}
     <!-- TIERS -->
     <div id="sec-tiers" class="section">
       <div class="reward-card" style="border-color:#FAC775;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-gold">Gold</span><span style="font-size:13px;color:var(--text2)">/bin/sh – 9 spend / 2 months</span></div>
-        <div style="font-size:14px;font-weight:500;color:var(--text)">5% off any products</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-gold">Gold</span><span style="font-size:13px;color:var(--text2)">$0 – $99 spend / 2 months</span></div>
+        <div style="font-size:14px;font-weight:500">5% off any products</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px">+ Free birthday treat — redeem any 1 product in store (once per year)</div>
       </div>
       <div class="reward-card" style="border-color:#B4B2A9;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-platinum">Platinum</span><span style="font-size:13px;color:var(--text2)">00 – 99 spend / 2 months</span></div>
-        <div style="font-size:14px;font-weight:500;color:var(--text)">10% off any products</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-platinum">Platinum</span><span style="font-size:13px;color:var(--text2)">$100 – $399 spend / 2 months</span></div>
+        <div style="font-size:14px;font-weight:500">10% off any products</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px">+ Free birthday treat — redeem any 1 product in store (once per year)</div>
       </div>
       <div class="reward-card" style="border-color:#85B7EB;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-diamond">Diamond</span><span style="font-size:13px;color:var(--text2)">00+ spend / 2 months</span></div>
-        <div style="font-size:14px;font-weight:500;color:var(--text)">20% off any products</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="tier-badge tier-diamond">Diamond</span><span style="font-size:13px;color:var(--text2)">$400+ spend / 2 months</span></div>
+        <div style="font-size:14px;font-weight:500">20% off any products</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px">+ Free birthday treat — redeem any 1 product in store (once per year)</div>
       </div>
       <div class="card info-card" style="font-size:13px;color:var(--text2);line-height:1.8">
-        <i class="ti ti-info-circle"></i> <strong>Tier renewal:</strong> Every 2 months, spend is reviewed. If spend falls below the tier minimum, the member drops one tier. Points = $1 per point spent.
+        <i class="ti ti-info-circle"></i> <strong>Tier renewal:</strong> Every 2 months from join date, spend is reviewed. If spend falls below the tier minimum, the member drops one tier. Points = $1 per point spent.
       </div>
     </div>
 
@@ -225,30 +235,54 @@ input.error-field{border-color:#c0392b !important}
   </div>
 </div>
 
-<!-- MODAL -->
+<!-- MEMBER DETAIL MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal-box">
     <div class="modal-header">
-      <span style="font-size:15px;font-weight:500;color:var(--text)" id="modal-name"></span>
+      <span style="font-size:15px;font-weight:500" id="modal-name"></span>
       <button class="btn-sm" onclick="closeModalDirect()"><i class="ti ti-x"></i></button>
     </div>
     <div id="modal-body"></div>
   </div>
 </div>
+
+<!-- EDIT TRANSACTION MODAL -->
+<div class="modal-overlay" id="edit-txn-modal" onclick="closeEditTxnModal(event)">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-header">
+      <span style="font-size:15px;font-weight:500">Edit Transaction</span>
+      <button class="btn-sm" onclick="closeEditTxnModalDirect()"><i class="ti ti-x"></i></button>
+    </div>
+    <div>
+      <div class="form-row full" style="margin-bottom:12px"><label>Amount ($)</label><input type="number" id="edit-txn-amount" min="0" step="0.01"></div>
+      <div class="form-row full" style="margin-bottom:12px"><label>Description</label><input type="text" id="edit-txn-desc"></div>
+      <div class="form-row full" style="margin-bottom:16px"><label>Date</label><input type="date" id="edit-txn-date"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1" onclick="saveEditTxn()"><i class="ti ti-check"></i> Save changes</button>
+        <button class="btn btn-outline" style="flex:1" onclick="closeEditTxnModalDirect()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const MK='fruicey_members_v1';
 const TK='fruicey_txns_v1';
 let members=[],transactions=[];
+let editingTxnId=null;
+
 const TIERS=[
   {name:'Gold',cls:'tier-gold',min:0,max:99,discount:5,next:'Platinum',nextMin:100},
   {name:'Platinum',cls:'tier-platinum',min:100,max:399,discount:10,next:'Diamond',nextMin:400},
   {name:'Diamond',cls:'tier-diamond',min:400,max:Infinity,discount:20,next:null,nextMin:null}
 ];
+
 function getTierObj(n){return TIERS.find(t=>t.name===n)||TIERS[0];}
 function normalisePhone(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
 function save(){localStorage.setItem(MK,JSON.stringify(members));localStorage.setItem(TK,JSON.stringify(transactions));}
+
 function load(){
   try{const m=localStorage.getItem(MK);if(m)members=JSON.parse(m);}catch(e){members=[];}
   try{const t=localStorage.getItem(TK);if(t)transactions=JSON.parse(t);}catch(e){transactions=[];}
@@ -258,38 +292,30 @@ function load(){
   document.getElementById('top-date').textContent=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
   render();
 }
-function getTierExpiry(s){const d=new Date(s);d.setMonth(d.getMonth()+2);return d;}
-function getPeriodSpend(mid,ts){
-  const c=new Date(ts),now=new Date();
-  const mo=((now.getFullYear()-c.getFullYear())*12+(now.getMonth()-c.getMonth()));
-  const ps=new Date(c);ps.setMonth(ps.getMonth()+Math.floor(mo/2)*2);
-  return transactions.filter(t=>t.memberId===mid&&new Date(t.date)>=ps).reduce((s,t)=>s+t.amount,0);
+
+// LIVE tier computed from actual spend in current 2-month period from join date
+function computeLiveTier(member){
+  const joinDate=new Date(member.since);
+  const now=new Date();
+  const monthsElapsed=((now.getFullYear()-joinDate.getFullYear())*12+(now.getMonth()-joinDate.getMonth()));
+  const periodsElapsed=Math.floor(monthsElapsed/2);
+  const periodStart=new Date(joinDate);
+  periodStart.setMonth(periodStart.getMonth()+periodsElapsed*2);
+  const periodEnd=new Date(periodStart);
+  periodEnd.setMonth(periodEnd.getMonth()+2);
+  const periodSpend=transactions
+    .filter(t=>t.memberId===member.id&&new Date(t.date)>=periodStart&&new Date(t.date)<periodEnd)
+    .reduce((s,t)=>s+t.amount,0);
+  const tierObj=TIERS.slice().reverse().find(t=>periodSpend>=t.min)||TIERS[0];
+  const daysLeft=Math.ceil((periodEnd-now)/(1000*60*60*24));
+  return{tierObj,periodSpend,periodStart,periodEnd,daysLeft};
 }
-function evaluateTier(member){
-  const ts=member.tierSince||member.since;
-  const expiry=getTierExpiry(ts);
-  if(new Date()>=expiry){
-    const spend=getPeriodSpend(member.id,ts);
-    const earned=TIERS.slice().reverse().find(t=>spend>=t.min)||TIERS[0];
-    const curIdx=TIERS.findIndex(t=>t.name===(member.tier||'Gold'));
-    const earnedIdx=TIERS.findIndex(t=>t.name===earned.name);
-    const newIdx=earnedIdx>=curIdx?earnedIdx:Math.max(0,curIdx-1);
-    return{tier:TIERS[newIdx].name,tierSince:expiry.toISOString().split('T')[0]};
-  }
-  return{tier:member.tier||'Gold',tierSince:member.tierSince||member.since};
-}
-function getMemberTierInfo(member){
-  const ev=evaluateTier(member);
-  const tierObj=getTierObj(ev.tier);
-  const expiry=getTierExpiry(ev.tierSince);
-  const daysLeft=Math.ceil((expiry-new Date())/(1000*60*60*24));
-  const periodSpend=getPeriodSpend(member.id,ev.tierSince);
-  return{...ev,tierObj,expiry,daysLeft,periodSpend};
-}
+
 function getMemberPoints(id){return transactions.filter(t=>t.memberId===id).reduce((s,t)=>s+t.points,0);}
 function initials(f,l){return(f[0]||'').toUpperCase()+(l[0]||'').toUpperCase();}
 function isBdayMonth(b){if(!b)return false;return parseInt(b.split('-')[0])===new Date().getMonth()+1;}
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+
 function switchTab(tab,e){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -299,7 +325,9 @@ function switchTab(tab,e){
   if(tab==='dashboard')renderDashboard();
   if(tab==='members')renderMembers();
 }
+
 function render(){renderDashboard();renderMembers();renderTransactions();populateMemberSelect();}
+
 function renderDashboard(){
   const totalSpend=transactions.reduce((s,t)=>s+t.amount,0);
   const totalPts=transactions.reduce((s,t)=>s+t.points,0);
@@ -308,43 +336,62 @@ function renderDashboard(){
   document.getElementById('m-points').textContent=totalPts.toLocaleString();
   const bdayM=members.filter(m=>isBdayMonth(m.bday));
   const bc=document.getElementById('bday-card');
-  if(bdayM.length){bc.style.display='block';document.getElementById('bday-list').innerHTML=bdayM.map(m=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)"><div class="avatar" style="width:28px;height:28px;font-size:11px">'+initials(m.first,m.last)+'</div><span style="font-size:13px">'+m.first+' '+m.last+'</span><span class="bday-badge">'+(m.bdayRedeemed?'Redeemed':'Treat available')+'</span></div>').join('');}else{bc.style.display='none';}
+  if(bdayM.length){
+    bc.style.display='block';
+    document.getElementById('bday-list').innerHTML=bdayM.map(m=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)"><div class="avatar" style="width:28px;height:28px;font-size:11px">'+initials(m.first,m.last)+'</div><span style="font-size:13px">'+m.first+' '+m.last+'</span><span class="bday-badge">'+(m.bdayRedeemed?'Redeemed':'Treat available')+'</span></div>').join('');
+  }else{bc.style.display='none';}
   const recent=[...transactions].sort((a,b)=>b.ts-a.ts).slice(0,5);
-  document.getElementById('dash-txns').innerHTML=recent.length?recent.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnHTML(t,m?m.first+' '+m.last:'Unknown');}).join(''):'<div class="empty">No transactions yet</div>';
-  const top=members.map(m=>({...m,pts:getMemberPoints(m.id)})).sort((a,b)=>b.pts-a.pts).slice(0,5);
-  document.getElementById('dash-top').innerHTML=top.length?top.map(m=>{const info=getMemberTierInfo(m);return'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+'</div><div class="member-meta">$'+info.periodSpend.toFixed(0)+' this period</div></div><span class="tier-badge '+info.tierObj.cls+'">'+info.tier+'</span><span class="points-badge">'+getMemberPoints(m.id).toLocaleString()+' pts</span></div>';}).join(''):'<div class="empty">No members yet</div>';
+  document.getElementById('dash-txns').innerHTML=recent.length?recent.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnRowHTML(t,m?m.first+' '+m.last:'Unknown',false);}).join(''):'<div class="empty">No transactions yet</div>';
+  const top=members.map(m=>({...m,pts:getMemberPoints(m.id),info:computeLiveTier(m)})).sort((a,b)=>b.pts-a.pts).slice(0,5);
+  document.getElementById('dash-top').innerHTML=top.length?top.map(m=>'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+'</div><div class="member-meta">$'+m.info.periodSpend.toFixed(0)+' this period</div></div><span class="tier-badge '+m.info.tierObj.cls+'">'+m.info.tierObj.name+'</span><span class="points-badge">'+getMemberPoints(m.id).toLocaleString()+' pts</span></div>').join(''):'<div class="empty">No members yet</div>';
 }
-function txnHTML(t,name){return'<div class="txn-row"><div class="txn-icon"><i class="ti ti-shopping-bag" style="font-size:14px;color:var(--text2)"></i></div><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+name+' · '+t.date+'</div></div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>';}
+
+function txnRowHTML(t,name,showActions){
+  const actionsHTML=showActions?'<div class="txn-actions"><button class="btn-sm-edit" onclick="openEditTxn(\''+t.id+'\')"><i class="ti ti-pencil"></i> Edit</button><button class="btn-sm-danger" onclick="deleteTxn(\''+t.id+'\')"><i class="ti ti-trash"></i> Delete</button></div>':'';
+  return'<div class="txn-row"><div class="txn-icon"><i class="ti ti-shopping-bag" style="font-size:14px;color:var(--text2)"></i></div><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+name+' · '+t.date+'</div>'+actionsHTML+'</div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>';
+}
+
 function renderMembers(search=''){
   const q=(search||'').toLowerCase();
   const filtered=members.filter(m=>(m.first+' '+m.last+m.email).toLowerCase().includes(q));
   const el=document.getElementById('member-list');
   if(!filtered.length){el.innerHTML='<div class="empty">No members found</div>';return;}
   el.innerHTML=filtered.map(m=>{
-    const info=getMemberTierInfo(m);const pts=getMemberPoints(m.id);
-    const warn=info.daysLeft<=14&&info.daysLeft>0;const bdayThis=isBdayMonth(m.bday);
-    return'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+(bdayThis?' <span class="bday-badge"><i class="ti ti-cake"></i> Birthday</span>':'')+'</div><div class="member-meta">'+m.email+' · '+m.phone+'</div><div style="margin-top:3px">'+(warn?'<span class="expiry-warn">Renews in '+info.daysLeft+'d · $'+info.periodSpend.toFixed(0)+' spent</span>':'<span class="expiry-ok">Renews '+info.expiry.toLocaleDateString('en-SG')+' · $'+info.periodSpend.toFixed(0)+' spent</span>')+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tier+'</span><span class="points-badge">'+pts.toLocaleString()+' pts</span><button class="btn-sm" onclick="openModal(\''+m.id+'\')">View</button></div></div>';
+    const info=computeLiveTier(m);
+    const pts=getMemberPoints(m.id);
+    const warn=info.daysLeft<=14&&info.daysLeft>0;
+    const bdayThis=isBdayMonth(m.bday);
+    return'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+(bdayThis?' <span class="bday-badge"><i class="ti ti-cake"></i> Birthday</span>':'')+'</div><div class="member-meta">'+m.email+' · '+m.phone+'</div><div style="margin-top:3px">'+(warn?'<span class="expiry-warn">Renews in '+info.daysLeft+'d · $'+info.periodSpend.toFixed(0)+' spent</span>':'<span class="expiry-ok">Renews '+info.periodEnd.toLocaleDateString('en-SG')+' · $'+info.periodSpend.toFixed(0)+' spent</span>')+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tierObj.name+'</span><span class="points-badge">'+pts.toLocaleString()+' pts</span><button class="btn-sm" onclick="openModal(\''+m.id+'\')">View</button></div></div>';
   }).join('');
 }
+
 function renderTransactions(){
   const sorted=[...transactions].sort((a,b)=>b.ts-a.ts);
-  document.getElementById('txn-list').innerHTML=sorted.length?sorted.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnHTML(t,m?m.first+' '+m.last:'Unknown');}).join(''):'<div class="empty">No transactions yet</div>';
+  const el=document.getElementById('txn-list');
+  if(!sorted.length){el.innerHTML='<div class="empty">No transactions yet</div>';return;}
+  el.innerHTML=sorted.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnRowHTML(t,m?m.first+' '+m.last:'Unknown',true);}).join('');
 }
+
 function populateMemberSelect(){
   const sel=document.getElementById('txn-member');const cur=sel.value;
   sel.innerHTML='<option value="">Select member</option>'+members.map(m=>'<option value="'+m.id+'">'+m.first+' '+m.last+'</option>').join('');
   if(cur)sel.value=cur;
 }
+
 function showDiscount(){
   const memberId=document.getElementById('txn-member').value;
   const amount=parseFloat(document.getElementById('txn-amount').value);
   const hint=document.getElementById('discount-hint');
   if(!memberId||isNaN(amount)||amount<=0){hint.style.display='none';return;}
   const m=members.find(x=>x.id===memberId);if(!m){hint.style.display='none';return;}
-  const info=getMemberTierInfo(m);const disc=info.tierObj.discount;
-  const discAmt=(amount*disc/100).toFixed(2);const final=(amount-parseFloat(discAmt)).toFixed(2);
-  hint.style.display='block';hint.textContent=info.tier+' member: '+disc+'% off → Save $'+discAmt+' · Final: $'+final;
+  const info=computeLiveTier(m);
+  const disc=info.tierObj.discount;
+  const discAmt=(amount*disc/100).toFixed(2);
+  const final=(amount-parseFloat(discAmt)).toFixed(2);
+  hint.style.display='block';
+  hint.textContent=info.tierObj.name+' member: '+disc+'% off → Save $'+discAmt+' · Final: $'+final;
 }
+
 function registerMember(){
   const first=document.getElementById('reg-first').value.trim();
   const last=document.getElementById('reg-last').value.trim();
@@ -364,14 +411,15 @@ function registerMember(){
     if(!f.val){showToast(f.msg);document.getElementById(f.id).classList.add('error-field');document.getElementById(f.id).focus();return;}
     document.getElementById(f.id).classList.remove('error-field');
   }
-  if(!/^\d{2}-\d{2}$/.test(bday)){showToast('Birthday must be MM-DD format (e.g. 06-15)');document.getElementById('reg-bday').classList.add('error-field');return;}
+  if(!/^\d{2}-\d{2}$/.test(bday)){showToast('Birthday must be MM-DD (e.g. 06-15)');document.getElementById('reg-bday').classList.add('error-field');return;}
   if(members.find(m=>m.email===email)){showToast('Email already registered');return;}
-  if(members.find(m=>normalisePhone(m.phone)===phone)){showToast('Phone number already registered');return;}
+  if(members.find(m=>normalisePhone(m.phone)===phone)){showToast('Phone already registered');return;}
   members.push({id:Date.now().toString(),first,last,email,phone,bday,since,tier:'Gold',tierSince:since,bdayRedeemed:false});
   save();
   ['reg-first','reg-last','reg-email','reg-phone','reg-bday'].forEach(id=>document.getElementById(id).value='');
   render();showToast(first+' '+last+' registered as Gold member!');
 }
+
 function addTransaction(){
   const memberId=document.getElementById('txn-member').value;
   const amount=parseFloat(document.getElementById('txn-amount').value);
@@ -380,29 +428,81 @@ function addTransaction(){
   if(!memberId||isNaN(amount)||amount<=0){showToast('Select a member and enter a valid amount');return;}
   const points=Math.round(amount);
   transactions.push({id:Date.now().toString(),memberId,amount,desc,date,points,ts:Date.now()});
-  const m=members.find(x=>x.id===memberId);
-  if(m){const info=getMemberTierInfo(m);m.tier=info.tier;m.tierSince=info.tierSince;}
-  save();document.getElementById('txn-amount').value='';document.getElementById('txn-desc').value='';document.getElementById('discount-hint').style.display='none';
+  save();
+  document.getElementById('txn-amount').value='';
+  document.getElementById('txn-desc').value='';
+  document.getElementById('discount-hint').style.display='none';
   render();showToast('+'+points+' points added!');
 }
+
+// --- EDIT & DELETE TRANSACTIONS ---
+function openEditTxn(id){
+  const t=transactions.find(x=>x.id===id);if(!t)return;
+  editingTxnId=id;
+  document.getElementById('edit-txn-amount').value=t.amount;
+  document.getElementById('edit-txn-desc').value=t.desc||'';
+  document.getElementById('edit-txn-date').value=t.date;
+  document.getElementById('edit-txn-modal').classList.add('open');
+}
+
+function saveEditTxn(){
+  const t=transactions.find(x=>x.id===editingTxnId);if(!t)return;
+  const amount=parseFloat(document.getElementById('edit-txn-amount').value);
+  const desc=document.getElementById('edit-txn-desc').value.trim();
+  const date=document.getElementById('edit-txn-date').value;
+  if(isNaN(amount)||amount<=0){showToast('Enter a valid amount');return;}
+  t.amount=amount;
+  t.points=Math.round(amount);
+  t.desc=desc;
+  t.date=date;
+  save();closeEditTxnModalDirect();render();showToast('Transaction updated!');
+}
+
+function deleteTxn(id){
+  if(!confirm('Delete this transaction? This will affect points and tier calculation.'))return;
+  transactions=transactions.filter(t=>t.id!==id);
+  save();render();showToast('Transaction deleted');
+}
+
+function closeEditTxnModal(e){if(e.target===document.getElementById('edit-txn-modal'))closeEditTxnModalDirect();}
+function closeEditTxnModalDirect(){document.getElementById('edit-txn-modal').classList.remove('open');editingTxnId=null;}
+
+// --- MEMBER DETAIL MODAL ---
 function openModal(id){
   const m=members.find(x=>x.id===id);if(!m)return;
-  const info=getMemberTierInfo(m);const pts=getMemberPoints(m.id);const bdayThis=isBdayMonth(m.bday);
-  const txns=transactions.filter(t=>t.memberId===id).sort((a,b)=>b.ts-a.ts).slice(0,5);
+  const info=computeLiveTier(m);
+  const pts=getMemberPoints(m.id);
+  const bdayThis=isBdayMonth(m.bday);
+  const txns=transactions.filter(t=>t.memberId===id).sort((a,b)=>b.ts-a.ts).slice(0,8);
   document.getElementById('modal-name').textContent=m.first+' '+m.last;
-  document.getElementById('modal-body').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Tier</div><div style="margin-top:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tier+'</span></div><div style="font-size:11px;color:var(--text2);margin-top:4px">'+info.tierObj.discount+'% discount</div></div><div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Points</div><div style="font-size:20px;font-weight:500;color:var(--text)">'+pts.toLocaleString()+'</div></div></div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Period spend: <strong style="color:var(--text)">$'+info.periodSpend.toFixed(2)+'</strong> · Renews: <strong style="color:var(--text)">'+info.expiry.toLocaleDateString('en-SG')+'</strong></div><div style="font-size:12px;color:var(--text2);margin-bottom:10px">Phone: '+(m.phone||'—')+' · Birthday: '+(m.bday||'—')+'</div>'+(bdayThis?'<div style="margin:8px 0;padding:8px 12px;background:var(--pink-bg);border-radius:var(--radius);font-size:13px;color:var(--pink-text);display:flex;align-items:center;justify-content:space-between"><span><i class="ti ti-cake"></i> Birthday month! Free treat available.</span>'+(!m.bdayRedeemed?'<button class="btn-sm" onclick="redeemBday(\''+id+'\')">Mark redeemed</button>':'<span style="font-size:11px">Redeemed ✓</span>')+'</div>':'')+'<div style="font-size:13px;font-weight:500;margin:12px 0 8px">Recent transactions</div>'+(txns.length?txns.map(t=>'<div class="txn-row" style="padding:6px 0"><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+t.date+'</div></div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>').join(''):'<div style="font-size:13px;color:var(--text2)">No transactions yet</div>');
+  document.getElementById('modal-body').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    +'<div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Tier</div><div style="margin-top:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tierObj.name+'</span></div><div style="font-size:11px;color:var(--text2);margin-top:4px">'+info.tierObj.discount+'% discount</div></div>'
+    +'<div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Points</div><div style="font-size:20px;font-weight:500">'+pts.toLocaleString()+'</div></div>'
+    +'</div>'
+    +'<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Period spend: <strong style="color:var(--text)">$'+info.periodSpend.toFixed(2)+'</strong> · Renews: <strong style="color:var(--text)">'+info.periodEnd.toLocaleDateString('en-SG')+'</strong></div>'
+    +'<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Phone: '+(m.phone||'—')+' · Birthday: '+(m.bday||'—')+'</div>'
+    +(bdayThis?'<div style="margin:8px 0;padding:8px 12px;background:var(--pink-bg);border-radius:var(--radius);font-size:13px;color:var(--pink-text);display:flex;align-items:center;justify-content:space-between"><span><i class="ti ti-cake"></i> Birthday month!</span>'+(!m.bdayRedeemed?'<button class="btn-sm" onclick="redeemBday(\''+id+'\')">Mark redeemed</button>':'<span style="font-size:11px">Redeemed ✓</span>')+'</div>':'')
+    +'<div style="font-size:13px;font-weight:500;margin:12px 0 8px">Transactions <span style="font-size:11px;color:var(--text2);font-weight:400">(edit/delete from Transactions tab)</span></div>'
+    +(txns.length?txns.map(t=>'<div class="txn-row" style="padding:6px 0"><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+t.date+'</div></div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>').join(''):'<div style="font-size:13px;color:var(--text2)">No transactions yet</div>');
   document.getElementById('modal-overlay').classList.add('open');
 }
-function redeemBday(id){const m=members.find(x=>x.id===id);if(!m)return;m.bdayRedeemed=true;save();openModal(id);renderDashboard();showToast('Birthday treat redeemed!');}
+
+function redeemBday(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  m.bdayRedeemed=true;save();openModal(id);renderDashboard();showToast('Birthday treat redeemed!');
+}
+
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
+
 function exportData(){
   const blob=new Blob([JSON.stringify({members,transactions,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fruicey-backup-'+new Date().toISOString().split('T')[0]+'.json';a.click();showToast('Data exported!');
 }
 function exportCSV(){
   const rows=[['First','Last','Email','Phone','Birthday','Since','Tier','Points']];
-  members.forEach(m=>rows.push([m.first,m.last,m.email,m.phone||'',m.bday||'',m.since,getMemberTierInfo(m).tier,getMemberPoints(m.id)]));
+  members.forEach(m=>rows.push([m.first,m.last,m.email,m.phone||'',m.bday||'',m.since,computeLiveTier(m).tierObj.name,getMemberPoints(m.id)]));
   const csv=rows.map(r=>r.map(v=>'"'+v+'"').join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fruicey-members-'+new Date().toISOString().split('T')[0]+'.csv';a.click();showToast('CSV exported!');
@@ -421,6 +521,7 @@ function importData(){
   };
   reader.readAsText(file);
 }
+
 load();
 </script>
 </body>

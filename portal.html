@@ -256,28 +256,36 @@ function sPTab(tab,e){
 // If cumulative spend in current period crosses next tier threshold → upgrade immediately,
 // reset the period start to today (upgrade date).
 function calcTier(member, txns){
-  const joinDate = new Date(member.since);
-  const tierSince = member.tierSince ? new Date(member.tierSince) : joinDate;
-  const now = new Date();
+  const joinDate  = new Date(member.since);
+  const now       = new Date();
 
-  // Current period start = tierSince (resets on each upgrade or renewal)
-  const periodStart = new Date(tierSince);
-  const periodEnd   = new Date(tierSince);
+  // Use stored tierSince as the period start.
+  // If it has expired (> 2 months ago), roll it forward in 2-month steps
+  // so the member always has a current active period.
+  let periodStart = member.tierSince ? new Date(member.tierSince) : new Date(joinDate);
+  let periodEnd   = new Date(periodStart);
   periodEnd.setMonth(periodEnd.getMonth() + 2);
 
-  // Spend in current period
-  const isBdayMo = isBday(member.bday);
+  // Roll forward if period has expired
+  while(periodEnd <= now){
+    periodStart = new Date(periodEnd);
+    periodEnd   = new Date(periodStart);
+    periodEnd.setMonth(periodEnd.getMonth() + 2);
+  }
+
+  // Spend within the current active period only
+  const isBdayMo   = isBday(member.bday);
   const periodTxns = txns.filter(t => t.memberId === member.id && new Date(t.date) >= periodStart && new Date(t.date) < periodEnd);
   const rawSpend   = periodTxns.reduce((s,t) => s + t.amount, 0);
 
-  // Double points on birthday month
-  const periodPoints = isBdayMo
+  // Double points for Diamond members on birthday month
+  const isDiamondBday = isBdayMo && member.tier === 'Diamond';
+  const periodPoints  = isDiamondBday
     ? periodTxns.reduce((s,t) => s + t.points * 2, 0)
     : periodTxns.reduce((s,t) => s + t.points, 0);
 
-  // Determine tier from spend (NOT doubled — spend is real money)
-  const tier = TIERS.slice().reverse().find(t => rawSpend >= t.min) || TIERS[0];
-
+  // Determine tier from real spend
+  const tier     = TIERS.slice().reverse().find(t => rawSpend >= t.min) || TIERS[0];
   const daysLeft = Math.max(0, Math.ceil((periodEnd - now) / (1000*60*60*24)));
 
   return {tier, rawSpend, periodPoints, periodStart, periodEnd, daysLeft, isBdayMo};

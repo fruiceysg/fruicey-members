@@ -272,19 +272,28 @@ function load(){
 }
 
 function computeLiveTier(member){
-  const joinDate=new Date(member.since);
-  const now=new Date();
-  const monthsElapsed=((now.getFullYear()-joinDate.getFullYear())*12+(now.getMonth()-joinDate.getMonth()));
-  const periodsElapsed=Math.floor(Math.max(0,monthsElapsed)/2);
-  const periodStart=new Date(joinDate);
-  periodStart.setMonth(periodStart.getMonth()+periodsElapsed*2);
-  const periodEnd=new Date(periodStart);
-  periodEnd.setMonth(periodEnd.getMonth()+2);
-  const periodSpend=transactions.filter(t=>t.memberId===member.id&&new Date(t.date)>=periodStart&&new Date(t.date)<periodEnd).reduce((s,t)=>s+t.amount,0);
-  const periodPoints=Math.round(periodSpend);
-  const tierObj=TIERS.slice().reverse().find(t=>periodSpend>=t.min)||TIERS[0];
-  const daysLeft=Math.ceil((periodEnd-now)/(1000*60*60*24));
-  return{tierObj,periodSpend,periodPoints,periodStart,periodEnd,daysLeft};
+  const now        = new Date();
+  const joinDate   = new Date(member.since);
+  let periodStart  = member.tierSince ? new Date(member.tierSince) : new Date(joinDate);
+  let periodEnd    = new Date(periodStart);
+  periodEnd.setMonth(periodEnd.getMonth() + 2);
+
+  // Roll forward if expired
+  while(periodEnd <= now){
+    periodStart = new Date(periodEnd);
+    periodEnd   = new Date(periodStart);
+    periodEnd.setMonth(periodEnd.getMonth() + 2);
+  }
+
+  const isBdayMo    = isBdayMonth(member.bday) && member.tier === 'Diamond';
+  const periodTxns  = transactions.filter(t => t.memberId===member.id && new Date(t.date)>=periodStart && new Date(t.date)<periodEnd);
+  const periodSpend = periodTxns.reduce((s,t) => s+t.amount, 0);
+  const periodPoints= isBdayMo
+    ? periodTxns.reduce((s,t) => s+t.points*2, 0)
+    : periodTxns.reduce((s,t) => s+t.points, 0);
+  const tierObj     = TIERS.slice().reverse().find(t => periodSpend>=t.min) || TIERS[0];
+  const daysLeft    = Math.max(0, Math.ceil((periodEnd-now)/(1000*60*60*24)));
+  return{tierObj, periodSpend, periodPoints, periodStart, periodEnd, daysLeft};
 }
 
 function isBdayMonth(b){if(!b)return false;return parseInt(b.split('-')[0])===new Date().getMonth()+1;}
@@ -422,9 +431,30 @@ function addTransaction(){
   const desc=document.getElementById('txn-desc').value.trim();
   const date=document.getElementById('txn-date').value;
   if(!memberId||isNaN(amount)||amount<=0){showToast('Select a member and valid amount');return;}
-  transactions.push({id:Date.now().toString(),memberId,amount,desc,date,points:Math.round(amount),ts:Date.now()});
-  save();document.getElementById('txn-amount').value='';document.getElementById('txn-desc').value='';document.getElementById('discount-hint').style.display='none';
-  render();showToast('+'+Math.round(amount)+' points added!');
+  const points=Math.round(amount);
+  transactions.push({id:Date.now().toString(),memberId,amount,desc,date,points,ts:Date.now()});
+  // Check for immediate tier upgrade — reset tierSince to upgrade date
+  const m=members.find(x=>x.id===memberId);
+  if(m){
+    const info=computeLiveTier(m);
+    const currentIdx=TIERS.findIndex(t=>t.name===(m.tier||'Member'));
+    const newIdx=TIERS.findIndex(t=>t.name===info.tierObj.name);
+    if(newIdx>currentIdx){
+      // Upgrade: reset period start to transaction date
+      m.tier=info.tierObj.name;
+      m.tierSince=date;
+      save();
+      showToast(m.first+' upgraded to '+info.tierObj.name+'! 🎉');
+    } else {
+      m.tier=info.tierObj.name;
+      save();
+      showToast('+'+points+' points added!');
+    }
+  }
+  document.getElementById('txn-amount').value='';
+  document.getElementById('txn-desc').value='';
+  document.getElementById('discount-hint').style.display='none';
+  render();
 }
 
 function openEditTxn(id){

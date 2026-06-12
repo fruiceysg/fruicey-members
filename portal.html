@@ -8,7 +8,15 @@
 <style>
 
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#fff;--bg2:#f5f5f5;--text:#111;--text2:#666;--border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.2);--success-bg:#eaf3de;--success-text:#3b6d11;--pink-bg:#fbeaf0;--pink-text:#72243e;--danger:#c0392b;--danger-bg:#fde8e8;--radius:8px;--radius-lg:12px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+:root{
+  --bg:#fff;--bg2:#f5f5f5;--text:#111;--text2:#666;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.2);
+  --success-bg:#eaf3de;--success-text:#3b6d11;
+  --pink-bg:#fbeaf0;--pink-text:#72243e;
+  --danger:#c0392b;--danger-bg:#fde8e8;
+  --radius:8px;--radius-lg:12px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
 body{font-family:var(--font);background:#fff;color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
 .portal{width:100%;max-width:440px}
 .header{text-align:center;margin-bottom:1.5rem}
@@ -25,10 +33,8 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
 .btn-primary{background:#111;color:#fff}
 .btn-secondary{background:none;border:0.5px solid var(--border2)!important;color:var(--text)}
 .btn-green{background:#27ae60;color:#fff}
-
-
-
-.tier-badge{display:inline-block;font-size:12px;padding:3px 12px;border-radius:20px;font-weight:500}
+.tier-badge{display:inline-block;font-size:11px;padding:2px 10px;border-radius:20px;font-weight:500}
+.tier-member{background:#e8e8e8;color:#444}
 .tier-gold{background:#FAC775;color:#633806}
 .tier-platinum{background:#D3D1C7;color:#2C2C2A}
 .tier-diamond{background:#B5D4F4;color:#0C447C}
@@ -46,6 +52,9 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
 .alert-error{background:var(--danger-bg);color:var(--danger)}
 .alert-success{background:var(--success-bg);color:var(--success-text)}
 .bday-box{background:var(--pink-bg);border-radius:var(--radius);padding:14px;margin-bottom:12px;display:none}
+.bday-notice{display:none;font-size:12px;color:#c0197e;background:#fde8f4;border-radius:var(--radius);padding:7px 12px;margin-bottom:10px;font-weight:500}
+.diamond-notice{display:none;font-size:12px;color:#0C447C;background:#e6f1fb;border-radius:var(--radius);padding:7px 12px;margin-bottom:10px;font-weight:500}
+.cutoff-bar{font-size:12px;color:var(--text2);background:#f5f5f5;border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;line-height:1.5}
 .txn-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:0.5px solid var(--border);font-size:13px}
 .txn-row:last-child{border-bottom:none}
 .txn-meta{font-size:11px;color:var(--text2)}
@@ -59,7 +68,7 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
 .tcbox h4:first-child{margin-top:0}
 .cbrow{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;font-size:13px;color:var(--text2);line-height:1.5}
 .cbrow input[type=checkbox]{width:16px;height:16px;margin:2px 0 0;flex-shrink:0}
-.tier-item{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px}
+.tier-item{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px}
 .tier-item-img{width:100%;display:block;height:auto;border-radius:6px 6px 0 0}
 .tier-item-hdr{padding:8px 14px;display:flex;align-items:center;justify-content:space-between}
 .tier-item-body{padding:8px 14px;font-size:12px;color:var(--text2);border-top:0.5px solid var(--border);line-height:1.6}
@@ -74,7 +83,6 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
     <div class="portal-sub">Check your membership or apply to join</div>
   </div>
 
-  <!-- SCREEN: LOOKUP (check membership only) -->
   <div id="scr-lookup">
     <div class="card">
       <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">Enter your registered phone number or email to access your membership.</p>
@@ -89,7 +97,6 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
     </div>
   </div>
 
-  <!-- SCREEN: PORTAL (logged-in member view) -->
   <div id="scr-portal" style="display:none">
     <div class="card" style="padding-bottom:0.75rem">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
@@ -106,6 +113,9 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
       </div>
 
       <div class="psec active" id="psec-overview" style="padding-top:0.75rem">
+        <div class="cutoff-bar" id="r-cutoff"></div>
+        <div class="bday-notice" id="bday-notice"></div>
+        <div class="diamond-notice" id="diamond-notice">&#128142; Diamond perk: You receive special pricing on all new Fruicey product launches.</div>
         <div class="bday-box" id="bday-box">
           <div style="font-size:14px;font-weight:500;color:var(--pink-text);margin-bottom:6px"><i class="ti ti-cake"></i> Happy Birthday!</div>
           <div style="font-size:13px;color:var(--pink-text);margin-bottom:10px;line-height:1.5" id="bday-msg"></div>
@@ -120,7 +130,6 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
           <div class="progress-bar"><div class="progress-fill" id="pg-fill" style="width:0%"></div></div>
           <div style="font-size:11px;color:var(--text2);margin-top:5px" id="pg-hint"></div>
         </div>
-        <div style="font-size:11px;color:var(--text2);margin-top:4px" id="r-renewal"></div>
       </div>
 
       <div class="psec" id="psec-transactions" style="padding-top:0.75rem">
@@ -132,46 +141,40 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
         <div class="sec-title">Your membership perks</div>
         <div id="p-perks"></div>
         <div style="margin-top:12px;padding:10px 12px;background:#f5f5f5;border-radius:var(--radius);font-size:12px;color:var(--text2);line-height:1.6">
-          <i class="ti ti-info-circle"></i> Tier renews every 2 months from your join date. Points reset each renewal. Spending below minimum results in one-tier downgrade.
+          <i class="ti ti-info-circle"></i> Tier upgrades are immediate once the spending threshold is met. Tier renews every 2 months. Spending below minimum results in one-tier downgrade. Discounts are not applicable in conjunction with promotional items.
         </div>
       </div>
     </div>
     <button class="btn btn-secondary" onclick="showScr('scr-lookup');clearLookup()"><i class="ti ti-arrow-left"></i> Back</button>
   </div>
 
-  <!-- SCREEN: APPLY (new membership application) -->
   <div id="scr-apply" style="display:none">
     <div class="card">
       <div style="font-size:16px;font-weight:500;margin-bottom:4px">Apply for Membership</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">All new members start at <span class="tier-badge tier-gold">Gold</span> and can upgrade based on spending each period.</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">All new members start as a <span class="tier-badge tier-member">Member</span> and tier up based on spending each period.</div>
 
       <div style="font-size:13px;font-weight:500;margin-bottom:12px">Membership at a glance</div>
 
-      <div class="tier-item" style="border-color:#FAC775;margin-bottom:12px">
-        <img class="tier-item-img" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAD8AXoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD06iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiimyOsaM7nCqMmjYB1FY8upTO37vCL24yaaL65/56f+OiuV4ymjX2MjaorGN7c/89f/AB0U0311/wA9f/HRU/XafZh7GRt0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" alt="Gold Membership Card">
-        <div class="tier-item-hdr" style="background:#FFFBF0">
-          <span class="tier-badge tier-gold">Gold</span>
-          <span style="font-size:12px;color:var(--text2)">$0–$99 / 2 months</span>
-        </div>
-        <div class="tier-item-body"><strong>5% off</strong> all products &nbsp;·&nbsp; <strong>Free birthday treat</strong> (1 product/year)</div>
+      <div style="background:#f9f9f9;border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.8">
+        <span class="tier-badge tier-member">Member</span> &nbsp;Below $50 &nbsp;·&nbsp; No tier discount &nbsp;·&nbsp; Free birthday treat (1 product/year)
       </div>
 
-      <div class="tier-item" style="border-color:#B4B2A9;margin-bottom:12px">
-        <img class="tier-item-img" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAD8AXoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD06iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiimuwRSzHAAyaAHUVmvfuzfIAo9xk0ou5j/ABD8qANGis5rqbsw/IUw3k4/jH/fIoA1KKyfttx/eH/fIpReXH98fkKANWis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APp4qMZ9acM+tICQU8VGM+tOBoAkFPApgNPBoAcKeBTQRTx9KBjgBTximinD6UAOFPFNH0pwpAOFLiminZoACKYRTjTDQA0imkU4000AMOKjNSGmGmBGaYcVI1MNAhhx6U049KcaYaAGnHpTGx7041G1ADTitTQus/8AwH+tZRFauhdZ/wDgP9aANeiiikMKKKKACiiigAooooAKKKKACiiigAooooAKzPEBxpT/AO8v8606zPEH/IKf/eX+dAHLqanQ/Sq6mp0NUInB+lOFRAmnrmgCQEU4U0ZpwzSAkFOUU0Zp4BoAcuakFMFOWgCQU8GmCnigY8YpwpopwoAcDTwRTRThSAdkUZFAowaAAkU04pxz60w59aAGnFNOKcSaac0AMNMNPOaYc0wGGmGnnNMbNAhhNMNOOaaaAGECmNinnNRtQBG2PWtXQes//Af61kmtbQes/wDwH+tAGxRRRSGFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFZfiH/kFP/vL/ADrUrL8Rf8gl/wDeX+dAHLLU6mqymplI9KoRYU08NUK1KtAEgNPB96YKkApAKPrUgHvTVHvTwKAHAU9RTQKeBQA8CnqKaop4FAxwFPApop4pAOApwWmgU8UAGKXHtRRxQA0/SmkU84pp/GgCMimnHvUhApmKAGEU0gU8imEUwI2AphAqQ4phoERkU049akNNNAERxTGxipDUbUARHFamg9Z/+A/1rLIrU0IYaf8A4D/WgDYooopDCiiigAooooAKKKKACiiigAooooAKKKKACsvxECdIkwM4ZSfzrUqOeJJ4XilGUcYIoA4JTipkNX7jw/eRSHyAsydjkA/iDTV0fUB1tz/30P8AGqEQKalUmp10q+HWA/8AfQqQaZe/88f/AB4UAQDNSCphpt3/AM8v1FPGn3f/ADy/UUgIVqQCpRY3I/5ZfqKeLO4H/LI/mKAIgKkFPFpcf88j+Yp4tZu8Z/MUDGCninC2l/55n8xThby/3DQA0U8Uohk/uGniJ/7hpAIKeKAj/wBw04K3900AIKXFKA3900uG/umgBlNNPKn+6aQo39w0ARmmGpTG/wDcNIY3/uGgCE0w1OYpP7hppgl/55n8xTArmmHFWTby/wDPM/mKabab/nmfzFAFY/jTDirf2Sb/AJ5/qKYbOc/8s/1FAioxFRtirpsbj/nn+opjWFz2i/UUAUTWpoYOZj2+X+tV1026ZsFAo9Sa2LW3W2hEa8nqT6mgCaiiikMKKKKACiiigAooooAKKKKACiiigAooooAKKKKACkpaKAEopaKAEpaKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA//Z" alt="Platinum Membership Card">
-        <div class="tier-item-hdr" style="background:#F8F8F7">
-          <span class="tier-badge tier-platinum">Platinum</span>
-          <span style="font-size:12px;color:var(--text2)">$100–$399 / 2 months</span>
-        </div>
-        <div class="tier-item-body"><strong>10% off</strong> all products &nbsp;·&nbsp; <strong>Free birthday treat</strong> (1 product/year)</div>
+      <div class="tier-item" style="border-color:#FAC775">
+        <img class="tier-item-img" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAD8AXoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD06iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiimyOsaM7nCqMmjYB1FY8upTO37vCL24yaaL65/56f+OiuV4ymjX2MjaorGN7c/89f/AB0U0311/wA9f/HRU/XafZh7GRt0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" alt="Gold Card">
+        <div class="tier-item-hdr" style="background:#FFFBF0"><span class="tier-badge tier-gold">Gold</span><span style="font-size:12px;color:var(--text2)">$50–$99 / 2 months</span></div>
+        <div class="tier-item-body"><strong>5% off</strong> all products &nbsp;·&nbsp; Free birthday treat</div>
+      </div>
+
+      <div class="tier-item" style="border-color:#B4B2A9">
+        <img class="tier-item-img" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAD8AXoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD06iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiimuwRSzHAAyaAHUVmvfuzfIAo9xk0ou5j/ABD8qANGis5rqbsw/IUw3k4/jH/fIoA1KKyfttx/eH/fIpReXH98fkKANWis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APp4qMZ9acM+tICQU8VGM+tOBoAkFPApgNPBoAcKeBTQRTx9KBjgBTximinD6UAOFPFNH0pwpAOFLiminZoACKYRTjTDQA0imkU4000AMOKjNSGmGmBGaYcVI1MNAhhx6U049KcaYaAGnHpTGx7041G1ADTitTQus/8AwH+tZRFauhdZ/wDgP9aANeiiikMKKKKACiiigAooooAKKKKACiiigAooooAKzPEBxpT/AO8v8606zPEH/IKf/eX+dAHLqanQ/Sq6mp0NUInB+lOFRAmnrmgCQEU4U0ZpwzSAkFOUU0Zp4BoAcuakFMFOWgCQU8GmCnigY8YpwpopwoAcDTwRTRThSAdkUZFAowaAAkU04pxz60w59aAGnFNOKcSaac0AMNMNPOaYc0wGGmGnnNMbNAhhNMNOOaaaAGECmNinnNRtQBG2PWtXQes//Af61kmtbQes/wDwH+tAGxRRRSGFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFZfiH/kFP/vL/ADrUrL8Rf8gl/wDeX+dAHLLU6mqymplI9KoRYU08NUK1KtAEgNPB96YKkApAKPrUgHvTVHvTwKAHAU9RTQKeBQA8CnqKaop4FAxwFPApop4pAOApwWmgU8UAGKXHtRRxQA0/SmkU84pp/GgCMimnHvUhApmKAGEU0gU8imEUwI2AphAqQ4phoERkU049akNNNAERxTGxipDUbUARHFamg9Z/+A/1rLIrU0IYaf8A4D/WgDYooopDCiiigAooooAKKKKACiiigAooooAKKKKACsvxECdIkwM4ZSfzrUqOeJJ4XilGUcYIoA4JTipkNX7jw/eRSHyAsydjkA/iDTV0fUB1tz/30P8AGqEQKalUmp10q+HWA/8AfQqQaZe/88f/AB4UAQDNSCphpt3/AM8v1FPGn3f/ADy/UUgIVqQCpRY3I/5ZfqKeLO4H/LI/mKAIgKkFPFpcf88j+Yp4tZu8Z/MUDGCninC2l/55n8xThby/3DQA0U8Uohk/uGniJ/7hpAIKeKAj/wBw04K3900AIKXFKA3900uG/umgBlNNPKn+6aQo39w0ARmmGpTG/wDcNIY3/uGgCE0w1OYpP7hppgl/55n8xTArmmHFWTby/wDPM/mKabab/nmfzFAFY/jTDirf2Sb/AJ5/qKYbOc/8s/1FAioxFRtirpsbj/nn+opjWFz2i/UUAUTWpoYOZj2+X+tV1026ZsFAo9Sa2LW3W2hEa8nqT6mgCaiiikMKKKKACiiigAooooAKKKKACiiigAooooAKKKKACkpaKAEopaKAEpaKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA//Z" alt="Platinum Card">
+        <div class="tier-item-hdr" style="background:#F8F8F7"><span class="tier-badge tier-platinum">Platinum</span><span style="font-size:12px;color:var(--text2)">$100–$399 / 2 months</span></div>
+        <div class="tier-item-body"><strong>10% off</strong> all products &nbsp;·&nbsp; Free birthday treat</div>
       </div>
 
       <div class="tier-item" style="border-color:#85B7EB;margin-bottom:16px">
-        <img class="tier-item-img" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAD8AXoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD06iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiikJABJOAO9AC0VTmu5EBaO2ZlxncTgH6U1L52QsYgpGeC1FguXqKx31p0dlNsuFGcmTA+nTrSrrLuSFtMt6b+v6U7MV0a9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" alt="Diamond Membership Card">
-        <div class="tier-item-hdr" style="background:#F0F6FD">
-          <span class="tier-badge tier-diamond">Diamond</span>
-          <span style="font-size:12px;color:var(--text2)">$400+ / 2 months</span>
-        </div>
-        <div class="tier-item-body"><strong>20% off</strong> all products &nbsp;·&nbsp; <strong>Free birthday treat</strong> (1 product/year)</div>
+        <img class="tier-item-img" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAD8AXoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD06iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiikJABJOAO9AC0VTmu5EBaO2ZlxncTgH6U1L52QsYgpGeC1FguXqKx31p0dlNsuFGcmTA+nTrSrrLuSFtMt6b+v6U7MV0a9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" alt="Diamond Card">
+        <div class="tier-item-hdr" style="background:#F0F6FD"><span class="tier-badge tier-diamond">Diamond</span><span style="font-size:12px;color:var(--text2)">$400+ / 2 months</span></div>
+        <div class="tier-item-body"><strong>15% off</strong> all products &nbsp;·&nbsp; Special pricing on new launches &nbsp;·&nbsp; Double points on birthday month &nbsp;·&nbsp; Free birthday treat</div>
       </div>
 
       <div style="border-top:0.5px solid var(--border);padding-top:16px;margin-bottom:14px">
@@ -192,12 +195,18 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
 
       <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500">Terms &amp; Conditions <span class="req">*</span></div>
       <div class="tcbox">
-        <h4>1. Non-Transferability of Points</h4>Memberships are strictly personal and cannot be transferred to another individual. Membership points will be reset at the beginning of each renewal period.
-        <h4>2. Use of Member Benefits</h4>Member benefits are solely for the use of the registered member. Benefits may only be redeemed by the member upon self-collection or delivery. Member benefits are not transferable under any circumstances. Members must maintain their tier spending levels to continue enjoying tier-specific benefits.
-        <h4>3. Birthday Month Redemption</h4>Birthday month rewards must be redeemed within the member's birthday month. Unused rewards cannot be carried forward to subsequent months.
-        <h4>4. Changes to Terms &amp; Conditions</h4>Fruicey reserves the right to amend, update, or modify these Terms &amp; Conditions at any time without prior notice. Continued use of membership benefits constitutes acceptance of the revised Terms &amp; Conditions.
+        <h4>1. Membership Tiers</h4>New members are registered as a Member. Tiers upgrade immediately when the spending threshold is met within the current 2-month period. The cut-off date resets on the date of upgrade.
+        <h4>2. Tier Benefits &amp; Discounts</h4>Gold (5% off), Platinum (10% off), Diamond (15% off). Discounts are not applicable in conjunction with promotional items or other ongoing promotions.
+        <h4>3. Diamond Tier Perks</h4>Diamond members receive special pricing on new Fruicey product launches and earn double points during their birthday month to accelerate tier progression.
+        <h4>4. Non-Transferability of Points</h4>Memberships are strictly personal and cannot be transferred to another individual. Points reset at the beginning of each 2-month renewal period.
+        <h4>5. Use of Member Benefits</h4>Member benefits are solely for the use of the registered member upon self-collection or delivery. Benefits are not transferable under any circumstances. Members must maintain tier spending levels to continue enjoying tier-specific benefits.
+        <h4>6. Birthday Month Redemption</h4>Birthday month rewards must be redeemed within the member's birthday month. Unused rewards cannot be carried forward to subsequent months. Members must present a valid photo identification (e.g. NRIC, passport, or driver's licence) for identity verification at the time of redemption.
+        <h4>7. Changes to Terms &amp; Conditions</h4>Fruicey reserves the right to amend, update, or modify these Terms &amp; Conditions at any time without prior notice. Continued use of membership benefits constitutes acceptance of the revised Terms &amp; Conditions.
       </div>
-      <div class="cbrow"><input type="checkbox" id="a-tc"><label for="a-tc" style="margin-bottom:0;font-size:13px;color:var(--text2)">I have read and agree to the Fruicey Family Membership Terms &amp; Conditions.</label></div>
+      <div class="cbrow">
+        <input type="checkbox" id="a-tc">
+        <label for="a-tc" style="margin-bottom:0;font-size:13px;color:var(--text2)">I have read and agree to the Fruicey Family Membership Terms &amp; Conditions.</label>
+      </div>
       <div class="alert alert-error" id="a-err"></div>
       <div class="alert alert-success" id="a-ok"></div>
       <button class="btn btn-primary" onclick="submitApp()"><i class="ti ti-send"></i> Submit application</button>
@@ -209,75 +218,211 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
 <script>
 
 const MK='fruicey_members_v1',TK='fruicey_txns_v1',AK='fruicey_applications_v1';
+
+// TIERS: member (below $50 threshold), Gold ($50-$99), Platinum ($100-$399), Diamond ($400+)
 const TIERS=[
-  {name:'Gold',cls:'tier-gold',min:0,discount:5,next:'Platinum',nextMin:100},
-  {name:'Platinum',cls:'tier-platinum',min:100,discount:10,next:'Diamond',nextMin:400},
-  {name:'Diamond',cls:'tier-diamond',min:400,discount:20,next:null,nextMin:null}
+  {name:'Member',cls:'tier-member',min:0,   max:49,  discount:0,  next:'Gold',     nextMin:50},
+  {name:'Gold',  cls:'tier-gold',  min:50,  max:99,  discount:5,  next:'Platinum', nextMin:100},
+  {name:'Platinum',cls:'tier-platinum',min:100,max:399,discount:10,next:'Diamond', nextMin:400},
+  {name:'Diamond',cls:'tier-diamond',min:400,max:Infinity,discount:15,next:null,   nextMin:null}
 ];
-let curMember=null,allTxns=[];
+
+let curMember=null, allTxns=[];
+
 function np(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
-function showScr(id){['scr-lookup','scr-portal','scr-apply'].forEach(s=>{const e=document.getElementById(s);if(e)e.style.display='none';});const t=document.getElementById(id);if(t)t.style.display='block';}
-function clearLookup(){document.getElementById('lk-phone').value='';document.getElementById('lk-email').value='';document.getElementById('lk-err').style.display='none';curMember=null;}
-function sPTab(tab,e){document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.psec').forEach(s=>s.classList.remove('active'));e.target.classList.add('active');document.getElementById('psec-'+tab).classList.add('active');}
-function calcTier(member,txns){
-  const j=new Date(member.since),now=new Date();
-  const mo=((now.getFullYear()-j.getFullYear())*12+(now.getMonth()-j.getMonth()));
-  const pe=Math.floor(Math.max(0,mo)/2);
-  const ps=new Date(j);ps.setMonth(ps.getMonth()+pe*2);
-  const pend=new Date(ps);pend.setMonth(pend.getMonth()+2);
-  const spend=txns.filter(t=>t.memberId===member.id&&new Date(t.date)>=ps&&new Date(t.date)<pend).reduce((s,t)=>s+t.amount,0);
-  const pts=Math.round(spend);
-  const tier=TIERS.slice().reverse().find(t=>spend>=t.min)||TIERS[0];
-  return{tier,spend,pts,ps,pend};
+
+function showScr(id){
+  ['scr-lookup','scr-portal','scr-apply'].forEach(s=>{
+    const e=document.getElementById(s);if(e)e.style.display='none';
+  });
+  const t=document.getElementById(id);if(t)t.style.display='block';
 }
+
+function clearLookup(){
+  document.getElementById('lk-phone').value='';
+  document.getElementById('lk-email').value='';
+  document.getElementById('lk-err').style.display='none';
+  curMember=null;
+}
+
+function sPTab(tab,e){
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.psec').forEach(s=>s.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('psec-'+tab).classList.add('active');
+}
+
+// Compute live tier from actual spend in the current 2-month period.
+// If cumulative spend in current period crosses next tier threshold → upgrade immediately,
+// reset the period start to today (upgrade date).
+function calcTier(member, txns){
+  const joinDate = new Date(member.since);
+  const tierSince = member.tierSince ? new Date(member.tierSince) : joinDate;
+  const now = new Date();
+
+  // Current period start = tierSince (resets on each upgrade or renewal)
+  const periodStart = new Date(tierSince);
+  const periodEnd   = new Date(tierSince);
+  periodEnd.setMonth(periodEnd.getMonth() + 2);
+
+  // Spend in current period
+  const isBdayMo = isBday(member.bday);
+  const periodTxns = txns.filter(t => t.memberId === member.id && new Date(t.date) >= periodStart && new Date(t.date) < periodEnd);
+  const rawSpend   = periodTxns.reduce((s,t) => s + t.amount, 0);
+
+  // Double points on birthday month
+  const periodPoints = isBdayMo
+    ? periodTxns.reduce((s,t) => s + t.points * 2, 0)
+    : periodTxns.reduce((s,t) => s + t.points, 0);
+
+  // Determine tier from spend (NOT doubled — spend is real money)
+  const tier = TIERS.slice().reverse().find(t => rawSpend >= t.min) || TIERS[0];
+
+  const daysLeft = Math.max(0, Math.ceil((periodEnd - now) / (1000*60*60*24)));
+
+  return {tier, rawSpend, periodPoints, periodStart, periodEnd, daysLeft, isBdayMo};
+}
+
 function isBday(b){if(!b)return false;return parseInt(b.split('-')[0])===new Date().getMonth()+1;}
 function redeemedYear(m){if(!m.bdayRedeemed)return false;return new Date(m.bdayRedeemedDate||'').getFullYear()===new Date().getFullYear();}
+
 function lookup(){
   const rp=document.getElementById('lk-phone').value.trim();
   const em=document.getElementById('lk-email').value.trim().toLowerCase();
-  const ph=np(rp);const err=document.getElementById('lk-err');err.style.display='none';
+  const ph=np(rp);
+  const err=document.getElementById('lk-err');
+  err.style.display='none';
   if(!rp&&!em){err.textContent='Please enter your phone number or email.';err.style.display='block';return;}
-  let mems=[];try{const m=localStorage.getItem(MK);if(m)mems=JSON.parse(m);}catch(e){}
+  let mems=[];
+  try{const m=localStorage.getItem(MK);if(m)mems=JSON.parse(m);}catch(e){}
   try{const t=localStorage.getItem(TK);if(t)allTxns=JSON.parse(t);}catch(e){}
-  const mem=mems.find(m=>{const mp=np(m.phone||'');const me=(m.email||'').toLowerCase();return(ph&&mp===ph)||(em&&me===em);});
+  const mem=mems.find(m=>{
+    const mp=np(m.phone||''); const me=(m.email||'').toLowerCase();
+    return(ph&&mp===ph)||(em&&me===em);
+  });
   if(!mem){err.textContent='Member not found. Please check your details or visit us in store.';err.style.display='block';return;}
-  curMember=mem;renderPortal(mem,allTxns);showScr('scr-portal');
+  curMember=mem;
+  renderPortal(mem, allTxns);
+  showScr('scr-portal');
 }
-function renderPortal(mem,txns){
-  const {tier,spend,pts,ps,pend}=calcTier(mem,txns);
-  const bdayThis=isBday(mem.bday);const ry=redeemedYear(mem);
-  document.getElementById('r-name').textContent=mem.first+' '+mem.last;
-  document.getElementById('r-since').textContent='Member since '+mem.since;
-  const b=document.getElementById('r-tier');b.textContent=tier.name;b.className='tier-badge '+tier.cls;
-  document.getElementById('r-pts').textContent=pts.toLocaleString();
-  document.getElementById('r-disc').textContent=tier.discount+'%';
+
+function renderPortal(mem, txns){
+  const {tier, rawSpend, periodPoints, periodStart, periodEnd, daysLeft, isBdayMo} = calcTier(mem, txns);
+  const ry = redeemedYear(mem);
+
+  document.getElementById('r-name').textContent  = mem.first + ' ' + mem.last;
+  document.getElementById('r-since').textContent = 'Member since ' + mem.since;
+
+  const badge = document.getElementById('r-tier');
+  badge.textContent  = tier.name;
+  badge.className    = 'tier-badge ' + tier.cls;
+
+  document.getElementById('r-pts').textContent  = periodPoints.toLocaleString();
+  document.getElementById('r-disc').textContent = tier.discount > 0 ? tier.discount + '%' : '—';
+
+  // Progress bar
+  const pgFill = document.getElementById('pg-fill');
+  const pgVal  = document.getElementById('pg-val');
+  const pgLbl  = document.getElementById('pg-lbl');
+  const pgHint = document.getElementById('pg-hint');
   if(tier.next){
-    const pct=Math.min(100,Math.round((spend/tier.nextMin)*100));
-    document.getElementById('pg-fill').style.width=pct+'%';document.getElementById('pg-fill').style.background='#378ADD';
-    document.getElementById('pg-val').textContent='$'+spend.toFixed(0);document.getElementById('pg-lbl').textContent='Progress to '+tier.next;
-    const need=Math.max(0,tier.nextMin-spend);
-    document.getElementById('pg-hint').textContent=need>0?'Spend $'+need.toFixed(0)+' more to reach '+tier.next:'You qualify for '+tier.next+'!';
-  }else{
-    document.getElementById('pg-fill').style.width='100%';document.getElementById('pg-fill').style.background='#85B7EB';
-    document.getElementById('pg-val').textContent='$'+spend.toFixed(0);document.getElementById('pg-lbl').textContent='Diamond tier';
-    document.getElementById('pg-hint').textContent="You're at our highest tier — Diamond! 💎";
+    const pct = Math.min(100, Math.round((rawSpend / tier.nextMin) * 100));
+    pgFill.style.width    = pct + '%';
+    pgFill.style.background = '#378ADD';
+    pgVal.textContent     = '$' + rawSpend.toFixed(0);
+    pgLbl.textContent     = 'Progress to ' + tier.next;
+    const need = Math.max(0, tier.nextMin - rawSpend);
+    pgHint.textContent    = need > 0
+      ? 'Spend $' + need.toFixed(0) + ' more this period to reach ' + tier.next
+      : 'You qualify for ' + tier.next + '!';
+  } else {
+    pgFill.style.width    = '100%';
+    pgFill.style.background = '#85B7EB';
+    pgVal.textContent     = '$' + rawSpend.toFixed(0);
+    pgLbl.textContent     = 'Diamond tier';
+    pgHint.textContent    = "You're at our highest tier \u2014 Diamond!";
   }
-  document.getElementById('r-renewal').textContent='Period: '+ps.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})+' – '+pend.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
-  const bb=document.getElementById('bday-box');
-  if(bdayThis){bb.style.display='block';document.getElementById('bday-msg').textContent=ry?'You have already redeemed your birthday treat this year. See you next year! 🎂':'It’s your birthday month! Show this to our crew in store to redeem your free treat — any 1 product, once per year.';document.getElementById('bday-btn').style.display=ry?'none':'flex';}else{bb.style.display='none';}
-  const mt=txns.filter(t=>t.memberId===mem.id).sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById('p-txns').innerHTML=mt.length?mt.map(t=>{const ip=new Date(t.date)>=ps&&new Date(t.date)<pend;return'<div class="txn-row"><div><div style="font-size:13px">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+t.date+(ip?' · <span style="color:var(--success-text)">This period</span>':'')+'</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:500">$'+t.amount.toFixed(2)+'</div><div class="txn-meta">+'+t.points+' pts</div></div></div>';}).join(''):'<div style="text-align:center;padding:1.5rem;color:var(--text2);font-size:13px">No transactions yet</div>';
-  document.getElementById('p-perks').innerHTML=[{icon:'ti-discount',label:tier.discount+'% off all products',desc:'Applied on every purchase'},{icon:'ti-cake',label:'Free birthday treat',desc:ry?'Redeemed this year ✓':(bdayThis?'Available now — show this page in store':'Available during your birthday month ('+(mem.bday||'')+')')}].map(p=>'<div class="perk-row"><i class="ti '+p.icon+'" style="color:var(--success-text);font-size:18px;flex-shrink:0;margin-top:1px"></i><div><div style="font-size:13px;font-weight:500">'+p.label+'</div><div style="font-size:11px;color:var(--text2)">'+p.desc+'</div></div></div>').join('');
+
+  // Cut-off date display
+  const cutoffEl = document.getElementById('r-cutoff');
+  const renewalStr = periodEnd.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
+  const sinceStr   = periodStart.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
+  cutoffEl.innerHTML =
+    '<i class="ti ti-calendar" style="font-size:13px;vertical-align:middle;margin-right:4px"></i>' +
+    'Current period: <strong>' + sinceStr + '</strong> \u2013 <strong>' + renewalStr + '</strong>' +
+    ' &nbsp;(<strong>' + daysLeft + ' day' + (daysLeft!==1?'s':'')+' left</strong>)';
+
+  // Birthday double points notice
+  const bdayNotice = document.getElementById('bday-notice');
+  if(isBdayMo){
+    bdayNotice.style.display = 'block';
+    bdayNotice.textContent   = '\uD83C\uDF82 Birthday month bonus: double points this month!';
+  } else {
+    bdayNotice.style.display = 'none';
+  }
+
+  // Birthday box
+  const bb     = document.getElementById('bday-box');
+  const bdayMsg = document.getElementById('bday-msg');
+  const bdayBtn = document.getElementById('bday-btn');
+  if(isBdayMo){
+    bb.style.display = 'block';
+    if(ry){
+      bdayMsg.textContent    = 'You have already redeemed your birthday treat this year. See you next year!';
+      bdayBtn.style.display  = 'none';
+    } else {
+      bdayMsg.textContent    = "It's your birthday month! Show this to our crew in store to redeem your free treat \u2014 any 1 product, once per year.";
+      bdayBtn.style.display  = 'flex';
+    }
+  } else {
+    bb.style.display = 'none';
+  }
+
+  // Diamond perks notice
+  const diamondNotice = document.getElementById('diamond-notice');
+  if(diamondNotice) diamondNotice.style.display = tier.name==='Diamond' ? 'block' : 'none';
+
+  // Transactions
+  const mt = txns.filter(t=>t.memberId===mem.id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('p-txns').innerHTML = mt.length ? mt.map(t=>{
+    const inPeriod = new Date(t.date) >= periodStart && new Date(t.date) < periodEnd;
+    const pts = isBdayMo ? t.points*2 : t.points;
+    return '<div class="txn-row"><div><div style="font-size:13px">'+(t.desc||'Purchase')+'</div>' +
+      '<div class="txn-meta">'+t.date+(inPeriod?' \u00b7 <span style="color:var(--success-text)">This period</span>':'')+
+      (isBdayMo&&inPeriod?' \u00b7 <span style="color:#e91e8c">2x pts</span>':'')+'</div></div>' +
+      '<div style="text-align:right"><div style="font-size:13px;font-weight:500">$'+t.amount.toFixed(2)+'</div>' +
+      '<div class="txn-meta">+'+pts+' pts</div></div></div>';
+  }).join('') : '<div style="text-align:center;padding:1.5rem;color:var(--text2);font-size:13px">No transactions yet</div>';
+
+  // Perks
+  const perks = [
+    {icon:'ti-discount', label: tier.discount>0 ? tier.discount+'% off all products' : 'No tier discount yet', desc: tier.discount>0 ? 'Applied on every purchase' : 'Spend $50+ in a period to reach Gold tier'}
+  ];
+  if(isBdayMo) perks.push({icon:'ti-star', label:'2x points this month', desc:'Birthday bonus \u2014 double points count toward your next tier'});
+  if(tier.name==='Diamond') perks.push({icon:'ti-tag', label:'Special pricing on new launches', desc:'Exclusive Diamond member pricing on new Fruicey products'});
+  perks.push({icon:'ti-cake', label:'Free birthday treat', desc: ry ? 'Redeemed this year \u2713' : (isBdayMo ? 'Available now \u2014 show this page in store' : 'Available during your birthday month ('+mem.bday+')')});
+
+  document.getElementById('p-perks').innerHTML = perks.map(p=>
+    '<div class="perk-row"><i class="ti '+p.icon+'" style="color:var(--success-text);font-size:18px;flex-shrink:0;margin-top:1px"></i>' +
+    '<div><div style="font-size:13px;font-weight:500">'+p.label+'</div>' +
+    '<div style="font-size:11px;color:var(--text2)">'+p.desc+'</div></div></div>'
+  ).join('');
 }
+
 function redeemBday(){
   if(!curMember)return;
   if(!confirm('Confirm birthday treat redemption? This can only be done once per year.'))return;
-  let mems=[];try{const m=localStorage.getItem(MK);if(m)mems=JSON.parse(m);}catch(e){}
+  let mems=[];
+  try{const m=localStorage.getItem(MK);if(m)mems=JSON.parse(m);}catch(e){}
   const i=mems.findIndex(m=>m.id===curMember.id);if(i===-1)return;
-  mems[i].bdayRedeemed=true;mems[i].bdayRedeemedDate=new Date().toISOString().split('T')[0];
-  localStorage.setItem(MK,JSON.stringify(mems));curMember=mems[i];renderPortal(curMember,allTxns);
-  alert('Birthday treat redeemed! Enjoy from Fruicey 🎂🍓');
+  mems[i].bdayRedeemed=true;
+  mems[i].bdayRedeemedDate=new Date().toISOString().split('T')[0];
+  localStorage.setItem(MK,JSON.stringify(mems));
+  curMember=mems[i];
+  renderPortal(curMember, allTxns);
+  alert('Birthday treat redeemed! Enjoy your treat from Fruicey \uD83C\uDF82\uD83C\uDF53');
 }
+
 function submitApp(){
   const first=document.getElementById('a-first').value.trim();
   const last=document.getElementById('a-last').value.trim();
@@ -285,21 +430,35 @@ function submitApp(){
   const phone=np(document.getElementById('a-phone').value.trim());
   const bday=document.getElementById('a-bday').value.trim();
   const tc=document.getElementById('a-tc').checked;
-  const err=document.getElementById('a-err');const ok=document.getElementById('a-ok');
-  err.style.display='none';ok.style.display='none';
-  const chk=[{v:first,m:'Please enter your first name.'},{v:last,m:'Please enter your last name.'},{v:email,m:'Please enter your email.'},{v:phone,m:'Please enter your phone number.'},{v:bday,m:'Please enter your birthday (MM-DD).'}];
+  const err=document.getElementById('a-err');
+  const ok=document.getElementById('a-ok');
+  err.style.display='none'; ok.style.display='none';
+
+  const chk=[
+    {v:first,m:'Please enter your first name.'},
+    {v:last, m:'Please enter your last name.'},
+    {v:email,m:'Please enter your email address.'},
+    {v:phone,m:'Please enter your phone number.'},
+    {v:bday, m:'Please enter your birthday (MM-DD).'}
+  ];
   for(const c of chk){if(!c.v){err.textContent=c.m;err.style.display='block';return;}}
   if(!/^\d{2}-\d{2}$/.test(bday)){err.textContent='Birthday must be MM-DD format (e.g. 06-15).';err.style.display='block';return;}
   if(!tc){err.textContent='Please agree to the Terms & Conditions.';err.style.display='block';return;}
-  let mems=[];try{const m=localStorage.getItem(MK);if(m)mems=JSON.parse(m);}catch(e){}
+
+  let mems=[];
+  try{const m=localStorage.getItem(MK);if(m)mems=JSON.parse(m);}catch(e){}
   if(mems.find(m=>(m.email||'').toLowerCase()===email)){err.textContent='This email is already registered.';err.style.display='block';return;}
-  if(mems.find(m=>np(m.phone)===phone)){err.textContent='This phone is already registered.';err.style.display='block';return;}
-  let apps=[];try{const a=localStorage.getItem(AK);if(a)apps=JSON.parse(a);}catch(e){}
+  if(mems.find(m=>np(m.phone)===phone)){err.textContent='This phone number is already registered.';err.style.display='block';return;}
+
+  let apps=[];
+  try{const a=localStorage.getItem(AK);if(a)apps=JSON.parse(a);}catch(e){}
   apps.push({id:'app_'+Date.now(),first,last,email,phone,bday,appliedAt:new Date().toISOString().split('T')[0],status:'pending'});
   localStorage.setItem(AK,JSON.stringify(apps));
+
   ['a-first','a-last','a-email','a-phone','a-bday'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('a-tc').checked=false;
-  ok.innerHTML='<strong>Application submitted!</strong><br>Thank you, '+first+'! Our team will review and activate your membership. We will notify you via WhatsApp at +65 8509 8095.';ok.style.display='block';
+  ok.innerHTML='<strong>Application submitted!</strong><br>Thank you, '+first+'! Our team will review and activate your membership. We will notify you via WhatsApp at +65\u20098509\u20098095.';
+  ok.style.display='block';
 }
 
 </script>

@@ -244,6 +244,28 @@ input.err{border-color:var(--danger)!important}
 <div class="toast" id="toast"></div>
 
 <script>
+const API = 'https://script.google.com/macros/s/AKfycbz2cDkYTpMNhf5uoBHJ4qW30NLAC0V3UcljWPHJ7pqrkgkJ8f7q_KYSuXDNoX8xwYguzw/exec';
+
+async function apiGet(params){
+  const url = API + '?' + new URLSearchParams(params);
+  const r = await fetch(url); return r.json();
+}
+async function apiPost(body){
+  const r = await fetch(API, {method:'POST', body: JSON.stringify(body)}); return r.json();
+}
+async function loadFromSheets(){
+  try {
+    const res = await apiGet({action:'getAll'});
+    members      = (res.members      || []);
+    transactions = (res.transactions || []).map(t=>({...t, amount:parseFloat(t.amount)||0, points:parseInt(t.points)||0}));
+    applications = (res.applications || []);
+    render();
+  } catch(e){ showToast('Could not load data. Check API URL in index.html'); }
+}
+function save(){}
+function saveApps(){}
+
+
 const MK='fruicey_members_v1';
 const TK='fruicey_txns_v1';
 const AK='fruicey_applications_v1';
@@ -378,17 +400,12 @@ function approveApp(id){
   const app=applications.find(a=>a.id===id);if(!app)return;
   if(members.find(m=>(m.email||'').toLowerCase()===app.email.toLowerCase())){showToast('Email already registered');return;}
   const since=new Date().toISOString().split('T')[0];
-  members.push({id:Date.now().toString(),first:app.first,last:app.last,email:app.email,phone:app.phone,bday:app.bday,since,tier:'Gold',tierSince:since,bdayRedeemed:false});
-  app.status='approved';
-  save();saveApps();render();
-  showToast(app.first+' '+app.last+' approved and registered!');
+  apiPost({action:'approveApplication', id}).then(()=>{loadFromSheets();showToast(app.first+' '+app.last+' approved!');});
 }
 
 function rejectApp(id){
   if(!confirm('Reject this application?'))return;
-  applications=applications.filter(a=>a.id!==id);
-  saveApps();renderApplications();renderDashboard();
-  showToast('Application rejected');
+  apiPost({action:'rejectApplication', id}).then(()=>{loadFromSheets();showToast('Application rejected');});
 }
 
 function populateMemberSelect(){
@@ -432,29 +449,14 @@ function addTransaction(){
   const date=document.getElementById('txn-date').value;
   if(!memberId||isNaN(amount)||amount<=0){showToast('Select a member and valid amount');return;}
   const points=Math.round(amount);
-  transactions.push({id:Date.now().toString(),memberId,amount,desc,date,points,ts:Date.now()});
-  // Check for immediate tier upgrade — reset tierSince to upgrade date
-  const m=members.find(x=>x.id===memberId);
-  if(m){
-    const info=computeLiveTier(m);
-    const currentIdx=TIERS.findIndex(t=>t.name===(m.tier||'Member'));
-    const newIdx=TIERS.findIndex(t=>t.name===info.tierObj.name);
-    if(newIdx>currentIdx){
-      // Upgrade: reset period start to transaction date
-      m.tier=info.tierObj.name;
-      m.tierSince=date;
-      save();
-      showToast(m.first+' upgraded to '+info.tierObj.name+'! 🎉');
-    } else {
-      m.tier=info.tierObj.name;
-      save();
-      showToast('+'+points+' points added!');
-    }
-  }
-  document.getElementById('txn-amount').value='';
-  document.getElementById('txn-desc').value='';
-  document.getElementById('discount-hint').style.display='none';
-  render();
+  apiPost({action:'addTransaction', memberId, amount, desc, date}).then(res=>{
+    if(res.upgraded) showToast('Upgraded to '+res.newTier+'! 🎉');
+    else showToast('+'+Math.round(amount)+' points added!');
+    document.getElementById('txn-amount').value='';
+    document.getElementById('txn-desc').value='';
+    document.getElementById('discount-hint').style.display='none';
+    loadFromSheets();
+  });
 }
 
 function openEditTxn(id){
@@ -470,11 +472,11 @@ function saveEditTxn(){
   const amount=parseFloat(document.getElementById('edit-txn-amount').value);
   if(isNaN(amount)||amount<=0){showToast('Enter a valid amount');return;}
   t.amount=amount;t.points=Math.round(amount);t.desc=document.getElementById('edit-txn-desc').value.trim();t.date=document.getElementById('edit-txn-date').value;
-  save();closeEditTxnModalDirect();render();showToast('Transaction updated!');
+  apiPost({action:'editTransaction', id:editingTxnId, amount, desc:document.getElementById('edit-txn-desc').value.trim(), date:document.getElementById('edit-txn-date').value}).then(()=>{closeEditTxnModalDirect();loadFromSheets();showToast('Transaction updated!');});
 }
 function deleteTxn(id){
   if(!confirm('Delete this transaction? Points and tier will recalculate.'))return;
-  transactions=transactions.filter(t=>t.id!==id);save();render();showToast('Transaction deleted');
+  apiPost({action:'deleteTransaction', id}).then(()=>{loadFromSheets();showToast('Transaction deleted');});
 }
 function closeEditTxnModal(e){if(e.target===document.getElementById('edit-txn-modal'))closeEditTxnModalDirect();}
 function closeEditTxnModalDirect(){document.getElementById('edit-txn-modal').classList.remove('open');editingTxnId=null;}
@@ -499,8 +501,7 @@ function openModal(id){
 
 function adminRedeemBday(id){
   const m=members.find(x=>x.id===id);if(!m)return;
-  m.bdayRedeemed=true;m.bdayRedeemedDate=new Date().toISOString().split('T')[0];
-  save();openModal(id);renderDashboard();showToast('Birthday treat marked as redeemed!');
+  apiPost({action:'updateMember', id, updates:{bdayRedeemed:'true', bdayRedeemedDate:new Date().toISOString().split('T')[0]}}).then(()=>{loadFromSheets().then(()=>openModal(id));showToast('Birthday treat marked as redeemed!');});
 }
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
@@ -531,7 +532,7 @@ function importData(){
   reader.readAsText(file);
 }
 
-load();
+loadFromSheets();
 </script>
 </body>
 </html>

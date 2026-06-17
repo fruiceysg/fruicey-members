@@ -246,10 +246,22 @@ input.err{border-color:var(--danger)!important}
 <script>
 
 
+
 const API = 'https://script.google.com/macros/s/AKfycbz2cDkYTpMNhf5uoBHJ4qW30NLAC0V3UcljWPHJ7pqrkgkJ8f7q_KYSuXDNoX8xwYguzw/exec';
 
-async function apiGet(params){const url=API+'?'+new URLSearchParams(params);const r=await fetch(url);return r.json();}
-async function apiPost(body){const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});return r.json();}
+async function apiGet(params){
+  const url=API+'?'+new URLSearchParams(params);
+  const r=await fetch(url);
+  return r.json();
+}
+async function apiPost(body){
+  const r=await fetch(API,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify(body)
+  });
+  return r.json();
+}
 async function loadFromSheets(){
   try{
     const res=await apiGet({action:'getAll'});
@@ -472,7 +484,7 @@ function deleteMember(id){
   apiPost({action:'deleteMember',id}).then(res=>{
     if(res.success){loadFromSheets();showToast(m.first+' '+m.last+' deleted');}
     else showToast('Error deleting member');
-  }).catch(()=>showToast('Connection error'));
+  }).catch(e=>{console.error('Delete error:',e);showToast('Connection error: '+e.message);});
 }
 
 function exportData(){
@@ -504,6 +516,7 @@ function load(){
   loadFromSheets();
 }
 load();
+
 
 
 

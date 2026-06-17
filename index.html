@@ -174,7 +174,7 @@ input.err{border-color:var(--danger)!important}
         <div class="form-row full"><label>Email <span class="req">*</span></label><input type="email" id="reg-email" placeholder="jane@example.com"></div>
         <div class="form-row">
           <div><label>Phone (digits only) <span class="req">*</span></label><input type="tel" id="reg-phone" placeholder="e.g. 91234567"><div class="field-hint">No country code needed</div></div>
-          <div><label>Birthday (MM-DD) <span class="req">*</span></label><input type="text" id="reg-bday" placeholder="e.g. 06-15" maxlength="5"><div class="field-hint">Month-Day format</div></div>
+          <div><label>Birthday (DD-MM) <span class="req">*</span></label><input type="text" id="reg-bday" placeholder="e.g. 15-06" maxlength="5"><div class="field-hint">Day-Month format</div></div>
         </div>
         <div class="form-row full"><label>Member since <span class="req">*</span></label><input type="date" id="reg-date"></div>
         <button class="btn btn-primary" onclick="registerMember()"><i class="ti ti-user-plus"></i> Register member</button>
@@ -246,80 +246,68 @@ input.err{border-color:var(--danger)!important}
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbz2cDkYTpMNhf5uoBHJ4qW30NLAC0V3UcljWPHJ7pqrkgkJ8f7q_KYSuXDNoX8xwYguzw/exec';
 
-async function apiGet(params){
-  const url = API + '?' + new URLSearchParams(params);
-  const r = await fetch(url); return r.json();
-}
-async function apiPost(body){
-  const r = await fetch(API, {method:'POST', body: JSON.stringify(body)}); return r.json();
-}
+async function apiGet(params){const url=API+'?'+new URLSearchParams(params);const r=await fetch(url);return r.json();}
+async function apiPost(body){const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});return r.json();}
 async function loadFromSheets(){
-  try {
-    const res = await apiGet({action:'getAll'});
-    members      = (res.members      || []);
-    transactions = (res.transactions || []).map(t=>({...t, amount:parseFloat(t.amount)||0, points:parseInt(t.points)||0}));
-    applications = (res.applications || []);
+  try{
+    const res=await apiGet({action:'getAll'});
+    members=(res.members||[]);
+    transactions=(res.transactions||[]).map(t=>({...t,amount:parseFloat(t.amount)||0,points:parseInt(t.points)||0}));
+    applications=(res.applications||[]);
     render();
-  } catch(e){ showToast('Could not load data. Check API URL in index.html'); }
+  }catch(e){showToast('Could not load data. Check API URL in index.html');}
 }
 function save(){}
 function saveApps(){}
 
+const TIERS=[
+  {name:'Member',  cls:'tier-member',  min:0,   max:49,  discount:0,  next:'Gold',     nextMin:50},
+  {name:'Gold',    cls:'tier-gold',    min:50,  max:99,  discount:5,  next:'Platinum', nextMin:100},
+  {name:'Platinum',cls:'tier-platinum',min:100, max:399, discount:10, next:'Diamond',  nextMin:400},
+  {name:'Diamond', cls:'tier-diamond', min:400, max:Infinity,discount:15,next:null,    nextMin:null}
+];
 
-const MK='fruicey_members_v1';
-const TK='fruicey_txns_v1';
-const AK='fruicey_applications_v1';
 let members=[],transactions=[],applications=[];
 let editingTxnId=null;
 
-const TIERS=[
-  {name:'Gold',cls:'tier-gold',min:0,max:99,discount:5,next:'Platinum',nextMin:100},
-  {name:'Platinum',cls:'tier-platinum',min:100,max:399,discount:10,next:'Diamond',nextMin:400},
-  {name:'Diamond',cls:'tier-diamond',min:400,max:Infinity,discount:20,next:null,nextMin:null}
-];
-
 function normalisePhone(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
-function save(){localStorage.setItem(MK,JSON.stringify(members));localStorage.setItem(TK,JSON.stringify(transactions));}
-function saveApps(){localStorage.setItem(AK,JSON.stringify(applications));}
 
-function load(){
-  try{const m=localStorage.getItem(MK);if(m)members=JSON.parse(m);}catch(e){members=[];}
-  try{const t=localStorage.getItem(TK);if(t)transactions=JSON.parse(t);}catch(e){transactions=[];}
-  try{const a=localStorage.getItem(AK);if(a)applications=JSON.parse(a);}catch(e){applications=[];}
-  const today=new Date().toISOString().split('T')[0];
-  document.getElementById('reg-date').value=today;
-  document.getElementById('txn-date').value=today;
-  document.getElementById('top-date').textContent=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
-  render();
+function formatBday(bday){
+  if(!bday)return '\u2014';
+  if(/^\d{2}-\d{2}$/.test(bday))return bday;
+  var sm=bday.match(/^\w+\s+(\w+)\s+(\d+)\s+\d{4}/);
+  if(sm){var M={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};var mm=M[sm[1]];var dd=String(parseInt(sm[2])).padStart(2,'0');if(mm)return dd+'-'+mm;}
+  var im=bday.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(im)return im[3]+'-'+im[2];
+  return bday;
+}
+
+function isBdayMonth(b){
+  if(!b)return false;
+  const fmt=formatBday(b);
+  if(!fmt||fmt==='\u2014')return false;
+  const parts=fmt.split('-');
+  if(parts.length!==2)return false;
+  return parseInt(parts[1])===new Date().getMonth()+1;
 }
 
 function computeLiveTier(member){
-  const now        = new Date();
-  const joinDate   = new Date(member.since);
-  let periodStart  = member.tierSince ? new Date(member.tierSince) : new Date(joinDate);
-  let periodEnd    = new Date(periodStart);
-  periodEnd.setMonth(periodEnd.getMonth() + 2);
-
-  // Roll forward if expired
-  while(periodEnd <= now){
-    periodStart = new Date(periodEnd);
-    periodEnd   = new Date(periodStart);
-    periodEnd.setMonth(periodEnd.getMonth() + 2);
-  }
-
-  const isBdayMo    = isBdayMonth(member.bday) && member.tier === 'Diamond';
-  const periodTxns  = transactions.filter(t => t.memberId===member.id && new Date(t.date)>=periodStart && new Date(t.date)<periodEnd);
-  const periodSpend = periodTxns.reduce((s,t) => s+t.amount, 0);
-  const periodPoints= isBdayMo
-    ? periodTxns.reduce((s,t) => s+t.points*2, 0)
-    : periodTxns.reduce((s,t) => s+t.points, 0);
-  const tierObj     = TIERS.slice().reverse().find(t => periodSpend>=t.min) || TIERS[0];
-  const daysLeft    = Math.max(0, Math.ceil((periodEnd-now)/(1000*60*60*24)));
-  return{tierObj, periodSpend, periodPoints, periodStart, periodEnd, daysLeft};
+  const now=new Date();
+  let periodStart=member.tierSince?new Date(member.tierSince):new Date(member.since);
+  let periodEnd=new Date(periodStart);
+  periodEnd.setMonth(periodEnd.getMonth()+2);
+  while(periodEnd<=now){periodStart=new Date(periodEnd);periodEnd=new Date(periodStart);periodEnd.setMonth(periodEnd.getMonth()+2);}
+  const isBdayMo=isBdayMonth(member.bday)&&(member.tier==='Diamond');
+  const periodTxns=transactions.filter(t=>t.memberId===member.id&&new Date(t.date)>=periodStart&&new Date(t.date)<periodEnd);
+  const periodSpend=periodTxns.reduce((s,t)=>s+t.amount,0);
+  const periodPoints=isBdayMo?periodTxns.reduce((s,t)=>s+t.points*2,0):periodTxns.reduce((s,t)=>s+t.points,0);
+  const tierObj=TIERS.slice().reverse().find(t=>periodSpend>=t.min)||TIERS[0];
+  const daysLeft=Math.max(0,Math.ceil((periodEnd-now)/(1000*60*60*24)));
+  return{tierObj,periodSpend,periodPoints,periodStart,periodEnd,daysLeft};
 }
 
-function isBdayMonth(b){if(!b)return false;return parseInt(b.split('-')[0])===new Date().getMonth()+1;}
-function bdayRedeemedThisYear(member){if(!member.bdayRedeemed)return false;return new Date(member.bdayRedeemedDate||'').getFullYear()===new Date().getFullYear();}
+function bdayRedeemedThisYear(member){if(member.bdayRedeemed!=='true')return false;return new Date(member.bdayRedeemedDate||'').getFullYear()===new Date().getFullYear();}
+function getMemberPoints(id){return transactions.filter(t=>t.memberId===id).reduce((s,t)=>s+t.points,0);}
 function initials(f,l){return(f[0]||'').toUpperCase()+(l[0]||'').toUpperCase();}
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
 
@@ -349,20 +337,15 @@ function renderDashboard(){
   document.getElementById('m-members').textContent=members.length;
   document.getElementById('m-spend').textContent='$'+totalSpend.toFixed(0);
   document.getElementById('m-points').textContent=totalPts.toLocaleString();
-
   const bdayM=members.filter(m=>isBdayMonth(m.bday));
   const bc=document.getElementById('bday-card');
   if(bdayM.length){bc.style.display='block';document.getElementById('bday-list').innerHTML=bdayM.map(m=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--border)"><div class="avatar" style="width:28px;height:28px;font-size:11px">'+initials(m.first,m.last)+'</div><span style="font-size:13px">'+m.first+' '+m.last+'</span><span class="bday-badge">'+(bdayRedeemedThisYear(m)?'Redeemed':'Treat available')+'</span></div>').join('');}else{bc.style.display='none';}
-
   const pending=applications.filter(a=>a.status==='pending');
   const pb=document.getElementById('pending-banner');
   if(pending.length){pb.style.display='block';document.getElementById('pending-count-msg').textContent=pending.length+' application'+(pending.length>1?'s':'')+' waiting for your review.';}else{pb.style.display='none';}
-  // Update tab badge
   const tabApps=document.getElementById('tab-applications');
-  const existingBadge=tabApps.querySelector('.badge-count');
-  if(existingBadge)existingBadge.remove();
+  const existingBadge=tabApps.querySelector('.badge-count');if(existingBadge)existingBadge.remove();
   if(pending.length){const b=document.createElement('span');b.className='badge-count';b.textContent=pending.length;tabApps.appendChild(b);}
-
   const recent=[...transactions].sort((a,b)=>b.ts-a.ts).slice(0,5);
   document.getElementById('dash-txns').innerHTML=recent.length?recent.map(t=>{const m=members.find(x=>x.id===t.memberId);return txnRowHTML(t,m?m.first+' '+m.last:'Unknown',false);}).join(''):'<div class="empty">No transactions yet</div>';
   const top=members.map(m=>({...m,info:computeLiveTier(m)})).sort((a,b)=>b.info.periodPoints-a.info.periodPoints).slice(0,5);
@@ -370,7 +353,7 @@ function renderDashboard(){
 }
 
 function txnRowHTML(t,name,showActions){
-  return'<div class="txn-row"><div class="txn-icon"><i class="ti ti-shopping-bag" style="font-size:14px;color:var(--text2)"></i></div><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+name+' · '+t.date+'</div>'+(showActions?'<div class="txn-actions"><button class="btn-sm-edit" onclick="openEditTxn(\''+t.id+'\')"><i class="ti ti-pencil"></i> Edit</button><button class="btn-sm-danger" onclick="deleteTxn(\''+t.id+'\')"><i class="ti ti-trash"></i> Delete</button></div>':'')+'</div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>';
+  return'<div class="txn-row"><div class="txn-icon"><i class="ti ti-shopping-bag" style="font-size:14px;color:var(--text2)" aria-hidden="true"></i></div><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+name+' \u00b7 '+t.date+'</div>'+(showActions?'<div class="txn-actions"><button class="btn-sm-edit" onclick="openEditTxn(\''+t.id+'\')"><i class="ti ti-pencil" aria-hidden="true"></i> Edit</button><button class="btn-sm-danger" onclick="deleteTxn(\''+t.id+'\')"><i class="ti ti-trash" aria-hidden="true"></i> Delete</button></div>':'')+'</div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>';
 }
 
 function renderMembers(search=''){
@@ -380,7 +363,7 @@ function renderMembers(search=''){
   if(!filtered.length){el.innerHTML='<div class="empty">No members found</div>';return;}
   el.innerHTML=filtered.map(m=>{
     const info=computeLiveTier(m);const bdayThis=isBdayMonth(m.bday);const warn=info.daysLeft<=14&&info.daysLeft>0;
-    return'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+(bdayThis?' <span class="bday-badge"><i class="ti ti-cake"></i> Birthday</span>':'')+'</div><div class="member-meta">'+m.email+' · '+m.phone+'</div><div style="margin-top:3px">'+(warn?'<span class="expiry-warn">Renews in '+info.daysLeft+'d · $'+info.periodSpend.toFixed(0)+' spent</span>':'<span class="expiry-ok">Renews '+info.periodEnd.toLocaleDateString('en-SG')+' · $'+info.periodSpend.toFixed(0)+' spent</span>')+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tierObj.name+'</span><span class="points-badge">'+info.periodPoints+' pts</span><button class="btn-sm" onclick="openModal(\''+m.id+'\')">View</button></div></div>';
+    return'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+(bdayThis?' <span class="bday-badge"><i class="ti ti-cake" aria-hidden="true"></i> Birthday</span>':'')+'</div><div class="member-meta">'+m.email+' \u00b7 '+m.phone+'</div><div style="margin-top:3px">'+(warn?'<span class="expiry-warn">Renews in '+info.daysLeft+'d \u00b7 $'+info.periodSpend.toFixed(0)+' spent</span>':'<span class="expiry-ok">Renews '+info.periodEnd.toLocaleDateString('en-SG')+' \u00b7 $'+info.periodSpend.toFixed(0)+' spent</span>')+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tierObj.name+'</span><span class="points-badge">'+info.periodPoints+' pts</span><button class="btn-sm" onclick="openModal(\''+m.id+'\')">View</button></div></div>';
   }).join('');
 }
 
@@ -393,19 +376,7 @@ function renderApplications(){
   const el=document.getElementById('app-list');
   const pending=applications.filter(a=>a.status==='pending');
   if(!pending.length){el.innerHTML='<div class="empty">No pending applications</div>';return;}
-  el.innerHTML=pending.map(a=>'<div class="app-row"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div><div style="font-size:14px;font-weight:500">'+a.first+' '+a.last+'</div><div style="font-size:12px;color:var(--text2);margin-top:2px">'+a.email+' · '+a.phone+'</div><div style="font-size:12px;color:var(--text2)">Birthday: '+a.bday+' · Applied: '+a.appliedAt+'</div></div><span class="badge-pending">Pending</span></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn-sm-success" onclick="approveApp(\''+a.id+'\')"><i class="ti ti-check"></i> Approve &amp; register</button><button class="btn-sm-danger" onclick="rejectApp(\''+a.id+'\')"><i class="ti ti-x"></i> Reject</button></div></div>').join('');
-}
-
-function approveApp(id){
-  const app=applications.find(a=>a.id===id);if(!app)return;
-  if(members.find(m=>(m.email||'').toLowerCase()===app.email.toLowerCase())){showToast('Email already registered');return;}
-  const since=new Date().toISOString().split('T')[0];
-  apiPost({action:'approveApplication', id}).then(()=>{loadFromSheets();showToast(app.first+' '+app.last+' approved!');});
-}
-
-function rejectApp(id){
-  if(!confirm('Reject this application?'))return;
-  apiPost({action:'rejectApplication', id}).then(()=>{loadFromSheets();showToast('Application rejected');});
+  el.innerHTML=pending.map(a=>'<div class="app-row"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px"><div><div style="font-size:14px;font-weight:500">'+a.first+' '+a.last+'</div><div style="font-size:12px;color:var(--text2);margin-top:2px">'+a.email+' \u00b7 '+a.phone+'</div><div style="font-size:12px;color:var(--text2)">Birthday: '+formatBday(a.bday)+' \u00b7 Applied: '+a.appliedAt+'</div></div><span class="badge-pending">Pending</span></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn-sm-success" onclick="approveApp(\''+a.id+'\')"><i class="ti ti-check" aria-hidden="true"></i> Approve &amp; register</button><button class="btn-sm-danger" onclick="rejectApp(\''+a.id+'\')"><i class="ti ti-x" aria-hidden="true"></i> Reject</button></div></div>').join('');
 }
 
 function populateMemberSelect(){
@@ -415,69 +386,48 @@ function populateMemberSelect(){
 }
 
 function showDiscount(){
-  const memberId=document.getElementById('txn-member').value;
-  const amount=parseFloat(document.getElementById('txn-amount').value);
-  const hint=document.getElementById('discount-hint');
+  const memberId=document.getElementById('txn-member').value;const amount=parseFloat(document.getElementById('txn-amount').value);const hint=document.getElementById('discount-hint');
   if(!memberId||isNaN(amount)||amount<=0){hint.style.display='none';return;}
   const m=members.find(x=>x.id===memberId);if(!m){hint.style.display='none';return;}
   const info=computeLiveTier(m);const disc=info.tierObj.discount;
   const discAmt=(amount*disc/100).toFixed(2);const final=(amount-parseFloat(discAmt)).toFixed(2);
-  hint.style.display='block';hint.textContent=info.tierObj.name+' member: '+disc+'% off → Save $'+discAmt+' · Final: $'+final;
+  hint.style.display='block';hint.textContent=info.tierObj.name+' member: '+disc+'% off \u2192 Save $'+discAmt+' \u00b7 Final: $'+final;
 }
 
 function registerMember(){
-  const first=document.getElementById('reg-first').value.trim();
-  const last=document.getElementById('reg-last').value.trim();
-  const email=document.getElementById('reg-email').value.trim();
-  const phone=normalisePhone(document.getElementById('reg-phone').value.trim());
-  const bday=document.getElementById('reg-bday').value.trim();
-  const since=document.getElementById('reg-date').value;
-  const checks=[{id:'reg-first',val:first,msg:'First name required'},{id:'reg-last',val:last,msg:'Last name required'},{id:'reg-email',val:email,msg:'Email required'},{id:'reg-phone',val:phone,msg:'Phone required'},{id:'reg-bday',val:bday,msg:'Birthday required (MM-DD)'},{id:'reg-date',val:since,msg:'Member since date required'}];
+  const first=document.getElementById('reg-first').value.trim();const last=document.getElementById('reg-last').value.trim();const email=document.getElementById('reg-email').value.trim();const phone=normalisePhone(document.getElementById('reg-phone').value.trim());const bday=document.getElementById('reg-bday').value.trim();const since=document.getElementById('reg-date').value;
+  const checks=[{id:'reg-first',val:first,msg:'First name required'},{id:'reg-last',val:last,msg:'Last name required'},{id:'reg-email',val:email,msg:'Email required'},{id:'reg-phone',val:phone,msg:'Phone required'},{id:'reg-bday',val:bday,msg:'Birthday required (DD-MM)'},{id:'reg-date',val:since,msg:'Member since date required'}];
   for(const c of checks){if(!c.val){showToast(c.msg);document.getElementById(c.id).classList.add('err');document.getElementById(c.id).focus();return;}document.getElementById(c.id).classList.remove('err');}
-  if(!/^\d{2}-\d{2}$/.test(bday)){showToast('Birthday must be MM-DD (e.g. 06-15)');document.getElementById('reg-bday').classList.add('err');return;}
-  if(members.find(m=>m.email===email)){showToast('Email already registered');return;}
-  if(members.find(m=>normalisePhone(m.phone)===phone)){showToast('Phone already registered');return;}
-  members.push({id:Date.now().toString(),first,last,email,phone,bday,since,tier:'Gold',tierSince:since,bdayRedeemed:false});
-  save();['reg-first','reg-last','reg-email','reg-phone','reg-bday'].forEach(id=>document.getElementById(id).value='');
-  render();showToast(first+' '+last+' registered as Gold member!');
+  if(!/^\d{2}-\d{2}$/.test(bday)){showToast('Birthday must be DD-MM (e.g. 15-06)');document.getElementById('reg-bday').classList.add('err');return;}
+  apiPost({action:'addMember',first,last,email,phone,bday,since}).then(res=>{
+    if(res.error==='email_exists'){showToast('Email already registered');return;}
+    if(res.error==='phone_exists'){showToast('Phone already registered');return;}
+    ['reg-first','reg-last','reg-email','reg-phone','reg-bday'].forEach(id=>document.getElementById(id).value='');
+    loadFromSheets();showToast(first+' '+last+' registered!');
+  });
 }
 
 function addTransaction(){
-  const memberId=document.getElementById('txn-member').value;
-  const amount=parseFloat(document.getElementById('txn-amount').value);
-  const desc=document.getElementById('txn-desc').value.trim();
-  const date=document.getElementById('txn-date').value;
+  const memberId=document.getElementById('txn-member').value;const amount=parseFloat(document.getElementById('txn-amount').value);const desc=document.getElementById('txn-desc').value.trim();const date=document.getElementById('txn-date').value;
   if(!memberId||isNaN(amount)||amount<=0){showToast('Select a member and valid amount');return;}
-  const points=Math.round(amount);
-  apiPost({action:'addTransaction', memberId, amount, desc, date}).then(res=>{
-    if(res.upgraded) showToast('Upgraded to '+res.newTier+'! 🎉');
+  apiPost({action:'addTransaction',memberId,amount,desc,date}).then(res=>{
+    if(res.upgraded)showToast('Upgraded to '+res.newTier+'! \uD83C\uDF89');
     else showToast('+'+Math.round(amount)+' points added!');
-    document.getElementById('txn-amount').value='';
-    document.getElementById('txn-desc').value='';
-    document.getElementById('discount-hint').style.display='none';
+    document.getElementById('txn-amount').value='';document.getElementById('txn-desc').value='';document.getElementById('discount-hint').style.display='none';
     loadFromSheets();
   });
 }
 
 function openEditTxn(id){
   const t=transactions.find(x=>x.id===id);if(!t)return;
-  editingTxnId=id;
-  document.getElementById('edit-txn-amount').value=t.amount;
-  document.getElementById('edit-txn-desc').value=t.desc||'';
-  document.getElementById('edit-txn-date').value=t.date;
+  editingTxnId=id;document.getElementById('edit-txn-amount').value=t.amount;document.getElementById('edit-txn-desc').value=t.desc||'';document.getElementById('edit-txn-date').value=t.date;
   document.getElementById('edit-txn-modal').classList.add('open');
 }
 function saveEditTxn(){
-  const t=transactions.find(x=>x.id===editingTxnId);if(!t)return;
-  const amount=parseFloat(document.getElementById('edit-txn-amount').value);
-  if(isNaN(amount)||amount<=0){showToast('Enter a valid amount');return;}
-  t.amount=amount;t.points=Math.round(amount);t.desc=document.getElementById('edit-txn-desc').value.trim();t.date=document.getElementById('edit-txn-date').value;
-  apiPost({action:'editTransaction', id:editingTxnId, amount, desc:document.getElementById('edit-txn-desc').value.trim(), date:document.getElementById('edit-txn-date').value}).then(()=>{closeEditTxnModalDirect();loadFromSheets();showToast('Transaction updated!');});
+  const amount=parseFloat(document.getElementById('edit-txn-amount').value);if(isNaN(amount)||amount<=0){showToast('Enter a valid amount');return;}
+  apiPost({action:'editTransaction',id:editingTxnId,amount,desc:document.getElementById('edit-txn-desc').value.trim(),date:document.getElementById('edit-txn-date').value}).then(()=>{closeEditTxnModalDirect();loadFromSheets();showToast('Transaction updated!');});
 }
-function deleteTxn(id){
-  if(!confirm('Delete this transaction? Points and tier will recalculate.'))return;
-  apiPost({action:'deleteTransaction', id}).then(()=>{loadFromSheets();showToast('Transaction deleted');});
-}
+function deleteTxn(id){if(!confirm('Delete this transaction? Points and tier will recalculate.'))return;apiPost({action:'deleteTransaction',id}).then(()=>{loadFromSheets();showToast('Transaction deleted');});}
 function closeEditTxnModal(e){if(e.target===document.getElementById('edit-txn-modal'))closeEditTxnModalDirect();}
 function closeEditTxnModalDirect(){document.getElementById('edit-txn-modal').classList.remove('open');editingTxnId=null;}
 
@@ -486,25 +436,23 @@ function openModal(id){
   const info=computeLiveTier(m);const bdayThis=isBdayMonth(m.bday);const redeemedYear=bdayRedeemedThisYear(m);
   const txns=transactions.filter(t=>t.memberId===id).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
   document.getElementById('modal-name').textContent=m.first+' '+m.last;
-  document.getElementById('modal-body').innerHTML=
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
-    +'<div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Tier</div><div style="margin-top:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tierObj.name+'</span></div><div style="font-size:11px;color:var(--text2);margin-top:4px">'+info.tierObj.discount+'% discount</div></div>'
-    +'<div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Points (this period)</div><div style="font-size:20px;font-weight:500">'+info.periodPoints+'</div></div>'
-    +'</div>'
-    +'<div style="font-size:12px;color:var(--text2);margin-bottom:4px">Period spend: <strong style="color:var(--text)">$'+info.periodSpend.toFixed(2)+'</strong> · Renews: <strong style="color:var(--text)">'+info.periodEnd.toLocaleDateString('en-SG')+'</strong></div>'
-    +'<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Phone: '+(m.phone||'—')+' · Birthday: '+(m.bday||'—')+'</div>'
-    +(bdayThis?'<div style="margin:8px 0;padding:8px 12px;background:var(--pink-bg);border-radius:var(--radius);font-size:13px;color:var(--pink-text);display:flex;align-items:center;justify-content:space-between"><span><i class="ti ti-cake"></i> Birthday month!</span>'+(redeemedYear?'<span style="font-size:11px">Redeemed ✓</span>':'<button class="btn-sm" onclick="adminRedeemBday(\''+id+'\')">Mark redeemed</button>')+'</div>':'')
-    +'<div style="font-size:13px;font-weight:500;margin:12px 0 8px">Recent transactions</div>'
-    +(txns.length?txns.map(t=>'<div class="txn-row" style="padding:6px 0"><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+t.date+'</div></div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>').join(''):'<div style="font-size:13px;color:var(--text2)">No transactions yet</div>');
+  document.getElementById('modal-body').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Tier</div><div style="margin-top:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tierObj.name+'</span></div><div style="font-size:11px;color:var(--text2);margin-top:4px">'+info.tierObj.discount+'% discount</div></div><div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Points (this period)</div><div style="font-size:20px;font-weight:500">'+info.periodPoints+'</div></div></div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Period spend: <strong style="color:var(--text)">$'+info.periodSpend.toFixed(2)+'</strong> \u00b7 Renews: <strong style="color:var(--text)">'+info.periodEnd.toLocaleDateString('en-SG')+'</strong></div><div style="font-size:12px;color:var(--text2);margin-bottom:10px">Phone: '+(m.phone||'\u2014')+' \u00b7 Birthday: '+formatBday(m.bday)+'</div>'+(bdayThis?'<div style="margin:8px 0;padding:8px 12px;background:var(--pink-bg);border-radius:var(--radius);font-size:13px;color:var(--pink-text);display:flex;align-items:center;justify-content:space-between"><span><i class="ti ti-cake" aria-hidden="true"></i> Birthday month!</span>'+(redeemedYear?'<span style="font-size:11px">Redeemed \u2713</span>':'<button class="btn-sm" onclick="adminRedeemBday(\''+id+'\')">Mark redeemed</button>')+'</div>':'')+'<div style="font-size:13px;font-weight:500;margin:12px 0 8px">Recent transactions</div>'+(txns.length?txns.map(t=>'<div class="txn-row" style="padding:6px 0"><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+t.date+'</div></div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>').join(''):'<div style="font-size:13px;color:var(--text2)">No transactions yet</div>');
   document.getElementById('modal-overlay').classList.add('open');
 }
-
 function adminRedeemBday(id){
-  const m=members.find(x=>x.id===id);if(!m)return;
-  apiPost({action:'updateMember', id, updates:{bdayRedeemed:'true', bdayRedeemedDate:new Date().toISOString().split('T')[0]}}).then(()=>{loadFromSheets().then(()=>openModal(id));showToast('Birthday treat marked as redeemed!');});
+  apiPost({action:'updateMember',id,updates:{bdayRedeemed:'true',bdayRedeemedDate:new Date().toISOString().split('T')[0]}}).then(()=>{loadFromSheets().then(()=>openModal(id));showToast('Birthday treat marked as redeemed!');});
 }
 function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
 function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
+
+function approveApp(id){
+  const app=applications.find(a=>a.id===id);if(!app)return;
+  apiPost({action:'approveApplication',id}).then(()=>{loadFromSheets();showToast(app.first+' '+app.last+' approved!');});
+}
+function rejectApp(id){
+  if(!confirm('Reject this application?'))return;
+  apiPost({action:'rejectApplication',id}).then(()=>{loadFromSheets();showToast('Application rejected');});
+}
 
 function exportData(){
   const blob=new Blob([JSON.stringify({members,transactions,applications,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
@@ -512,7 +460,7 @@ function exportData(){
 }
 function exportCSV(){
   const rows=[['First','Last','Email','Phone','Birthday','Since','Tier','Points (Period)']];
-  members.forEach(m=>rows.push([m.first,m.last,m.email,m.phone||'',m.bday||'',m.since,computeLiveTier(m).tierObj.name,computeLiveTier(m).periodPoints]));
+  members.forEach(m=>rows.push([m.first,m.last,m.email,m.phone||'',formatBday(m.bday)||'',m.since,computeLiveTier(m).tierObj.name,computeLiveTier(m).periodPoints]));
   const csv=rows.map(r=>r.map(v=>'"'+v+'"').join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='fruicey-members-'+new Date().toISOString().split('T')[0]+'.csv';a.click();showToast('CSV exported!');
@@ -521,18 +469,21 @@ function importData(){
   const file=document.getElementById('import-file').files[0];if(!file){showToast('Please select a file');return;}
   const reader=new FileReader();
   reader.onload=e=>{
-    try{
-      const data=JSON.parse(e.target.result);
-      if(!data.members||!data.transactions){showToast('Invalid backup file');return;}
-      if(!confirm('This will replace all current data. Are you sure?'))return;
-      members=data.members;transactions=data.transactions;applications=data.applications||[];
-      save();saveApps();render();showToast('Data restored!');
-    }catch(err){showToast('Error reading file');}
+    try{const data=JSON.parse(e.target.result);if(!data.members||!data.transactions){showToast('Invalid backup file');return;}if(!confirm('This will replace all current data. Are you sure?'))return;
+    apiPost({action:'importAll',members:data.members,transactions:data.transactions,applications:data.applications||[]}).then(()=>{loadFromSheets();showToast('Data restored to Google Sheets!');});}catch(err){showToast('Error reading file');}
   };
   reader.readAsText(file);
 }
 
-loadFromSheets();
+function load(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('reg-date').value=today;
+  document.getElementById('txn-date').value=today;
+  document.getElementById('top-date').textContent=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
+  loadFromSheets();
+}
+load();
+
 </script>
 </body>
 </html>

@@ -182,8 +182,8 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
         <label>Email <span class="req">*</span></label><input type="email" id="a-email" placeholder="jane@example.com">
         <label>Phone (digits only) <span class="req">*</span></label><input type="tel" id="a-phone" placeholder="e.g. 91234567">
         <div class="field-hint">No country code needed</div>
-        <label>Birthday (MM-DD) <span class="req">*</span></label><input type="text" id="a-bday" placeholder="e.g. 06-15" maxlength="5">
-        <div class="field-hint">Month-Day format, e.g. 06-15 for 15 June</div>
+        <label>Birthday (DD-MM) <span class="req">*</span></label><input type="text" id="a-bday" placeholder="e.g. 15-06" maxlength="5">
+        <div class="field-hint">Day-Month format, e.g. 15-06 for 15 June</div>
       </div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500">Terms &amp; Conditions <span class="req">*</span></div>
       <div class="tcbox">
@@ -205,10 +205,6 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
 
 </div>
 <script>
-
-// =============================================
-// Replace this URL after deploying Apps Script
-// =============================================
 const API = 'https://script.google.com/macros/s/AKfycbz2cDkYTpMNhf5uoBHJ4qW30NLAC0V3UcljWPHJ7pqrkgkJ8f7q_KYSuXDNoX8xwYguzw/exec';
 
 const TIERS=[
@@ -218,239 +214,126 @@ const TIERS=[
   {name:'Diamond', cls:'tier-diamond', min:400, discount:15, next:null,       nextMin:null}
 ];
 
-let curMember = null;
-let allTxns   = [];
+let curMember=null, allTxns=[];
 
-function np(p){ let d=(p||'').replace(/\D/g,''); if(d.startsWith('65')&&d.length>8)d=d.slice(2); return d; }
+function np(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
 
-async function api(params){
-  const url = API + '?' + new URLSearchParams(params);
-  const r = await fetch(url);
-  return r.json();
+function formatBday(bday){
+  if(!bday)return '';
+  if(/^\d{2}-\d{2}$/.test(bday))return bday;
+  var sm=bday.match(/^\w+\s+(\w+)\s+(\d+)\s+\d{4}/);
+  if(sm){var M={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};var mm=M[sm[1]];var dd=String(parseInt(sm[2])).padStart(2,'0');if(mm)return dd+'-'+mm;}
+  var im=bday.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(im)return im[3]+'-'+im[2];
+  return bday;
 }
 
-async function apiPost(body){
-  const r = await fetch(API, {method:'POST', body: JSON.stringify(body)});
-  return r.json();
+async function apiGet(params){const url=API+'?'+new URLSearchParams(params);const r=await fetch(url);return r.json();}
+async function apiPost(body){const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});return r.json();}
+
+function showScr(id){['scr-lookup','scr-portal','scr-apply'].forEach(s=>{const e=document.getElementById(s);if(e)e.style.display='none';});const t=document.getElementById(id);if(t)t.style.display='block';}
+function clearLookup(){document.getElementById('lk-phone').value='';document.getElementById('lk-email').value='';hide('lk-err');curMember=null;allTxns=[];}
+function show(id){document.getElementById(id).style.display='block';}
+function hide(id){document.getElementById(id).style.display='none';}
+function setText(id,v){document.getElementById(id).textContent=v;}
+function setHTML(id,v){document.getElementById(id).innerHTML=v;}
+function sPTab(tab,e){document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.psec').forEach(s=>s.classList.remove('active'));e.target.classList.add('active');document.getElementById('psec-'+tab).classList.add('active');}
+
+function isBday(b){
+  if(!b)return false;
+  const fmt=formatBday(b);
+  if(!fmt)return false;
+  const parts=fmt.split('-');
+  if(parts.length!==2)return false;
+  return parseInt(parts[1])===new Date().getMonth()+1;
 }
+function redeemedYear(m){if(m.bdayRedeemed!=='true')return false;return new Date(m.bdayRedeemedDate||'').getFullYear()===new Date().getFullYear();}
 
-function showScr(id){
-  ['scr-lookup','scr-portal','scr-apply'].forEach(s=>{
-    const e=document.getElementById(s); if(e) e.style.display='none';
-  });
-  const t=document.getElementById(id); if(t) t.style.display='block';
-}
-
-function clearLookup(){
-  document.getElementById('lk-phone').value='';
-  document.getElementById('lk-email').value='';
-  hide('lk-err'); curMember=null; allTxns=[];
-}
-
-function show(id){ document.getElementById(id).style.display='block'; }
-function hide(id){ document.getElementById(id).style.display='none'; }
-function setText(id,v){ document.getElementById(id).textContent=v; }
-function setHTML(id,v){ document.getElementById(id).innerHTML=v; }
-
-function sPTab(tab,e){
-  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.psec').forEach(s=>s.classList.remove('active'));
-  e.target.classList.add('active');
-  document.getElementById('psec-'+tab).classList.add('active');
-}
-
-function calcTier(member, txns){
-  const now = new Date();
-  let periodStart = member.tierSince ? new Date(member.tierSince) : new Date(member.since);
-  let periodEnd   = new Date(periodStart);
+function calcTier(member,txns){
+  const now=new Date();
+  let periodStart=member.tierSince?new Date(member.tierSince):new Date(member.since);
+  let periodEnd=new Date(periodStart);
   periodEnd.setMonth(periodEnd.getMonth()+2);
-  while(periodEnd <= now){
-    periodStart = new Date(periodEnd);
-    periodEnd   = new Date(periodStart);
-    periodEnd.setMonth(periodEnd.getMonth()+2);
-  }
-  const isBdayMo   = isBday(member.bday);
-  const isDiamondBday = isBdayMo && member.tier==='Diamond';
-  const periodTxns = txns.filter(t=>t.memberId===member.id && new Date(t.date)>=periodStart && new Date(t.date)<periodEnd);
-  const rawSpend   = periodTxns.reduce((s,t)=>s+parseFloat(t.amount),0);
-  const periodPoints = isDiamondBday
-    ? periodTxns.reduce((s,t)=>s+parseInt(t.points)*2,0)
-    : periodTxns.reduce((s,t)=>s+parseInt(t.points),0);
-  const tier = TIERS.slice().reverse().find(t=>rawSpend>=t.min)||TIERS[0];
-  const daysLeft = Math.max(0,Math.ceil((periodEnd-now)/(1000*60*60*24)));
-  return {tier, rawSpend, periodPoints, periodStart, periodEnd, daysLeft, isBdayMo};
+  while(periodEnd<=now){periodStart=new Date(periodEnd);periodEnd=new Date(periodStart);periodEnd.setMonth(periodEnd.getMonth()+2);}
+  const isBdayMo=isBday(member.bday);
+  const isDiamondBday=isBdayMo&&member.tier==='Diamond';
+  const periodTxns=txns.filter(t=>t.memberId===member.id&&new Date(t.date)>=periodStart&&new Date(t.date)<periodEnd);
+  const rawSpend=periodTxns.reduce((s,t)=>s+parseFloat(t.amount),0);
+  const periodPoints=isDiamondBday?periodTxns.reduce((s,t)=>s+parseInt(t.points)*2,0):periodTxns.reduce((s,t)=>s+parseInt(t.points),0);
+  const tier=TIERS.slice().reverse().find(t=>rawSpend>=t.min)||TIERS[0];
+  const daysLeft=Math.max(0,Math.ceil((periodEnd-now)/(1000*60*60*24)));
+  return{tier,rawSpend,periodPoints,periodStart,periodEnd,daysLeft,isBdayMo};
 }
 
-function isBday(b){ if(!b)return false; return parseInt(b.split('-')[0])===new Date().getMonth()+1; }
-function redeemedYear(m){ if(m.bdayRedeemed!=='true')return false; return new Date(m.bdayRedeemedDate||'').getFullYear()===new Date().getFullYear(); }
+function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
 
 async function lookup(){
-  const phone = document.getElementById('lk-phone').value.trim();
-  const email = document.getElementById('lk-email').value.trim().toLowerCase();
+  const phone=document.getElementById('lk-phone').value.trim();
+  const email=document.getElementById('lk-email').value.trim().toLowerCase();
   hide('lk-err');
-  if(!phone&&!email){ showErr('lk-err','Please enter your phone number or email.'); return; }
-
+  if(!phone&&!email){showErr('lk-err','Please enter your phone number or email.');return;}
   setText('lk-btn-text','Checking...');
   document.getElementById('lk-btn').disabled=true;
-
-  try {
-    const res = await api({action:'getMember', phone: np(phone), email});
-    if(res.error==='not_found'){
-      showErr('lk-err','Member not found. Please check your details or visit us in store.');
-    } else if(res.error){
-      showErr('lk-err','Something went wrong. Please try again.');
-    } else {
-      curMember = res.member;
-      allTxns   = res.transactions || [];
-      renderPortal(curMember, allTxns);
-      showScr('scr-portal');
-    }
-  } catch(e){
-    showErr('lk-err','Unable to connect. Please check your internet connection.');
-  }
-
+  try{
+    const res=await apiGet({action:'getMember',phone:np(phone),email});
+    if(res.error==='not_found'){showErr('lk-err','Member not found. Please check your details or visit us in store.');}
+    else if(res.error){showErr('lk-err','Something went wrong. Please try again.');}
+    else{curMember=res.member;allTxns=res.transactions||[];renderPortal(curMember,allTxns);showScr('scr-portal');}
+  }catch(e){showErr('lk-err','Unable to connect. Please check your internet connection.');}
   setText('lk-btn-text','Check my membership');
   document.getElementById('lk-btn').disabled=false;
 }
 
-function showErr(id, msg){
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-function renderPortal(member, txns){
-  const {tier, rawSpend, periodPoints, periodStart, periodEnd, daysLeft, isBdayMo} = calcTier(member, txns);
-  const ry = redeemedYear(member);
-
-  setText('r-name',  member.first+' '+member.last);
-  setText('r-since', 'Member since '+member.since);
-
-  const badge = document.getElementById('r-tier');
-  badge.textContent = tier.name;
-  badge.className   = 'tier-badge '+tier.cls;
-
-  setText('r-pts',  periodPoints.toLocaleString());
-  setText('r-disc', tier.discount>0 ? tier.discount+'%' : '\u2014');
-
-  // Cut-off date
-  const sinceStr  = periodStart.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
-  const endStr    = periodEnd.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
-  setHTML('r-cutoff',
-    '<i class="ti ti-calendar" style="font-size:13px;vertical-align:middle;margin-right:4px"></i>'+
-    'Current period: <strong>'+sinceStr+'</strong> \u2013 <strong>'+endStr+'</strong>'+
-    ' &nbsp;(<strong>'+daysLeft+' day'+(daysLeft!==1?'s':'')+' left</strong>)'
-  );
-
-  // Progress bar
-  if(tier.next){
-    const pct = Math.min(100,Math.round((rawSpend/tier.nextMin)*100));
-    document.getElementById('pg-fill').style.width=pct+'%';
-    document.getElementById('pg-fill').style.background='#378ADD';
-    setText('pg-val', '$'+rawSpend.toFixed(0));
-    setText('pg-lbl', 'Progress to '+tier.next);
-    const need = Math.max(0,tier.nextMin-rawSpend);
-    setText('pg-hint', need>0?'Spend $'+need.toFixed(0)+' more this period to reach '+tier.next:'You qualify for '+tier.next+'!');
-  } else {
-    document.getElementById('pg-fill').style.width='100%';
-    document.getElementById('pg-fill').style.background='#85B7EB';
-    setText('pg-val', '$'+rawSpend.toFixed(0));
-    setText('pg-lbl', 'Diamond tier');
-    setText('pg-hint', "You're at our highest tier \u2014 Diamond!");
-  }
-
-  // Birthday notices
-  const bdayBox = document.getElementById('bday-box');
-  const bdayNotice = document.getElementById('bday-notice');
-  const diamondNotice = document.getElementById('diamond-notice');
-  if(isBdayMo){
-    bdayBox.style.display='block';
-    setText('bday-msg', ry
-      ? 'You have already redeemed your birthday treat this year. See you next year!'
-      : "It's your birthday month! Show this to our crew in store to redeem your free treat \u2014 any 1 product, once per year. Valid ID required."
-    );
-    document.getElementById('bday-btn').style.display = ry ? 'none' : 'flex';
-    if(tier.name==='Diamond'){ bdayNotice.style.display='block'; bdayNotice.textContent='\uD83C\uDF82 Birthday month bonus: you earn double points this month!'; }
-  } else {
-    bdayBox.style.display='none';
-    bdayNotice.style.display='none';
-  }
-  if(diamondNotice) diamondNotice.style.display = tier.name==='Diamond'?'block':'none';
-
-  // Transactions
-  const sorted = [...txns].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  setHTML('p-txns', sorted.length ? sorted.map(t=>{
-    const inP = new Date(t.date)>=periodStart && new Date(t.date)<periodEnd;
-    const pts = (isBdayMo && member.tier==='Diamond' && inP) ? parseInt(t.points)*2 : parseInt(t.points);
-    return '<div class="txn-row"><div><div style="font-size:13px">'+(t.desc||'Purchase')+'</div>'+
-      '<div class="txn-meta">'+t.date+(inP?' \u00b7 <span style="color:var(--success-text)">This period</span>':'')+
-      (isBdayMo&&member.tier==='Diamond'&&inP?' \u00b7 <span style="color:#c0197e">2x pts</span>':'')+
-      '</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:500">$'+parseFloat(t.amount).toFixed(2)+'</div>'+
-      '<div class="txn-meta">+'+pts+' pts</div></div></div>';
-  }).join('') : '<div style="text-align:center;padding:1.5rem;color:var(--text2);font-size:13px">No transactions yet</div>');
-
-  // Perks
-  const perks = [
-    {icon:'ti-discount', label: tier.discount>0?tier.discount+'% off all products':'No tier discount yet',
-     desc: tier.discount>0?'Applied on every purchase':'Spend $50+ in a period to reach Gold tier'}
-  ];
-  if(isBdayMo && tier.name==='Diamond') perks.push({icon:'ti-star',label:'2x points this month',desc:'Birthday bonus \u2014 double points count toward your next tier'});
-  if(tier.name==='Diamond') perks.push({icon:'ti-tag',label:'Special pricing on new launches',desc:'Exclusive Diamond member pricing on new Fruicey products'});
-  perks.push({icon:'ti-cake',label:'Free birthday treat',
-    desc: ry?'Redeemed this year \u2713':(isBdayMo?'Available now \u2014 show this page in store (valid ID required)':'Available during your birthday month ('+member.bday+')')});
-
-  setHTML('p-perks', perks.map(p=>
-    '<div class="perk-row"><i class="ti '+p.icon+'" style="color:var(--success-text);font-size:18px;flex-shrink:0;margin-top:1px"></i>'+
-    '<div><div style="font-size:13px;font-weight:500">'+p.label+'</div>'+
-    '<div style="font-size:11px;color:var(--text2)">'+p.desc+'</div></div></div>'
-  ).join(''));
+function renderPortal(member,txns){
+  const{tier,rawSpend,periodPoints,periodStart,periodEnd,daysLeft,isBdayMo}=calcTier(member,txns);
+  const ry=redeemedYear(member);
+  setText('r-name',member.first+' '+member.last);
+  setText('r-since','Member since '+member.since);
+  const badge=document.getElementById('r-tier');badge.textContent=tier.name;badge.className='tier-badge '+tier.cls;
+  setText('r-pts',periodPoints.toLocaleString());
+  setText('r-disc',tier.discount>0?tier.discount+'%':'\u2014');
+  const sinceStr=periodStart.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
+  const endStr=periodEnd.toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
+  setHTML('r-cutoff','<i class="ti ti-calendar" style="font-size:13px;vertical-align:middle;margin-right:4px" aria-hidden="true"></i>Current period: <strong>'+sinceStr+'</strong> \u2013 <strong>'+endStr+'</strong> &nbsp;(<strong>'+daysLeft+' day'+(daysLeft!==1?'s':'')+' left</strong>)');
+  if(tier.next){const pct=Math.min(100,Math.round((rawSpend/tier.nextMin)*100));document.getElementById('pg-fill').style.width=pct+'%';document.getElementById('pg-fill').style.background='#378ADD';setText('pg-val','$'+rawSpend.toFixed(0));setText('pg-lbl','Progress to '+tier.next);const need=Math.max(0,tier.nextMin-rawSpend);setText('pg-hint',need>0?'Spend $'+need.toFixed(0)+' more this period to reach '+tier.next:'You qualify for '+tier.next+'!');}
+  else{document.getElementById('pg-fill').style.width='100%';document.getElementById('pg-fill').style.background='#85B7EB';setText('pg-val','$'+rawSpend.toFixed(0));setText('pg-lbl','Diamond tier');setText('pg-hint',"You're at our highest tier \u2014 Diamond!");}
+  const bb=document.getElementById('bday-box');const bdayNotice=document.getElementById('bday-notice');const diamondNotice=document.getElementById('diamond-notice');
+  if(isBdayMo){bb.style.display='block';setText('bday-msg',ry?'You have already redeemed your birthday treat this year. See you next year!':"It's your birthday month! Show this to our crew in store to redeem your free treat \u2014 any 1 product, once per year. Valid ID required.");document.getElementById('bday-btn').style.display=ry?'none':'flex';if(tier.name==='Diamond'&&bdayNotice){bdayNotice.style.display='block';bdayNotice.textContent='\uD83C\uDF82 Birthday month bonus: you earn double points this month!';}}
+  else{bb.style.display='none';if(bdayNotice)bdayNotice.style.display='none';}
+  if(diamondNotice)diamondNotice.style.display=tier.name==='Diamond'?'block':'none';
+  const sorted=[...txns].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  setHTML('p-txns',sorted.length?sorted.map(t=>{const inP=new Date(t.date)>=periodStart&&new Date(t.date)<periodEnd;const pts=(isBdayMo&&member.tier==='Diamond'&&inP)?parseInt(t.points)*2:parseInt(t.points);return'<div class="txn-row"><div><div style="font-size:13px">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+t.date+(inP?' \u00b7 <span style="color:var(--success-text)">This period</span>':'')+(isBdayMo&&member.tier==='Diamond'&&inP?' \u00b7 <span style="color:#c0197e">2x pts</span>':'')+'</div></div><div style="text-align:right"><div style="font-size:13px;font-weight:500">$'+parseFloat(t.amount).toFixed(2)+'</div><div class="txn-meta">+'+pts+' pts</div></div></div>';}).join(''):'<div style="text-align:center;padding:1.5rem;color:var(--text2);font-size:13px">No transactions yet</div>');
+  const perks=[{icon:'ti-discount',label:tier.discount>0?tier.discount+'% off all products':'No tier discount yet',desc:tier.discount>0?'Applied on every purchase':'Spend $50+ in a period to reach Gold tier'}];
+  if(isBdayMo&&tier.name==='Diamond')perks.push({icon:'ti-star',label:'2x points this month',desc:'Birthday bonus \u2014 double points count toward your next tier'});
+  if(tier.name==='Diamond')perks.push({icon:'ti-tag',label:'Special pricing on new launches',desc:'Exclusive Diamond member pricing on new Fruicey products'});
+  perks.push({icon:'ti-cake',label:'Free birthday treat',desc:ry?'Redeemed this year \u2713':(isBdayMo?'Available now \u2014 show this page in store (valid ID required)':'Available during your birthday month ('+formatBday(member.bday)+')')});
+  setHTML('p-perks',perks.map(p=>'<div class="perk-row"><i class="ti '+p.icon+'" style="color:var(--success-text);font-size:18px;flex-shrink:0;margin-top:1px" aria-hidden="true"></i><div><div style="font-size:13px;font-weight:500">'+p.label+'</div><div style="font-size:11px;color:var(--text2)">'+p.desc+'</div></div></div>').join(''));
 }
 
 async function redeemBday(){
   if(!curMember)return;
   if(!confirm('Confirm birthday treat redemption? Valid ID required. This can only be done once per year.'))return;
-  try {
-    const res = await apiPost({action:'updateMember', id:curMember.id, updates:{bdayRedeemed:'true', bdayRedeemedDate:new Date().toISOString().split('T')[0]}});
-    if(res.success){
-      curMember.bdayRedeemed='true';
-      curMember.bdayRedeemedDate=new Date().toISOString().split('T')[0];
-      renderPortal(curMember, allTxns);
-      alert('Birthday treat redeemed! Enjoy from Fruicey 🎂🍓');
-    }
-  } catch(e){ alert('Connection error. Please try again.'); }
+  try{const res=await apiPost({action:'updateMember',id:curMember.id,updates:{bdayRedeemed:'true',bdayRedeemedDate:new Date().toISOString().split('T')[0]}});if(res.success){curMember.bdayRedeemed='true';curMember.bdayRedeemedDate=new Date().toISOString().split('T')[0];renderPortal(curMember,allTxns);alert('Birthday treat redeemed! Enjoy from Fruicey \uD83C\uDF82\uD83C\uDF53');}}
+  catch(e){alert('Connection error. Please try again.');}
 }
 
 async function submitApp(){
-  const first = document.getElementById('a-first').value.trim();
-  const last  = document.getElementById('a-last').value.trim();
-  const email = document.getElementById('a-email').value.trim().toLowerCase();
-  const phone = np(document.getElementById('a-phone').value.trim());
-  const bday  = document.getElementById('a-bday').value.trim();
-  const tc    = document.getElementById('a-tc').checked;
-  hide('a-err'); hide('a-ok');
-
-  const chk=[{v:first,m:'Please enter your first name.'},{v:last,m:'Please enter your last name.'},{v:email,m:'Please enter your email.'},{v:phone,m:'Please enter your phone number.'},{v:bday,m:'Please enter your birthday (MM-DD).'}];
+  const first=document.getElementById('a-first').value.trim();const last=document.getElementById('a-last').value.trim();const email=document.getElementById('a-email').value.trim().toLowerCase();const phone=np(document.getElementById('a-phone').value.trim());const bday=document.getElementById('a-bday').value.trim();const tc=document.getElementById('a-tc').checked;
+  hide('a-err');hide('a-ok');
+  const chk=[{v:first,m:'Please enter your first name.'},{v:last,m:'Please enter your last name.'},{v:email,m:'Please enter your email.'},{v:phone,m:'Please enter your phone number.'},{v:bday,m:'Please enter your birthday (DD-MM).'}];
   for(const c of chk){if(!c.v){showErr('a-err',c.m);return;}}
-  if(!/^\d{2}-\d{2}$/.test(bday)){showErr('a-err','Birthday must be MM-DD format (e.g. 06-15).');return;}
+  if(!/^\d{2}-\d{2}$/.test(bday)){showErr('a-err','Birthday must be DD-MM format (e.g. 15-06).');return;}
   if(!tc){showErr('a-err','Please agree to the Terms & Conditions.');return;}
-
-  const btn = document.getElementById('a-btn');
-  btn.disabled=true; btn.textContent='Submitting...';
-
-  try {
-    const res = await apiPost({action:'addApplication', first, last, email, phone, bday});
-    if(res.error==='email_exists')      { showErr('a-err','This email is already registered.'); }
-    else if(res.error==='phone_exists') { showErr('a-err','This phone number is already registered.'); }
-    else if(res.error==='application_pending'){ showErr('a-err','An application with this email is already pending.'); }
-    else if(res.success){
-      ['a-first','a-last','a-email','a-phone','a-bday'].forEach(id=>document.getElementById(id).value='');
-      document.getElementById('a-tc').checked=false;
-      setHTML('a-ok','<strong>Application submitted!</strong><br>Thank you, '+first+'! Our team will review and activate your membership. We will notify you via WhatsApp at +65\u20098509\u20098095.');
-      show('a-ok');
-    } else { showErr('a-err','Something went wrong. Please try again.'); }
-  } catch(e){ showErr('a-err','Connection error. Please try again.'); }
-
-  btn.disabled=false; btn.textContent='Submit application';
+  const btn=document.getElementById('a-btn');btn.disabled=true;btn.textContent='Submitting...';
+  try{
+    const res=await apiPost({action:'addApplication',first,last,email,phone,bday});
+    if(res.error==='email_exists'){showErr('a-err','This email is already registered.');}
+    else if(res.error==='phone_exists'){showErr('a-err','This phone number is already registered.');}
+    else if(res.error==='application_pending'){showErr('a-err','An application with this email is already pending.');}
+    else if(res.success){['a-first','a-last','a-email','a-phone','a-bday'].forEach(id=>document.getElementById(id).value='');document.getElementById('a-tc').checked=false;setHTML('a-ok','<strong>Application submitted!</strong><br>Thank you, '+first+'! Our team will review and activate your membership. We will notify you via WhatsApp at +65\u20098509\u20098095.');show('a-ok');}
+    else{showErr('a-err','Something went wrong. Please try again.');}
+  }catch(e){showErr('a-err','Connection error. Please try again.');}
+  btn.disabled=false;btn.textContent='Submit application';
 }
 
 </script>

@@ -244,6 +244,8 @@ input.err{border-color:var(--danger)!important}
 <div class="toast" id="toast"></div>
 
 <script>
+
+
 const API = 'https://script.google.com/macros/s/AKfycbz2cDkYTpMNhf5uoBHJ4qW30NLAC0V3UcljWPHJ7pqrkgkJ8f7q_KYSuXDNoX8xwYguzw/exec';
 
 async function apiGet(params){const url=API+'?'+new URLSearchParams(params);const r=await fetch(url);return r.json();}
@@ -437,6 +439,15 @@ function openModal(id){
   const txns=transactions.filter(t=>t.memberId===id).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
   document.getElementById('modal-name').textContent=m.first+' '+m.last;
   document.getElementById('modal-body').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Tier</div><div style="margin-top:4px"><span class="tier-badge '+info.tierObj.cls+'">'+info.tierObj.name+'</span></div><div style="font-size:11px;color:var(--text2);margin-top:4px">'+info.tierObj.discount+'% discount</div></div><div style="background:var(--bg2);border-radius:var(--radius);padding:10px;text-align:center"><div style="font-size:11px;color:var(--text2)">Points (this period)</div><div style="font-size:20px;font-weight:500">'+info.periodPoints+'</div></div></div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Period spend: <strong style="color:var(--text)">$'+info.periodSpend.toFixed(2)+'</strong> \u00b7 Renews: <strong style="color:var(--text)">'+info.periodEnd.toLocaleDateString('en-SG')+'</strong></div><div style="font-size:12px;color:var(--text2);margin-bottom:10px">Phone: '+(m.phone||'\u2014')+' \u00b7 Birthday: '+formatBday(m.bday)+'</div>'+(bdayThis?'<div style="margin:8px 0;padding:8px 12px;background:var(--pink-bg);border-radius:var(--radius);font-size:13px;color:var(--pink-text);display:flex;align-items:center;justify-content:space-between"><span><i class="ti ti-cake" aria-hidden="true"></i> Birthday month!</span>'+(redeemedYear?'<span style="font-size:11px">Redeemed \u2713</span>':'<button class="btn-sm" onclick="adminRedeemBday(\''+id+'\')">Mark redeemed</button>')+'</div>':'')+'<div style="font-size:13px;font-weight:500;margin:12px 0 8px">Recent transactions</div>'+(txns.length?txns.map(t=>'<div class="txn-row" style="padding:6px 0"><div class="txn-info"><div class="txn-desc">'+(t.desc||'Purchase')+'</div><div class="txn-meta">'+t.date+'</div></div><div><div class="txn-amt">$'+t.amount.toFixed(2)+'</div><div class="txn-pts">+'+t.points+' pts</div></div></div>').join(''):'<div style="font-size:13px;color:var(--text2)">No transactions yet</div>');
+  // Add delete member button at bottom
+  const delDiv=document.createElement('div');
+  delDiv.style.cssText='margin-top:16px;padding-top:12px;border-top:0.5px solid var(--border)';
+  const delBtn=document.createElement('button');
+  delBtn.style.cssText='width:100%;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;background:none;border:0.5px solid #c0392b;color:#c0392b;display:flex;align-items:center;justify-content:center;gap:6px';
+  delBtn.innerHTML='<i class="ti ti-trash" aria-hidden="true"></i> Delete this member';
+  delBtn.onclick=function(){deleteMember(id);};
+  delDiv.appendChild(delBtn);
+  document.getElementById('modal-body').appendChild(delDiv);
   document.getElementById('modal-overlay').classList.add('open');
 }
 function adminRedeemBday(id){
@@ -452,6 +463,16 @@ function approveApp(id){
 function rejectApp(id){
   if(!confirm('Reject this application?'))return;
   apiPost({action:'rejectApplication',id}).then(()=>{loadFromSheets();showToast('Application rejected');});
+}
+
+function deleteMember(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  if(!confirm('Delete '+m.first+' '+m.last+'?\n\nThis will permanently remove the member and ALL their transactions. This cannot be undone.'))return;
+  closeModalDirect();
+  apiPost({action:'deleteMember',id}).then(res=>{
+    if(res.success){loadFromSheets();showToast(m.first+' '+m.last+' deleted');}
+    else showToast('Error deleting member');
+  }).catch(()=>showToast('Connection error'));
 }
 
 function exportData(){
@@ -483,6 +504,8 @@ function load(){
   loadFromSheets();
 }
 load();
+
+
 
 </script>
 </body>

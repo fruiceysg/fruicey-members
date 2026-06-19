@@ -180,6 +180,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 <script>
 
 
+
 const API = 'https://script.google.com/macros/s/AKfycbzOJ8qppcD22qaWEyNNzJG65bK0p-v08QnGCi9-nx9sA6GVrc8FHrLcIBGvdogt1ZWL4g/exec';
 
 const CATALOGUE = {
@@ -419,7 +420,7 @@ function renderProducts(){
     const fileId = IMG[p.id];
     if(fileId){
       const img = document.createElement('img');
-      img.src = 'https://drive.google.com/uc?export=view&id=' + fileId;
+      img.src = 'https://lh3.googleusercontent.com/d/' + fileId + '=w400';
       img.style.cssText = 'width:100%;height:80px;object-fit:cover;border-radius:6px 6px 0 0;display:block';
       img.loading = 'lazy';
       card.appendChild(img);
@@ -676,6 +677,7 @@ document.getElementById('close-sales-btn').addEventListener('click', closeSales)
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 </script>

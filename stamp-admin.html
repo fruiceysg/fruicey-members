@@ -175,12 +175,18 @@ function renderDashboard(){
 
 function memberRowHTML(m){
   const stamps=parseInt(m.stamps)||0;
+  const completed=parseInt(m.cardsCompleted)||0;
   const pips=Array.from({length:10},(_,i)=>'<div class="pip'+(i<stamps?' filled':'')+'"></div>').join('');
+  const phone=m.phone||'';
+  const name=m.first+' '+m.last;
   return '<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div>'
-    +'<div class="member-info"><div class="member-name">'+m.first+' '+m.last+'</div>'
-    +'<div class="member-meta">'+m.phone+' &middot; '+stamps+'/10 stamps'+(parseInt(m.cardsCompleted)>0?' &middot; '+m.cardsCompleted+' completed':'')+'</div>'
+    +'<div class="member-info"><div class="member-name">'+name+'</div>'
+    +'<div class="member-meta">'+phone+' &middot; '+stamps+'/10 stamps'+(completed>0?' &middot; '+completed+' completed':'')+'</div>'
     +'<div class="stamp-pips">'+pips+'</div></div>'
+    +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
     +(stamps>=10?'<span class="badge badge-complete">Ready!</span>':'<span class="badge badge-active">Active</span>')
+    +'<button class="edit-stamp-btn" data-phone="'+phone+'" data-name="'+name+'" data-stamps="'+stamps+'" data-completed="'+completed+'" style="font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid #ddd;background:#fff;cursor:pointer;color:#555;font-family:var(--font)">Edit</button>'
+    +'</div>'
     +'</div>';
 }
 
@@ -233,7 +239,134 @@ async function generateStampQR(){
 
 document.getElementById('stamp-phone').addEventListener('keydown',function(e){if(e.key==='Enter')generateStampQR();});
 
+
+// Edit modal state
+let editPhone = '';
+let editStamps = 0;
+
+function openEditModal(phone, name, stamps, completed){
+  editPhone = phone;
+  editStamps = stamps;
+  document.getElementById('edit-modal-title').textContent = 'Edit stamps — '+name;
+  document.getElementById('edit-stamp-val').textContent = stamps;
+  document.getElementById('edit-completed').value = completed;
+  document.getElementById('edit-reason').value = '';
+  document.getElementById('edit-err').style.display = 'none';
+  updateEditPips();
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeEditModal(){
+  document.getElementById('edit-modal').style.display = 'none';
+}
+
+function adjustStamp(d){
+  editStamps = Math.max(0, Math.min(10, editStamps + d));
+  document.getElementById('edit-stamp-val').textContent = editStamps;
+  updateEditPips();
+}
+
+function updateEditPips(){
+  const el = document.getElementById('edit-pips-preview');
+  el.innerHTML = Array.from({length:10},(_,i)=>
+    '<div style="width:18px;height:18px;border-radius:4px;background:'+(i<editStamps?'#E91E8C':'#eee')+';border:1px solid '+(i<editStamps?'#c0006a':'#ddd')+'"></div>'
+  ).join('');
+}
+
+async function saveStampEdit(){
+  const completed = parseInt(document.getElementById('edit-completed').value)||0;
+  const reason = document.getElementById('edit-reason').value.trim();
+  const errEl = document.getElementById('edit-err');
+  errEl.style.display='none';
+
+  if(!reason){errEl.textContent='Please enter a reason for the edit.';errEl.style.display='block';return;}
+
+  const btn = document.getElementById('save-edit-btn');
+  btn.textContent='Saving...';btn.disabled=true;
+
+  try{
+    const res = await apiPost({
+      action:'editStampCard',
+      phone: np(editPhone),
+      stamps: editStamps,
+      cardsCompleted: completed,
+      reason
+    });
+    if(res.success){
+      closeEditModal();
+      showToast('Stamps updated successfully!');
+      loadData();
+    } else {
+      errEl.textContent = 'Error saving. Please try again.';
+      errEl.style.display='block';
+    }
+  }catch(e){
+    errEl.textContent='Connection error. Please try again.';
+    errEl.style.display='block';
+  }
+  btn.textContent='Save changes';btn.disabled=false;
+}
+
+// Event delegation for dynamically rendered edit buttons
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('.edit-stamp-btn');
+  if(btn){
+    openEditModal(
+      btn.dataset.phone,
+      btn.dataset.name,
+      parseInt(btn.dataset.stamps)||0,
+      parseInt(btn.dataset.completed)||0
+    );
+  }
+});
+
+// Close modal on backdrop click
+document.getElementById('edit-modal').addEventListener('click', function(e){
+  if(e.target===this) closeEditModal();
+});
+
 loadData();
 </script>
+
+<!-- EDIT STAMPS MODAL -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:12px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eee">
+      <span style="font-size:15px;font-weight:700" id="edit-modal-title">Edit Stamps</span>
+      <button onclick="closeEditModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:#f5f5f5;cursor:pointer;font-size:14px;color:#555">✕</button>
+    </div>
+    <div style="padding:16px">
+      <div style="font-size:13px;color:#666;margin-bottom:14px">Manually adjust stamp count for this customer. Use only to correct errors.</div>
+
+      <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Current stamps (0–10)</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <button onclick="adjustStamp(-1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #ddd;background:#f5f5f5;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+        <div style="flex:1;text-align:center">
+          <div id="edit-stamp-val" style="font-size:32px;font-weight:800;color:#E91E8C">0</div>
+          <div style="font-size:11px;color:#aaa">stamps</div>
+        </div>
+        <button onclick="adjustStamp(1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #ddd;background:#f5f5f5;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+      </div>
+
+      <!-- Stamp pips preview -->
+      <div id="edit-pips-preview" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:16px"></div>
+
+      <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Cards completed (total redeemed)</label>
+      <input type="number" id="edit-completed" min="0" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:4px">
+      <div style="font-size:11px;color:#aaa;margin-bottom:16px">Number of times this customer has completed a full 10-stamp card</div>
+
+      <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Reason for edit</label>
+      <input type="text" id="edit-reason" placeholder="e.g. Stamp missed, system error..." style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:16px">
+
+      <div id="edit-err" style="color:#c0006a;font-size:12px;margin-bottom:10px;display:none"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="closeEditModal()" style="padding:10px;border:1.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font)">Cancel</button>
+        <button onclick="saveStampEdit()" id="save-edit-btn" style="padding:10px;border:none;border-radius:8px;background:#E91E8C;color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font)">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

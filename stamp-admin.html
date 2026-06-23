@@ -168,7 +168,7 @@ input:focus{border-color:var(--pink)}
 const API = 'https://script.google.com/macros/s/AKfycbzOJ8qppcD22qaWEyNNzJG65bK0p-v08QnGCi9-nx9sA6GVrc8FHrLcIBGvdogt1ZWL4g/exec';
 const STAMP_URL = 'https://fruiceysg.github.io/fruicey-members/stamp.html';
 
-async function apiGet(p){const r=await fetch(API+'?'+new URLSearchParams(p));return r.json();}
+async function apiGet(p){const params=new URLSearchParams(p);params.set('authuser','0');const r=await fetch(API+'?'+params);return r.json();}
 async function apiPost(b){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)});return r.json();}
 
 function np(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}

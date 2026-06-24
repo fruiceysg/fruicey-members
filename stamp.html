@@ -339,7 +339,7 @@ input:focus{border-color:#8fcea1}
     <div class="wheel-subtitle">Congratulations! Spin to find out your free drink reward.</div>
     <div class="wheel-wrap">
       <div class="wheel-pointer"></div>
-      <canvas id="wheel-canvas" width="560" height="560"></canvas>
+      <canvas id="wheel-canvas" width="700" height="700"></canvas>
     </div>
     <button id="spin-btn">Spin the Wheel!</button>
     <div class="wheel-result" id="wheel-result">
@@ -415,6 +415,7 @@ input:focus{border-color:#8fcea1}
 <div class="toast" id="toast"></div>
 
 <script>
+
 
 
 
@@ -638,7 +639,7 @@ function buildWheel() {
     ctx.fillStyle = '#fff';
     ctx.shadowColor = 'rgba(0,0,0,0.4)';
     ctx.shadowBlur  = 3;
-    ctx.font = `bold ${size * 0.033}px -apple-system, sans-serif`;
+    ctx.font = `bold ${size * 0.048}px -apple-system, sans-serif`;
     const words = seg.name.split(' ');
     if (words.length === 1) {
       ctx.fillText(seg.name, r - 10, 5);
@@ -673,15 +674,24 @@ function spinWheel() {
   if (btn) { btn.disabled = true; btn.textContent = 'Spinning...'; }
 
   wheelSpinning = true;
-  const extraSpins  = 7 + Math.random() * 5;          // 7–12 full rotations
+  const extraSpins  = 5 + Math.random() * 3;          // 5–8 full rotations
   const stopAngle   = Math.random() * 2 * Math.PI;    // random stop
   const totalAngle  = extraSpins * 2 * Math.PI + stopAngle;
-  const duration    = 7000 + Math.random() * 2000;    // 7–9 seconds
+  const duration    = 10000 + Math.random() * 3000;   // 10–13 seconds
   const startTime   = performance.now();
   const startAngle  = currentAngle;
 
   function easeOut(t) {
-    if(t<0.3){return t*t*3;}else{const u=(t-0.3)/0.7;return 0.27+0.73*(1-Math.pow(1-u,6));}
+    // Quick start, then extremely slow crawl to the end
+    if (t < 0.2) {
+      return t * t * 5;           // fast spin up
+    } else if (t < 0.6) {
+      const u = (t - 0.2) / 0.4;
+      return 0.2 + 0.5 * u;      // steady mid spin
+    } else {
+      const u = (t - 0.6) / 0.4;
+      return 0.7 + 0.3 * (1 - Math.pow(1 - u, 10)); // extremely slow crawl
+    }
   }
 
   function animate(now) {
@@ -761,6 +771,7 @@ function showWheel(){
     ws.scrollIntoView({behavior:'smooth',block:'center'});
   }, 200);
 }
+
 
 
 

@@ -246,6 +246,7 @@ function memberRowHTML(m){
     +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
     +(stamps>=10?'<span class="badge badge-complete">Ready!</span>':'<span class="badge badge-active">Active</span>')
     +'<button class="edit-stamp-btn" data-phone="'+phone+'" data-name="'+name+'" data-stamps="'+stamps+'" data-completed="'+completed+'" style="font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid #ddd;background:#fff;cursor:pointer;color:#555;font-family:var(--font)">Edit</button>'
+    +'<button class="del-stamp-btn" data-phone="'+phone+'" data-name="'+name+'" style="font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid #fcc;background:#fff;cursor:pointer;color:#e74c3c;font-family:var(--font);margin-top:3px">Delete</button>'
     +'</div>'
     +'</div>';
 }
@@ -378,6 +379,21 @@ document.addEventListener('click', async function(e){
       const res = await apiPost({action:'redeemStampCard', phone:np(phone)});
       if(res.success){ showToast(name+' redeemed! Card reset to 0.'); loadData(); }
       else showToast('Error: '+( res.error||'unknown'));
+    }catch(e){ showToast('Connection error'); }
+  }
+});
+
+// Event delegation for delete stamp card button
+document.addEventListener('click', async function(e){
+  const db = e.target.closest('.del-stamp-btn');
+  if(db){
+    const phone = db.dataset.phone;
+    const name  = db.dataset.name;
+    if(!confirm('Permanently delete stamp card for '+name+'?\nThis cannot be undone.')) return;
+    try{
+      const res = await apiPost({action:'deleteStampCard', phone:np(phone)});
+      if(res.success){ showToast(name+' stamp card deleted'); loadData(); }
+      else showToast('Error: '+(res.error||'unknown'));
     }catch(e){ showToast('Connection error'); }
   }
 });

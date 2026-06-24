@@ -170,6 +170,23 @@ input:focus{border-color:#8fcea1}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;font-family:var(--font)}
 .toast.show{opacity:1}
+
+/* ── SPIN WHEEL ─────────────────────────────────── */
+.wheel-section{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.08);border:1.5px solid #f0f0f0;margin-bottom:16px;text-align:center;display:none}
+.wheel-section.show{display:block}
+.wheel-title{font-family:'BabyDoll',cursive;font-size:22px;color:#8fcea1;margin-bottom:6px}
+.wheel-subtitle{font-size:12px;color:#aaa;margin-bottom:16px}
+.wheel-wrap{position:relative;width:280px;height:280px;margin:0 auto 16px}
+#wheel-canvas{width:280px;height:280px;border-radius:50%;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.wheel-pointer{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:24px solid #8fcea1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));z-index:10}
+#spin-btn{background:linear-gradient(135deg,#8fcea1,#5aab74);color:#fff;border:none;border-radius:25px;padding:13px 40px;font-size:18px;font-family:'BabyDoll',cursive;cursor:pointer;box-shadow:0 4px 12px rgba(143,206,161,.4);transition:all .2s}
+#spin-btn:disabled{background:#ddd;cursor:not-allowed;box-shadow:none}
+#spin-btn:active:not(:disabled){transform:scale(.96)}
+.wheel-result{display:none;margin-top:16px;border-radius:12px;padding:16px;color:#fff;text-align:center}
+.wheel-result-drink{font-family:'BabyDoll',cursive;font-size:22px;margin-bottom:4px}
+.wheel-result-desc{font-size:13px;opacity:.9}
+.wheel-result-note{font-size:11px;margin-top:10px;opacity:.7;border-top:1px solid rgba(255,255,255,.3);padding-top:8px}
+
 </style>
 </head>
 <body>
@@ -302,6 +319,23 @@ input:focus{border-color:#8fcea1}
   <div class="complete-banner" id="complete-banner">
     <h3> Rewards Pass Complete!</h3>
     <p>Show this to our crew to redeem your free medium juice or shake!</p>
+  </div>
+
+
+  <!-- SPIN WHEEL SECTION -->
+  <div class="wheel-section" id="wheel-section">
+    <div class="wheel-title">Spin the Fruicey Wheel!</div>
+    <div class="wheel-subtitle">Congratulations! Spin to find out your free drink reward.</div>
+    <div class="wheel-wrap">
+      <div class="wheel-pointer"></div>
+      <canvas id="wheel-canvas" width="560" height="560"></canvas>
+    </div>
+    <button id="spin-btn">Spin the Wheel!</button>
+    <div class="wheel-result" id="wheel-result">
+      <div class="wheel-result-drink" id="wheel-result-name"></div>
+      <div class="wheel-result-desc" id="wheel-result-reward"></div>
+      <div class="wheel-result-note">Show this screen to our crew to redeem your free drink. Redeem in store only.</div>
+    </div>
   </div>
 
   <div class="stamp-card">
@@ -449,6 +483,7 @@ function renderCard(member){
   const banner=document.getElementById('complete-banner');
   if(stamps>=TOTAL_STAMPS){banner.classList.add('show');}else{banner.classList.remove('show');}
 
+  checkWheelVisibility(stamps);
   const hist=document.getElementById('stamp-history');
   const log=member.stampLog?member.stampLog.split('|').filter(l=>l&&!l.startsWith('\n[')):[];
   if(log.length){
@@ -479,7 +514,157 @@ async function checkQRToken(){
   }catch(e){showToast('Connection error.');}
   window.history.replaceState({},'',window.location.pathname);
 }
+document.getElementById('spin-btn').addEventListener('click', spinWheel);
 checkQRToken();
+
+// ── SPIN WHEEL ────────────────────────────────────────────────────────
+const WHEEL_SEGMENTS = [
+  {name:'Coco Cha Cha',   color:'#9B59B6', reward:'1 Free M Coco Cha Cha'},
+  {name:'Berry Shiok',    color:'#3498DB', reward:'1 Free M Berry Shiok'},
+  {name:'Rainbow',        color:'#00BCD4', reward:'1 Free M Follow That Rainbow'},
+  {name:'Bright Sky',     color:'#00E5FF', reward:'1 Free M Bright Sky'},
+  {name:'Cojito',         color:'#4CAF50', reward:'1 Free M Cojito'},
+  {name:'Lovacado',       color:'#8BC34A', reward:'1 Free M Lovacado'},
+  {name:'Pina Cocolada',  color:'#FFEB3B', reward:'1 Free M Pina Cocolada'},
+  {name:'Cup of Gold',    color:'#FFC107', reward:'1 Free M Cup of Gold'},
+  {name:'Fruicey Sling',  color:'#FF5722', reward:'1 Free M Fruicey Sling'},
+  {name:'Horizon',        color:'#FF9800', reward:'1 Free M Horizon'},
+  {name:'Kampung Spirit', color:'#F44336', reward:'1 Free M Kampung Spirit'},
+  {name:'Adventure',      color:'#E91E8C', reward:'1 Free M Adventure'},
+];
+
+const TOTAL_SEGS = WHEEL_SEGMENTS.length;
+const SEG_ANGLE  = (2 * Math.PI) / TOTAL_SEGS;
+let wheelSpinning = false;
+let currentAngle  = 0;
+
+function buildWheel() {
+  const canvas = document.getElementById('wheel-canvas');
+  if (!canvas) return;
+  const ctx  = canvas.getContext('2d');
+  const size = canvas.width;
+  const cx   = size / 2;
+  const cy   = size / 2;
+  const r    = size / 2 - 4;
+
+  ctx.clearRect(0, 0, size, size);
+
+  WHEEL_SEGMENTS.forEach((seg, i) => {
+    const startAngle = currentAngle + i * SEG_ANGLE - Math.PI / 2;
+    const endAngle   = startAngle + SEG_ANGLE;
+
+    // Segment fill
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+
+    // Segment border
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(startAngle + SEG_ANGLE / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur  = 3;
+    ctx.font = `bold ${size * 0.033}px -apple-system, sans-serif`;
+    const words = seg.name.split(' ');
+    if (words.length === 1) {
+      ctx.fillText(seg.name, r - 10, 5);
+    } else {
+      ctx.fillText(words[0], r - 10, -4);
+      ctx.fillText(words.slice(1).join(' '), r - 10, 12);
+    }
+    ctx.restore();
+  });
+
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 0.08, 0, 2 * Math.PI);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 0.025, 0, 2 * Math.PI);
+  ctx.fillStyle = '#8fcea1';
+  ctx.fill();
+}
+
+function spinWheel() {
+  if (wheelSpinning) return;
+
+  const btn = document.getElementById('spin-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Spinning...'; }
+
+  wheelSpinning = true;
+  const extraSpins  = 5 + Math.random() * 5;          // 5–10 full rotations
+  const stopAngle   = Math.random() * 2 * Math.PI;    // random stop
+  const totalAngle  = extraSpins * 2 * Math.PI + stopAngle;
+  const duration    = 4000 + Math.random() * 1500;    // 4–5.5 seconds
+  const startTime   = performance.now();
+  const startAngle  = currentAngle;
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed  = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    currentAngle   = startAngle + totalAngle * easeOut(progress);
+    buildWheel();
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      wheelSpinning = false;
+      // Determine winning segment
+      // Pointer is at top (angle = -PI/2 before rotation)
+      // Normalize current angle
+      const normalised = ((currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      // Pointer at top = 270 degrees from 0
+      const pointerAngle = (2 * Math.PI * 3 / 4);
+      const adjustedAngle = (pointerAngle - normalised + 2 * Math.PI) % (2 * Math.PI);
+      const winIndex = Math.floor(adjustedAngle / SEG_ANGLE) % TOTAL_SEGS;
+      showWheelResult(WHEEL_SEGMENTS[winIndex]);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function showWheelResult(segment) {
+  const el = document.getElementById('wheel-result');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.background = segment.color;
+  document.getElementById('wheel-result-name').textContent = segment.name;
+  document.getElementById('wheel-result-reward').textContent = segment.reward;
+
+  // Update spin button
+  const btn = document.getElementById('spin-btn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Spin again?'; }
+}
+
+
+// Show wheel when card complete
+function checkWheelVisibility(stamps){
+  const ws=document.getElementById('wheel-section');
+  if(!ws)return;
+  if(stamps>=TOTAL_STAMPS){ws.classList.add('show');buildWheel();}
+  else{ws.classList.remove('show');}
+}
 </script>
 </body>
 </html>

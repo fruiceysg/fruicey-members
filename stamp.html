@@ -236,7 +236,9 @@ input:focus{border-color:#8fcea1}
         After redemption, your rewards pass resets to 0 and a new card begins.
         <h4>8. Non-Transferability</h4>
         Stamp card accounts are strictly personal and non-transferable. Stamps are strictly not transferable between accounts or customers under any circumstances.
-        <h4>9. Amendments</h4>
+        <h4>9. Prize Redemption</h4>
+        Wheel prizes must be redeemed in store upon redemption or making payment. Screenshot images are strictly not accepted for redemption. Un-redeemed prizes can be traced back in store by our crew.
+        <h4>10. Amendments</h4>
         Fruicey reserves the right to amend these terms at any time.
 </div>
   </div>
@@ -286,7 +288,9 @@ input:focus{border-color:#8fcea1}
         After redemption, your rewards pass resets to 0 and a new card begins.
         <h4>8. Non-Transferability</h4>
         Stamp card accounts are strictly personal and non-transferable. Stamps are strictly not transferable between accounts or customers under any circumstances.
-        <h4>9. Amendments</h4>
+        <h4>9. Prize Redemption</h4>
+        Wheel prizes must be redeemed in store upon redemption or making payment. Screenshot images are strictly not accepted for redemption. Un-redeemed prizes can be traced back in store by our crew.
+        <h4>10. Amendments</h4>
         Fruicey reserves the right to amend these terms at any time.
 </div>
       <div class="cbrow">
@@ -341,7 +345,12 @@ input:focus{border-color:#8fcea1}
     <div class="wheel-result" id="wheel-result">
       <div class="wheel-result-drink" id="wheel-result-name"></div>
       <div class="wheel-result-desc" id="wheel-result-reward"></div>
-      <div class="wheel-result-note">Show this screen to our crew to redeem your free drink. Redeem in store only.</div>
+      <div id="wheel-result-desc" style="font-size:12px;opacity:.85;margin-top:6px"></div>
+    <div class="wheel-result-note">
+      Show this screen to our crew upon redemption or making payment.<br>
+      Screenshots are <strong>not accepted</strong> for redemption.<br>
+      Un-redeemed prizes can be traced back in store.
+    </div>
     <button id="wheel-redeem-btn" style="display:none;margin-top:12px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:10px 24px;font-size:14px;font-family:'BabyDoll',cursive;cursor:pointer;width:100%">Crew confirmed — Reset my card</button>
     </div>
   </div>
@@ -380,7 +389,9 @@ input:focus{border-color:#8fcea1}
         After redemption, your rewards pass resets to 0 and a new card begins.
         <h4>8. Non-Transferability</h4>
         Stamp card accounts are strictly personal and non-transferable. Stamps are strictly not transferable between accounts or customers under any circumstances.
-        <h4>9. Amendments</h4>
+        <h4>9. Prize Redemption</h4>
+        Wheel prizes must be redeemed in store upon redemption or making payment. Screenshot images are strictly not accepted for redemption. Un-redeemed prizes can be traced back in store by our crew.
+        <h4>10. Amendments</h4>
         Fruicey reserves the right to amend these terms at any time.
 </div>
   </div>
@@ -404,6 +415,8 @@ input:focus{border-color:#8fcea1}
 <div class="toast" id="toast"></div>
 
 <script>
+
+
 
 
 
@@ -574,20 +587,14 @@ checkQRToken();
 
 // ── SPIN WHEEL ────────────────────────────────────────────────────────
 const WHEEL_SEGMENTS = [
-  {name:'Coco Cha Cha',   color:'#9B59B6', reward:'1 Free M Coco Cha Cha'},
-  {name:'Berry Shiok',    color:'#3498DB', reward:'1 Free M Berry Shiok'},
-  {name:'Rainbow',        color:'#00BCD4', reward:'1 Free M Follow That Rainbow'},
-  {name:'Bright Sky',     color:'#00E5FF', reward:'1 Free M Bright Sky'},
-  {name:'Cojito',         color:'#4CAF50', reward:'1 Free M Cojito'},
-  {name:'Lovacado',       color:'#8BC34A', reward:'1 Free M Lovacado'},
-  {name:'Pina Cocolada',  color:'#FFEB3B', reward:'1 Free M Pina Cocolada'},
-  {name:'Cup of Gold',    color:'#FFC107', reward:'1 Free M Cup of Gold'},
-  {name:'Fruicey Sling',  color:'#FF5722', reward:'1 Free M Fruicey Sling'},
-  {name:'Horizon',        color:'#FF9800', reward:'1 Free M Horizon'},
-  {name:'Kampung Spirit', color:'#F44336', reward:'1 Free M Kampung Spirit'},
-  {name:'Adventure',      color:'#E91E8C', reward:'1 Free M Adventure'},
+  {name:'$2 Off',          color:'#FF6B6B', reward:'$2 off your next purchase',           desc:'Present this screen to our crew before payment.'},
+  {name:'Free Upsize',     color:'#FFA94D', reward:'Free upsize on your Shake or Juice',  desc:'Valid for one cup. Present before ordering.'},
+  {name:'$5 Off',          color:'#FFD43B', reward:'$5 off your next purchase',           desc:'Present this screen to our crew before payment.'},
+  {name:'3 Bonus Stamps',  color:'#8fcea1', reward:'3 bonus stamps added to your card',   desc:'Stamps will be added by our crew in store.'},
+  {name:'Free Juice/Shake',color:'#4DABF7', reward:'Redeem a free Juice or Shake (M)',    desc:'Any regular-priced juice or shake. Medium size.'},
+  {name:'Free Acai Bowl',  color:'#9775FA', reward:'Redeem a free Dessert Sized Acai Bowl', desc:'Any acai bowl from our dessert menu.'},
+  {name:'Free Cold Press', color:'#F783AC', reward:'Redeem a free Pressed Juice',         desc:'Any immunity or nutritional press.'},
 ];
-
 const TOTAL_SEGS = WHEEL_SEGMENTS.length;
 const SEG_ANGLE  = (2 * Math.PI) / TOTAL_SEGS;
 let wheelSpinning = false;
@@ -709,6 +716,8 @@ function showWheelResult(segment) {
   el.style.background = segment.color;
   document.getElementById('wheel-result-name').textContent = segment.name;
   document.getElementById('wheel-result-reward').textContent = segment.reward;
+  const descEl = document.getElementById('wheel-result-desc');
+  if(descEl) descEl.textContent = segment.desc||'';
 
   // Show redeem button
   const redeemEl = document.getElementById('wheel-redeem-btn');
@@ -751,6 +760,8 @@ function showWheel(){
     ws.scrollIntoView({behavior:'smooth',block:'center'});
   }, 200);
 }
+
+
 
 
 

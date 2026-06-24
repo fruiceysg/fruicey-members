@@ -236,7 +236,7 @@ function renderDashboard(){
 function memberRowHTML(m){
   const stamps=parseInt(m.stamps)||0;
   const completed=parseInt(m.cardsCompleted)||0;
-  const pips=Array.from({length:10},(_,i)=>'<div class="pip'+(i<stamps?' filled':'')+'"></div>').join('');
+  const pips=Array.from({length:9},(_,i)=>'<div class="pip'+(i<stamps?' filled':'')+'"></div>').join('');
   const phone=m.phone||'';
   const name=m.first+' '+m.last;
   return '<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div>'
@@ -366,6 +366,21 @@ async function saveStampEdit(){
   }
   btn.textContent='Save changes';btn.disabled=false;
 }
+
+// Event delegation for redeem card button
+document.addEventListener('click', async function(e){
+  const rb = e.target.closest('.redeem-card-btn');
+  if(rb){
+    const phone = rb.dataset.phone;
+    const name  = rb.dataset.name;
+    if(!confirm('Confirm free drink given to '+name+'? This will reset their stamp card to 0.')) return;
+    try{
+      const res = await apiPost({action:'redeemStampCard', phone:np(phone)});
+      if(res.success){ showToast(name+' redeemed! Card reset to 0.'); loadData(); }
+      else showToast('Error: '+( res.error||'unknown'));
+    }catch(e){ showToast('Connection error'); }
+  }
+});
 
 // Event delegation for dynamically rendered edit buttons
 document.addEventListener('click', function(e){

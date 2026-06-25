@@ -192,15 +192,18 @@ function switchTab(tab,btn){
 
 function formatDate(d){
   if(!d) return '';
+  // YYYY-MM-DD HH:MM format (new SGT format)
+  if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(d)) return d;
   // Already in YYYY-MM-DD format
   if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
-  // Google Sheets full date string
-  const m = d.match(/(\w+)\s+(\w+)\s+(\d+)\s+(\d{4})/);
+  // Google Sheets full date string e.g. "Wed Jun 24 2026 00:00:00 GMT+0800"
+  const m = d.match(/(\w+)\s+(\w+)\s+(\d+)\s+(\d{4})(?:\s+(\d{2}:\d{2}))?/);
   if(m){
     const months={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
     const mm=months[m[2]]||'01';
     const dd=String(parseInt(m[3])).padStart(2,'0');
-    return m[4]+'-'+mm+'-'+dd;
+    const base = m[4]+'-'+mm+'-'+dd;
+    return m[5] ? base+' '+m[5] : base;
   }
   return d;
 }
@@ -230,7 +233,7 @@ function renderDashboard(){
   // Recent
   const recentEl=document.getElementById('recent-activity');
   const recent=[...allMembers].sort((a,b)=>new Date(b.lastStamp||0)-new Date(a.lastStamp||0)).slice(0,5);
-  recentEl.innerHTML=recent.length?recent.map(m=>'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+'</div><div class="member-meta">Last stamp: '+(m.lastStamp||'Never')+'</div></div><span style="font-size:13px;font-weight:700;color:#8fcea1">'+(parseInt(m.stamps)||0)+'/10</span></div>').join(''):'<div class="empty">No activity yet</div>';
+  recentEl.innerHTML=recent.length?recent.map(m=>'<div class="member-row"><div class="avatar">'+initials(m.first,m.last)+'</div><div class="member-info"><div class="member-name">'+m.first+' '+m.last+'</div><div class="member-meta">Last stamp: '+(m.lastStamp?formatDate(m.lastStamp):'Never')+'</div></div><span style="font-size:13px;font-weight:700;color:#8fcea1">'+(parseInt(m.stamps)||0)+'/9</span></div>').join(''):'<div class="empty">No activity yet</div>';
 }
 
 function memberRowHTML(m){

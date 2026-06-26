@@ -378,12 +378,43 @@ async function generateStampQR(){
     document.getElementById('qr-card').style.display='block';
     document.getElementById('qr-stamp-label').textContent=stampQty+' stamp'+(stampQty>1?'s':'')+' will be added';
     if(countdownInterval)clearInterval(countdownInterval);
-    let secs=180;
+    let secs=30;
+    let pollInterval=null;
     document.getElementById('countdown').textContent=secs;
+
+    // Poll every 2s to check if token was scanned
+    const currentToken = res.token;
+    const currentPhone = phone;
+    if(pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(async()=>{
+      try{
+        const check = await apiGet({action:'checkTokenUsed', token:currentToken});
+        if(check.used){
+          clearInterval(pollInterval);
+          clearInterval(countdownInterval);
+          document.getElementById('qr-display').innerHTML=
+            '<div style="text-align:center;padding:1rem">'
+            +'<div style="font-size:32px;margin-bottom:8px">✓</div>'
+            +'<div style="font-size:14px;font-weight:700;color:#2e7d32">Stamp scanned!</div>'
+            +'<div style="font-size:12px;color:#888;margin-top:4px">Customer received '+stampQty+' stamp'+(stampQty>1?'s':'')+'</div>'
+            +'</div>';
+          document.getElementById('countdown').textContent='';
+          document.getElementById('qr-stamp-label').textContent='';
+          showToast('Stamp added successfully!');
+        }
+      }catch(e){}
+    },2000);
+
     countdownInterval=setInterval(()=>{
       secs--;
       document.getElementById('countdown').textContent=secs;
-      if(secs<=0){clearInterval(countdownInterval);document.getElementById('qr-display').innerHTML='<div style="text-align:center;padding:1rem;color:#aaa">QR expired</div>';showToast('QR expired');}
+      if(secs<=0){
+        clearInterval(countdownInterval);
+        clearInterval(pollInterval);
+        document.getElementById('qr-display').innerHTML='<div style="text-align:center;padding:1rem;color:#aaa"><div style="font-size:24px">⌛</div><div style="margin-top:6px">QR expired</div></div>';
+        document.getElementById('countdown').textContent='';
+        showToast('QR expired — generate a new one');
+      }
     },1000);
   }catch(e){showToast('Connection error');}
   btn.textContent='Generate Stamp QR';btn.disabled=false;

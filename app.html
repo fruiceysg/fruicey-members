@@ -420,6 +420,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 <div class="toast" id="toast"></div>
 
 <script>
+
+
 const CATALOGUE = {
   'Shakes & Smoothies': [
     {id:'ss01',name:'Coco Chacha',              sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
@@ -561,6 +563,7 @@ const TOTAL_STAMPS = 9;
 
 // ── STATE ─────────────────────────────────────────────────────
 let currentUser   = null;
+let stockStatus   = {};
 let stampMember   = null;
 let cart          = [];
 let currentCat    = '';
@@ -681,7 +684,11 @@ function initMenu(){
   if(currentCat) return; // already init
   currentCat = CATS[0];
   renderCatPills();
-  renderProducts();
+  // Load stock status then render
+  apiGet({action:'getStock'}).then(res=>{
+    if(res.stock) stockStatus = res.stock;
+    renderProducts();
+  }).catch(()=>renderProducts());
 }
 
 function renderCatPills(){
@@ -698,6 +705,8 @@ function renderProducts(){
   prods.forEach(p => {
     const card = document.createElement('div');
     card.className = 'product-card';
+    card.style.position = 'relative';
+    card.style.overflow = 'hidden';
     const fileId = IMG[p.id];
     if(fileId){
       const img = document.createElement('img');
@@ -711,6 +720,13 @@ function renderProducts(){
       ph.innerHTML = '<i class="ti ti-cup" style="font-size:28px;color:var(--green);opacity:.5"></i>';
       card.appendChild(ph);
     }
+    // Pre-order ribbon
+    if(PREORDER_IDS.has(p.id)){
+      const ribbon = document.createElement('div');
+      ribbon.style.cssText = 'position:absolute;top:10px;right:-20px;background:#e67e22;color:#fff;font-size:9px;font-weight:700;padding:3px 26px;transform:rotate(45deg);letter-spacing:.5px;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
+      ribbon.textContent = 'PRE-ORDER';
+      card.appendChild(ribbon);
+    }
     const body = document.createElement('div');
     body.className = 'product-body';
     const name = document.createElement('div');
@@ -719,15 +735,24 @@ function renderProducts(){
     body.appendChild(name);
     const btns = document.createElement('div');
     btns.className = 'size-btns';
-    p.sizes.forEach(s => {
-      const btn = document.createElement('button');
-      btn.className = 'size-btn';
-      btn.dataset.pid   = p.id;
-      btn.dataset.size  = s.l||'';
-      btn.dataset.price = s.p;
-      btn.textContent   = (s.l?s.l+' ':'')+' $'+s.p.toFixed(2);
-      btns.appendChild(btn);
-    });
+    const isAvail = stockStatus[p.id] !== false;
+    if(isAvail){
+      p.sizes.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'size-btn';
+        btn.dataset.pid   = p.id;
+        btn.dataset.size  = s.l||'';
+        btn.dataset.price = s.p;
+        btn.textContent   = (s.l?s.l+' ':'')+' $'+s.p.toFixed(2);
+        btns.appendChild(btn);
+      });
+    } else {
+      const oos = document.createElement('div');
+      oos.style.cssText = 'font-size:11px;color:#e74c3c;font-weight:700;padding:6px 0';
+      oos.textContent = 'Out of Stock';
+      btns.appendChild(oos);
+      card.style.opacity = '0.5';
+    }
     body.appendChild(btns);
     card.appendChild(body);
     grid.appendChild(card);
@@ -743,6 +768,7 @@ document.addEventListener('click', function(e){
   if(sizeBtn && sizeBtn.dataset.pid){
     if(!currentUser){ openLogin(); return; }
     const pid  = sizeBtn.dataset.pid;
+    if(stockStatus[pid] === false){ showToast('Sorry, this item is out of stock'); return; }
     const size = sizeBtn.dataset.size||'';
     const price= parseFloat(sizeBtn.dataset.price);
     const prod = PRODUCT_MAP[pid];
@@ -1095,6 +1121,8 @@ document.addEventListener('DOMContentLoaded', function(){
   // Hide login hint if logged in
   if(currentUser) document.getElementById('menu-login-hint').style.display='none';
 });
+
+
 </script>
 </body>
 </html>

@@ -183,6 +183,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
+
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 
 const CATALOGUE = {
@@ -326,6 +328,8 @@ const CAT_BG     = {'Shakes & Smoothies':'#fce4f0','Superfood Bowls':'#e8f8ee','
 const CAT_ICONS  = {'Shakes & Smoothies':'ti-cup','Superfood Bowls':'ti-bowl','Immunity Press':'ti-flask','Nutritional Press':'ti-pill','Juices':'ti-droplet'};
 
 let cart = [], currentMember = null, memberDiscount = 0, currentCat = 'Shakes & Smoothies', paymentMethod = '';
+let stockStatus = {};
+const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg // id -> true/false
 let salesLog = [];
 try { salesLog = JSON.parse(localStorage.getItem('fruicey_pos_sales') || '[]'); } catch(e) { salesLog = []; }
 
@@ -425,6 +429,8 @@ function renderProducts(){
     // Card wrapper
     const card = document.createElement('div');
     card.className = 'product-card';
+    card.style.position = 'relative';
+    card.style.overflow = 'hidden';
 
     // Colour top strip (or image when available)
     const fileId = IMG[p.id];
@@ -439,6 +445,13 @@ function renderProducts(){
       strip.style.cssText = 'height:5px;background:' + color + ';border-radius:6px 6px 0 0;flex-shrink:0';
       card.appendChild(strip);
     }
+    // Pre-order ribbon
+    if(PREORDER_IDS.has(p.id)){
+      const ribbon = document.createElement('div');
+      ribbon.style.cssText = 'position:absolute;top:10px;right:-18px;background:#e67e22;color:#fff;font-size:9px;font-weight:700;padding:3px 22px;transform:rotate(45deg);letter-spacing:.5px;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
+      ribbon.textContent = 'PRE-ORDER';
+      card.appendChild(ribbon);
+    }
 
     // Body
     const body = document.createElement('div');
@@ -450,23 +463,48 @@ function renderProducts(){
     nameEl.textContent = p.name;
     body.appendChild(nameEl);
 
+    const isAvailable = stockStatus[p.id] !== false; // default true
+
     // Size buttons row
     const btnRow = document.createElement('div');
     btnRow.className = 'sbwrap';
 
-    p.sizes.forEach(function(s){
-      const btn = document.createElement('button');
-      btn.className = 'size-btn';
-      btn.style.borderColor = color;
-      btn.style.color = color;
-      btn.dataset.pid   = p.id;
-      btn.dataset.size  = s.l || '';
-      btn.dataset.price = String(s.p);
-      btn.textContent   = (s.l ? s.l + ' ' : '') + '$' + s.p.toFixed(2);
-      btnRow.appendChild(btn);
-    });
-
+    if(isAvailable){
+      p.sizes.forEach(function(s){
+        const btn = document.createElement('button');
+        btn.className = 'size-btn';
+        btn.style.borderColor = color;
+        btn.style.color = color;
+        btn.dataset.pid   = p.id;
+        btn.dataset.size  = s.l || '';
+        btn.dataset.price = String(s.p);
+        btn.textContent   = (s.l ? s.l + ' ' : '') + '$' + s.p.toFixed(2);
+        btnRow.appendChild(btn);
+      });
+    } else {
+      const oos = document.createElement('div');
+      oos.style.cssText = 'font-size:11px;color:#e74c3c;font-weight:700;padding:4px 0';
+      oos.textContent = 'Out of Stock';
+      btnRow.appendChild(oos);
+    }
     body.appendChild(btnRow);
+
+    // Stock toggle button for POS staff
+    const toggleBtn = document.createElement('button');
+    toggleBtn.style.cssText = 'margin-top:6px;width:100%;padding:4px;border-radius:4px;border:1px solid '+(isAvailable?'#ddd':'#e74c3c')+';background:'+(isAvailable?'#f9f9f9':'#fff0f0')+';cursor:pointer;font-size:10px;color:'+(isAvailable?'#888':'#e74c3c')+';font-family:var(--font)';
+    toggleBtn.textContent = isAvailable ? 'Mark Out of Stock' : 'Mark Available';
+    toggleBtn.dataset.pid = p.id;
+    toggleBtn.dataset.toggle = isAvailable ? 'false' : 'true';
+    toggleBtn.className = 'stock-toggle-btn';
+    body.appendChild(toggleBtn);
+
+    // Grey overlay if out of stock
+    if(!isAvailable){
+      card.style.opacity = '0.55';
+    } else {
+      card.style.opacity = '1';
+    }
+
     card.appendChild(body);
     grid.appendChild(card);
   });
@@ -480,6 +518,15 @@ document.addEventListener('click', function(e){
     currentCat = decodeURIComponent(catTab.dataset.cat);
     renderCats(); renderProducts(); return;
   }
+  // Stock toggle
+  const stockBtn = e.target.closest('.stock-toggle-btn');
+  if(stockBtn && stockBtn.dataset.pid){
+    const pid = stockBtn.dataset.pid;
+    const available = stockBtn.dataset.toggle === 'true';
+    toggleStock(pid, available);
+    return;
+  }
+
   // Size button
   const sizeBtn = e.target.closest('.size-btn');
   if(sizeBtn && sizeBtn.dataset.pid){
@@ -488,6 +535,7 @@ document.addEventListener('click', function(e){
     const price = parseFloat(sizeBtn.dataset.price);
     const prod  = PRODUCT_MAP[pid];
     if(!prod) return;
+    if(stockStatus[pid] === false){ showToast('Item is out of stock'); return; }
     const label = prod.name+(size?' ('+size+')':'');
     const existing = cart.find(i=>i.id===pid&&i.size===size);
     if(existing){existing.qty++;}
@@ -670,9 +718,27 @@ function showToast(msg){
 // ── INIT ──────────────────────────────────────────────────────────────
 updateClock();
 renderCats();
-renderProducts();
+loadStock(); // loads stock then renders products
 renderCart();
 
+
+// ── STOCK ────────────────────────────────────────────────────
+async function loadStock(){
+  try{
+    const res = await apiGet({action:'getStock'});
+    if(res.stock) stockStatus = res.stock;
+  }catch(e){ console.log('Could not load stock'); }
+  renderProducts();
+}
+
+async function toggleStock(pid, available){
+  stockStatus[pid] = available;
+  renderProducts(); // instant UI update
+  try{
+    await apiPost({action:'updateStock', id:pid, available});
+    showToast((available ? 'Back in stock' : 'Marked out of stock') + ': ' + (PRODUCT_MAP[pid]||{name:pid}).name);
+  }catch(e){ showToast('Could not update stock'); }
+}
 
 // Wire up buttons that aren't inside dynamic HTML
 document.getElementById('lookup-btn').addEventListener('click', lookupMember);
@@ -687,6 +753,8 @@ document.getElementById('close-sales-btn').addEventListener('click', closeSales)
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
+
 
 
 

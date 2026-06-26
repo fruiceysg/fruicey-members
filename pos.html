@@ -190,6 +190,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 
 const CATALOGUE = {
@@ -497,16 +498,19 @@ function renderProducts(){
     }
     body.appendChild(btnRow);
 
-    // Stock badge (tap to toggle in stock mode)
-    if(!isAvailable){
-      const oosBadge = document.createElement('div');
-      oosBadge.style.cssText = 'margin-top:4px;font-size:9px;color:#e74c3c;font-weight:700;cursor:pointer;text-align:center;border:1px solid #fcc;border-radius:4px;padding:2px 0;background:#fff0f0';
-      oosBadge.textContent = 'OUT OF STOCK — Tap to restore';
-      oosBadge.className = 'stock-toggle-btn';
-      oosBadge.dataset.pid = p.id;
-      oosBadge.dataset.toggle = 'true';
-      body.appendChild(oosBadge);
+    // Stock toggle button — always visible
+    const stockToggle = document.createElement('button');
+    stockToggle.className = 'stock-toggle-btn';
+    stockToggle.dataset.pid = p.id;
+    stockToggle.dataset.toggle = isAvailable ? 'false' : 'true';
+    if(isAvailable){
+      stockToggle.textContent = 'Mark Out of Stock';
+      stockToggle.style.cssText = 'margin-top:5px;width:100%;padding:3px;border:1px solid #ddd;border-radius:4px;background:#f9f9f9;cursor:pointer;font-size:9px;color:#999;font-family:var(--font)';
+    } else {
+      stockToggle.textContent = 'Mark Available';
+      stockToggle.style.cssText = 'margin-top:5px;width:100%;padding:3px;border:1px solid #e74c3c;border-radius:4px;background:#fff0f0;cursor:pointer;font-size:9px;color:#e74c3c;font-weight:700;font-family:var(--font)';
     }
+    body.appendChild(stockToggle);
 
     // Grey overlay if out of stock
     if(!isAvailable){
@@ -777,6 +781,7 @@ document.getElementById('close-sales-btn').addEventListener('click', closeSales)
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

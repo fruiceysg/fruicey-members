@@ -204,6 +204,7 @@ input:focus{border-color:#8fcea1}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="closeEditModal()" style="padding:10px;border:1.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font)">Cancel</button>
         <button onclick="saveStampEdit()" id="save-edit-btn" style="padding:10px;border:none;border-radius:8px;background:#8fcea1;color:#fff;cursor:pointer;font-size:13px;font-w
+<script>
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 const STAMP_URL = 'https://fruiceysg.github.io/fruicey-members/stamp.html';
 
@@ -543,9 +544,6 @@ document.addEventListener('click', function(e){
 // Close modal on backdrop click
 const editModalEl = document.getElementById('edit-modal');
 if(editModalEl){ editModalEl.addEventListener('click', function(e){ if(e.target===this) closeEditModal(); }); }
-
-loadData();
-itModalEl.addEventListener('click', function(e){ if(e.target===this) closeEditModal(); }); }
 
 loadData();
 </script>

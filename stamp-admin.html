@@ -55,6 +55,19 @@ input:focus{border-color:#8fcea1}
 .search-bar{position:relative;margin-bottom:14px}
 .search-bar input{padding-left:34px;margin-bottom:0}
 .search-bar i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#aaa;font-size:16px}
+.filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font)}
+.filter-btn.active{background:#111;color:#fff;border-color:#111}
+.order-admin-card{background:#fff;border-radius:var(--r);border:1px solid var(--border);margin-bottom:10px;overflow:hidden}
+.order-admin-hdr{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.order-admin-body{padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.8}
+.order-admin-footer{padding:10px 14px;display:flex;gap:6px;flex-wrap:wrap;background:#fafafa;border-top:1px solid var(--border)}
+.status-btn{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font)}
+.status-btn:hover{opacity:.8}
+.status-Pending{background:#fff8e1;color:#f57f17;border-color:#f57f17}
+.status-Confirmed{background:#e8f5e9;color:#2e7d32;border-color:#2e7d32}
+.status-Ready{background:#e3f2fd;color:#1565c0;border-color:#1565c0}
+.status-Collected{background:#f5f5f5;color:#757575;border-color:#bbb}
+.toast{position:fixed;bottom:20px
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 18px;border-radius:var(--r);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
 </style>
@@ -71,6 +84,7 @@ input:focus{border-color:#8fcea1}
     <button class="tab active" onclick="switchTab('dashboard',this)">Dashboard</button>
     <button class="tab" onclick="switchTab('members',this)">Members</button>
     <button class="tab" onclick="switchTab('stamp',this)">Issue Stamp QR</button>
+    <button class="tab" onclick="switchTab('orders',this)">Orders</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -101,15 +115,41 @@ input:focus{border-color:#8fcea1}
     </div>
   </div>
 
+<!-- ORDERS -->
+  <div class="section" id="sec-orders">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:13px;color:var(--text2)">Incoming pre-orders. Update status after confirming payment.</div>
+      <button class="btn btn-outline" style="font-size:12px;padding:6px 14px" onclick="loadOrders()">Refresh</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="order-filter-btns">
+      <button class="filter-btn active" data-status="all" onclick="filterOrders('all',this)">All</button>
+      <button class="filter-btn" data-status="Pending"   onclick="filterOrders('Pending',this)"  style="color:#f57f17">Pending</button>
+      <button class="filter-btn" data-status="Confirmed" onclick="filterOrders('Confirmed',this)" style="color:#2e7d32">Confirmed</button>
+      <button class="filter-btn" data-status="Ready"     onclick="filterOrders('Ready',this)"     style="color:#1565c0">Ready</button>
+      <button class="filter-btn" data-status="Collected" onclick="filterOrders('Collected',this)" style="color:#757575">Collected</button>
+    </div>
+    <div id="orders-admin-list"></div>
+  </div>
+
   <!-- ISSUE STAMP QR -->
   <div class="section" id="sec-stamp">
     <div class="card">
       <div class="card-title">Generate Stamp QR</div>
       <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">
-        Enter the customer's phone number, then show them the QR code to scan. The QR expires in 60 seconds and can only be used once.
+        Enter the customer's phone number and number of stamps to issue. Show the QR for the customer to scan. Each QR expires in 3 minutes and can only be used once.
       </p>
       <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Customer phone number</label>
       <input type="tel" id="stamp-phone" placeholder="e.g. 91234567" style="margin-bottom:10px">
+      <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Number of stamps to issue</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <button onclick="adjustStampQty(-1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #ddd;background:#f5f5f5;font-size:20px;cursor:pointer;flex-shrink:0">−</button>
+        <div style="flex:1;text-align:center">
+          <div id="stamp-qty-val" style="font-size:32px;font-weight:800;color:var(--pink)">1</div>
+          <div style="font-size:11px;color:#aaa">stamp(s)</div>
+        </div>
+        <button onclick="adjustStampQty(1)" style="width:36px;height:36px;border-radius:50%;border:1.5px solid #ddd;background:#f5f5f5;font-size:20px;cursor:pointer;flex-shrink:0">+</button>
+      </div>
+      <div id="stamp-qty-note" style="font-size:12px;color:#e67e22;margin-bottom:10px;display:none;font-weight:500"></div>
       <button class="btn btn-pink" id="gen-btn" style="width:100%" onclick="generateStampQR()">Generate Stamp QR</button>
     </div>
 
@@ -118,7 +158,8 @@ input:focus{border-color:#8fcea1}
         <div class="qr-code" id="qr-display"></div>
         <div class="qr-timer">Expires in</div>
         <div class="qr-countdown" id="countdown">60</div>
-        <div class="qr-note">Show this QR to the customer to scan. It will expire after 60 seconds or when used.</div>
+        <div id="qr-stamp-count" style="font-size:13px;font-weight:700;color:var(--pink);margin-bottom:6px"></div>
+        <div class="qr-note">Show this QR to the customer to scan once. It will expire after 3 minutes.</div>
         <button class="btn btn-outline refresh-btn" onclick="generateStampQR()">↻ Generate new QR</button>
       </div>
     </div>
@@ -162,13 +203,7 @@ input:focus{border-color:#8fcea1}
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="closeEditModal()" style="padding:10px;border:1.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font)">Cancel</button>
-        <button onclick="saveStampEdit()" id="save-edit-btn" style="padding:10px;border:none;border-radius:8px;background:#8fcea1;color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font)">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
+        <button onclick="saveStampEdit()" id="save-edit-btn" style="padding:10px;border:none;border-radius:8px;background:#8fcea1;color:#fff;cursor:pointer;font-size:13px;font-w
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 const STAMP_URL = 'https://fruiceysg.github.io/fruicey-members/stamp.html';
 
@@ -181,6 +216,19 @@ function initials(f,l){return(f[0]||'').toUpperCase()+(l[0]||'').toUpperCase();}
 
 let allMembers=[];
 let countdownInterval=null;
+let stampQtyToIssue = 1;
+
+function adjustStampQty(d){
+  stampQtyToIssue = Math.max(1, Math.min(9, stampQtyToIssue + d));
+  document.getElementById('stamp-qty-val').textContent = stampQtyToIssue;
+  const note = document.getElementById('stamp-qty-note');
+  if(stampQtyToIssue > 1){
+    note.textContent = stampQtyToIssue + ' stamps will be issued — customer scans once.';
+    note.style.display = 'block';
+  } else {
+    note.style.display = 'none';
+  }
+}
 
 function switchTab(tab,btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -273,7 +321,7 @@ async function generateStampQR(){
   btn.textContent='Generating...';btn.disabled=true;
 
   try{
-    const res=await apiPost({action:'generateStampToken',phone});
+    const res=await apiPost({action:'generateStampToken',phone,qty:stampQtyToIssue});
     if(res.error==='not_found'){showToast('Customer not registered');btn.textContent='Generate Stamp QR';btn.disabled=false;return;}
     if(res.error==='already_complete'){showToast('Card is complete — ask customer to redeem first');btn.textContent='Generate Stamp QR';btn.disabled=false;return;}
 
@@ -359,7 +407,85 @@ async function saveStampEdit(){
     if(res.success){
       closeEditModal();
       showToast('Stamps updated successfully!');
-      loadData();
+      
+// ── ORDERS ────────────────────────────────────────────────────
+let allOrders = [];
+let currentOrderFilter = 'all';
+
+async function loadOrders(){
+  const el = document.getElementById('orders-admin-list');
+  el.innerHTML = '<div style="text-align:center;padding:2rem;color:#aaa">Loading orders...</div>';
+  try{
+    const res = await apiGet({action:'getOrders'});
+    allOrders = res.orders||[];
+    renderOrders();
+  }catch(e){ el.innerHTML='<div style="text-align:center;padding:2rem;color:#aaa">Could not load orders.</div>'; }
+}
+
+function filterOrders(status, btn){
+  currentOrderFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders();
+}
+
+function renderOrders(){
+  const filtered = currentOrderFilter==='all' ? allOrders : allOrders.filter(o=>o.status===currentOrderFilter);
+  const el = document.getElementById('orders-admin-list');
+  if(!filtered.length){
+    el.innerHTML='<div style="text-align:center;padding:2rem;color:#aaa">No orders found</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(o => {
+    const items = Array.isArray(o.items)?o.items:[];
+    const statusColors = {Pending:'#f57f17',Confirmed:'#2e7d32',Ready:'#1565c0',Collected:'#757575'};
+    const color = statusColors[o.status]||'#333';
+    return '<div class="order-admin-card">'
+      +'<div class="order-admin-hdr">'
+      +'<div><div style="font-size:14px;font-weight:700">'+o.id+'</div>'
+      +'<div style="font-size:12px;color:#888">'+o.name+' · '+o.phone+'</div>'
+      +'<div style="font-size:11px;color:#bbb">'+formatDate(o.createdAt||'')+'</div></div>'
+      +'<div style="text-align:right"><span class="status-badge status-'+o.status+'">'+o.status+'</span>'
+      +'<div style="font-size:15px;font-weight:700;color:var(--pink);margin-top:4px">$'+parseFloat(o.total||0).toFixed(2)+'</div></div>'
+      +'</div>'
+      +'<div class="order-admin-body">'
+      +'<div>'+items.map(i=>i.qty+'x '+i.label).join('<br>')+'</div>'
+      +'<div style="margin-top:6px;font-size:12px"><b>Collection:</b> '+o.collectTime+'</div>'
+      +(o.notes?'<div style="font-size:12px"><b>Notes:</b> '+o.notes+'</div>':'')
+      +'</div>'
+      +'<div class="order-admin-footer">'
+      +'<div style="font-size:11px;color:#888;width:100%;margin-bottom:4px">Update status:</div>'
+      +['Pending','Confirmed','Ready','Collected'].map(function(s){
+        const check = o.status===s ? '✓ ' : '';
+        return '<button class="status-btn status-'+s+'" data-oid="'+o.id+'" data-status="'+s+'">'+check+s+'</button>';
+      }).join('')
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+async function updateStatus(orderId, status){
+  try{
+    const res = await apiPost({action:'updateOrderStatus', id:orderId, status});
+    if(res.success){ showToast('Order '+orderId+' → '+status); loadOrders(); }
+    else showToast('Error updating status');
+  }catch(e){ showToast('Connection error'); }
+}
+
+// Event delegation for status buttons
+document.addEventListener('click', function(e){
+  const sb = e.target.closest('.status-btn[data-oid]');
+  if(sb){ updateStatus(sb.dataset.oid, sb.dataset.status); }
+});
+
+// Auto-load orders when tab is switched to orders
+const origSwitchTab = switchTab;
+window.switchTab = function(tab, btn){
+  origSwitchTab(tab, btn);
+  if(tab==='orders') loadOrders();
+};
+
+loadData();
     } else {
       errEl.textContent = 'Error saving. Please try again.';
       errEl.style.display='block';
@@ -417,6 +543,9 @@ document.addEventListener('click', function(e){
 // Close modal on backdrop click
 const editModalEl = document.getElementById('edit-modal');
 if(editModalEl){ editModalEl.addEventListener('click', function(e){ if(e.target===this) closeEditModal(); }); }
+
+loadData();
+itModalEl.addEventListener('click', function(e){ if(e.target===this) closeEditModal(); }); }
 
 loadData();
 </script>

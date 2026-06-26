@@ -194,6 +194,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 
 const CATALOGUE = {
@@ -362,14 +363,13 @@ async function lookupMember(){
   const btn=document.getElementById('lookup-btn');
   btn.textContent='...';btn.disabled=true;
   try{
-    const res=await apiGet({action:'getMember',phone:np(phone)});
-    if(res.error==='not_found'){showToast('Member not found');clearMemberDisplay();}
+    const res=await apiGet({action:'getStampCard',phone:np(phone)});
+    if(res.error==='not_found'){showToast('Rewards member not found');clearMemberDisplay();}
     else if(res.member){
       currentMember=res.member;
-      const tier=computeTier(res.member,res.transactions||[]);
-      memberDiscount=tier.discount;
-      showMemberDisplay(res.member,tier);
-      showToast(res.member.first+' — '+tier.name+(tier.discount>0?' ('+tier.discount+'% off)':''));
+      memberDiscount=0; // no tier discount from rewards pass
+      showMemberDisplay(res.member);
+      showToast(res.member.first+' '+res.member.last+' — '+( parseInt(res.member.stamps)||0)+'/9 stamps');
     }
   }catch(e){showToast('Connection error');}
   btn.textContent='Look up';btn.disabled=false;
@@ -386,15 +386,18 @@ function computeTier(member,txns){
   return TIERS.slice().reverse().find(t=>spend>=t.min)||TIERS[0];
 }
 
-function showMemberDisplay(m,tier){
-  const TC={Member:'#888',Gold:'#b8860b',Platinum:'#607d8b',Diamond:'#1565c0'};
-  const el=document.getElementById('member-result');
-  el.style.display='block';
-  el.innerHTML='<div style="display:flex;align-items:center;gap:10px">'
-    +'<div style="width:34px;height:34px;border-radius:50%;background:'+TC[tier.name]+'22;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:'+TC[tier.name]+';flex-shrink:0">'+m.first[0].toUpperCase()+m.last[0].toUpperCase()+'</div>'
+function showMemberDisplay(m){
+  const stamps = parseInt(m.stamps)||0;
+  const el = document.getElementById('member-result');
+  el.style.display = 'block';
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
+    +'<div style="width:34px;height:34px;border-radius:50%;background:#8fcea122;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#8fcea1;flex-shrink:0">'+(m.first[0]||'').toUpperCase()+(m.last[0]||'').toUpperCase()+'</div>'
     +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+m.first+' '+m.last+'</div><div style="font-size:11px;color:#888">'+m.phone+'</div></div>'
-    +'<div style="text-align:right"><div style="font-size:12px;font-weight:700;color:'+TC[tier.name]+'">'+tier.name+'</div>'
-    +(tier.discount>0?'<div style="font-size:13px;color:#27ae60;font-weight:600">'+tier.discount+'% off</div>':'<div style="font-size:11px;color:#aaa">No discount</div>')+'</div></div>';
+    +'<div style="text-align:right">'
+    +'<div style="font-size:12px;font-weight:700;color:#8fcea1">Rewards Pass</div>'
+    +'<div style="font-size:11px;color:#888">'+stamps+' / 9 stamps</div>'
+    +(stamps>=9?'<div style="font-size:11px;color:#e67e22;font-weight:700">Card complete!</div>':'')
+    +'</div></div>';
 }
 function clearMemberDisplay(){document.getElementById('member-result').style.display='none';}
 function clearMember(){currentMember=null;memberDiscount=0;document.getElementById('member-phone').value='';clearMemberDisplay();updateTotals();showToast('Member cleared');}
@@ -776,6 +779,7 @@ document.getElementById('close-sales-btn').addEventListener('click', closeSales)
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

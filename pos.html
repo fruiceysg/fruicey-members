@@ -393,7 +393,7 @@ async function apiPost(body){const r=await fetch(API,{method:'POST',headers:{'Co
 
 // ── CLOCK ────────────────────────────────────────────────────────────
 // ── PIN PROTECTION ───────────────────────────────────────────
-const STAFF_PIN = '1234'; // Change this to your preferred PIN
+const STAFF_PIN = '168886'; // Change this to your preferred PIN
 function checkPin(){
   const saved = sessionStorage.getItem('fruicey_pin_ok');
   if(saved === 'yes') return true;

@@ -124,7 +124,6 @@ input:focus{border-color:var(--green)}
     <button class="tab active" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
     <button class="tab" id="tab-members"   onclick="switchTab('members')">Members</button>
     <button class="tab" id="tab-stamp"     onclick="switchTab('stamp')">Issue Stamp QR</button>
-    <button class="tab" id="tab-orders"    onclick="switchTab('orders')">Orders</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -183,24 +182,7 @@ input:focus{border-color:var(--green)}
     </div>
   </div>
 
-  <!-- ORDERS -->
-  <div class="section" id="sec-orders">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:13px;color:var(--text2)">Update order status after confirming PayNow payment.</div>
-      <button class="btn btn-outline" onclick="loadOrders()">Refresh</button>
-    </div>
-    <div class="filter-btns">
-      <button class="filter-btn active" onclick="filterOrders('all',this)">All</button>
-      <button class="filter-btn" onclick="filterOrders('Pending',this)" style="color:#f57f17">Pending</button>
-      <button class="filter-btn" onclick="filterOrders('Confirmed',this)" style="color:#2e7d32">Confirmed</button>
-      <button class="filter-btn" onclick="filterOrders('Ready',this)" style="color:#1565c0">Ready</button>
-      <button class="filter-btn" onclick="filterOrders('Collected',this)" style="color:#757575">Collected</button>
-    </div>
-    <div id="orders-list"></div>
-  </div>
-</div>
-
-<!-- EDIT MODAL -->
+  <!-- EDIT MODAL -->
 <div class="modal-bg" id="edit-modal">
   <div class="modal-box">
     <div class="modal-hdr">
@@ -237,7 +219,7 @@ input:focus{border-color:var(--green)}
 <script>
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'gBl8830G!!', name:'Admin'},
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
   {username:'staff1', password:'staff1pass',  name:'Staff 1'},
   {username:'staff2', password:'staff2pass',  name:'Staff 2'},
 ];
@@ -298,7 +280,6 @@ function switchTab(tab){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('sec-'+tab).classList.add('active');
-  if(tab==='orders') loadOrders();
 }
 
 // ── DATA ──────────────────────────────────────────────────────
@@ -495,55 +476,6 @@ async function generateStampQR(){
 }
 
 document.getElementById('stamp-phone').addEventListener('keydown',function(e){if(e.key==='Enter')generateStampQR();});
-
-// ── ORDERS ────────────────────────────────────────────────────
-async function loadOrders(){
-  const el=document.getElementById('orders-list');
-  el.innerHTML='<div class="empty">Loading orders...</div>';
-  try{
-    const res=await apiGet({action:'getOrders'});
-    allOrders=res.orders||[];
-    renderOrders();
-  }catch(e){el.innerHTML='<div class="empty">Could not load orders.</div>';}
-}
-
-function filterOrders(status,btn){
-  currentOrderFilter=status;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderOrders();
-}
-
-function renderOrders(){
-  const filtered=currentOrderFilter==='all'?allOrders:allOrders.filter(o=>o.status===currentOrderFilter);
-  const el=document.getElementById('orders-list');
-  if(!filtered.length){el.innerHTML='<div class="empty">No orders found</div>';return;}
-  el.innerHTML=filtered.map(o=>{
-    const items=Array.isArray(o.items)?o.items:[];
-    return '<div class="order-card">'
-      +'<div class="order-hdr"><div><div style="font-size:14px;font-weight:700">'+o.id+'</div>'
-      +'<div style="font-size:12px;color:#888">'+o.name+' · '+o.phone+'</div>'
-      +'<div style="font-size:11px;color:#bbb">'+formatDate(o.createdAt||'')+'</div></div>'
-      +'<div style="text-align:right"><span class="status-tag s-'+o.status+'">'+o.status+'</span>'
-      +'<div style="font-size:15px;font-weight:700;color:var(--green);margin-top:4px">$'+parseFloat(o.total||0).toFixed(2)+'</div></div></div>'
-      +'<div class="order-body">'+items.map(i=>i.qty+'x '+i.label).join('<br>')
-      +(o.collectTime?'<div style="margin-top:4px"><b>Collection:</b> '+o.collectTime+'</div>':'')
-      +(o.notes?'<div><b>Notes:</b> '+o.notes+'</div>':'')+'</div>'
-      +'<div class="order-footer">'
-      +['Pending','Confirmed','Ready','Collected'].map(s=>
-        '<button class="status-action s-'+s+'" style="border-color:'+(o.status===s?'#333':'#ddd')+';'+(o.status===s?'background:#333;color:#fff':'')+'" data-order-id="'+o.id+'" data-status="'+s+'">'+(o.status===s?'✓ ':'')+s+'</button>'
-      ).join('')
-      +'</div></div>';
-  }).join('');
-}
-
-async function updateStatus(id,status){
-  try{
-    const res=await apiPost({action:'updateOrderStatus',id,status});
-    if(res.success){showToast('Order updated to '+status);loadOrders();}
-    else showToast('Error updating');
-  }catch(e){showToast('Connection error');}
-}
 
 // ── INIT ──────────────────────────────────────────────────────
 // loadData called after login

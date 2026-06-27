@@ -282,11 +282,12 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'gBl8830G!!', name:'Admin'},
-  {username:'staff1', password:'staffpass1',  name:'Staff 1'},
-  {username:'staff2', password:'staffpass2',  name:'Staff 2'},
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
+  {username:'staff1', password:'staff1pass',  name:'Staff 1'},
+  {username:'staff2', password:'staff2pass',  name:'Staff 2'},
 ];
 let loggedInStaff = null;
 
@@ -335,16 +336,29 @@ function confirmPwModal(){
   const errEl = document.getElementById('pw-modal-err');
   if(!pass){ errEl.style.display='block'; return; }
   const account = STAFF_ACCOUNTS.find(a => a.username === loggedInStaff.username && a.password === pass);
-  if(!account){ errEl.style.display='block'; document.getElementById('pw-modal-input').value=''; document.getElementById('pw-modal-input').focus(); return; }
-  closePwModal();
-  if(_pwResolve){ _pwResolve(true); _pwResolve=null; }
-}
-
-function closePwModal(){
+  if(!account){
+    errEl.style.display='block';
+    document.getElementById('pw-modal-input').value='';
+    document.getElementById('pw-modal-input').focus();
+    return;
+  }
+  // Resolve TRUE before closing so closePwModal doesn't resolve FALSE
+  const resolve = _pwResolve;
+  _pwResolve = null;
   document.getElementById('pw-modal').classList.remove('open');
   document.getElementById('pw-modal-input').value='';
   document.getElementById('pw-modal-err').style.display='none';
-  if(_pwResolve){ _pwResolve(false); _pwResolve=null; }
+  if(resolve) resolve(true);
+}
+
+function closePwModal(){
+  // Only resolves FALSE if user cancelled (not called from confirmPwModal)
+  const resolve = _pwResolve;
+  _pwResolve = null;
+  document.getElementById('pw-modal').classList.remove('open');
+  document.getElementById('pw-modal-input').value='';
+  document.getElementById('pw-modal-err').style.display='none';
+  if(resolve) resolve(false);
 }
 
 function doLogout(){
@@ -1116,7 +1130,7 @@ async function dailySettlement(){
 async function clearSalesLog(){
   const okClear = await requireStaffAuth('clear all sales history');
   if(!okClear) return;
-  if(!confirm('Clear all sales history? This cannot be undone.')) return;
+  // confirmed via password modal already
   salesLog=[];try{localStorage.removeItem('fruicey_pos_sales');}catch(e){}
   renderSalesReport();showToast('Sales history cleared');
 }
@@ -1216,6 +1230,7 @@ document.getElementById('settle-btn').addEventListener('click', dailySettlement)
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 }
+
 
 
 

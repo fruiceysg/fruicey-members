@@ -213,6 +213,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 
 const CATALOGUE = {
@@ -797,20 +798,61 @@ function renderSalesReport(){
       </table>
     </div>`;
 
+  // Product sales breakdown
+  function buildProductChart(sales){
+    const tally = {};
+    sales.forEach(s=>{
+      (s.items||[]).forEach(i=>{
+        const key = i.label||i.name||'Unknown';
+        if(!tally[key]) tally[key]={qty:0,revenue:0};
+        tally[key].qty += i.qty||1;
+        tally[key].revenue += (i.price||0)*(i.qty||1);
+      });
+    });
+    const sorted = Object.entries(tally).sort((a,b)=>b[1].qty-a[1].qty);
+    if(!sorted.length) return '<div style="font-size:12px;color:#bbb;padding:8px 0">No data</div>';
+    const maxQty = sorted[0][1].qty;
+    return sorted.map(([label,data])=>{
+      const pct = Math.round(data.qty/maxQty*100);
+      return '<div style="padding:6px 0;border-bottom:.5px solid #f5f5f5">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+        +'<span style="font-size:12px;color:#333;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">'+label+'</span>'
+        +'<span style="font-size:12px;font-weight:700;color:#555;flex-shrink:0">'+data.qty+' sold · $'+data.revenue.toFixed(2)+'</span>'
+        +'</div>'
+        +'<div style="height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden">'
+        +'<div style="height:100%;width:'+pct+'%;background:#8fcea1;border-radius:3px;transition:width .3s"></div>'
+        +'</div></div>';
+    }).join('');
+  }
+
   // Recent transactions
   const el=document.getElementById('sales-list');
   if(!salesLog.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:#bbb">No sales yet</div>';return;}
-  el.innerHTML='<div style="font-size:12px;font-weight:600;color:#555;margin-bottom:8px">Recent transactions</div>'
-  +salesLog.slice(0,30).map(s=>
-    '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start">'
-    +'<div><div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'
-    +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+'</div>'
-    +'<div style="font-size:11px;color:#ccc">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div></div>'
-    +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'
-    +'<div style="font-size:13px;font-weight:700;color:#8fcea1">$'+s.total.toFixed(2)+'</div>'
-    +(s.discount>0?'<div style="font-size:10px;color:#aaa">disc $'+s.discount.toFixed(2)+'</div>':'')
-    +'</div></div>'
-  ).join('');
+
+  const today2=new Date().toISOString().split('T')[0];
+  const todaySales2=salesLog.filter(s=>s.date===today2);
+  const month2=today2.slice(0,7);
+  const monthSales2=salesLog.filter(s=>s.date&&s.date.startsWith(month2));
+
+  el.innerHTML=
+    // Daily product breakdown
+    '<div style="font-size:13px;font-weight:700;color:#555;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Products sold today</div>'
+    +(todaySales2.length?buildProductChart(todaySales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales today</div>')
+    // Monthly product breakdown
+    +'<div style="font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Products sold this month</div>'
+    +(monthSales2.length?buildProductChart(monthSales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>')
+    // Recent transactions
+    +'<div style="font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Recent transactions</div>'
+    +salesLog.slice(0,30).map(s=>
+      '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start">'
+      +'<div><div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'
+      +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+'</div>'
+      +'<div style="font-size:11px;color:#ccc">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div></div>'
+      +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'
+      +'<div style="font-size:13px;font-weight:700;color:#8fcea1">$'+s.total.toFixed(2)+'</div>'
+      +(s.discount>0?'<div style="font-size:10px;color:#aaa">disc $'+s.discount.toFixed(2)+'</div>':'')
+      +'</div></div>'
+    ).join('');
 }
 function exportSalesCSV(){
   if(!salesLog.length){showToast('No sales to export');return;}
@@ -920,6 +962,7 @@ document.getElementById('export-monthly-btn').addEventListener('click', exportMo
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

@@ -241,6 +241,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       <button class="btn-export" id="export-btn" style="flex:1;min-width:120px">Export Daily</button>
       <button class="btn-export" id="export-monthly-btn" style="flex:1;min-width:120px;background:#5aab74">Export Monthly</button>
       <button style="flex:1;min-width:120px;padding:9px;border-radius:var(--r);cursor:pointer;font-size:13px;font-family:var(--font);font-weight:500;background:#1565c0;color:#fff;border:none" id="settle-btn">Daily Settlement</button>
+      <button class="btn-clr-sales" id="clr-sales-btn" style="flex:1;min-width:120px">Clear History</button>
     </div>
   </div>
 </div>
@@ -271,14 +272,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="closeEditTxn()" class="btn-print">Cancel</button>
-        <button onclick="saveEditTxn()" class="btn-done">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
+        <button onclick="saveEditTxn()" <script>
 
-<div class="toast" id="toast"></div>
-<script>
 
 
 
@@ -1188,7 +1183,37 @@ document.getElementById('close-sales-btn').addEventListener('click', closeSales)
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
 document.getElementById('export-monthly-btn').addEventListener('click', exportMonthlyCSV);
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
+document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>stener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 
 
 

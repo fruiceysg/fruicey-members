@@ -282,9 +282,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 <script>
 
 
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'gBl8830G!!', name:'Admin'},
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
   {username:'staff1', password:'staff1pass',  name:'Staff 1'},
   {username:'staff2', password:'staff2pass',  name:'Staff 2'},
 ];
@@ -491,6 +492,7 @@ const CAT_BG     = {'Shakes & Smoothies':'#fce4f0','Superfood Bowls':'#e8f8ee','
 const CAT_ICONS  = {'Shakes & Smoothies':'ti-cup','Superfood Bowls':'ti-bowl','Immunity Press':'ti-flask','Nutritional Press':'ti-pill','Juices':'ti-droplet'};
 
 let cart = [], currentMember = null, memberDiscount = 0, currentCat = 'Shakes & Smoothies', paymentMethod = '';
+const ONLINE_PLATFORMS = ['GrabFood','FoodPanda'];
 let stockStatus = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg // id -> true/false
 let salesLog = [];
@@ -925,12 +927,11 @@ function renderSalesReport(){
   const monthSales=salesLog.filter(s=>s.date&&s.date.startsWith(month));
 
   // Payment breakdown helper
-  const ONLINE_PLATFORMS = ['GrabFood','FoodPanda'];
   function payBreakdown(sales){
     const inStore = sales.filter(s=>!ONLINE_PLATFORMS.includes(s.payment));
-    const cash    = inStore.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
-    const card    = inStore.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
-    const paynow  = inStore.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
+    const cash    = inStoreActive.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
+    const card    = inStoreActive.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
+    const paynow  = inStoreActive.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
     const grab    = sales.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0);
     const panda   = sales.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0);
     const total   = inStore.reduce((t,s)=>t+s.total,0);
@@ -1170,6 +1171,7 @@ document.getElementById('export-monthly-btn').addEventListener('click', exportMo
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

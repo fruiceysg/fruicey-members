@@ -283,9 +283,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'gBl8830G!!', name:'Admin'},
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
   {username:'staff1', password:'staff1pass',  name:'Staff 1'},
   {username:'staff2', password:'staff2pass',  name:'Staff 2'},
 ];
@@ -928,13 +929,14 @@ function renderSalesReport(){
 
   // Payment breakdown helper
   function payBreakdown(sales){
-    const inStore = sales.filter(s=>!ONLINE_PLATFORMS.includes(s.payment));
+    const inStore       = sales.filter(s=>!ONLINE_PLATFORMS.includes(s.payment));
+    const inStoreActive = inStore.filter(s=>!s.voided);
     const cash    = inStoreActive.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
     const card    = inStoreActive.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
     const paynow  = inStoreActive.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
     const grab    = sales.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0);
     const panda   = sales.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0);
-    const total   = inStore.reduce((t,s)=>t+s.total,0);
+    const total   = inStoreActive.reduce((t,s)=>t+s.total,0);
     return {cash,card,paynow,grab,panda,total,count:inStoreActive.length,onlineCount:sales.length-inStore.length};
   }
   const d=payBreakdown(todaySales);
@@ -1171,6 +1173,7 @@ document.getElementById('export-monthly-btn').addEventListener('click', exportMo
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

@@ -57,7 +57,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .summary-row{display:flex;justify-content:space-between;font-size:13px;color:#888;margin-bottom:4px}
 .disc-row{display:none;justify-content:space-between;font-size:13px;color:#27ae60;font-weight:500;margin-bottom:4px}
 .total-row{display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin:8px 0 10px}
-.pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}
 .pay-btn{padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:var(--r);background:#fff;cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font);color:#666;transition:all .15s;text-align:center}
 .pay-active{border-color:#111!important;background:#111!important;color:#fff!important}
 .charge-btn{width:100%;padding:13px;background:var(--pink);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font)}
@@ -110,15 +110,30 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 <div class="layout">
   <div class="catalogue">
-    <div id="cat-tabs" class="cat-tabs"></div>
-    <div class="member-bar">
-      <i class="ti ti-user-circle" style="color:#ccc;font-size:18px;flex-shrink:0" aria-hidden="true"></i>
-      <input type="tel" id="member-phone" placeholder="Member phone number">
-      <button class="mbtn mbtn-lookup" id="lookup-btn">Look up</button>
-      <button class="mbtn mbtn-clear" id="clear-member-btn">Clear</button>
+    <!-- POS view tabs -->
+    <div style="display:flex;background:#fff;border-bottom:1px solid #eee;flex-shrink:0">
+      <button id="pos-tab-menu" onclick="switchPosTab('menu')" style="flex:1;padding:8px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#8fcea1;border-bottom:2px solid #8fcea1;font-family:var(--font)">Menu</button>
+      <button id="pos-tab-member" onclick="switchPosTab('member')" style="flex:1;padding:8px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#aaa;border-bottom:2px solid transparent;font-family:var(--font)">Member</button>
     </div>
-    <div id="member-result" class="member-result" style="display:none"></div>
-    <div id="product-grid" class="product-grid"></div>
+    <!-- Menu view -->
+    <div id="pos-view-menu" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+      <div id="cat-tabs" class="cat-tabs"></div>
+      <div id="product-grid" class="product-grid"></div>
+    </div>
+    <!-- Member view -->
+    <div id="pos-view-member" style="display:none;flex:1;overflow-y:auto;padding:12px">
+      <div class="member-bar" style="margin-bottom:12px;padding:0">
+        <i class="ti ti-user-circle" style="color:#ccc;font-size:18px;flex-shrink:0" aria-hidden="true"></i>
+        <input type="tel" id="member-phone" placeholder="Customer phone number">
+        <button class="mbtn mbtn-lookup" id="lookup-btn">Look up</button>
+        <button class="mbtn mbtn-clear" id="clear-member-btn">Clear</button>
+      </div>
+      <div id="member-result" class="member-result" style="display:none;margin:0 0 12px"></div>
+      <div id="member-history" style="display:none">
+        <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">Purchase history</div>
+        <div id="member-history-list"></div>
+      </div>
+    </div>
   </div>
 
   <div class="cart-panel">
@@ -135,9 +150,9 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <button class="pay-btn" data-method="Cash"><i class="ti ti-cash" aria-hidden="true"></i> Cash</button>
         <button class="pay-btn" data-method="PayNow"><i class="ti ti-qrcode" aria-hidden="true"></i> PayNow</button>
         <button class="pay-btn" data-method="Card"><i class="ti ti-credit-card" aria-hidden="true"></i> Card</button>
-        <button class="pay-btn" data-method="GrabPay"><i class="ti ti-device-mobile" aria-hidden="true"></i> GrabPay</button>
+        
       </div>
-      <button class="charge-btn" id="checkout-btn">Charge Customer</button>
+      <button class="charge-btn" id="checkout-btn">Tender</button>
     </div>
   </div>
 </div>
@@ -169,15 +184,18 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">Recent Orders</div>
       <div id="sales-list"></div>
     </div>
-    <div class="sales-footer">
-      <button class="btn-export" id="export-btn">⬇ Export CSV</button>
-      <button class="btn-clr-sales" id="clr-sales-btn">🗑 Clear History</button>
+    <div class="sales-footer" style="flex-wrap:wrap;gap:6px">
+      <button class="btn-export" id="export-btn" style="flex:1;min-width:120px">Export Daily</button>
+      <button class="btn-export" id="export-monthly-btn" style="flex:1;min-width:120px;background:#5aab74">Export Monthly</button>
+      <button style="flex:1;min-width:120px;padding:9px;border-radius:var(--r);cursor:pointer;font-size:13px;font-family:var(--font);font-weight:500;background:#1565c0;color:#fff;border:none" id="settle-btn">Daily Settlement</button>
+      <button class="btn-clr-sales" id="clr-sales-btn" style="flex:1;min-width:120px">Clear History</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 <script>
+
 
 
 
@@ -388,19 +406,51 @@ function computeTier(member,txns){
 
 function showMemberDisplay(m){
   const stamps = parseInt(m.stamps)||0;
+  const completed = parseInt(m.cardsCompleted)||0;
   const el = document.getElementById('member-result');
   el.style.display = 'block';
   el.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
-    +'<div style="width:34px;height:34px;border-radius:50%;background:#8fcea122;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#8fcea1;flex-shrink:0">'+(m.first[0]||'').toUpperCase()+(m.last[0]||'').toUpperCase()+'</div>'
-    +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+m.first+' '+m.last+'</div><div style="font-size:11px;color:#888">'+m.phone+'</div></div>'
-    +'<div style="text-align:right">'
-    +'<div style="font-size:12px;font-weight:700;color:#8fcea1">Rewards Pass</div>'
-    +'<div style="font-size:11px;color:#888">'+stamps+' / 9 stamps</div>'
+    +'<div style="width:36px;height:36px;border-radius:50%;background:#8fcea122;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#8fcea1;flex-shrink:0">'+(m.first[0]||'').toUpperCase()+(m.last[0]||'').toUpperCase()+'</div>'
+    +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+m.first+' '+m.last+'</div>'
+    +'<div style="font-size:11px;color:#888">'+m.phone+'</div>'
+    +'<div style="font-size:11px;color:#8fcea1;margin-top:2px">'+stamps+'/9 stamps'+(completed>0?' · '+completed+' completed':'')+'</div>'
     +(stamps>=9?'<div style="font-size:11px;color:#e67e22;font-weight:700">Card complete!</div>':'')
     +'</div></div>';
+  // Load purchase history from localStorage
+  loadMemberHistory(m.phone);
+}
+
+function loadMemberHistory(phone){
+  const np = p=>(p||'').replace(/\D/g,'');
+  const history = salesLog.filter(s=>s.memberPhone&&np(s.memberPhone)===np(phone));
+  const histEl = document.getElementById('member-history');
+  const listEl = document.getElementById('member-history-list');
+  if(!history.length){
+    listEl.innerHTML='<div style="font-size:12px;color:#bbb;text-align:center;padding:12px">No purchases recorded today</div>';
+  } else {
+    listEl.innerHTML = history.map(s=>
+      '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0;font-size:12px">'
+      +'<div style="display:flex;justify-content:space-between">'
+      +'<span style="color:#555">'+s.date+' '+s.time+'</span>'
+      +'<span style="font-weight:700;color:#8fcea1">$'+s.total.toFixed(2)+'</span></div>'
+      +'<div style="color:#aaa;margin-top:2px">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div>'
+      +'<div style="color:#bbb;font-size:11px">'+s.payment+'</div>'
+      +'</div>'
+    ).join('');
+  }
+  histEl.style.display='block';
 }
 function clearMemberDisplay(){document.getElementById('member-result').style.display='none';}
-function clearMember(){currentMember=null;memberDiscount=0;document.getElementById('member-phone').value='';clearMemberDisplay();updateTotals();showToast('Member cleared');}
+function switchPosTab(tab){
+  document.getElementById('pos-view-menu').style.display = tab==='menu'?'flex':'none';
+  document.getElementById('pos-view-member').style.display = tab==='member'?'flex':'none';
+  document.getElementById('pos-tab-menu').style.color = tab==='menu'?'#8fcea1':'#aaa';
+  document.getElementById('pos-tab-menu').style.borderBottomColor = tab==='menu'?'#8fcea1':'transparent';
+  document.getElementById('pos-tab-member').style.color = tab==='member'?'#8fcea1':'#aaa';
+  document.getElementById('pos-tab-member').style.borderBottomColor = tab==='member'?'#8fcea1':'transparent';
+}
+
+function clearMember(){currentMember=null;memberDiscount=0;document.getElementById('member-phone').value='';clearMemberDisplay();document.getElementById('member-history').style.display='none';updateTotals();showToast('Member cleared');}
 
 // ── CATEGORIES ───────────────────────────────────────────────────────
 function renderCats(){
@@ -633,26 +683,44 @@ async function checkout(){
   const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
   const disc=memberDiscount>0?+(sub*memberDiscount/100).toFixed(2):0;
   const total=+(sub-disc).toFixed(2);
-  const today=new Date().toISOString().split('T')[0];
+  const now=new Date();
+  const dateStr=now.toISOString().split('T')[0];
+  const timeStr=now.toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
   const btn=document.getElementById('checkout-btn');
   btn.textContent='Processing...';btn.disabled=true;
   try{
-    if(currentMember){
-      await apiPost({action:'addTransaction',memberId:currentMember.id,
-        amount:total.toFixed(2),
-        desc:'POS: '+cart.map(i=>i.qty+'x '+i.label).join(', '),
-        date:today});
-    }
-    const sale={id:'sale_'+Date.now(),date:today,
-      time:new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'}),
-      items:cart.map(i=>({...i})),subtotal:sub,discount:disc,total,
+    const sale={
+      id:'sale_'+Date.now(),
+      date:dateStr,
+      time:timeStr,
+      items:cart.map(i=>({...i})),
+      subtotal:sub,
+      discount:disc,
+      total,
       payment:paymentMethod,
-      member:currentMember?currentMember.first+' '+currentMember.last:null};
+      member:currentMember?currentMember.first+' '+currentMember.last:null,
+      memberPhone:currentMember?currentMember.phone:null
+    };
+    // Save to Sheets
+    try{
+      await apiPost({
+        action:'addPOSSale',
+        date:dateStr,
+        time:timeStr,
+        items:JSON.stringify(cart.map(i=>({qty:i.qty,label:i.label,price:i.price}))),
+        subtotal:sub.toFixed(2),
+        discount:disc.toFixed(2),
+        total:total.toFixed(2),
+        payment:paymentMethod,
+        member:sale.member||'',
+        memberPhone:sale.memberPhone||''
+      });
+    }catch(e){ console.log('Sheet save failed',e); }
     salesLog.unshift(sale);
     try{localStorage.setItem('fruicey_pos_sales',JSON.stringify(salesLog.slice(0,500)));}catch(e){}
     showReceipt(sale);
   }catch(err){showToast('Error — please try again');}
-  btn.textContent='Charge Customer';btn.disabled=false;
+  btn.textContent='Tender';btn.disabled=false;
 }
 
 // ── RECEIPT ──────────────────────────────────────────────────────────
@@ -684,24 +752,63 @@ function openSales(){renderSalesReport();document.getElementById('sales-modal').
 function closeSales(){document.getElementById('sales-modal').classList.remove('open');}
 function renderSalesReport(){
   const today=new Date().toISOString().split('T')[0];
-  const ts=salesLog.filter(s=>s.date===today);
-  const tRev=ts.reduce((s,r)=>s+r.total,0);
-  document.getElementById('sales-summary').innerHTML=
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">'
-    +'<div class="stat-box"><div class="stat-val" style="color:#E91E8C">$'+tRev.toFixed(2)+'</div><div class="stat-lbl">Today Revenue</div></div>'
-    +'<div class="stat-box"><div class="stat-val">'+ts.length+'</div><div class="stat-lbl">Today Orders</div></div>'
-    +'<div class="stat-box"><div class="stat-val" style="color:#27ae60">'+salesLog.length+'</div><div class="stat-lbl">All Orders</div></div>'
-    +'</div>';
+  const todaySales=salesLog.filter(s=>s.date===today);
+  const month=today.slice(0,7);
+  const monthSales=salesLog.filter(s=>s.date&&s.date.startsWith(month));
+
+  // Payment breakdown helper
+  function payBreakdown(sales){
+    const cash=sales.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
+    const card=sales.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
+    const paynow=sales.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
+    const total=sales.reduce((t,s)=>t+s.total,0);
+    return {cash,card,paynow,total,count:sales.length};
+  }
+  const d=payBreakdown(todaySales);
+  const m=payBreakdown(monthSales);
+
+  document.getElementById('sales-summary').innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Daily Report — ${today}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <tr style="background:#f9f9f9">
+          <th style="padding:7px 10px;text-align:left;border:1px solid #eee">Payment</th>
+          <th style="padding:7px 10px;text-align:right;border:1px solid #eee">Txns</th>
+          <th style="padding:7px 10px;text-align:right;border:1px solid #eee">Amount</th>
+        </tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Cash').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.cash.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Card').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.card.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='PayNow').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.paynow.toFixed(2)}</td></tr>
+        <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${d.total.toFixed(2)}</td></tr>
+      </table>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;color:#555;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Monthly Report — ${month}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <tr style="background:#f9f9f9">
+          <th style="padding:7px 10px;text-align:left;border:1px solid #eee">Payment</th>
+          <th style="padding:7px 10px;text-align:right;border:1px solid #eee">Txns</th>
+          <th style="padding:7px 10px;text-align:right;border:1px solid #eee">Amount</th>
+        </tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Cash').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.cash.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Card').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.card.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='PayNow').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.paynow.toFixed(2)}</td></tr>
+        <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${m.total.toFixed(2)}</td></tr>
+      </table>
+    </div>`;
+
+  // Recent transactions
   const el=document.getElementById('sales-list');
   if(!salesLog.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:#bbb">No sales yet</div>';return;}
-  el.innerHTML=salesLog.slice(0,50).map(s=>
-    '<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-    +'<div><div style="font-size:13px;font-weight:500">'+s.date+' '+s.time+'</div>'
-    +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+s.payment+(s.member?' · '+s.member:'')+'</div>'
-    +'<div style="font-size:11px;color:#ccc;margin-top:1px">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div></div>'
-    +'<div style="text-align:right;flex-shrink:0;margin-left:8px"><div style="font-size:14px;font-weight:700;color:#E91E8C">$'+s.total.toFixed(2)+'</div>'
-    +(s.discount>0?'<div style="font-size:11px;color:#27ae60">-$'+s.discount.toFixed(2)+'</div>':'')+'</div>'
+  el.innerHTML='<div style="font-size:12px;font-weight:600;color:#555;margin-bottom:8px">Recent transactions</div>'
+  +salesLog.slice(0,30).map(s=>
+    '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start">'
+    +'<div><div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'
+    +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+'</div>'
+    +'<div style="font-size:11px;color:#ccc">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div></div>'
+    +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'
+    +'<div style="font-size:13px;font-weight:700;color:#8fcea1">$'+s.total.toFixed(2)+'</div>'
+    +(s.discount>0?'<div style="font-size:10px;color:#aaa">disc $'+s.discount.toFixed(2)+'</div>':'')
     +'</div></div>'
   ).join('');
 }
@@ -714,6 +821,38 @@ function exportSalesCSV(){
   a.download='fruicey-sales-'+new Date().toISOString().split('T')[0]+'.csv';a.click();
   showToast('Exported!');
 }
+
+function exportMonthlyCSV(){
+  const month=new Date().toISOString().slice(0,7);
+  const monthly=salesLog.filter(s=>s.date&&s.date.startsWith(month));
+  if(!monthly.length){showToast('No sales this month');return;}
+  const rows=[['Date','Time','Items','Subtotal','Discount','Total','Payment','Member']];
+  monthly.forEach(s=>rows.push([s.date,s.time,s.items.map(i=>i.qty+'x '+i.label).join(' | '),s.subtotal.toFixed(2),s.discount.toFixed(2),s.total.toFixed(2),s.payment,s.member||'']));
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='fruicey-monthly-'+month+'.csv';a.click();
+  showToast('Monthly report exported!');
+}
+
+function dailySettlement(){
+  const today=new Date().toISOString().split('T')[0];
+  const todaySales=salesLog.filter(s=>s.date===today);
+  if(!todaySales.length){showToast('No sales today to settle');return;}
+  const total=todaySales.reduce((t,s)=>t+s.total,0);
+  const cash=todaySales.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
+  const card=todaySales.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
+  const paynow=todaySales.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
+  if(!confirm('Settle '+today+'?\n\nCash: $'+cash.toFixed(2)+'\nCard: $'+card.toFixed(2)+'\nPayNow: $'+paynow.toFixed(2)+'\nTotal: $'+total.toFixed(2)+'\n\nThis will mark today as settled. Continue?'))return;
+  // Keep non-today sales, archive today
+  const settled=JSON.parse(localStorage.getItem('fruicey_settled')||'[]');
+  settled.push({date:today,sales:todaySales,settledAt:new Date().toISOString()});
+  try{localStorage.setItem('fruicey_settled',JSON.stringify(settled));}catch(e){}
+  salesLog=salesLog.filter(s=>s.date!==today);
+  try{localStorage.setItem('fruicey_pos_sales',JSON.stringify(salesLog));}catch(e){}
+  renderSalesReport();
+  showToast('Day settled! $'+total.toFixed(2)+' total.');
+}
+
 function clearSalesLog(){
   if(!confirm('Clear all sales history?'))return;
   salesLog=[];try{localStorage.removeItem('fruicey_pos_sales');}catch(e){}
@@ -777,8 +916,11 @@ document.getElementById('print-btn').addEventListener('click', function(){ windo
 document.getElementById('sales-btn').addEventListener('click', openSales);
 document.getElementById('close-sales-btn').addEventListener('click', closeSales);
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
+document.getElementById('export-monthly-btn').addEventListener('click', exportMonthlyCSV);
+document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

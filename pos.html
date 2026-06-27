@@ -84,7 +84,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .stat-val{font-size:18px;font-weight:700;color:#111}
 .stat-lbl{font-size:10px;color:#888;margin-top:2px}
 
-.numpad-btn{padding:14px;border:1.5px solid #e0e0e0;border-radius:8px;background:#fff;cursor:pointer;font-size:18px;font-weight:600;font-family:var(--font);color:#333;transition:all .1s;user-select:none}
+.numpad-btn{padding:18px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;cursor:pointer;font-size:22px;font-weight:600;font-family:var(--font);color:#333;transition:all .1s;user-select:none}
 .numpad-btn:active{background:#f0faf4;border-color:#8fcea1;transform:scale(.95)}
 .numpad-del{background:#fafafa;color:#e74c3c;border-color:#fcc}
 .numpad-go{font-size:13px!important}
@@ -202,7 +202,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <button class="pay-btn" data-method="Cash"><i class="ti ti-cash" aria-hidden="true"></i> Cash</button>
         <button class="pay-btn" data-method="PayNow"><i class="ti ti-qrcode" aria-hidden="true"></i> PayNow</button>
         <button class="pay-btn" data-method="Card"><i class="ti ti-credit-card" aria-hidden="true"></i> Card</button>
-        
+        <button class="pay-btn" data-method="GrabFood" style="color:#00B14F;border-color:#00B14F"><i class="ti ti-bike" aria-hidden="true"></i> GrabFood</button>
+        <button class="pay-btn" data-method="FoodPanda" style="color:#D70F64;border-color:#D70F64"><i class="ti ti-bike" aria-hidden="true"></i> FoodPanda</button>
       </div>
       <button class="charge-btn" id="checkout-btn">Tender</button>
     </div>
@@ -246,12 +247,44 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 </div>
 
 </div><!-- /pos-app -->
+<!-- EDIT TRANSACTION MODAL -->
+<div class="modal-bg" id="edit-txn-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title">Edit Transaction</span>
+      <button class="modal-close" onclick="closeEditTxn()">x</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:#888;margin-bottom:12px">
+        <div><b>ID:</b> <span id="edit-txn-id"></span></div>
+        <div><b>Items:</b> <span id="edit-txn-items"></span></div>
+        <div><b>Total:</b> <span id="edit-txn-total"></span></div>
+        <div><b>Payment:</b> <span id="edit-txn-payment"></span></div>
+      </div>
+      <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Note (e.g. refund reason)</label>
+      <input type="text" id="edit-txn-note" placeholder="e.g. Customer refund, wrong item..." style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#fff5f5;border-radius:8px;border:1px solid #fcc;margin-bottom:16px">
+        <input type="checkbox" id="edit-txn-voided" style="width:18px;height:18px;accent-color:#e74c3c;flex-shrink:0">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#e74c3c">Void this transaction</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">Marks as voided — excluded from daily totals</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="closeEditTxn()" class="btn-print">Cancel</button>
+        <button onclick="saveEditTxn()" class="btn-done">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script>
 
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'gBl8830G!!', name:'Admin'},
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
   {username:'staff1', password:'staff1pass',  name:'Staff 1'},
   {username:'staff2', password:'staff2pass',  name:'Staff 2'},
 ];
@@ -469,6 +502,39 @@ async function apiGet(params){const r=await fetch(API+'?'+new URLSearchParams(pa
 async function apiPost(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.json();}
 
 // ── CLOCK ────────────────────────────────────────────────────────────
+
+// ── EDIT TRANSACTION ─────────────────────────────────────────
+let editTxnIndex = -1;
+
+function openEditTxn(idx){
+  editTxnIndex = idx;
+  const s = salesLog[idx];
+  document.getElementById('edit-txn-id').textContent    = s.id || s.date+' '+s.time;
+  document.getElementById('edit-txn-items').textContent = s.items.map(i=>i.qty+'x '+i.label).join(', ');
+  document.getElementById('edit-txn-total').textContent = '$'+s.total.toFixed(2);
+  document.getElementById('edit-txn-payment').textContent = s.payment;
+  document.getElementById('edit-txn-note').value = s.note || '';
+  document.getElementById('edit-txn-voided').checked = s.voided || false;
+  document.getElementById('edit-txn-modal').classList.add('open');
+}
+
+function closeEditTxn(){
+  document.getElementById('edit-txn-modal').classList.remove('open');
+  editTxnIndex = -1;
+}
+
+function saveEditTxn(){
+  if(editTxnIndex < 0) return;
+  const note   = document.getElementById('edit-txn-note').value.trim();
+  const voided = document.getElementById('edit-txn-voided').checked;
+  salesLog[editTxnIndex].note   = note;
+  salesLog[editTxnIndex].voided = voided;
+  try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
+  closeEditTxn();
+  showToast(voided ? 'Transaction voided' : 'Transaction updated');
+  renderSalesReport();
+}
+
 function updateClock(){
   const n=new Date();
   const el=document.getElementById('clock');
@@ -859,12 +925,16 @@ function renderSalesReport(){
   const monthSales=salesLog.filter(s=>s.date&&s.date.startsWith(month));
 
   // Payment breakdown helper
+  const ONLINE_PLATFORMS = ['GrabFood','FoodPanda'];
   function payBreakdown(sales){
-    const cash=sales.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
-    const card=sales.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
-    const paynow=sales.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
-    const total=sales.reduce((t,s)=>t+s.total,0);
-    return {cash,card,paynow,total,count:sales.length};
+    const inStore = sales.filter(s=>!ONLINE_PLATFORMS.includes(s.payment));
+    const cash    = inStore.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
+    const card    = inStore.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
+    const paynow  = inStore.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
+    const grab    = sales.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0);
+    const panda   = sales.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0);
+    const total   = inStore.reduce((t,s)=>t+s.total,0);
+    return {cash,card,paynow,grab,panda,total,count:inStoreActive.length,onlineCount:sales.length-inStore.length};
   }
   const d=payBreakdown(todaySales);
   const m=payBreakdown(monthSales);
@@ -881,7 +951,9 @@ function renderSalesReport(){
         <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Cash').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.cash.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Card').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.card.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='PayNow').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.paynow.toFixed(2)}</td></tr>
-        <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${d.total.toFixed(2)}</td></tr>
+        <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${d.total.toFixed(2)}</td></tr>
+        <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.grab.toFixed(2)}</td></tr>
+        <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.panda.toFixed(2)}</td></tr>
       </table>
     </div>
     <div style="margin-bottom:16px">
@@ -895,7 +967,9 @@ function renderSalesReport(){
         <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Cash').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.cash.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Card').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.card.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='PayNow').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.paynow.toFixed(2)}</td></tr>
-        <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${m.total.toFixed(2)}</td></tr>
+        <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${m.total.toFixed(2)}</td></tr>
+        <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.grab.toFixed(2)}</td></tr>
+        <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.panda.toFixed(2)}</td></tr>
       </table>
     </div>`;
 
@@ -944,14 +1018,15 @@ function renderSalesReport(){
     +(monthSales2.length?buildProductChart(monthSales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>')
     // Recent transactions
     +'<div style="font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Recent transactions</div>'
-    +salesLog.slice(0,30).map(s=>
+    +salesLog.slice(0,30).map((s,i)=>
       '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start">'
-      +'<div><div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'
-      +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'
+      +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+(s.voided?' · <span style=\'color:#e74c3c;font-weight:700\'>VOIDED</span>':'')+'</div>'
       +'<div style="font-size:11px;color:#ccc">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div></div>'
       +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'
-      +'<div style="font-size:13px;font-weight:700;color:#8fcea1">$'+s.total.toFixed(2)+'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">$'+s.total.toFixed(2)+'</div>'
       +(s.discount>0?'<div style="font-size:10px;color:#aaa">disc $'+s.discount.toFixed(2)+'</div>':'')
+      +'<button onclick="openEditTxn('+i+')" style="margin-top:4px;padding:3px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px;color:#888;font-family:var(--font)">Edit</button>'
       +'</div></div>'
     ).join('');
 }
@@ -1095,6 +1170,7 @@ document.getElementById('export-monthly-btn').addEventListener('click', exportMo
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

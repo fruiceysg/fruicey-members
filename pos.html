@@ -285,9 +285,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'gBl8830G!!', name:'Admin'},
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
   {username:'staff1', password:'staff1pass',  name:'Staff 1'},
   {username:'staff2', password:'staff2pass',  name:'Staff 2'},
 ];
@@ -315,6 +316,16 @@ function doLogin(){
   renderCats();
   loadStock();
   renderCart();
+}
+
+// ── STAFF AUTH CHECK ─────────────────────────────────────────
+function requireStaffAuth(action){
+  const pass = prompt('Enter your password to ' + action + ':');
+  if(!pass) return false;
+  if(!loggedInStaff) return false;
+  const account = STAFF_ACCOUNTS.find(a => a.username === loggedInStaff.username && a.password === pass);
+  if(!account){ showToast('Incorrect password'); return false; }
+  return true;
 }
 
 function doLogout(){
@@ -531,6 +542,7 @@ function saveEditTxn(){
   if(editTxnIndex < 0) return;
   const note   = document.getElementById('edit-txn-note').value.trim();
   const voided = document.getElementById('edit-txn-voided').checked;
+  if(voided && !requireStaffAuth('void this transaction')) return;
   salesLog[editTxnIndex].note   = note;
   salesLog[editTxnIndex].voided = voided;
   try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
@@ -1059,6 +1071,7 @@ function exportMonthlyCSV(){
 }
 
 function dailySettlement(){
+  if(!requireStaffAuth('perform daily settlement')) return;
   const today=new Date().toISOString().split('T')[0];
   const todaySales=salesLog.filter(s=>s.date===today);
   if(!todaySales.length){showToast('No sales today to settle');return;}
@@ -1078,7 +1091,8 @@ function dailySettlement(){
 }
 
 function clearSalesLog(){
-  if(!confirm('Clear all sales history?'))return;
+  if(!requireStaffAuth('clear all sales history')) return;
+  if(!confirm('Clear all sales history? This cannot be undone.')) return;
   salesLog=[];try{localStorage.removeItem('fruicey_pos_sales');}catch(e){}
   renderSalesReport();showToast('Sales history cleared');
 }
@@ -1175,6 +1189,7 @@ document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
 document.getElementById('export-monthly-btn').addEventListener('click', exportMonthlyCSV);
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

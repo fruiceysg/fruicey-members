@@ -239,6 +239,33 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
     </div>
   </div>
 
+
+  <!-- STAFF PASSWORD MODAL -->
+  <div class="modal-bg" id="pw-modal">
+    <div class="modal-box" style="max-width:320px">
+      <div class="modal-hdr">
+        <span class="modal-hdr-title" id="pw-modal-title">Staff Verification</span>
+        <button class="modal-close" onclick="closePwModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="width:48px;height:48px;border-radius:50%;background:#f0faf4;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+            <i class="ti ti-lock" style="font-size:22px;color:#8fcea1"></i>
+          </div>
+          <div style="font-size:13px;color:#888" id="pw-modal-desc">Enter your password to continue.</div>
+        </div>
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Password</label>
+        <input type="password" id="pw-modal-input" placeholder="Enter your password"
+          style="width:100%;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px;outline:none;font-family:var(--font);margin-bottom:8px"
+          onkeydown="if(event.key==='Enter')confirmPwModal()">
+        <div id="pw-modal-err" style="display:none;color:#e74c3c;font-size:12px;margin-bottom:8px;font-weight:500">Incorrect password. Please try again.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+          <button onclick="closePwModal()" class="btn-print">Cancel</button>
+          <button onclick="confirmPwModal()" class="btn-done" style="background:#8fcea1">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div><!-- /pos-app -->
 
 <div class="toast" id="toast"></div>
@@ -254,9 +281,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'gBl8830G!!', name:'Admin'},
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
   {username:'staff1', password:'staff1pass',  name:'Staff 1'},
   {username:'staff2', password:'staff2pass',  name:'Staff 2'},
 ];
@@ -287,14 +315,36 @@ function doLogin(){
   initPOSListeners();
 }
 
-// ── STAFF AUTH CHECK ─────────────────────────────────────────
+// ── STAFF AUTH MODAL ─────────────────────────────────────────
+let _pwResolve = null;
+
 function requireStaffAuth(action){
-  const pass = prompt('Enter your password to ' + action + ':');
-  if(!pass) return false;
-  if(!loggedInStaff) return false;
+  return new Promise(resolve => {
+    _pwResolve = resolve;
+    document.getElementById('pw-modal-title').textContent = 'Staff Verification';
+    document.getElementById('pw-modal-desc').textContent = 'Enter your password to ' + action + '.';
+    document.getElementById('pw-modal-input').value = '';
+    document.getElementById('pw-modal-err').style.display = 'none';
+    document.getElementById('pw-modal').classList.add('open');
+    setTimeout(()=>document.getElementById('pw-modal-input').focus(), 100);
+  });
+}
+
+function confirmPwModal(){
+  const pass = document.getElementById('pw-modal-input').value;
+  const errEl = document.getElementById('pw-modal-err');
+  if(!pass){ errEl.style.display='block'; return; }
   const account = STAFF_ACCOUNTS.find(a => a.username === loggedInStaff.username && a.password === pass);
-  if(!account){ showToast('Incorrect password'); return false; }
-  return true;
+  if(!account){ errEl.style.display='block'; document.getElementById('pw-modal-input').value=''; document.getElementById('pw-modal-input').focus(); return; }
+  closePwModal();
+  if(_pwResolve){ _pwResolve(true); _pwResolve=null; }
+}
+
+function closePwModal(){
+  document.getElementById('pw-modal').classList.remove('open');
+  document.getElementById('pw-modal-input').value='';
+  document.getElementById('pw-modal-err').style.display='none';
+  if(_pwResolve){ _pwResolve(false); _pwResolve=null; }
 }
 
 function doLogout(){
@@ -507,11 +557,14 @@ function closeEditTxn(){
   editTxnIndex = -1;
 }
 
-function saveEditTxn(){
+async function saveEditTxn(){
   if(editTxnIndex < 0) return;
   const note   = document.getElementById('edit-txn-note').value.trim();
   const voided = document.getElementById('edit-txn-voided').checked;
-  if(voided && !requireStaffAuth('void this transaction')) return;
+  if(voided){
+    const ok = await requireStaffAuth('void this transaction');
+    if(!ok) return;
+  }
   salesLog[editTxnIndex].note   = note;
   salesLog[editTxnIndex].voided = voided;
   try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
@@ -1039,8 +1092,9 @@ function exportMonthlyCSV(){
   showToast('Monthly report exported!');
 }
 
-function dailySettlement(){
-  if(!requireStaffAuth('perform daily settlement')) return;
+async function dailySettlement(){
+  const okSettle = await requireStaffAuth('perform daily settlement');
+  if(!okSettle) return;
   const today=new Date().toISOString().split('T')[0];
   const todaySales=salesLog.filter(s=>s.date===today);
   if(!todaySales.length){showToast('No sales today to settle');return;}
@@ -1059,8 +1113,9 @@ function dailySettlement(){
   showToast('Day settled! $'+total.toFixed(2)+' total.');
 }
 
-function clearSalesLog(){
-  if(!requireStaffAuth('clear all sales history')) return;
+async function clearSalesLog(){
+  const okClear = await requireStaffAuth('clear all sales history');
+  if(!okClear) return;
   if(!confirm('Clear all sales history? This cannot be undone.')) return;
   salesLog=[];try{localStorage.removeItem('fruicey_pos_sales');}catch(e){}
   renderSalesReport();showToast('Sales history cleared');
@@ -1161,6 +1216,7 @@ document.getElementById('settle-btn').addEventListener('click', dailySettlement)
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 }
+
 
 
 </script>

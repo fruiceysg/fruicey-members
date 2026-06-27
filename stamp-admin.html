@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -202,6 +202,17 @@ input:focus{border-color:var(--green)}
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
+// ── PIN PROTECTION ───────────────────────────────────────────
+const STAFF_PIN = '1234';
+(function(){
+  const saved = sessionStorage.getItem('fruicey_pin_ok');
+  if(saved === 'yes') return;
+  const entered = prompt('Enter staff PIN:');
+  if(entered === STAFF_PIN){ sessionStorage.setItem('fruicey_pin_ok','yes'); return; }
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:12px"><div style="font-size:20px;color:#e74c3c;font-weight:700">Incorrect PIN</div><button onclick="location.reload()" style="padding:10px 20px;border-radius:8px;border:none;background:#8fcea1;color:#fff;cursor:pointer;font-size:14px">Try again</button></div>';
+  throw new Error('PIN required');
+})();
+
 const API      = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 const STAMP_URL = 'https://fruiceysg.github.io/fruicey-members/stamp.html';
 

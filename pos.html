@@ -84,6 +84,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .stat-val{font-size:18px;font-weight:700;color:#111}
 .stat-lbl{font-size:10px;color:#888;margin-top:2px}
 
+.numpad-btn{padding:14px;border:1.5px solid #e0e0e0;border-radius:8px;background:#fff;cursor:pointer;font-size:18px;font-weight:600;font-family:var(--font);color:#333;transition:all .1s;user-select:none}
+.numpad-btn:active{background:#f0faf4;border-color:#8fcea1;transform:scale(.95)}
+.numpad-del{background:#fafafa;color:#e74c3c;border-color:#fcc}
+.numpad-go{font-size:13px!important}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 18px;border-radius:var(--r);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
 
@@ -122,11 +126,30 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
     </div>
     <!-- Member view -->
     <div id="pos-view-member" style="display:none;flex:1;overflow-y:auto;padding:12px">
-      <div class="member-bar" style="margin-bottom:12px;padding:0">
-        <i class="ti ti-user-circle" style="color:#ccc;font-size:18px;flex-shrink:0" aria-hidden="true"></i>
-        <input type="tel" id="member-phone" placeholder="Customer phone number">
-        <button class="mbtn mbtn-lookup" id="lookup-btn">Look up</button>
-        <button class="mbtn mbtn-clear" id="clear-member-btn">Clear</button>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <i class="ti ti-user-circle" style="color:#ccc;font-size:20px;flex-shrink:0"></i>
+          <div id="member-phone-display" style="flex:1;padding:10px 12px;background:#f9f9f9;border:1.5px solid #e0e0e0;border-radius:8px;font-size:18px;font-weight:600;color:#333;min-height:42px;letter-spacing:2px">
+            <span id="member-phone-val" style="color:#333"></span><span style="color:#ccc" id="member-phone-cursor">|</span>
+          </div>
+          <button class="mbtn mbtn-clear" id="clear-member-btn" style="flex-shrink:0">Clear</button>
+        </div>
+        <!-- Numpad -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+          <button class="numpad-btn" data-n="1">1</button>
+          <button class="numpad-btn" data-n="2">2</button>
+          <button class="numpad-btn" data-n="3">3</button>
+          <button class="numpad-btn" data-n="4">4</button>
+          <button class="numpad-btn" data-n="5">5</button>
+          <button class="numpad-btn" data-n="6">6</button>
+          <button class="numpad-btn" data-n="7">7</button>
+          <button class="numpad-btn" data-n="8">8</button>
+          <button class="numpad-btn" data-n="9">9</button>
+          <button class="numpad-btn numpad-del" data-n="del" style="font-size:16px">⌫</button>
+          <button class="numpad-btn" data-n="0">0</button>
+          <button class="numpad-btn numpad-go" id="lookup-btn" style="background:#8fcea1;color:#fff;border-color:#8fcea1">Search</button>
+        </div>
+        <input type="hidden" id="member-phone" value="">
       </div>
       <div id="member-result" class="member-result" style="display:none;margin:0 0 12px"></div>
       <div id="member-history" style="display:none">
@@ -195,6 +218,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 <div class="toast" id="toast"></div>
 <script>
+
 
 
 
@@ -368,6 +392,21 @@ async function apiGet(params){const r=await fetch(API+'?'+new URLSearchParams(pa
 async function apiPost(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.json();}
 
 // ── CLOCK ────────────────────────────────────────────────────────────
+// ── PIN PROTECTION ───────────────────────────────────────────
+const STAFF_PIN = '1234'; // Change this to your preferred PIN
+function checkPin(){
+  const saved = sessionStorage.getItem('fruicey_pin_ok');
+  if(saved === 'yes') return true;
+  const entered = prompt('Enter staff PIN to access POS:');
+  if(entered === STAFF_PIN){
+    sessionStorage.setItem('fruicey_pin_ok','yes');
+    return true;
+  }
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:12px"><div style="font-size:20px;color:#e74c3c;font-weight:700">Incorrect PIN</div><button onclick="location.reload()" style="padding:10px 20px;border-radius:8px;border:none;background:#8fcea1;color:#fff;cursor:pointer;font-size:14px">Try again</button></div>';
+  return false;
+}
+if(!checkPin()) throw new Error('PIN required');
+
 function updateClock(){
   const n=new Date();
   const el=document.getElementById('clock');
@@ -377,7 +416,7 @@ setInterval(updateClock,1000);
 
 // ── MEMBER ───────────────────────────────────────────────────────────
 async function lookupMember(){
-  const phone=document.getElementById('member-phone').value.trim();
+  const phone=memberPhoneVal.trim()||document.getElementById('member-phone').value.trim();
   if(!phone){showToast('Enter phone number');return;}
   const btn=document.getElementById('lookup-btn');
   btn.textContent='...';btn.disabled=true;
@@ -909,6 +948,29 @@ function showToast(msg){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────
+// Numpad logic
+let memberPhoneVal = '';
+function numpadUpdate(){
+  document.getElementById('member-phone-val').textContent = memberPhoneVal;
+  document.getElementById('member-phone').value = memberPhoneVal;
+}
+document.addEventListener('click', function(e){
+  const nb = e.target.closest('.numpad-btn');
+  if(!nb) return;
+  const n = nb.dataset.n;
+  if(n === 'del'){ memberPhoneVal = memberPhoneVal.slice(0,-1); numpadUpdate(); return; }
+  if(n === 'go' || nb.id === 'lookup-btn') return; // handled by lookup-btn listener
+  if(memberPhoneVal.length < 12){ memberPhoneVal += n; numpadUpdate(); }
+});
+
+// Override clearMember to also reset numpad
+const _origClearMember = clearMember;
+function clearMember(){
+  memberPhoneVal='';
+  numpadUpdate();
+  _origClearMember();
+}
+
 updateClock();
 renderCats();
 loadStock(); // loads stock then renders products
@@ -962,6 +1024,7 @@ document.getElementById('export-monthly-btn').addEventListener('click', exportMo
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
+
 
 
 

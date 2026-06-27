@@ -281,6 +281,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
   {username:'admin',  password:'fruicey2025', name:'Admin'},
@@ -311,6 +312,7 @@ function doLogin(){
   renderCats();
   loadStock();
   renderCart();
+  initPOSListeners();
 }
 
 // ── STAFF AUTH CHECK ─────────────────────────────────────────
@@ -1132,6 +1134,7 @@ if(checkLogin()){
   renderCats();
   loadStock();
   renderCart();
+  initPOSListeners();
 } else {
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('pos-app').style.display='none';
@@ -1155,7 +1158,7 @@ async function toggleStock(pid, available){
     showToast((available ? 'Back in stock' : 'Marked out of stock') + ': ' + (PRODUCT_MAP[pid]||{name:pid}).name);
   }catch(e){ showToast('Could not update stock'); }
 }
-
+function initPOSListeners(){
 // Double-click a product card to mark it out of stock
 document.getElementById('product-grid').addEventListener('dblclick', function(e){
   const card = e.target.closest('.product-card');
@@ -1185,33 +1188,7 @@ document.getElementById('export-monthly-btn').addEventListener('click', exportMo
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
 
 </script>stener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 

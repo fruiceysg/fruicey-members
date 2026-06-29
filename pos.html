@@ -708,7 +708,7 @@ function saveReceiptPDF(){
   var sale=_lastSale; if(!sale){showToast('No receipt');return;}
   showToast('Generating PDF...');
   function doPDF(){
-    var doc=new window.jspdf.jsPDF({unit:'mm',format:[80,200]});
+    var doc=new window.jspdf.jsPDF({unit:'mm',format:[80,400],orientation:'portrait'});
     var y=10,lm=6,rm=74,isO=ONLINE_PLATFORMS.includes(sale.payment);
     doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text('FRUICEY',40,y,{align:'center'});y+=6;
     doc.setFontSize(7.5);doc.setFont('helvetica','normal');
@@ -742,7 +742,7 @@ function saveReceiptPDF(){
     doc.setLineDashPattern([1,1],0);doc.line(lm,y,rm,y);doc.setLineDashPattern([],0);y+=4;
     doc.text('Thank You For Visiting Fruicey!',40,y,{align:'center'});y+=4;
     doc.setFont('helvetica','bold');doc.text('www.fruicey.sg',40,y,{align:'center'});
-    doc.internal.pageSize.height=y+8;
+    // page height fixed at 400mm
     doc.save('Fruicey-'+(sale.rcptNo||sale.date)+'.pdf');
     showToast('PDF saved!'); closeShareModal();
   }

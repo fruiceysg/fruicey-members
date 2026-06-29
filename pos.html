@@ -305,6 +305,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 <div class="toast" id="toast"></div>
 
 <script>
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
   {username:'admin',  password:'fruicey2025', name:'Admin'},
@@ -651,9 +652,10 @@ async function confirmCashTender(){
   const change = tendered - total;
   _cashSale.cashTendered = tendered;
   _cashSale.changeDue    = change;
+  // Save reference before closing (closeCashModal nulls _cashSale)
+  const sale = _cashSale;
   closeCashModal();
-  // Now show receipt with change
-  showReceiptWithChange(_cashSale);
+  showReceipt(sale, sale.changeDue, sale.cashTendered);
 }
 
 function updateClock(){
@@ -1360,6 +1362,7 @@ document.getElementById('settle-btn').addEventListener('click', dailySettlement)
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 }
+
 
 
 

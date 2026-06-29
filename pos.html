@@ -266,11 +266,48 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       </div>
     </div>
   </div>
+
+  <!-- CASH TENDER MODAL -->
+  <div class="modal-bg" id="cash-modal">
+    <div class="modal-box" style="max-width:320px">
+      <div class="modal-hdr">
+        <span class="modal-hdr-title">Cash Payment</span>
+        <button class="modal-close" onclick="closeCashModal()">x</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:13px;color:#888;margin-bottom:4px">Total Amount Due</div>
+          <div style="font-size:32px;font-weight:800;color:#E91E8C" id="cash-total-display">$0.00</div>
+        </div>
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Amount Tendered by Customer</label>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:20px;font-weight:700;color:#555">$</span>
+          <input type="number" id="cash-tendered" placeholder="0.00" min="0" step="0.10"
+            style="flex:1;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:20px;font-weight:700;outline:none;font-family:var(--font);text-align:right"
+            oninput="updateChange()">
+        </div>
+        <div style="background:#f0faf4;border-radius:10px;padding:14px;margin-bottom:16px;border:1px solid #c8e6c9">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:14px;font-weight:600;color:#555">Change Due</span>
+            <span style="font-size:24px;font-weight:800;color:#27ae60" id="change-display">$0.00</span>
+          </div>
+        </div>
+        <!-- Quick cash buttons -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px" id="quick-cash-btns"></div>
+        <div id="cash-err" style="display:none;color:#e74c3c;font-size:12px;margin-bottom:8px;font-weight:500">Amount tendered must be at least the total due.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button onclick="closeCashModal()" class="btn-print">Cancel</button>
+          <button onclick="confirmCashTender()" class="btn-done" style="background:#8fcea1" id="confirm-cash-btn">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div><!-- /pos-app -->
 
 <div class="toast" id="toast"></div>
 
 <script>
+
 
 
 
@@ -587,6 +624,73 @@ async function saveEditTxn(){
   closeEditTxn();
   showToast(voided ? 'Transaction voided' : 'Transaction updated');
   renderSalesReport();
+}
+
+
+// ── CASH TENDER MODAL ────────────────────────────────────────
+let _cashSale = null;
+
+function openCashModal(sale){
+  _cashSale = sale;
+  const total = sale.total;
+  document.getElementById('cash-total-display').textContent = '$'+total.toFixed(2);
+  document.getElementById('cash-tendered').value = '';
+  document.getElementById('change-display').textContent = '$0.00';
+  document.getElementById('cash-err').style.display = 'none';
+
+  // Quick cash buttons - round up to nearest sensible denomination
+  const denoms = [1,2,5,10,20,50].filter(d => d >= total);
+  // Also include exact and next few round numbers
+  const rounds = [];
+  const base = Math.ceil(total);
+  [0,1,2,5,10,20,50,100].forEach(add => {
+    const v = Math.ceil((total+add)/5)*5;
+    if(!rounds.includes(v) && v >= total) rounds.push(v);
+  });
+  rounds.sort((a,b)=>a-b);
+  const btns = rounds.slice(0,4);
+  document.getElementById('quick-cash-btns').innerHTML = btns.map(v=>
+    '<button onclick="setCashTendered('+v+')" style="padding:10px 4px;border:1.5px solid #e0e0e0;border-radius:8px;background:#fff;cursor:pointer;font-size:14px;font-weight:700;font-family:var(--font);color:#333">$'+v+'</button>'
+  ).join('');
+
+  document.getElementById('cash-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('cash-tendered').focus(), 100);
+}
+
+function closeCashModal(){
+  document.getElementById('cash-modal').classList.remove('open');
+  _cashSale = null;
+}
+
+function setCashTendered(amt){
+  document.getElementById('cash-tendered').value = amt.toFixed(2);
+  updateChange();
+}
+
+function updateChange(){
+  if(!_cashSale) return;
+  const tendered = parseFloat(document.getElementById('cash-tendered').value)||0;
+  const total    = _cashSale.total;
+  const change   = tendered - total;
+  document.getElementById('change-display').textContent = change >= 0 ? '$'+change.toFixed(2) : '$0.00';
+  document.getElementById('change-display').style.color = change >= 0 ? '#27ae60' : '#e74c3c';
+  document.getElementById('cash-err').style.display = 'none';
+}
+
+async function confirmCashTender(){
+  if(!_cashSale) return;
+  const tendered = parseFloat(document.getElementById('cash-tendered').value)||0;
+  const total    = _cashSale.total;
+  if(tendered < total){
+    document.getElementById('cash-err').style.display = 'block';
+    return;
+  }
+  const change = tendered - total;
+  _cashSale.cashTendered = tendered;
+  _cashSale.changeDue    = change;
+  closeCashModal();
+  // Now show receipt with change
+  showReceiptWithChange(_cashSale);
 }
 
 function updateClock(){
@@ -942,7 +1046,12 @@ async function checkout(){
     }catch(e){ console.log('Sheet save failed',e); }
     salesLog.unshift(sale);
     try{localStorage.setItem('fruicey_pos_sales',JSON.stringify(salesLog.slice(0,500)));}catch(e){}
-    showReceipt(sale);
+    if(paymentMethod === 'Cash'){
+      closeSales();
+      openCashModal(sale);
+    } else {
+      showReceipt(sale);
+    }
   }catch(err){showToast('Error — please try again');}
   btn.textContent='Tender';btn.disabled=false;
 }
@@ -955,7 +1064,13 @@ function genReceiptNo(){
   return s;
 }
 
-function showReceipt(sale){
+function showReceiptWithChange(sale){
+  showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
+}
+
+function showReceipt(sale, changeDue, cashTendered){
+  changeDue    = changeDue    || 0;
+  cashTendered = cashTendered || 0;
   const disc=sale.discount||0;
   const total=sale.total||0;
   const rcptNo=genReceiptNo();
@@ -997,7 +1112,10 @@ function showReceipt(sale){
     +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:12px;color:#27ae60;margin-bottom:4px"><span>Discount</span><span>-$'+disc.toFixed(2)+'</span></div>':'')
     +'<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;margin-bottom:8px"><span>Total Amount</span><span style="color:#E91E8C">$'+total.toFixed(2)+'</span></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px"><span>Payment Mode</span><span style="font-weight:600">'+sale.payment+'</span></div>'
-    +(!isOnline&&sale.payment==='Cash'?'<div style="display:flex;justify-content:space-between;font-size:12px;color:#555"><span>Change Due</span><span id="change-due">—</span></div>':'')
+    +(sale.payment==='Cash'
+    ?'<div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:2px"><span>Cash Tendered</span><span>$'+cashTendered.toFixed(2)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#27ae60"><span>Change Due</span><span>$'+changeDue.toFixed(2)+'</span></div>'
+    :'')
     +'</div>'
     +'<div style="text-align:center;margin-top:16px;padding-top:12px;border-top:2px dashed #ddd;font-size:11px;color:#888;line-height:2">'
     +'Thank You For Visiting Fruicey!<br>'
@@ -1274,6 +1392,7 @@ document.getElementById('settle-btn').addEventListener('click', dailySettlement)
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 }
+
 
 
 

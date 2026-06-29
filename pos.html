@@ -318,44 +318,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
     </div>
   </div>- /pos-app -->
 <div class="toast" id="toast"></div>
-<script>
-
-
-
-
-
-// ── STAFF ACCOUNTS ───────────────────────────────────────────
-const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'fruicey2025', name:'Admin'},
-  {username:'staff1', password:'staff1pass',  name:'Staff 1'},
-  {username:'staff2', password:'staff2pass',  name:'Staff 2'},
-];
-let loggedInStaff = null;
-
-function checkLogin(){
-  const saved = sessionStorage.getItem('fruicey_staff');
-  if(saved){ loggedInStaff = JSON.parse(saved); return true; }
-  return false;
-}
-
-function doLogin(){
-  const user = document.getElementById('login-username').value.trim().toLowerCase();
-  const pass = document.getElementById('login-password').value;
-  const errEl = document.getElementById('login-err');
-  errEl.style.display = 'none';
-  const account = STAFF_ACCOUNTS.find(a => a.username === user && a.password === pass);
-  if(!account){ errEl.textContent = 'Incorrect username or password.'; errEl.style.display='block'; return; }
-  loggedInStaff = account;
-  sessionStorage.setItem('fruicey_staff', JSON.stringify(account));
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('pos-app').style.display = 'flex';
-  document.getElementById('staff-name').
-
-
-
-
-
-// ── STAFF ACCOUNTS ───────────────────────────────────────────
+<script>// ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
   {username:'admin',  password:'fruicey2025', name:'Admin'},
   {username:'staff1', password:'staff1pass',  name:'Staff 1'},
@@ -1535,3 +1498,7 @@ document.getElementById('member-phone').addEventListener('keydown', function(e){
 
 
 
+
+</script>
+</body>
+</html>

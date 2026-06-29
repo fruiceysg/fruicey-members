@@ -352,6 +352,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
   {username:'admin',  password:'fruicey2025', name:'Admin'},
@@ -840,6 +841,7 @@ function loadMemberHistory(phone){
       +'<div style="display:flex;justify-content:space-between">'
       +'<span style="color:#555">'+s.date+' '+s.time+'</span>'
       +'<span style="font-weight:700;color:#8fcea1">$'+s.total.toFixed(2)+'</span></div>'
+      +(s.rcptNo?'<div style="color:#aaa;font-size:10px;font-family:monospace;margin-top:2px">'+s.rcptNo+'</div>':'')
       +'<div style="color:#aaa;margin-top:2px">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div>'
       +'<div style="color:#bbb;font-size:11px">'+s.payment+'</div>'
       +'</div>'
@@ -1100,6 +1102,7 @@ async function checkout(){
   try{
     const sale={
       id:'sale_'+Date.now(),
+      rcptNo: genReceiptNo(),
       date:dateStr,
       time:timeStr,
       items:cart.map(i=>({...i})),
@@ -1119,7 +1122,8 @@ async function checkout(){
           phone: np(currentMember.phone),
           amount: total.toFixed(2),
           items: cart.map(i=>i.qty+'x '+i.label).join(', '),
-          date: dateStr
+          date: dateStr,
+          rcptNo: sale.rcptNo
         }).catch(()=>{});
       }
       await apiPost({
@@ -1164,7 +1168,7 @@ function showReceipt(sale, changeDue, cashTendered){
   cashTendered = cashTendered || 0;
   const disc=sale.discount||0;
   const total=sale.total||0;
-  const rcptNo=genReceiptNo();
+  const rcptNo = sale.rcptNo || genReceiptNo();
   const isOnline=ONLINE_PLATFORMS.includes(sale.payment);
   let itemRows='';
   sale.items.forEach(function(item,i){
@@ -1490,6 +1494,7 @@ document.getElementById('settle-btn').addEventListener('click', dailySettlement)
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 }
+
 
 
 

@@ -303,39 +303,53 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
   <!-- SHARE RECEIPT MODAL -->
   <div class="modal-bg" id="share-modal">
-    <div class="modal-box" style="max-width:340px">
+    <div class="modal-box" style="max-width:320px">
       <div class="modal-hdr">
-        <span class="modal-hdr-title">Send Receipt</span>
+        <span class="modal-hdr-title">Save Receipt</span>
         <button class="modal-close" onclick="closeShareModal()">x</button>
       </div>
       <div class="modal-body">
-        <div style="font-size:13px;color:#888;margin-bottom:16px">Save or send a PDF copy of this receipt.</div>
-        <!-- Save PDF -->
-        <button onclick="saveReceiptPDF()" style="width:100%;padding:12px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font);margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px">
-          <i class="ti ti-download"></i> Save as PDF
+        <div style="font-size:13px;color:#888;margin-bottom:16px">Save a PDF copy of this receipt to your device.</div>
+        <button onclick="saveReceiptPDF()" style="width:100%;padding:13px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:600;font-family:var(--font);margin-bottom:10px">
+          Save as PDF
         </button>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <div style="flex:1;height:1px;background:#eee"></div>
-          <span style="font-size:11px;color:#bbb">or</span>
-          <div style="flex:1;height:1px;background:#eee"></div>
-        </div>
-        <!-- Email PDF -->
-        <div style="margin-bottom:14px">
-          <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Send PDF via Email</label>
-          <input type="email" id="share-email" placeholder="customer@email.com"
-            style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font);margin-bottom:8px"
-            onkeydown="if(event.key==='Enter')sendReceiptEmailPDF()">
-          <button onclick="sendReceiptEmailPDF()" style="width:100%;padding:11px;background:#8fcea1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font)">
-            Send via Email
-          </button>
-        </div>
         <button onclick="closeShareModal()" class="btn-print" style="width:100%">Close</button>
       </div>
     </div>
-  </div>
-</div><!-- /pos-app -->
+  </div>- /pos-app -->
 <div class="toast" id="toast"></div>
 <script>
+
+
+
+
+
+// ── STAFF ACCOUNTS ───────────────────────────────────────────
+const STAFF_ACCOUNTS = [
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
+  {username:'staff1', password:'staff1pass',  name:'Staff 1'},
+  {username:'staff2', password:'staff2pass',  name:'Staff 2'},
+];
+let loggedInStaff = null;
+
+function checkLogin(){
+  const saved = sessionStorage.getItem('fruicey_staff');
+  if(saved){ loggedInStaff = JSON.parse(saved); return true; }
+  return false;
+}
+
+function doLogin(){
+  const user = document.getElementById('login-username').value.trim().toLowerCase();
+  const pass = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  const account = STAFF_ACCOUNTS.find(a => a.username === user && a.password === pass);
+  if(!account){ errEl.textContent = 'Incorrect username or password.'; errEl.style.display='block'; return; }
+  loggedInStaff = account;
+  sessionStorage.setItem('fruicey_staff', JSON.stringify(account));
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('pos-app').style.display = 'flex';
+  document.getElementById('staff-name').
 
 
 
@@ -810,15 +824,6 @@ function saveReceiptPDF(){
   s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
   s.onload=doPDF; s.onerror=function(){showToast('PDF library failed');};
   document.head.appendChild(s);
-}
-function sendReceiptEmailPDF(){
-  var email=document.getElementById('share-email').value.trim();
-  if(!email){showToast('Enter email');return;}
-  saveReceiptPDF();
-  var sale=_lastSale;
-  var subj=encodeURIComponent('Your Fruicey Receipt '+(sale?sale.rcptNo||'':''));
-  var body=encodeURIComponent('Dear Customer,\n\nYour Fruicey receipt PDF has been downloaded.\n\nReceipt: '+(sale?sale.rcptNo||'':'')+' \nDate: '+(sale?sale.date+' '+sale.time:'')+' \nTotal: $'+(sale?sale.total.toFixed(2):'0.00')+'\n\nThank you!\nwww.fruicey.sg');
-  setTimeout(function(){window.open('mailto:'+email+'?subject='+subj+'&body='+body,'_blank');closeShareModal();},1200);
 }
 
 function updateClock(){
@@ -1530,6 +1535,3 @@ document.getElementById('member-phone').addEventListener('keydown', function(e){
 
 
 
-</script>
-</body>
-</html>

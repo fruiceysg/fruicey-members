@@ -422,6 +422,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 <script>
 
 
+
 const CATALOGUE = {
   'Shakes & Smoothies': [
     {id:'ss01',name:'Coco Chacha',              sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
@@ -917,23 +918,59 @@ function sendWhatsApp(){
 // ── ORDERS ────────────────────────────────────────────────────
 async function loadOrders(){
   const el = document.getElementById('orders-list');
-  el.innerHTML = '<div style="text-align:center;padding:2rem;color:#bbb">Loading orders...</div>';
+  el.innerHTML = '<div style="text-align:center;padding:2rem;color:#bbb">Loading...</div>';
   try{
-    const res = await apiGet({action:'getOrders', phone:np(currentUser.phone)});
-    const orders = res.orders||[];
-    if(!orders.length){
-      el.innerHTML = '<div style="text-align:center;padding:3rem;color:#bbb"><div style="font-size:48px;margin-bottom:12px">🧾</div><div style="font-family:var(--font);font-size:18px">No orders yet</div><div style="font-size:13px;margin-top:4px">Your orders will appear here</div></div>';
+    // Fetch both app orders and POS purchases in parallel
+    const [ordersRes, posRes] = await Promise.all([
+      apiGet({action:'getOrders', phone:np(currentUser.phone)}),
+      apiGet({action:'getMemberPOS', phone:np(currentUser.phone)})
+    ]);
+
+    const orders   = ordersRes.orders||[];
+    const posSales = posRes.sales||[];
+
+    if(!orders.length && !posSales.length){
+      el.innerHTML = '<div style="text-align:center;padding:3rem;color:#bbb"><div style="font-family:var(--font);font-size:18px">No purchases yet</div><div style="font-size:13px;margin-top:4px">Your orders and in-store purchases will appear here</div></div>';
       return;
     }
-    el.innerHTML = orders.map(o => {
-      const items = Array.isArray(o.items) ? o.items : [];
-      return '<div class="order-card">'
-        +'<div class="order-header"><div><div class="order-id">'+o.id+'</div><div class="order-time">'+formatDT(o.createdAt)+'</div></div><span class="status-badge status-'+o.status+'">'+o.status+'</span></div>'
-        +'<div class="order-items">'+items.map(i=>i.qty+'x '+i.label).join(' · ')+'</div>'
-        +'<div class="order-footer"><span class="order-total">$'+parseFloat(o.total).toFixed(2)+'</span><span class="order-collect">Collection: '+o.collectTime+'</span></div>'
-        +'</div>';
-    }).join('');
-  }catch(e){ el.innerHTML='<div style="text-align:center;padding:2rem;color:#bbb">Could not load orders.</div>'; }
+
+    let html = '';
+
+    // App orders section
+    if(orders.length){
+      html += '<div style="font-size:12px;font-weight:700;color:#888;padding:12px 16px 4px;text-transform:uppercase;letter-spacing:.5px">Online Orders</div>';
+      html += orders.map(o => {
+        const items = Array.isArray(o.items) ? o.items : [];
+        return '<div class="order-card">'
+          +'<div class="order-header"><div><div class="order-id">'+o.id+'</div><div class="order-time">'+formatDT(o.createdAt)+'</div></div><span class="status-badge status-'+o.status+'">'+o.status+'</span></div>'
+          +'<div class="order-items">'+items.map(i=>i.qty+'x '+i.label).join(' · ')+'</div>'
+          +'<div class="order-footer"><span class="order-total">$'+parseFloat(o.total).toFixed(2)+'</span><span class="order-collect">Collection: '+o.collectTime+'</span></div>'
+          +'</div>';
+      }).join('');
+    }
+
+    // POS in-store purchases section
+    if(posSales.length){
+      html += '<div style="font-size:12px;font-weight:700;color:#888;padding:12px 16px 4px;text-transform:uppercase;letter-spacing:.5px">In-store Purchases</div>';
+      html += posSales.map(s => {
+        let items = [];
+        try{ items = typeof s.items==='string' ? JSON.parse(s.items) : (s.items||[]); }catch(e){}
+        const itemStr = items.length ? items.map(i=>i.qty+'x '+(i.label||i.name||'')).join(' · ') : (s.items||'');
+        return '<div class="order-card">'
+          +'<div class="order-header"><div>'
+          +'<div class="order-id" style="font-size:11px;font-family:monospace">'+(s.rcptNo||s.id||'')+'</div>'
+          +'<div class="order-time">'+s.date+(s.time?' '+s.time:'')+'</div>'
+          +'</div>'
+          +'<span class="status-badge" style="background:#f0faf4;color:#2e7d32">In-store</span></div>'
+          +'<div class="order-items">'+itemStr+'</div>'
+          +'<div class="order-footer"><span class="order-total">$'+parseFloat(s.total||0).toFixed(2)+'</span>'
+          +'<span class="order-collect">'+s.payment+'</span></div>'
+          +'</div>';
+      }).join('');
+    }
+
+    el.innerHTML = html;
+  }catch(e){ el.innerHTML='<div style="text-align:center;padding:2rem;color:#bbb">Could not load purchases.</div>'; }
 }
 
 function formatDT(s){
@@ -1121,6 +1158,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // Hide login hint if logged in
   if(currentUser) document.getElementById('menu-login-hint').style.display='none';
 });
+
 
 
 </script>

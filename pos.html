@@ -1149,6 +1149,7 @@ async function checkout(){
       }
       await apiPost({
         action:'addPOSSale',
+        rcptNo:sale.rcptNo||'',
         date:dateStr,
         time:timeStr,
         items:JSON.stringify(cart.map(i=>({qty:i.qty,label:i.label,price:i.price}))),

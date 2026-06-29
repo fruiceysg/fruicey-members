@@ -422,6 +422,65 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 <script>
 
 
+function openOrderReceipt(data){
+  const isPos = data.type === 'pos';
+  let items = [];
+  try{ items = typeof data.items==='string' ? JSON.parse(data.items) : (data.items||[]); }catch(e){}
+  const total = parseFloat(data.total||0);
+  const disc  = parseFloat(data.discount||0);
+
+  let rows = '';
+  items.forEach(function(item, i){
+    const amt = isPos && ['GrabFood','FoodPanda'].includes(data.payment) ? '$0.00'
+      : '$'+((item.price||0)*(item.qty||1)).toFixed(2);
+    rows += '<tr>'
+      +'<td style="padding:4px;font-size:11px;color:#555">'+(i+1)+'.</td>'
+      +'<td style="padding:4px;font-size:11px">'+(item.label||item.name||'')+'</td>'
+      +'<td style="padding:4px;font-size:11px;text-align:center">'+(item.qty||1)+'</td>'
+      +'<td style="padding:4px;font-size:11px;text-align:right;font-weight:600">'+amt+'</td>'
+      +'</tr>';
+  });
+
+  const html = ''
+    +'<div style="text-align:center;padding-bottom:10px;border-bottom:2px dashed #ddd;margin-bottom:10px">'
+    +'<div style="font-family:var(--font);font-size:22px;color:var(--green);margin-bottom:2px">Fruicey</div>'
+    +'<div style="font-size:10px;color:#555;line-height:1.8">68 Jalan Jurong Kechil #01-10<br>Singapore 596180<br>UEN: 53434968D | Tel: 8509 8095</div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:#555;margin-bottom:10px;line-height:1.8">'
+    +(data.rcptNo||data.id?'<div style="display:flex;justify-content:space-between"><b>'+(isPos?'Receipt':'Order ID')+'</b><span style="font-family:monospace;font-weight:700">'+(data.rcptNo||data.id)+'</span></div>':'')
+    +'<div style="display:flex;justify-content:space-between"><span>Date</span><span>'+formatDT(data.date||data.createdAt||'')+'</span></div>'
+    +(data.time?'<div style="display:flex;justify-content:space-between"><span>Time</span><span>'+data.time+'</span></div>':'')
+    +(isPos?'':'<div style="display:flex;justify-content:space-between"><span>Collection</span><span>'+(data.collectTime||'')+'</span></div>')
+    +'</div>'
+    +(items.length?'<table style="width:100%;border-collapse:collapse;margin-bottom:4px">'
+      +'<thead><tr style="border-bottom:1.5px solid #ddd">'
+      +'<th style="padding:4px;font-size:10px;text-align:left;color:#888;width:24px">No.</th>'
+      +'<th style="padding:4px;font-size:10px;text-align:left;color:#888">Item</th>'
+      +'<th style="padding:4px;font-size:10px;text-align:center;color:#888;width:28px">Qty</th>'
+      +'<th style="padding:4px;font-size:10px;text-align:right;color:#888;width:56px">Amount</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table>':'')
+    +'<div style="border-top:2px dashed #ddd;margin-top:6px;padding-top:8px">'
+    +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>Subtotal</span><span>$'+(parseFloat(data.subtotal||total)).toFixed(2)+'</span></div>':'')
+    +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--green);margin-bottom:3px"><span>Discount</span><span>-$'+disc.toFixed(2)+'</span></div>':'')
+    +'<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;margin-bottom:6px"><span>Total</span><span style="color:var(--green)">$'+total.toFixed(2)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555"><span>Payment</span><span style="font-weight:600">'+(data.payment||'')+'</span></div>'
+    +(!isPos&&data.status?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-top:4px"><span>Status</span><span class="status-badge status-'+(data.status||'')+'">'+(data.status||'')+'</span></div>':'')
+    +'</div>'
+    +'<div style="text-align:center;margin-top:14px;font-size:10px;color:#888;line-height:1.8;border-top:1px dashed #ddd;padding-top:10px">'
+    +'Thank You For Visiting Fruicey!<br><b style="color:#555">www.fruicey.sg</b>'
+    +'</div>';
+
+  document.getElementById('order-receipt-content').innerHTML = html;
+  document.getElementById('order-receipt-modal').classList.add('open');
+}
+
+function closeOrderReceipt(){
+  document.getElementById('order-receipt-modal').classList.remove('open');
+}
+
+
+
+
 
 const CATALOGUE = {
   'Shakes & Smoothies': [
@@ -938,13 +997,13 @@ async function loadOrders(){
 
     // App orders section
     if(orders.length){
-      html += '<div style="font-size:12px;font-weight:700;color:#888;padding:12px 16px 4px;text-transform:uppercase;letter-spacing:.5px">Online Orders</div>';
+      html += '<div style="font-size:12px;font-weight:700;color:#888;padding:12px 16px 4px;text-transform:uppercase;letter-spacing:.5px">App Orders</div>';
       html += orders.map(o => {
         const items = Array.isArray(o.items) ? o.items : [];
-        return '<div class="order-card">'
+        return '<div class="order-card" data-order="'+encodeURIComponent(JSON.stringify({...o,type:'app'}))+'" onclick="openOrderReceipt(JSON.parse(decodeURIComponent(this.dataset.order)))" style="cursor:pointer">'
           +'<div class="order-header"><div><div class="order-id">'+o.id+'</div><div class="order-time">'+formatDT(o.createdAt)+'</div></div><span class="status-badge status-'+o.status+'">'+o.status+'</span></div>'
           +'<div class="order-items">'+items.map(i=>i.qty+'x '+i.label).join(' · ')+'</div>'
-          +'<div class="order-footer"><span class="order-total">$'+parseFloat(o.total).toFixed(2)+'</span><span class="order-collect">Collection: '+o.collectTime+'</span></div>'
+          +'<div class="order-footer"><span class="order-total">$'+parseFloat(o.total).toFixed(2)+'</span><span class="order-collect">Tap to view receipt</span></div>'
           +'</div>';
       }).join('');
     }
@@ -959,7 +1018,7 @@ async function loadOrders(){
         return '<div class="order-card">'
           +'<div class="order-header"><div>'
           +'<div class="order-id" style="font-size:11px;font-family:monospace">'+(s.rcptNo||s.id||'')+'</div>'
-          +'<div class="order-time">'+s.date+(s.time?' '+s.time:'')+'</div>'
+          +'<div class="order-time">'+formatDT(s.date)+(s.time?' '+s.time:'')+'</div>'
           +'</div>'
           +'<span class="status-badge" style="background:#f0faf4;color:#2e7d32">In-store</span></div>'
           +'<div class="order-items">'+itemStr+'</div>'
@@ -975,10 +1034,15 @@ async function loadOrders(){
 
 function formatDT(s){
   if(!s) return '';
-  if(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(s)) return s;
+  // Handle Google Sheets serial date numbers (days since 1899-12-30)
+  if(typeof s === 'number' || /^\d{5,}$/.test(String(s))){
+    const d = new Date(Math.round((parseFloat(s) - 25569) * 86400 * 1000));
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,16);
   const m = s.match(/(\w+)\s+(\w+)\s+(\d+)\s+(\d{4})/);
   if(m){ const mn={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; return m[4]+'-'+(mn[m[2]]||'01')+'-'+String(parseInt(m[3])).padStart(2,'0'); }
-  return s;
+  return String(s).slice(0,10);
 }
 
 // ── REWARDS (stamp card embedded) ────────────────────────────
@@ -1161,6 +1225,19 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
+
+
 </script>
+
+<!-- ORDER RECEIPT MODAL -->
+<div class="modal-bg" id="order-receipt-modal" onclick="if(event.target===this)closeOrderReceipt()">
+  <div class="modal-box" style="max-width:380px;max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div id="order-receipt-content" style="padding:16px"></div>
+    <div style="padding:0 16px 16px">
+      <button onclick="closeOrderReceipt()" class="btn btn-secondary" style="width:100%">Close</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

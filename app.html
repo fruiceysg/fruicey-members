@@ -647,7 +647,7 @@ async function apiPost(body){ const r=await fetch(API,{method:'POST',headers:{'C
 
 // ── NAVIGATION ────────────────────────────────────────────────
 function goTab(tab) {
-  if(!currentUser && tab !== 'home') { openLogin(); return; }
+  if(!currentUser && tab !== 'home' && tab !== 'menu') { openLogin(); return; }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('scr-'+tab).classList.add('active');
@@ -1034,15 +1034,23 @@ async function loadOrders(){
 
 function formatDT(s){
   if(!s) return '';
-  // Handle Google Sheets serial date numbers (days since 1899-12-30)
-  if(typeof s === 'number' || /^\d{5,}$/.test(String(s))){
-    const d = new Date(Math.round((parseFloat(s) - 25569) * 86400 * 1000));
+  if(typeof s === 'number'){
+    if(s > 25000){
+      // Google Sheets serial date
+      const d = new Date(Math.round((s - 25569) * 86400 * 1000));
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    return '';
+  }
+  const str = String(s);
+  if(/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0,16);
+  if(/^\d{5,}$/.test(str)){
+    const d = new Date(Math.round((parseFloat(str) - 25569) * 86400 * 1000));
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
-  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,16);
-  const m = s.match(/(\w+)\s+(\w+)\s+(\d+)\s+(\d{4})/);
+  const m = str.match(/(\w+)\s+(\w+)\s+(\d+)\s+(\d{4})/);
   if(m){ const mn={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; return m[4]+'-'+(mn[m[2]]||'01')+'-'+String(parseInt(m[3])).padStart(2,'0'); }
-  return String(s).slice(0,10);
+  return str.slice(0,10);
 }
 
 // ── REWARDS (stamp card embedded) ────────────────────────────

@@ -1296,6 +1296,30 @@ function openSales(){
   loadSalesFromSheets();
 }
 
+function cleanSaleDate(s){
+  // Fix date if it comes as ISO string from Sheets (e.g. "2026-06-29T00:00:00.000Z")
+  if(s.date && s.date.includes('T')){
+    // Convert UTC ISO to SGT date string
+    const d = new Date(s.date);
+    const sgt = new Date(d.getTime() + 8*3600*1000);
+    s.date = sgt.toISOString().slice(0,10);
+  }
+  // Fix time if it comes as decimal fraction from Sheets (e.g. 0.625 = 15:00)
+  if(s.time && typeof s.time === 'number' && s.time < 1){
+    const totalMins = Math.round(s.time * 24 * 60);
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    s.time = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+  }
+  // Fix time if it comes as ISO string
+  if(s.time && typeof s.time === 'string' && s.time.includes('T')){
+    const d = new Date(s.time);
+    const sgt = new Date(d.getTime() + 8*3600*1000);
+    s.time = sgt.toISOString().slice(11,16);
+  }
+  return s;
+}
+
 async function loadSalesFromSheets(){
   try{
     const res = await apiGet({action:'getPOSSales'});
@@ -1308,7 +1332,7 @@ async function loadSalesFromSheets(){
         s.subtotal = parseFloat(s.subtotal||0);
         s.discount = parseFloat(s.discount||0);
         s.voided   = s.voided==='true';
-        return s;
+        return cleanSaleDate(s);
       });
       salesLog = [...sheetSales, ...localOnly]
         .sort((a,b)=>(b.date+' '+b.time).localeCompare(a.date+' '+a.time));

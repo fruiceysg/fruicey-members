@@ -210,7 +210,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
   <!-- SALES MODAL -->
   <div class="modal-bg" id="sales-modal">
     <div class="sales-modal-box">
-      <div class="modal-hdr"><span class="modal-hdr-title">Sales Report</span><button class="modal-close" id="close-sales-btn">✕</button></div>
+      <div class="modal-hdr"><span class="modal-hdr-title">Sales Report</span><button id="refresh-sales-btn" style="background:none;border:1px solid #8fcea1;border-radius:6px;padding:3px 10px;color:#8fcea1;font-weight:600;font-size:12px;cursor:pointer;margin-right:6px">Sync</button><button class="modal-close" id="close-sales-btn">✕</button></div>
       <div class="sales-body">
         <div id="sales-summary"></div>
         <div id="sales-list"></div>
@@ -1321,11 +1321,18 @@ function cleanSaleDate(s){
 }
 
 async function loadSalesFromSheets(){
+  // Show loading state
+  const sumEl = document.getElementById('sales-summary');
+  if(sumEl) sumEl.innerHTML = '<div style="text-align:center;padding:20px;color:#888">Syncing from server...</div>';
+
   try{
     const res = await apiGet({action:'getPOSSales'});
-    if(res.sales && res.sales.length){
-      const sheetIds = new Set(res.sales.map(s=>s.id));
-      const localOnly = salesLog.filter(s=>!sheetIds.has(s.id));
+    console.log('getPOSSales response:', res);
+
+    if(res.error){
+      showToast('Sync error: '+res.error);
+      console.error('getPOSSales error:', res.error);
+    } else if(res.sales && res.sales.length){
       const sheetSales = res.sales.map(s=>{
         try{ s.items = typeof s.items==='string' ? JSON.parse(s.items) : (s.items||[]); }catch(e){ s.items=[]; }
         s.total    = parseFloat(s.total||0);
@@ -1334,10 +1341,21 @@ async function loadSalesFromSheets(){
         s.voided   = s.voided==='true';
         return cleanSaleDate(s);
       });
+      // Merge: sheet is source of truth + any local unsaved
+      const sheetIds = new Set(sheetSales.map(s=>s.id));
+      const localOnly = salesLog.filter(s=>!sheetIds.has(s.id));
       salesLog = [...sheetSales, ...localOnly]
         .sort((a,b)=>(b.date+' '+b.time).localeCompare(a.date+' '+a.time));
+      // Persist to localStorage as cache
+      try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
+      showToast('Synced '+sheetSales.length+' transactions');
+    } else {
+      showToast('No transactions found in Sheets');
     }
-  }catch(e){ console.log('Using local sales:', e); }
+  }catch(e){
+    console.error('loadSalesFromSheets failed:', e);
+    showToast('Could not connect to server');
+  }
   renderSalesReport();
 }
 function closeSales(){document.getElementById('sales-modal').classList.remove('open');}
@@ -1589,6 +1607,7 @@ document.getElementById('new-order-btn').addEventListener('click', closeReceipt)
 document.getElementById('print-btn').addEventListener('click', function(){ window.print(); });
 document.getElementById('sales-btn').addEventListener('click', openSales);
 document.getElementById('close-sales-btn').addEventListener('click', closeSales);
+document.getElementById('refresh-sales-btn').addEventListener('click', ()=>{ loadSalesFromSheets(); });
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
 document.getElementById('export-monthly-btn').addEventListener('click', exportMonthlyCSV);
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);

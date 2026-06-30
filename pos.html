@@ -1354,8 +1354,10 @@ async function loadSalesFromSheets(){
       try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
       showToast('Synced '+sheetSales.length+' transactions'); console.log('Sales from Sheets:', sheetSales);
     } else if(res.sales && res.sales.length === 0) {
-      showToast('Sheets returned 0 transactions');
-      console.log('Full response:', res);
+      // Sheets is empty - clear local cache too
+      salesLog = [];
+      try{ localStorage.removeItem('fruicey_pos_sales'); }catch(e){}
+      showToast('Sales history up to date');
     } else {
       showToast('Unexpected response from Sheets');
       console.log('Full response:', res);

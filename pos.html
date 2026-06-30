@@ -337,9 +337,9 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'gBl8830G!!', name:'Admin'},
-  {username:'staff1', password:'staffpass1',  name:'Staff 1'},
-  {username:'staff2', password:'staffpass2',  name:'Staff 2'},
+  {username:'admin',  password:'fruicey2025', name:'Admin'},
+  {username:'staff1', password:'staff1pass',  name:'Staff 1'},
+  {username:'staff2', password:'staff2pass',  name:'Staff 2'},
 ];
 let loggedInStaff = null;
 
@@ -366,6 +366,7 @@ function doLogin(){
   loadStock();
   renderCart();
   initPOSListeners();
+  loadSalesFromSheets().catch(()=>{});
 }
 
 // ── STAFF AUTH MODAL ─────────────────────────────────────────
@@ -1210,6 +1211,7 @@ async function checkout(){
       }
       await apiPost({
         action:'addPOSSale',
+        rcptNo:sale.rcptNo||'',
         date:dateStr,
         time:timeStr,
         items:JSON.stringify(cart.map(i=>({qty:i.qty,label:i.label,price:i.price}))),
@@ -1289,7 +1291,31 @@ function closeReceipt(){
 }
 
 // ── SALES REPORT ─────────────────────────────────────────────────────
-function openSales(){renderSalesReport();document.getElementById('sales-modal').classList.add('open');}
+function openSales(){
+  document.getElementById('sales-modal').classList.add('open');
+  loadSalesFromSheets();
+}
+
+async function loadSalesFromSheets(){
+  try{
+    const res = await apiGet({action:'getPOSSales'});
+    if(res.sales && res.sales.length){
+      const sheetIds = new Set(res.sales.map(s=>s.id));
+      const localOnly = salesLog.filter(s=>!sheetIds.has(s.id));
+      const sheetSales = res.sales.map(s=>{
+        try{ s.items = typeof s.items==='string' ? JSON.parse(s.items) : (s.items||[]); }catch(e){ s.items=[]; }
+        s.total    = parseFloat(s.total||0);
+        s.subtotal = parseFloat(s.subtotal||0);
+        s.discount = parseFloat(s.discount||0);
+        s.voided   = s.voided==='true';
+        return s;
+      });
+      salesLog = [...sheetSales, ...localOnly]
+        .sort((a,b)=>(b.date+' '+b.time).localeCompare(a.date+' '+a.time));
+    }
+  }catch(e){ console.log('Using local sales:', e); }
+  renderSalesReport();
+}
 function closeSales(){document.getElementById('sales-modal').classList.remove('open');}
 function renderSalesReport(){
   const today=new Date().toISOString().split('T')[0];

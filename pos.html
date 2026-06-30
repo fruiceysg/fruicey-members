@@ -74,7 +74,19 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 18px;border-radius:var(--r);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
 @media(max-width:640px){.layout{flex-direction:column-reverse}.cart-panel{width:100%;border-left:none;border-top:1px solid #e8e8e8;max-height:42dvh}.product-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));padding:8px}.top-title{display:none}}
-@media print{body *{display:none!important}#receipt-content{display:block!important}}</style>
+@media print{
+  body *{display:none!important}
+  #receipt-modal{display:block!important;position:static!important;background:none!important;padding:0!important}
+  #receipt-modal .modal-box{display:block!important;width:58mm!important;max-width:58mm!important;box-shadow:none!important;border-radius:0!important;margin:0!important;padding:0!important}
+  #receipt-modal .modal-hdr{display:none!important}
+  #receipt-content{display:block!important;width:58mm!important;font-size:9pt!important;color:#000!important;padding:2mm!important}
+  #receipt-content img{max-width:40mm!important;display:block!important;margin:0 auto!important}
+  #receipt-content table{width:100%!important;font-size:8pt!important}
+  #receipt-content div{color:#000!important}
+  #receipt-content td,#receipt-content th{padding:1mm 1.5mm!important;font-size:8pt!important}
+  #receipt-modal .modal-body > div:last-child{display:none!important}
+  @page{size:58mm auto;margin:0}
+}</style>
 </head>
 <body>
 <!-- LOGIN SCREEN -->
@@ -789,6 +801,90 @@ function saveReceiptPDF(){
   document.head.appendChild(s);
 }
 
+
+// ── SUNMI THERMAL PRINT ──────────────────────────────────────
+function printReceipt(){
+  const sale = _lastSale;
+  if(!sale) return;
+  const isOnline = ONLINE_PLATFORMS.includes(sale.payment);
+
+  // Build plain text receipt for thermal printer
+  const W = 32; // characters wide for 58mm
+  function center(s){ const p=Math.max(0,Math.floor((W-s.length)/2)); return ' '.repeat(p)+s; }
+  function right(l,r){ const sp=Math.max(1,W-l.length-r.length); return l+' '.repeat(sp)+r; }
+  function line(){ return '-'.repeat(W); }
+
+  let txt = '';
+  txt += center('FRUICEY') + '\n';
+  txt += center('68 Jalan Jurong Kechil') + '\n';
+  txt += center('#01-10 Singapore 596180') + '\n';
+  txt += center('UEN: 53434968D') + '\n';
+  txt += center('Tel: 8509 8095') + '\n';
+  txt += line() + '\n';
+  txt += right('Receipt:', sale.rcptNo||'') + '\n';
+  txt += right('Date:', sale.date) + '\n';
+  txt += right('Time:', sale.time) + '\n';
+  if(sale.member) txt += right('Member:', sale.member) + '\n';
+  txt += line() + '\n';
+  txt += right(right('No','Description').slice(0,18),'Qty  Amt') + '\n';
+  txt += line() + '\n';
+  sale.items.forEach(function(item,i){
+    const amt = isOnline ? '$0.00' : '$'+(item.price*item.qty).toFixed(2);
+    const num = (i+1)+'. ';
+    // Wrap name to fit
+    const maxName = W - 8;
+    const name = (item.label||'').slice(0,maxName);
+    txt += num + name + '\n';
+    txt += right('  x'+item.qty, amt) + '\n';
+  });
+  txt += line() + '\n';
+  if(sale.discount > 0){
+    txt += right('Subtotal', '$'+sale.subtotal.toFixed(2)) + '\n';
+    txt += right('Discount', '-$'+sale.discount.toFixed(2)) + '\n';
+  }
+  txt += right('TOTAL', '$'+sale.total.toFixed(2)) + '\n';
+  txt += right('Payment', sale.payment) + '\n';
+  if(sale.payment==='Cash' && sale.cashTendered!=null){
+    txt += right('Cash', '$'+(sale.cashTendered||0).toFixed(2)) + '\n';
+    txt += right('Change', '$'+(sale.changeDue||0).toFixed(2)) + '\n';
+  }
+  txt += line() + '\n';
+  txt += center('Thank You For Visiting') + '\n';
+  txt += center('Fruicey!') + '\n';
+  txt += center('www.fruicey.sg') + '\n';
+  txt += center('Join Our Rewards Pass - Free!') + '\n';
+  txt += center('fruiceysg.github.io/') + '\n';
+  txt += center('fruicey-members/stamp.html') + '\n';
+  txt += '\n\n\n'; // feed lines
+
+  // Try Sunmi printer API first
+  if(window.SunmiPrinter){
+    try{
+      window.SunmiPrinter.printerInit();
+      window.SunmiPrinter.setAlignment(1); // center
+      window.SunmiPrinter.printText(txt);
+      window.SunmiPrinter.paperFeed(3);
+      window.SunmiPrinter.cutPaper();
+      showToast('Printing...');
+      return;
+    }catch(e){ console.log('SunmiPrinter error:',e); }
+  }
+
+  // Try Sunmi JS-SDK
+  if(window.sunmiInnerPrinter){
+    try{
+      sunmiInnerPrinter.printerInit(null);
+      sunmiInnerPrinter.printText(txt, null);
+      sunmiInnerPrinter.autoOutPaper(null);
+      showToast('Printing...');
+      return;
+    }catch(e){ console.log('sunmiInnerPrinter error:',e); }
+  }
+
+  // Fallback: web print
+  window.print();
+}
+
 function updateClock(){
   const n=new Date();
   const el=document.getElementById('clock');
@@ -1476,7 +1572,7 @@ document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
 document.getElementById('checkout-btn').addEventListener('click', checkout);
 document.getElementById('close-receipt-btn').addEventListener('click', closeReceipt);
 document.getElementById('new-order-btn').addEventListener('click', closeReceipt);
-document.getElementById('print-btn').addEventListener('click', function(){ window.print(); });
+document.getElementById('print-btn').addEventListener('click', printReceipt);
 document.getElementById('sales-btn').addEventListener('click', openSales);
 document.getElementById('close-sales-btn').addEventListener('click', closeSales);
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);

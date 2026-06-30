@@ -635,6 +635,10 @@ async function saveEditTxn(){
   salesLog[editTxnIndex].note   = note;
   salesLog[editTxnIndex].voided = voided;
   try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
+  // Sync change to Sheets
+  const txn = salesLog[editTxnIndex];
+  apiPost({action:'editPOSSale', id:txn.id, note:note, voided:voided})
+    .catch(e=>console.log('Sheets sync error:',e));
   closeEditTxn();
   showToast(voided ? 'Transaction voided' : 'Transaction updated');
   renderSalesReport();
@@ -1525,7 +1529,11 @@ async function clearSalesLog(){
   if(!okClear) return;
   // confirmed via password modal already
   salesLog=[];try{localStorage.removeItem('fruicey_pos_sales');}catch(e){}
-  renderSalesReport();showToast('Sales history cleared');
+  // Clear from Sheets too
+  apiPost({action:'clearPOSSales'})
+    .then(()=>showToast('Sales history cleared'))
+    .catch(()=>showToast('Sales history cleared (local only)'));
+  renderSalesReport();
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────

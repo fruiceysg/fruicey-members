@@ -820,14 +820,34 @@ function printReceipt(){
   if(window.sunmiInnerPrinter){
     try{ sunmiInnerPrinter.printerInit(null); sunmiInnerPrinter.printText(txt,null); sunmiInnerPrinter.autoOutPaper(null); showToast('Printing...'); return; }catch(e){}
   }
-  // Try Xilnex/local service ports
-  var ports=[10443,8080,9100,3000]; var tried=0;
-  function tryPort(port){
-    fetch('http://localhost:'+port+'/print',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:txt})
-    .then(function(){ showToast('Sent to printer!'); })
-    .catch(function(){ tried++; if(tried<ports.length) tryPort(ports[tried]); else window.print(); });
+  // Try Sunmi device IP + common Xilnex/ESC-POS ports
+  var SUNMI_IP = '10.150.255.157';
+  var endpoints = [
+    'http://'+SUNMI_IP+':10443/print',
+    'http://'+SUNMI_IP+':8080/print',
+    'http://'+SUNMI_IP+':9100',
+    'http://'+SUNMI_IP+':3000/print',
+    'http://'+SUNMI_IP+':8008/print',
+    'http://localhost:10443/print',
+    'http://localhost:9100/print'
+  ];
+  var tried = 0;
+  function tryEndpoint(){
+    if(tried >= endpoints.length){ window.print(); return; }
+    var url = endpoints[tried];
+    fetch(url, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body: txt
+    }).then(function(){
+      showToast('Sent to Sunmi printer!');
+    }).catch(function(){
+      tried++;
+      tryEndpoint();
+    });
   }
-  tryPort(ports[0]);
+  tryEndpoint();
 }
 
 function updateClock(){

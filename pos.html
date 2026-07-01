@@ -1248,36 +1248,48 @@ function renderCart(){
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:4px">'
       +'<button class="cqbtn" data-i="'+i+'" data-d="-1">&#8722;</button>'
-      +'<span style="font-size:14px;font-weight:600;min-width:18px;text-align:center">'+item.qty+'</span>'
+      +'<span class="cart-qty-'+i+'" style="font-size:14px;font-weight:600;min-width:18px;text-align:center">'+item.qty+'</span>'
       +'<button class="cqbtn" data-i="'+i+'" data-d="1">+</button>'
       +'</div>'
-      +'<div style="font-size:13px;font-weight:700;min-width:44px;text-align:right">$'+(item.price*item.qty).toFixed(2)+'</div>'
+      +'<span class="cart-line-'+i+'" style="font-size:13px;font-weight:700;min-width:44px;text-align:right">$'+(item.price*item.qty).toFixed(2)+'</span>'
       +'<button class="cdel" data-i="'+i+'">&#x2715;</button>'
       +'</div>';
   }).join('');
 
-  // Wire price input - requires password on change
+  // Wire price input - requires password on change, NO re-render
   el.querySelectorAll('.cart-price-input').forEach(function(inp){
     var origVal = inp.value;
     inp.addEventListener('change', async function(){
       var newPrice = parseFloat(inp.value);
-      var idx = parseInt(inp.dataset.idx);
+      var i = parseInt(inp.dataset.idx);
       if(isNaN(newPrice)||newPrice<0){ inp.value=origVal; return; }
       if(newPrice !== parseFloat(origVal)){
         var ok = await requireStaffAuth('change item price');
         if(!ok){ inp.value=origVal; return; }
       }
-      cart[idx].price = newPrice;
+      // Update cart data
+      cart[i].price = newPrice;
       origVal = newPrice.toFixed(2);
-      renderCart();
+      inp.value = origVal;
+      // Update line total display inline (no full re-render)
+      var lineEl = el.querySelector('.cart-line-'+i);
+      if(lineEl) lineEl.textContent = '$'+(newPrice * cart[i].qty).toFixed(2);
+      updateTotals();
+    });
+    // Prevent Enter key from submitting or doing anything unexpected
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); }
     });
   });
 
-  // Wire remark input - no password needed
+  // Wire remark input - no password needed, no re-render
   el.querySelectorAll('.cart-remark-input').forEach(function(inp){
     inp.addEventListener('change', function(){
-      var idx = parseInt(inp.dataset.idx);
-      cart[idx].remark = inp.value.trim();
+      var i = parseInt(inp.dataset.idx);
+      cart[i].remark = inp.value.trim();
+    });
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); }
     });
   });
 

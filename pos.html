@@ -216,6 +216,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div id="sales-list"></div>
       </div>
       <div class="sales-footer">
+        <button class="btn-export" onclick="openRcptLookup()" style="background:#fff;color:#8fcea1;border:1.5px solid #8fcea1">&#128269; Lookup</button>
         <button class="btn-export" id="export-btn">Export Daily</button>
         <button class="btn-export" id="export-monthly-btn" style="background:#5aab74">Export Monthly</button>
         <button class="btn-export" id="settle-btn" style="background:#1565c0">Daily Settlement</button>
@@ -349,6 +350,27 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button onclick="closeItemEdit()" class="btn-print">Cancel</button>
           <button onclick="saveItemEdit()" class="btn-done" style="background:#8fcea1">Confirm</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- RECEIPT LOOKUP MODAL -->
+  <div class="modal-bg" id="rcpt-lookup-modal">
+    <div class="modal-box" style="max-width:340px">
+      <div class="modal-hdr">
+        <span class="modal-hdr-title">Receipt Lookup</span>
+        <button class="modal-close" onclick="closeRcptLookup()">x</button>
+      </div>
+      <div class="modal-body">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Enter Receipt Number</label>
+        <input type="text" id="rcpt-lookup-input" placeholder="e.g. FRAB12CD34EF"
+          style="width:100%;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:monospace;outline:none;margin-bottom:8px;text-transform:uppercase"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')doRcptLookup()">
+        <button onclick="doRcptLookup()" class="btn-done" style="width:100%;margin-bottom:8px">Look Up</button>
+        <div id="rcpt-lookup-result" style="margin-top:8px"></div>
+        <button onclick="closeRcptLookup()" class="btn-print" style="width:100%;margin-top:8px">Close</button>
       </div>
     </div>
   </div>
@@ -949,6 +971,34 @@ async function saveItemEdit(){
   renderCart();
   updateTotals();
   showToast(priceChanged ? 'Price updated' : 'Remark saved');
+}
+
+
+// ── RECEIPT LOOKUP ────────────────────────────────────────────
+function openRcptLookup(){
+  document.getElementById('rcpt-lookup-input').value='';
+  document.getElementById('rcpt-lookup-result').innerHTML='';
+  document.getElementById('rcpt-lookup-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('rcpt-lookup-input').focus(),100);
+}
+function closeRcptLookup(){
+  document.getElementById('rcpt-lookup-modal').classList.remove('open');
+}
+function doRcptLookup(){
+  const rcptNo = document.getElementById('rcpt-lookup-input').value.trim().toUpperCase();
+  if(!rcptNo){ showToast('Enter a receipt number'); return; }
+  const sale = salesLog.find(s=>(s.rcptNo||'').toUpperCase()===rcptNo);
+  if(!sale){
+    document.getElementById('rcpt-lookup-result').innerHTML='<div style="color:#e74c3c;font-size:13px;text-align:center;padding:12px">Receipt not found.<br><span style="font-size:11px;color:#aaa">Try syncing first.</span></div>';
+    return;
+  }
+  closeRcptLookup();
+  showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
+}
+function viewSaleReceipt(idx){
+  const sale = salesLog[idx];
+  if(!sale) return;
+  showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
 }
 
 function updateClock(){
@@ -1621,17 +1671,15 @@ function renderSalesReport(){
     +(monthSales2.length?buildProductChart(monthSales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>')
     // Recent transactions
     +'<div style="font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Recent transactions</div>'
-    +salesLog.slice(0,30).map((s,i)=>
-      '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start">'
-      +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'
-      +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+(s.voided?' · <span style=\'color:#e74c3c;font-weight:700\'>VOIDED</span>':'')+'</div>'
-      +'<div style="font-size:11px;color:#ccc">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div></div>'
-      +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'
-      +'<div style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">$'+s.total.toFixed(2)+'</div>'
-      +(s.discount>0?'<div style="font-size:10px;color:#aaa">disc $'+s.discount.toFixed(2)+'</div>':'')
-      +'<button onclick="openEditTxn('+i+')" style="margin-top:4px;padding:3px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:10px;color:#888;font-family:var(--font)">Edit</button>'
-      +'</div></div>'
-    ).join('');
+    +salesLog.slice(0,30).map((s,i)=>{
+    var itemsHtml = s.items.map(function(it){
+      var txt = it.qty+'x '+it.label;
+      if(it.remark) txt += ' <span style="color:#e67e22;font-style:italic">('+it.remark+')</span>';
+      return txt;
+    }).join(', ');
+    var remarksStr = s.items.filter(function(it){return it.remark;}).map(function(it){return it.remark;}).join('; ');
+    return '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start" onclick="viewSaleReceipt('+i+')" style="cursor:pointer">'      +'<div style="flex:1;min-width:0">'      +'<div style="display:flex;align-items:center;gap:6px">'      +'<div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'      +(s.rcptNo?'<div style="font-size:10px;color:#999;font-family:monospace">'+s.rcptNo+'</div>':'')      +'</div>'      +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+(s.voided?' · <span style="color:#e74c3c;font-weight:700">VOIDED</span>':'')+'</div>'      +'<div style="font-size:11px;color:#ccc">'+itemsHtml+'</div>'      +(remarksStr?'<div style="font-size:10px;color:#e67e22;font-style:italic;margin-top:1px">Remark: '+remarksStr+'</div>':'')      +(s.note?'<div style="font-size:10px;color:#aaa;font-style:italic">Note: '+s.note+'</div>':'')      +'</div>'      +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'      +'<div style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">$'+s.total.toFixed(2)+'</div>'      +(s.discount>0?'<div style="font-size:10px;color:#27ae60">-$'+s.discount.toFixed(2)+' off</div>':'')      +'<button class="edit-txn-btn" data-i="'+i+'" style="margin-top:4px;padding:2px 8px;border:1px solid #ddd;border-radius:4px;background:#fafafa;cursor:pointer;font-size:10px;color:#888;font-family:var(--font)">Edit</button>'      +'</div></div>';
+  }).join('');
 }
 function exportSalesCSV(){
   if(!salesLog.length){showToast('No sales to export');return;}

@@ -1209,7 +1209,7 @@ function renderCart(){
       +'<div class="cname">'+item.label+'</div>'
       +'<div style="display:flex;align-items:center;gap:6px">'
       +'<span style="font-size:11px;color:#888">$'+item.price.toFixed(2)+' ea</span>'
-      +'<button style="font-size:10px;color:#8fcea1;background:none;border:1px solid #8fcea1;border-radius:4px;padding:1px 6px;cursor:pointer;font-family:var(--font)" onclick="openItemEdit('+i+')">edit</button>'
+      +'<button class="cedit" data-idx="'+i+'" style="font-size:10px;color:#8fcea1;background:none;border:1px solid #8fcea1;border-radius:4px;padding:1px 6px;cursor:pointer;font-family:var(--font)">edit</button>'
       +'</div>'
       +remarkHtml
       +'</div>'
@@ -1222,6 +1222,15 @@ function renderCart(){
       +'<button class="cdel" data-i="'+i+'">&#x2715;</button>'
       +'</div>';
   }).join('');
+
+  // Wire edit buttons directly after render
+  el.querySelectorAll('.cedit').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      openItemEdit(parseInt(btn.dataset.idx));
+    });
+  });
+
   updateTotals();
 }
 

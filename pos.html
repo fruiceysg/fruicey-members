@@ -1335,7 +1335,7 @@ async function checkout(){
   const total = isOnline ? 0 : +(sub-disc).toFixed(2);
   const now=new Date();
   const dateStr=now.toISOString().split('T')[0];
-  const timeStr=now.toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
+  const h=now.getHours(),m=now.getMinutes(); const timeStr=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
   const btn=document.getElementById('checkout-btn');
   btn.textContent='Processing...';btn.disabled=true;
   try{
@@ -1379,8 +1379,11 @@ async function checkout(){
         memberPhone:sale.memberPhone||''
       });
     }catch(e){ console.log('Sheet save failed',e); }
+    // Add to local cache, then immediately reload from Sheets to stay in sync
     salesLog.unshift(sale);
     try{localStorage.setItem('fruicey_pos_sales',JSON.stringify(salesLog.slice(0,500)));}catch(e){}
+    // Background reload from Sheets (replaces local with authoritative data)
+    setTimeout(function(){ loadSalesFromSheets().catch(()=>{}); }, 2000);
     if(paymentMethod === 'Cash'){
       closeSales();
       openCashModal(sale);
@@ -1498,12 +1501,8 @@ async function loadSalesFromSheets(){
         s.voided   = s.voided==='true';
         return cleanSaleDate(s);
       });
-      // Merge: sheet is source of truth + any local unsaved
-      const sheetIds = new Set(sheetSales.map(s=>s.id));
-      const localOnly = salesLog.filter(s=>!sheetIds.has(s.id));
-      salesLog = [...sheetSales, ...localOnly]
-        .sort((a,b)=>(b.date+' '+b.time).localeCompare(a.date+' '+a.time));
-      // Persist to localStorage as cache
+      // Sheets is the single source of truth - replace local entirely
+      salesLog = sheetSales;
       try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
       showToast('Synced '+sheetSales.length+' transactions'); console.log('Sales from Sheets:', sheetSales);
     } else if(res.sales && res.sales.length === 0) {

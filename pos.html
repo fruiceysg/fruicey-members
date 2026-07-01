@@ -1185,11 +1185,7 @@ document.addEventListener('click', function(e){
     cart.splice(parseInt(dBtn.dataset.i),1);
     renderCart(); return;
   }
-  // Cart item edit (tap on item info area)
-  const editArea = e.target.closest('.cart-info');
-  if(editArea && editArea.dataset.edit !== undefined){
-    openItemEdit(parseInt(editArea.dataset.edit)); return;
-  }
+
   // Payment buttons
   const payBtn = e.target.closest('.pay-btn');
   if(payBtn && payBtn.dataset.method){
@@ -1203,15 +1199,18 @@ document.addEventListener('click', function(e){
 function renderCart(){
   const el=document.getElementById('cart-items');
   if(!cart.length){
-    el.innerHTML='<div class="cart-empty"><div style="font-size:32px">🛒</div><div style="margin-top:8px;font-size:13px;color:#bbb;text-align:center">Cart is empty<br><span style="font-size:11px">Tap a product to add</span></div></div>';
+    el.innerHTML='<div class="cart-empty"><div style="font-size:32px">&#128722;</div><div style="margin-top:8px;font-size:13px;color:#bbb;text-align:center">Cart is empty<br><span style="font-size:11px">Tap a product to add</span></div></div>';
     updateTotals(); return;
   }
   el.innerHTML=cart.map(function(item,i){
     var remarkHtml=item.remark?'<div style="font-size:10px;color:#e67e22;margin-top:1px">'+item.remark+'</div>':'';
     return '<div class="cart-row">'
-      +'<div class="cart-info" data-edit="'+i+'" style="cursor:pointer;flex:1;padding-right:6px">'
+      +'<div class="cart-info" style="flex:1">'
       +'<div class="cname">'+item.label+'</div>'
-      +'<div style="font-size:11px;color:#8fcea1;font-weight:600">$'+item.price.toFixed(2)+' ea &middot; <i>edit</i></div>'
+      +'<div style="display:flex;align-items:center;gap:6px">'
+      +'<span style="font-size:11px;color:#888">$'+item.price.toFixed(2)+' ea</span>'
+      +'<button style="font-size:10px;color:#8fcea1;background:none;border:1px solid #8fcea1;border-radius:4px;padding:1px 6px;cursor:pointer;font-family:var(--font)" onclick="openItemEdit('+i+')">edit</button>'
+      +'</div>'
       +remarkHtml
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:4px">'

@@ -1207,9 +1207,12 @@ function renderCart(){
     return '<div class="cart-row">'
       +'<div class="cart-info" style="flex:1">'
       +'<div class="cname">'+item.label+'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px">'
-      +'<span style="font-size:11px;color:#888">$'+item.price.toFixed(2)+' ea</span>'
-      +'<button class="cedit" data-idx="'+i+'" style="font-size:10px;color:#8fcea1;background:none;border:1px solid #8fcea1;border-radius:4px;padding:1px 6px;cursor:pointer;font-family:var(--font)">edit</button>'
+      +'<div style="display:flex;align-items:center;gap:4px;margin-top:2px">'
+      +'<span style="font-size:11px;color:#aaa">$</span>'
+      +'<input type="number" class="cart-price-input" data-idx="'+i+'" value="'+item.price.toFixed(2)+'" step="0.10" min="0"'
+      +' style="width:54px;font-size:12px;font-weight:700;border:1px solid #e0e0e0;border-radius:4px;padding:2px 4px;font-family:var(--font);color:#333;text-align:center">'
+      +'<input type="text" class="cart-remark-input" data-idx="'+i+'" placeholder="remark" value="'+(item.remark||'')+'"'
+      +' style="flex:1;font-size:11px;border:1px solid #e0e0e0;border-radius:4px;padding:2px 6px;font-family:var(--font);color:#e67e22;min-width:0">'
       +'</div>'
       +remarkHtml
       +'</div>'
@@ -1223,11 +1226,28 @@ function renderCart(){
       +'</div>';
   }).join('');
 
-  // Wire edit buttons directly after render
-  el.querySelectorAll('.cedit').forEach(function(btn){
-    btn.addEventListener('click', function(e){
-      e.stopPropagation();
-      openItemEdit(parseInt(btn.dataset.idx));
+  // Wire price input - requires password on change
+  el.querySelectorAll('.cart-price-input').forEach(function(inp){
+    var origVal = inp.value;
+    inp.addEventListener('change', async function(){
+      var newPrice = parseFloat(inp.value);
+      var idx = parseInt(inp.dataset.idx);
+      if(isNaN(newPrice)||newPrice<0){ inp.value=origVal; return; }
+      if(newPrice !== parseFloat(origVal)){
+        var ok = await requireStaffAuth('change item price');
+        if(!ok){ inp.value=origVal; return; }
+      }
+      cart[idx].price = newPrice;
+      origVal = newPrice.toFixed(2);
+      renderCart();
+    });
+  });
+
+  // Wire remark input - no password needed
+  el.querySelectorAll('.cart-remark-input').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      var idx = parseInt(inp.dataset.idx);
+      cart[idx].remark = inp.value.trim();
     });
   });
 

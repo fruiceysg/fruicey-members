@@ -1185,6 +1185,11 @@ document.addEventListener('click', function(e){
     cart.splice(parseInt(dBtn.dataset.i),1);
     renderCart(); return;
   }
+  // Cart item edit (tap on item info area)
+  const editArea = e.target.closest('.cart-info');
+  if(editArea && editArea.dataset.edit !== undefined){
+    openItemEdit(parseInt(editArea.dataset.edit)); return;
+  }
   // Payment buttons
   const payBtn = e.target.closest('.pay-btn');
   if(payBtn && payBtn.dataset.method){
@@ -1204,7 +1209,7 @@ function renderCart(){
   el.innerHTML=cart.map(function(item,i){
     var remarkHtml=item.remark?'<div style="font-size:10px;color:#e67e22;margin-top:1px">'+item.remark+'</div>':'';
     return '<div class="cart-row">'
-      +'<div class="cart-info" onclick="openItemEdit('+i+')" style="cursor:pointer;flex:1;padding-right:6px">'
+      +'<div class="cart-info" data-edit="'+i+'" style="cursor:pointer;flex:1;padding-right:6px">'
       +'<div class="cname">'+item.label+'</div>'
       +'<div style="font-size:11px;color:#8fcea1;font-weight:600">$'+item.price.toFixed(2)+' ea &middot; <i>edit</i></div>'
       +remarkHtml

@@ -649,8 +649,7 @@ let cart = [], currentMember = null, memberDiscount = 0, currentCat = 'Shakes & 
 const ONLINE_PLATFORMS = ['GrabFood','FoodPanda'];
 let stockStatus = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg // id -> true/false
-let salesLog = [];
-try { salesLog = JSON.parse(localStorage.getItem('fruicey_pos_sales') || '[]'); } catch(e) { salesLog = []; }
+let salesLog = []; // always loaded fresh from Sheets
 
 // ── API ──────────────────────────────────────────────────────────────
 function np(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
@@ -689,7 +688,7 @@ async function saveEditTxn(){
   }
   salesLog[editTxnIndex].note   = note;
   salesLog[editTxnIndex].voided = voided;
-  try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
+  // edit synced to Sheets only
   // Sync change to Sheets
   const txn = salesLog[editTxnIndex];
   apiPost({action:'editPOSSale', id:txn.id, note:note, voided:voided})
@@ -1352,9 +1351,8 @@ async function checkout(){
       member:currentMember?currentMember.first+' '+currentMember.last:null,
       memberPhone:currentMember?currentMember.phone:null
     };
-    // Save to Sheets
+    // Save to Sheets (Sheets is the ONLY source of truth)
     try{
-      // If member, record spending on their stamp card record
       if(currentMember && currentMember.phone && !isOnline){
         await apiPost({
           action:'recordMemberSpend',
@@ -1367,23 +1365,24 @@ async function checkout(){
       }
       await apiPost({
         action:'addPOSSale',
-        rcptNo:sale.rcptNo||'',
-        date:dateStr,
-        time:timeStr,
-        items:JSON.stringify(cart.map(i=>({qty:i.qty,label:i.label,price:i.price,remark:i.remark||''}))),
-        subtotal:sub.toFixed(2),
-        discount:disc.toFixed(2),
-        total:total.toFixed(2),
-        payment:paymentMethod,
-        member:sale.member||'',
-        memberPhone:sale.memberPhone||''
+        id: sale.id,
+        rcptNo: sale.rcptNo||'',
+        date: dateStr,
+        time: timeStr,
+        items: JSON.stringify(cart.map(i=>({qty:i.qty,label:i.label,price:i.price,remark:i.remark||''}))),
+        subtotal: sub.toFixed(2),
+        discount: disc.toFixed(2),
+        total: total.toFixed(2),
+        payment: paymentMethod,
+        member: sale.member||'',
+        memberPhone: sale.memberPhone||''
       });
-    }catch(e){ console.log('Sheet save failed',e); }
-    // Add to local cache, then immediately reload from Sheets to stay in sync
-    salesLog.unshift(sale);
-    try{localStorage.setItem('fruicey_pos_sales',JSON.stringify(salesLog.slice(0,500)));}catch(e){}
-    // Background reload from Sheets (replaces local with authoritative data)
-    setTimeout(function(){ loadSalesFromSheets().catch(()=>{}); }, 2000);
+      // Add to local in-memory log for immediate receipt display only
+      salesLog.unshift(sale);
+    }catch(e){
+      console.log('Sheet save failed — keeping local copy',e);
+      salesLog.unshift(sale);
+    }
     if(paymentMethod === 'Cash'){
       closeSales();
       openCashModal(sale);
@@ -1503,7 +1502,7 @@ async function loadSalesFromSheets(){
       });
       // Sheets is the single source of truth - replace local entirely
       salesLog = sheetSales;
-      try{ localStorage.setItem('fruicey_pos_sales', JSON.stringify(salesLog)); }catch(e){}
+      try{ localStorage.removeItem('fruicey_pos_sales'); }catch(e){} // no local cache
       showToast('Synced '+sheetSales.length+' transactions'); console.log('Sales from Sheets:', sheetSales);
     } else if(res.sales && res.sales.length === 0) {
       // Sheets is empty - clear local cache too
@@ -1672,8 +1671,7 @@ async function dailySettlement(){
   const settled=JSON.parse(localStorage.getItem('fruicey_settled')||'[]');
   settled.push({date:today,sales:todaySales,settledAt:new Date().toISOString()});
   try{localStorage.setItem('fruicey_settled',JSON.stringify(settled));}catch(e){}
-  salesLog=salesLog.filter(s=>s.date!==today);
-  try{localStorage.setItem('fruicey_pos_sales',JSON.stringify(salesLog));}catch(e){}
+  salesLog=salesLog.filter(s=>s.date!==today); // Sheets is source of truth
   renderSalesReport();
   showToast('Day settled! $'+total.toFixed(2)+' total.');
 }
@@ -1682,7 +1680,7 @@ async function clearSalesLog(){
   const okClear = await requireStaffAuth('clear all sales history');
   if(!okClear) return;
   // confirmed via password modal already
-  salesLog=[];try{localStorage.removeItem('fruicey_pos_sales');}catch(e){}
+  salesLog=[];
   // Clear from Sheets too
   apiPost({action:'clearPOSSales'})
     .then(()=>showToast('Sales history cleared'))

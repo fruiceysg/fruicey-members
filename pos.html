@@ -1019,7 +1019,12 @@ function loadMemberHistory(phone){
       +'<span style="color:#555">'+s.date+' '+s.time+'</span>'
       +'<span style="font-weight:700;color:#8fcea1">$'+s.total.toFixed(2)+'</span></div>'
       +(s.rcptNo?'<div style="color:#aaa;font-size:10px;font-family:monospace;margin-top:2px">'+s.rcptNo+'</div>':'')
-      +'<div style="color:#aaa;margin-top:2px">'+s.items.map(i=>i.qty+'x '+i.label).join(', ')+'</div>'
+      +'<div style="color:#aaa;margin-top:2px">'+s.items.map(i=>{
+        var txt=i.qty+'x '+i.label;
+        if(i.remark) txt+=' <span style="color:#e67e22;font-style:italic">('+i.remark+')</span>';
+        if(parseFloat(i.price)!==parseFloat(i.origPrice||i.price)) txt+=' <span style="color:#e74c3c">[$'+parseFloat(i.price).toFixed(2)+']</span>';
+        return txt;
+      }).join(', ')+'</div>'
       +'<div style="color:#bbb;font-size:11px">'+s.payment+'</div>'
       +'</div>'
     ).join('');

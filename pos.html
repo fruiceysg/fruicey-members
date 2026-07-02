@@ -1062,14 +1062,36 @@ function viewSaleReceipt(idx){
 
 // ── RECEIPTS TAB ─────────────────────────────────────────────
 async function openReceiptsTab(){
-  const el = document.getElementById('rcpt-search-results');
-  if(!el) return;
-  el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa">Loading receipts...</div>';
+  var el = document.getElementById('rcpt-search-results');
+  if(!el){ console.error('rcpt-search-results not found'); return; }
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa">Loading receipts from server...</div>';
+
   try{
-    await loadSalesFromSheets();
+    // Direct API call - independent of loadSalesFromSheets
+    var res = await apiGet({action:'getPOSSales'});
+    if(res.error){ el.innerHTML='<div style="color:#e74c3c;text-align:center;padding:24px">Error: '+res.error+'</div>'; return; }
+    if(res.sales && res.sales.length){
+      // Parse and clean the data
+      var cleaned = res.sales.map(function(s){
+        try{ s.items = typeof s.items==='string' ? JSON.parse(s.items) : (Array.isArray(s.items)?s.items:[]); }catch(e){ s.items=[]; }
+        s.total    = parseFloat(s.total||0);
+        s.subtotal = parseFloat(s.subtotal||0);
+        s.discount = parseFloat(s.discount||0);
+        s.voided   = s.voided==='true'||s.voided===true;
+        return cleanSaleDate(s);
+      });
+      // Also update salesLog so viewRcptResult works
+      salesLog = cleaned;
+    } else {
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa">No transactions found.<br><small>Make a sale first to see receipts here.</small></div>';
+      return;
+    }
   }catch(e){
-    console.log('Receipts load error:', e);
+    console.error('openReceiptsTab error:', e);
+    el.innerHTML = '<div style="color:#e74c3c;text-align:center;padding:24px">Could not connect to server.<br><small>Check your internet connection.</small></div>';
+    return;
   }
+
   renderReceiptsList(document.getElementById('rcpt-search-input').value||'');
 }
 
@@ -1078,42 +1100,39 @@ function searchReceipts(query){
 }
 
 function renderReceiptsList(query){
-  const el = document.getElementById('rcpt-search-results');
+  var el = document.getElementById('rcpt-search-results');
+  if(!el) return;
   query = (query||'').trim().toUpperCase();
-  // Filter salesLog based on query
+
   var list = query
     ? salesLog.filter(function(s){
         return (s.rcptNo||'').toUpperCase().includes(query)
           || (s.memberPhone||'').replace(/\D/g,'').includes(query.replace(/\D/g,''))
-          || (s.member||'').toUpperCase().includes(query)
-          || s.items.some(function(it){ return (it.label||'').toUpperCase().includes(query); });
+          || (s.member||'').toUpperCase().includes(query);
       })
     : salesLog.slice(0,50);
 
   if(!list.length){
-    el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa">'
-      +(query?'No receipts found for <b>'+query+'</b>':'No receipts yet — tap Sync in Sales first')
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa">'
+      +(query?'No receipts found for <b>'+query+'</b>':'No receipts yet.')
       +'</div>';
     return;
   }
 
   el.innerHTML = list.map(function(s){
-    var idx = salesLog.indexOf(s);
-    var itemsStr = s.items.map(function(it){
-      var t = it.qty+'x '+it.label;
-      if(it.remark) t += ' ('+it.remark+')';
-      return t;
-    }).join(', ');
-    return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fafafa;active:background:#f0f0f0" onclick="viewRcptResult('+idx+')">'
+    var sidx = salesLog.indexOf(s);
+    var items = Array.isArray(s.items) ? s.items : [];
+    var itemsStr = items.map(function(it){ return (it.qty||1)+'x '+(it.label||''); }).join(', ');
+    return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fafafa" onclick="viewRcptResult('+sidx+')">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
-      +'<span style="font-family:monospace;font-size:11px;color:#555;font-weight:600">'+(s.rcptNo||s.id||'—')+'</span>'
-      +'<span style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">'+(s.voided?'<s>':'')+'$'+s.total.toFixed(2)+(s.voided?'</s> VOID':'')+'</span>'
+      +'<span style="font-family:monospace;font-size:11px;color:#555;font-weight:600">'+(s.rcptNo||'—')+'</span>'
+      +'<span style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">'+(s.voided?'VOID ':'')+'$'+s.total.toFixed(2)+'</span>'
       +'</div>'
-      +'<div style="font-size:11px;color:#888">'+s.date+' '+s.time+' · '+s.payment+(s.member?' · <span style="color:#27ae60">'+s.member+'</span>':'')+'</div>'
-      +'<div style="font-size:11px;color:#bbb;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+itemsStr+'</div>'
+      +'<div style="font-size:11px;color:#888">'+s.date+' '+s.time+' · '+s.payment+(s.member?' · <b style="color:#27ae60">'+s.member+'</b>':'')+'</div>'
+      +(itemsStr?'<div style="font-size:11px;color:#bbb;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+itemsStr+'</div>':'')
       +'</div>';
   }).join('')
-  +(list.length===50&&!query?'<div style="text-align:center;font-size:11px;color:#bbb;padding:8px">Showing latest 50 — search to filter</div>':'');
+  +(list.length===50&&!query?'<div style="text-align:center;font-size:11px;color:#ddd;padding:8px">Showing latest 50</div>':'');
 }
 
 function viewRcptResult(idx){

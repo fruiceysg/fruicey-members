@@ -132,6 +132,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       <div class="pos-tabs">
         <button class="pos-tab active" id="pos-tab-menu" onclick="switchPosTab('menu')">Menu</button>
         <button class="pos-tab" id="pos-tab-member" onclick="switchPosTab('member')">Member</button>
+        <button class="pos-tab" id="pos-tab-receipts" onclick="switchPosTab('receipts')">Receipts</button>
       </div>
       <div id="pos-view-menu" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0">
         <div id="cat-tabs" class="cat-tabs"></div>
@@ -162,6 +163,21 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           </div>
           <input type="hidden" id="member-phone" value="">
         </div>
+      <div id="pos-view-receipts" style="display:none;flex:1;overflow-y:auto;padding:12px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">Search Receipts</div>
+          <input type="text" id="rcpt-search-input" placeholder="Receipt no. or member phone..."
+            style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font);margin-bottom:8px"
+            oninput="searchReceipts(this.value)">
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button onclick="searchReceipts(document.getElementById('rcpt-search-input').value)" class="btn-done" style="flex:1">Search</button>
+            <button onclick="document.getElementById('rcpt-search-input').value='';searchReceipts('')" class="btn-print" style="flex:1">Clear</button>
+          </div>
+        </div>
+        <div id="rcpt-search-results" style="font-size:12px;color:#aaa;text-align:center;padding:20px">
+          Enter a receipt number or phone number to search
+        </div>
+      </div>
         <div id="member-result" class="member-result" style="display:none"></div>
         <div id="member-history" style="display:none">
           <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">Purchase history</div>
@@ -1054,6 +1070,48 @@ function viewSaleReceipt(idx){
   showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
 }
 
+
+// ── RECEIPTS TAB ─────────────────────────────────────────────
+function loadReceiptsTab(){
+  searchReceipts(document.getElementById('rcpt-search-input').value||'');
+}
+
+function searchReceipts(query){
+  const el = document.getElementById('rcpt-search-results');
+  query = (query||'').trim().toUpperCase();
+  if(!query){
+    el.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:20px">Enter a receipt number or phone number to search</div>';
+    return;
+  }
+  // Search in salesLog
+  const results = salesLog.filter(function(s){
+    return (s.rcptNo||'').toUpperCase().includes(query)
+      || (s.memberPhone||'').replace(/\D/g,'').includes(query.replace(/\D/g,''))
+      || (s.member||'').toUpperCase().includes(query);
+  });
+  if(!results.length){
+    el.innerHTML='<div style="color:#e74c3c;font-size:13px;text-align:center;padding:20px">No receipts found for <b>'+query+'</b><br><small style="color:#aaa">Try syncing Sales first</small></div>';
+    return;
+  }
+  el.innerHTML = results.map(function(s, i){
+    var itemsStr = s.items.map(function(it){ return it.qty+'x '+it.label; }).join(', ');
+    return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fafafa" onclick="viewRcptResult('+salesLog.indexOf(s)+')">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+      +'<span style="font-family:monospace;font-size:11px;color:#555;font-weight:600">'+(s.rcptNo||s.id||'')+'</span>'
+      +'<span style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">'+(s.voided?'VOIDED ':'')+'$'+s.total.toFixed(2)+'</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#888">'+s.date+' '+s.time+' · '+s.payment+(s.member?' · '+s.member:'')+'</div>'
+      +'<div style="font-size:11px;color:#bbb;margin-top:2px">'+itemsStr+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function viewRcptResult(idx){
+  const sale = salesLog[idx];
+  if(!sale) return;
+  showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
+}
+
 function updateClock(){
   const n=new Date();
   const el=document.getElementById('clock');
@@ -1135,12 +1193,14 @@ function loadMemberHistory(phone){
 }
 function clearMemberDisplay(){document.getElementById('member-result').style.display='none';}
 function switchPosTab(tab){
+  ['menu','member','receipts'].forEach(function(t){
+    var view = document.getElementById('pos-view-'+t);
+    var btn  = document.getElementById('pos-tab-'+t);
+    if(view) view.style.display = t===tab?(t==='menu'?'flex':'flex'):'none';
+    if(btn){ btn.style.color = t===tab?'#8fcea1':'#aaa'; btn.style.borderBottomColor = t===tab?'#8fcea1':'transparent'; }
+  });
   document.getElementById('pos-view-menu').style.display = tab==='menu'?'flex':'none';
-  document.getElementById('pos-view-member').style.display = tab==='member'?'flex':'none';
-  document.getElementById('pos-tab-menu').style.color = tab==='menu'?'#8fcea1':'#aaa';
-  document.getElementById('pos-tab-menu').style.borderBottomColor = tab==='menu'?'#8fcea1':'transparent';
-  document.getElementById('pos-tab-member').style.color = tab==='member'?'#8fcea1':'#aaa';
-  document.getElementById('pos-tab-member').style.borderBottomColor = tab==='member'?'#8fcea1':'transparent';
+  if(tab==='receipts') loadReceiptsTab();
 }
 
 function clearMember(){
@@ -1565,8 +1625,15 @@ function showReceipt(sale,changeDue,cashTendered){
 }
 function closeReceipt(){
   document.getElementById('receipt-modal').classList.remove('open');
-  cart=[];paymentMethod='';
+  cart=[]; paymentMethod='';
+  // Auto-clear member after tender
+  currentMember=null; memberDiscount=0;
+  memberPhoneVal='';
+  var mp=document.getElementById('member-phone'); if(mp) mp.value='';
+  var mpv=document.getElementById('member-phone-val'); if(mpv) mpv.textContent='';
+  clearMemberDisplay();
   document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('pay-active'));
+  switchPosTab('menu');
   renderCart();
 }
 

@@ -232,7 +232,6 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div id="sales-list"></div>
       </div>
       <div class="sales-footer">
-        <button class="btn-export" onclick="openRcptLookup()" style="background:#fff;color:#8fcea1;border:1.5px solid #8fcea1">&#128269; Lookup</button>
         <button class="btn-export" id="export-btn">Export Daily</button>
         <button class="btn-export" id="export-monthly-btn" style="background:#5aab74">Export Monthly</button>
         <button class="btn-export" id="settle-btn" style="background:#1565c0">Daily Settlement</button>
@@ -411,6 +410,18 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
+  {username:'admin',  password:'fruicey2025', name:'A
+
+
+
+
+
+
+
+
+
+// ── STAFF ACCOUNTS ───────────────────────────────────────────
+const STAFF_ACCOUNTS = [
   {username:'admin',  password:'fruicey2025', name:'Admin'},
   {username:'staff1', password:'staff1pass',  name:'Staff 1'},
   {username:'staff2', password:'staff2pass',  name:'Staff 2'},
@@ -530,8 +541,8 @@ const CATALOGUE = {
     {id:'sb02',name:'Dreamy Acai',          sizes:[{l:'Dessert',p:6.90},{l:'Meal',p:9.90},{l:'Dessert Sorbet',p:7.40},{l:'Meal Sorbet',p:10.40}]},
     {id:'sb03',name:'Nostalgic Acai',       sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
     {id:'sb04',name:'Berry Acai',           sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
-    {id:'sb05',name:'Double Rainbowl Acai', sizes:[{l:'',p:10.90}]},
-    {id:'sb06',name:'Galaxy Dream Acai',    sizes:[{l:'',p:9.90}]}
+    {id:'sb05',name:'Double Rainbowl Acai', sizes:[{l:'Regular',p:10.90},{l:'Sorbet',p:11.90}]},
+    {id:'sb06',name:'Galaxy Dream Acai',    sizes:[{l:'Regular',p:9.90},{l:'Sorbet',p:10.90}]}
   ],
   'Shakes & Smoothies': [
     {id:'ss01',name:'Coco Chacha',              sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
@@ -1072,42 +1083,58 @@ function viewSaleReceipt(idx){
 
 
 // ── RECEIPTS TAB ─────────────────────────────────────────────
-function loadReceiptsTab(){
-  searchReceipts(document.getElementById('rcpt-search-input').value||'');
+async function openReceiptsTab(){
+  const el = document.getElementById('rcpt-search-results');
+  el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa">Loading receipts...</div>';
+  try{ await loadSalesFromSheets(); }catch(e){}
+  renderReceiptsList('');
 }
 
 function searchReceipts(query){
+  renderReceiptsList(query||'');
+}
+
+function renderReceiptsList(query){
   const el = document.getElementById('rcpt-search-results');
   query = (query||'').trim().toUpperCase();
-  if(!query){
-    el.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:20px">Enter a receipt number or phone number to search</div>';
-    return;
-  }
-  // Search in salesLog
-  const results = salesLog.filter(function(s){
-    return (s.rcptNo||'').toUpperCase().includes(query)
-      || (s.memberPhone||'').replace(/\D/g,'').includes(query.replace(/\D/g,''))
-      || (s.member||'').toUpperCase().includes(query);
-  });
-  if(!results.length){
-    el.innerHTML='<div style="color:#e74c3c;font-size:13px;text-align:center;padding:20px">No receipts found for <b>'+query+'</b><br><small style="color:#aaa">Try syncing Sales first</small></div>';
-    return;
-  }
-  el.innerHTML = results.map(function(s, i){
-    var itemsStr = s.items.map(function(it){ return it.qty+'x '+it.label; }).join(', ');
-    return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fafafa" onclick="viewRcptResult('+salesLog.indexOf(s)+')">'
-      +'<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
-      +'<span style="font-family:monospace;font-size:11px;color:#555;font-weight:600">'+(s.rcptNo||s.id||'')+'</span>'
-      +'<span style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">'+(s.voided?'VOIDED ':'')+'$'+s.total.toFixed(2)+'</span>'
-      +'</div>'
-      +'<div style="font-size:11px;color:#888">'+s.date+' '+s.time+' · '+s.payment+(s.member?' · '+s.member:'')+'</div>'
-      +'<div style="font-size:11px;color:#bbb;margin-top:2px">'+itemsStr+'</div>'
+  // Filter salesLog based on query
+  var list = query
+    ? salesLog.filter(function(s){
+        return (s.rcptNo||'').toUpperCase().includes(query)
+          || (s.memberPhone||'').replace(/\D/g,'').includes(query.replace(/\D/g,''))
+          || (s.member||'').toUpperCase().includes(query)
+          || s.items.some(function(it){ return (it.label||'').toUpperCase().includes(query); });
+      })
+    : salesLog.slice(0,50);
+
+  if(!list.length){
+    el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa">'
+      +(query?'No receipts found for <b>'+query+'</b>':'No receipts yet — tap Sync in Sales first')
       +'</div>';
-  }).join('');
+    return;
+  }
+
+  el.innerHTML = list.map(function(s){
+    var idx = salesLog.indexOf(s);
+    var itemsStr = s.items.map(function(it){
+      var t = it.qty+'x '+it.label;
+      if(it.remark) t += ' ('+it.remark+')';
+      return t;
+    }).join(', ');
+    return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fafafa;active:background:#f0f0f0" onclick="viewRcptResult('+idx+')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
+      +'<span style="font-family:monospace;font-size:11px;color:#555;font-weight:600">'+(s.rcptNo||s.id||'—')+'</span>'
+      +'<span style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">'+(s.voided?'<s>':'')+'$'+s.total.toFixed(2)+(s.voided?'</s> VOID':'')+'</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#888">'+s.date+' '+s.time+' · '+s.payment+(s.member?' · <span style="color:#27ae60">'+s.member+'</span>':'')+'</div>'
+      +'<div style="font-size:11px;color:#bbb;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+itemsStr+'</div>'
+      +'</div>';
+  }).join('')
+  +(list.length===50&&!query?'<div style="text-align:center;font-size:11px;color:#bbb;padding:8px">Showing latest 50 — search to filter</div>':'');
 }
 
 function viewRcptResult(idx){
-  const sale = salesLog[idx];
+  var sale = salesLog[idx];
   if(!sale) return;
   showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
 }
@@ -1200,7 +1227,7 @@ function switchPosTab(tab){
     if(btn){ btn.style.color = t===tab?'#8fcea1':'#aaa'; btn.style.borderBottomColor = t===tab?'#8fcea1':'transparent'; }
   });
   document.getElementById('pos-view-menu').style.display = tab==='menu'?'flex':'none';
-  if(tab==='receipts') loadReceiptsTab();
+  if(tab==='receipts') openReceiptsTab();
 }
 
 function clearMember(){
@@ -1983,6 +2010,3 @@ document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 document.getElementById('print-btn').addEventListener('click', printReceipt);
 }
-</script>
-</body>
-</html>

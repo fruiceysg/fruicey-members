@@ -178,7 +178,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font);margin-bottom:8px"
             oninput="searchReceipts(this.value)">
           <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button onclick="searchReceipts(document.getElementById('rcpt-search-input').value)" class="btn-done" style="flex:1">Search</button>
+            <button class="btn-done rcpt-search-btn" style="flex:1">Search</button>
             <button onclick="document.getElementById('rcpt-search-input').value='';searchReceipts('')" class="btn-print" style="flex:1">Clear</button>
           </div>
         </div>
@@ -1125,7 +1125,7 @@ function renderReceiptsList(query){
     var sidx = salesLog.indexOf(s);
     var items = Array.isArray(s.items) ? s.items : [];
     var itemsStr = items.map(function(it){ return (it.qty||1)+'x '+(it.label||''); }).join(', ');
-    return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fafafa" onclick="viewRcptResult('+sidx+')">'
+    return '<div class="rcpt-card" data-sidx="'+sidx+'" style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fafafa">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'
       +'<span style="font-family:monospace;font-size:11px;color:#555;font-weight:600">'+(s.rcptNo||'—')+'</span>'
       +'<span style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">'+(s.voided?'VOID ':'')+'$'+s.total.toFixed(2)+'</span>'
@@ -1430,6 +1430,27 @@ document.addEventListener('click', function(e){
   if(editTxnBtn){
     e.stopPropagation();
     openEditTxn(parseInt(editTxnBtn.dataset.i));
+    return;
+  }
+  // Receipts tab — card click
+  const rcptCard = e.target.closest('.rcpt-card');
+  if(rcptCard){
+    const sidx = parseInt(rcptCard.dataset.sidx);
+    var sale = salesLog[sidx];
+    if(sale) showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
+    return;
+  }
+  // Receipts tab — search button
+  const rcptSearchBtn = e.target.closest('.rcpt-search-btn');
+  if(rcptSearchBtn){
+    searchReceipts(document.getElementById('rcpt-search-input').value||'');
+    return;
+  }
+  // Receipts tab — refresh button
+  const rcptRefreshBtn = e.target.closest('.rcpt-refresh-btn');
+  if(rcptRefreshBtn){
+    document.getElementById('rcpt-search-input').value='';
+    openReceiptsTab();
     return;
   }
   // Payment buttons

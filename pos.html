@@ -55,7 +55,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}
 .pay-btn{padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:var(--r);background:#fff;cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font);color:#666;transition:all .15s;text-align:center}
 .pay-btn.pay-active{border-color:#111!important;background:#111!important;color:#fff!important}
-.charge-btn{width:100%;padding:13px;background:var(--pink);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.charge-btn{width:100%;padding:13px;background:#5aab74;color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font)}
 .charge-btn:disabled{background:#ccc;cursor:not-allowed}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:16px}
 .modal-bg.open{display:flex}
@@ -389,6 +389,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
 
+
+
+
+
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
 const STAFF_ACCOUNTS = [
   {username:'admin',  password:'fruicey2025', name:'Admin'},
@@ -506,10 +510,10 @@ const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-S
 
 const CATALOGUE = {
   'Superfood Bowls': [
-    {id:'sb01',name:'Rainbowl Acai',        sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90}]},
-    {id:'sb02',name:'Dreamy Acai',          sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90}]},
-    {id:'sb03',name:'Nostalgic Acai',       sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90}]},
-    {id:'sb04',name:'Berry Acai',           sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90}]},
+    {id:'sb01',name:'Rainbowl Acai',        sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
+    {id:'sb02',name:'Dreamy Acai',          sizes:[{l:'Dessert',p:6.90},{l:'Meal',p:9.90},{l:'Dessert Sorbet',p:7.40},{l:'Meal Sorbet',p:10.40}]},
+    {id:'sb03',name:'Nostalgic Acai',       sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
+    {id:'sb04',name:'Berry Acai',           sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
     {id:'sb05',name:'Double Rainbowl Acai', sizes:[{l:'',p:10.90}]},
     {id:'sb06',name:'Galaxy Dream Acai',    sizes:[{l:'',p:9.90}]}
   ],
@@ -537,6 +541,7 @@ const CATALOGUE = {
     {id:'ss21',name:'Mango Sago in a Cup',       sizes:[{l:'M',p:5.60},{l:'L',p:6.60}]}
   ],
   'Juices': [
+    {id:'ju00',name:'Custom Juice',         sizes:[{l:'',p:0.00}]},
     {id:'ju01',name:'Watermelon Lemonade',     sizes:[{l:'M',p:5.00},{l:'S No Ice',p:5.50},{l:'L',p:6.00}]},
     {id:'ju02',name:'Watermelon Pineapple',    sizes:[{l:'M',p:5.00},{l:'S No Ice',p:5.50},{l:'L',p:6.00}]},
     {id:'ju03',name:'Watermelon Lychee',       sizes:[{l:'M',p:5.00},{l:'S No Ice',p:5.50},{l:'L',p:6.00}]},
@@ -1023,12 +1028,21 @@ function openRcptLookup(){
 function closeRcptLookup(){
   document.getElementById('rcpt-lookup-modal').classList.remove('open');
 }
-function doRcptLookup(){
+async function doRcptLookup(){
   const rcptNo = document.getElementById('rcpt-lookup-input').value.trim().toUpperCase();
   if(!rcptNo){ showToast('Enter a receipt number'); return; }
-  const sale = salesLog.find(s=>(s.rcptNo||'').toUpperCase()===rcptNo);
+  document.getElementById('rcpt-lookup-result').innerHTML='<div style="text-align:center;padding:12px;color:#aaa">Searching...</div>';
+  // First search in-memory
+  let sale = salesLog.find(s=>(s.rcptNo||'').toUpperCase()===rcptNo);
+  // If not found, try fetching from Sheets
   if(!sale){
-    document.getElementById('rcpt-lookup-result').innerHTML='<div style="color:#e74c3c;font-size:13px;text-align:center;padding:12px">Receipt not found.<br><span style="font-size:11px;color:#aaa">Try syncing first.</span></div>';
+    try{
+      await loadSalesFromSheets();
+      sale = salesLog.find(s=>(s.rcptNo||'').toUpperCase()===rcptNo);
+    }catch(e){}
+  }
+  if(!sale){
+    document.getElementById('rcpt-lookup-result').innerHTML='<div style="color:#e74c3c;font-size:13px;text-align:center;padding:12px">Receipt <b>'+rcptNo+'</b> not found.</div>';
     return;
   }
   closeRcptLookup();
@@ -1278,6 +1292,17 @@ document.addEventListener('click', function(e){
   // Size button
   const sizeBtn = e.target.closest('.size-btn');
   if(sizeBtn && sizeBtn.dataset.pid){
+    // Custom Juice — show price + remark input
+    if(sizeBtn.dataset.pid === 'ju00'){
+      const priceStr = prompt('Custom Juice — Enter price ($):','');
+      if(!priceStr) return;
+      const customPrice = parseFloat(priceStr);
+      if(isNaN(customPrice)||customPrice<0){ showToast('Invalid price'); return; }
+      const remark = prompt('Enter juice description (e.g. Watermelon + Mango):','') || '';
+      const label = remark ? 'Custom: '+remark : 'Custom Juice';
+      cart.push({id:'ju00', name:'Custom Juice', size:'', label:label, price:customPrice, qty:1, remark:remark});
+      renderCart(); return;
+    }
     const pid   = sizeBtn.dataset.pid;
     const size  = decodeURIComponent(sizeBtn.dataset.size||'');
     const price = parseFloat(sizeBtn.dataset.price);
@@ -1717,7 +1742,7 @@ function renderSalesReport(){
     +(monthSales2.length?buildProductChart(monthSales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>')
     // Recent transactions
     +'<div style="font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Recent transactions</div>'
-    +salesLog.slice(0,30).map((s,i)=>{
+    +salesLog.filter(function(s){return s.date===today;}).map((s,i)=>{
     var itemsHtml = s.items.map(function(it){
       var txt = it.qty+'x '+it.label;
       if(it.remark) txt += ' <span style="color:#e67e22;font-style:italic">('+it.remark+')</span>';
@@ -1728,13 +1753,28 @@ function renderSalesReport(){
   }).join('');
 }
 function exportSalesCSV(){
-  if(!salesLog.length){showToast('No sales to export');return;}
-  const rows=[['Date','Time','Items','Subtotal','Discount','Total','Payment','Member']];
-  salesLog.forEach(s=>rows.push([s.date,s.time,s.items.map(i=>i.qty+'x '+i.label).join(' | '),s.subtotal.toFixed(2),s.discount.toFixed(2),s.total.toFixed(2),s.payment,s.member||'']));
-  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='fruicey-sales-'+new Date().toISOString().split('T')[0]+'.csv';a.click();
-  showToast('Exported!');
+  // Show date picker modal
+  const today = new Date(); const sgt = new Date(today.getTime()+8*3600*1000);
+  const todayStr = sgt.toISOString().slice(0,10);
+  const input = prompt('Export sales for date (YYYY-MM-DD):', todayStr);
+  if(!input) return;
+  const dateStr = input.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ showToast('Invalid date format'); return; }
+  const filtered = salesLog.filter(s=>s.date===dateStr);
+  if(!filtered.length){ showToast('No sales found for '+dateStr); return; }
+  const rows=[['Date','Time','Receipt','Items','Remarks','Subtotal','Discount','Total','Payment','Member','MemberPhone','Note','Voided']];
+  filtered.forEach(s=>rows.push([
+    s.date, s.time, s.rcptNo||'',
+    s.items.map(i=>i.qty+'x '+i.label).join(' | '),
+    s.items.filter(i=>i.remark).map(i=>i.label+': '+i.remark).join(' | '),
+    s.subtotal.toFixed(2), s.discount.toFixed(2), s.total.toFixed(2),
+    s.payment, s.member||'', s.memberPhone||'', s.note||'', s.voided?'YES':''
+  ]));
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='fruicey-sales-'+dateStr+'.csv'; a.click();
+  showToast('Exported '+filtered.length+' transactions for '+dateStr);
 }
 
 function exportMonthlyCSV(){
@@ -1765,7 +1805,8 @@ async function dailySettlement(){
   const settled=JSON.parse(localStorage.getItem('fruicey_settled')||'[]');
   settled.push({date:today,sales:todaySales,settledAt:new Date().toISOString()});
   try{localStorage.setItem('fruicey_settled',JSON.stringify(settled));}catch(e){}
-  salesLog=salesLog.filter(s=>s.date!==today); // Sheets is source of truth
+  // After settlement, only keep today's unsettled (filter out settled date)
+  salesLog=salesLog.filter(s=>s.date!==today); // Remove settled day
   renderSalesReport();
   showToast('Day settled! $'+total.toFixed(2)+' total.');
 }
@@ -1875,20 +1916,6 @@ document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 document.getElementById('print-btn').addEventListener('click', printReceipt);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
 </body>
 </html>

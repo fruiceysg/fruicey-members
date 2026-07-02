@@ -231,10 +231,17 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       <div class="modal-hdr"><span class="modal-hdr-title">Edit Transaction</span><button class="modal-close" onclick="closeEditTxn()">✕</button></div>
       <div class="modal-body">
         <div style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.8">
-          <div><b>ID:</b> <span id="edit-txn-id"></span></div>
+          <div><b>Receipt:</b> <span id="edit-txn-id" style="font-family:monospace"></span></div>
           <div><b>Items:</b> <span id="edit-txn-items"></span></div>
           <div><b>Total:</b> <span id="edit-txn-total"></span></div>
           <div><b>Payment:</b> <span id="edit-txn-payment"></span></div>
+          <div><b>Member:</b> <span id="edit-txn-member-name" style="color:#27ae60">None</span></div>
+        </div>
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Assign Member Phone</label>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="tel" id="edit-txn-member-phone" placeholder="e.g. 91234567"
+            style="flex:1;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font)">
+          <button onclick="lookupEditMember()" style="padding:9px 14px;background:#8fcea1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font)">Find</button>
         </div>
         <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Note</label>
         <input type="text" id="edit-txn-note" placeholder="e.g. Customer refund, wrong item..."
@@ -511,7 +518,7 @@ const CATALOGUE = {
     {id:'ss02',name:'Follow That Rainbow',       sizes:[{l:'M',p:5.80},{l:'L',p:6.80}]},
     {id:'ss03',name:'Cojito',                    sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
     {id:'ss04',name:'Pina Cocolada',             sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
-    {id:'ss05',name:'Fruicey Sling',             sizes:[{l:'M',p:5.60},{l:'L',p:6.60}]},
+    {id:'ss05',name:'Fruicey Sling',             sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
     {id:'ss06',name:'Kampung Spirit',            sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
     {id:'ss07',name:'Berry Shiok',               sizes:[{l:'S',p:5.80},{l:'M',p:6.80}]},
     {id:'ss08',name:'Bright Sky',                sizes:[{l:'S',p:5.80},{l:'M',p:6.80}]},
@@ -680,15 +687,42 @@ async function apiPost(body){const r=await fetch(API,{method:'POST',headers:{'Co
 // ── EDIT TRANSACTION ─────────────────────────────────────────
 let editTxnIndex = -1;
 
+
+function lookupEditMember(){
+  const ph = np(document.getElementById('edit-txn-member-phone').value);
+  if(!ph){ showToast('Enter a phone number'); return; }
+  apiGet({action:'getStampCard', phone:ph}).then(function(res){
+    if(res.card){
+      document.getElementById('edit-txn-member-name').textContent = (res.card.first||'')+' '+(res.card.last||'');
+      showToast('Member found: '+res.card.first);
+    } else {
+      apiGet({action:'getMember', phone:ph}).then(function(r){
+        if(r.member){
+          document.getElementById('edit-txn-member-name').textContent = r.member.first+' '+r.member.last;
+          showToast('Member found: '+r.member.first);
+        } else {
+          document.getElementById('edit-txn-member-name').textContent = ph;
+          showToast('Phone saved (no profile found)');
+        }
+      });
+    }
+  }).catch(()=>{ document.getElementById('edit-txn-member-name').textContent = ph; });
+}
+
 function openEditTxn(idx){
   editTxnIndex = idx;
   const s = salesLog[idx];
-  document.getElementById('edit-txn-id').textContent    = s.id || s.date+' '+s.time;
-  document.getElementById('edit-txn-items').textContent = s.items.map(i=>i.qty+'x '+i.label).join(', ');
-  document.getElementById('edit-txn-total').textContent = '$'+s.total.toFixed(2);
+  document.getElementById('edit-txn-id').textContent      = s.rcptNo || s.id || s.date+' '+s.time;
+  document.getElementById('edit-txn-items').textContent   = s.items.map(i=>i.qty+'x '+i.label).join(', ');
+  document.getElementById('edit-txn-total').textContent   = '$'+s.total.toFixed(2);
   document.getElementById('edit-txn-payment').textContent = s.payment;
-  document.getElementById('edit-txn-note').value = s.note || '';
+  document.getElementById('edit-txn-note').value    = s.note || '';
   document.getElementById('edit-txn-voided').checked = s.voided || false;
+  // Member phone field
+  const mpEl = document.getElementById('edit-txn-member-phone');
+  if(mpEl) mpEl.value = s.memberPhone || '';
+  const mnEl = document.getElementById('edit-txn-member-name');
+  if(mnEl) mnEl.textContent = s.member || 'None';
   document.getElementById('edit-txn-modal').classList.add('open');
 }
 
@@ -707,10 +741,18 @@ async function saveEditTxn(){
   }
   salesLog[editTxnIndex].note   = note;
   salesLog[editTxnIndex].voided = voided;
+  // Update member if provided
+  const newMemberPhone = document.getElementById('edit-txn-member-phone');
+  if(newMemberPhone && newMemberPhone.value.trim()){
+    const ph = np(newMemberPhone.value.trim());
+    salesLog[editTxnIndex].memberPhone = ph;
+    salesLog[editTxnIndex].member = document.getElementById('edit-txn-member-name').textContent !== 'None'
+      ? document.getElementById('edit-txn-member-name').textContent : ph;
+  }
   // edit synced to Sheets only
   // Sync change to Sheets
   const txn = salesLog[editTxnIndex];
-  apiPost({action:'editPOSSale', id:txn.id, note:note, voided:voided})
+  apiPost({action:'editPOSSale', id:txn.id, note:note, voided:voided, member:salesLog[editTxnIndex].member||'', memberPhone:salesLog[editTxnIndex].memberPhone||''})
     .catch(e=>console.log('Sheets sync error:',e));
   closeEditTxn();
   showToast(voided ? 'Transaction voided' : 'Transaction updated');
@@ -1267,6 +1309,13 @@ document.addEventListener('click', function(e){
     renderCart(); return;
   }
 
+  // Edit transaction button in sales report
+  const editTxnBtn = e.target.closest('.edit-txn-btn');
+  if(editTxnBtn){
+    e.stopPropagation();
+    openEditTxn(parseInt(editTxnBtn.dataset.i));
+    return;
+  }
   // Payment buttons
   const payBtn = e.target.closest('.pay-btn');
   if(payBtn && payBtn.dataset.method){
@@ -1380,8 +1429,8 @@ async function checkout(){
   const isOnline = ONLINE_PLATFORMS.includes(paymentMethod);
   const total = isOnline ? 0 : +(sub-disc).toFixed(2);
   const now=new Date();
-  const dateStr=now.toISOString().split('T')[0];
-  const h=now.getHours(),m=now.getMinutes(); const timeStr=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  const _sgtD=new Date(now.getTime()+8*3600*1000); const dateStr=_sgtD.toISOString().split('T')[0];
+  const _sgt=new Date(now.getTime()+8*3600*1000); const h=_sgt.getUTCHours(),m=_sgt.getUTCMinutes(); const timeStr=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
   const btn=document.getElementById('checkout-btn');
   btn.textContent='Processing...';btn.disabled=true;
   try{
@@ -1675,7 +1724,7 @@ function renderSalesReport(){
       return txt;
     }).join(', ');
     var remarksStr = s.items.filter(function(it){return it.remark;}).map(function(it){return it.remark;}).join('; ');
-    return '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0;display:flex;justify-content:space-between;align-items:flex-start" onclick="viewSaleReceipt('+i+')" style="cursor:pointer">'      +'<div style="flex:1;min-width:0">'      +'<div style="display:flex;align-items:center;gap:6px">'      +'<div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'      +(s.rcptNo?'<div style="font-size:10px;color:#999;font-family:monospace">'+s.rcptNo+'</div>':'')      +'</div>'      +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+(s.voided?' · <span style="color:#e74c3c;font-weight:700">VOIDED</span>':'')+'</div>'      +'<div style="font-size:11px;color:#ccc">'+itemsHtml+'</div>'      +(remarksStr?'<div style="font-size:10px;color:#e67e22;font-style:italic;margin-top:1px">Remark: '+remarksStr+'</div>':'')      +(s.note?'<div style="font-size:10px;color:#aaa;font-style:italic">Note: '+s.note+'</div>':'')      +'</div>'      +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'      +'<div style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">$'+s.total.toFixed(2)+'</div>'      +(s.discount>0?'<div style="font-size:10px;color:#27ae60">-$'+s.discount.toFixed(2)+' off</div>':'')      +'<button class="edit-txn-btn" data-i="'+i+'" style="margin-top:4px;padding:2px 8px;border:1px solid #ddd;border-radius:4px;background:#fafafa;cursor:pointer;font-size:10px;color:#888;font-family:var(--font)">Edit</button>'      +'</div></div>';
+    return '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0">'      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'      +'<div style="flex:1;min-width:0;cursor:pointer" onclick="viewSaleReceipt('+i+')">'      +'<div style="display:flex;align-items:center;gap:6px">'      +'<div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'      +(s.rcptNo?'<div style="font-size:10px;color:#999;font-family:monospace">'+s.rcptNo+'</div>':'')      +'</div>'      +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+(s.voided?' · <span style="color:#e74c3c;font-weight:700">VOIDED</span>':'')+'</div>'      +'<div style="font-size:11px;color:#ccc">'+itemsHtml+'</div>'      +(remarksStr?'<div style="font-size:10px;color:#e67e22;font-style:italic;margin-top:1px">Remark: '+remarksStr+'</div>':'')      +(s.note?'<div style="font-size:10px;color:#aaa;font-style:italic">Note: '+s.note+'</div>':'')      +'</div>'      +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'      +'<div style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">$'+s.total.toFixed(2)+'</div>'      +(s.discount>0?'<div style="font-size:10px;color:#27ae60">-$'+s.discount.toFixed(2)+' off</div>':'')      +'<button class="edit-txn-btn" data-i="'+i+'" style="margin-top:4px;padding:2px 8px;border:1px solid #ddd;border-radius:4px;background:#fafafa;cursor:pointer;font-size:10px;color:#888;font-family:var(--font)">Edit</button>'      +'</div></div></div>';
   }).join('');
 }
 function exportSalesCSV(){

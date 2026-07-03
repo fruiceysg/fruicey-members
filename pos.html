@@ -1114,14 +1114,21 @@ function doClearRcptSearch(){
   openReceiptsTab();
 }
 
+var _rcptRenderCount = 0;
 function renderReceiptsList(query){
   var el = document.getElementById('rcpt-search-results');
   if(!el) return;
+  _rcptRenderCount++;
+  var rawQuery = query;
   query = (query||'').trim().toUpperCase();
   var qDigits = query.replace(/[^0-9]/g,'');
 
   var dateInp = document.getElementById('rcpt-date-input');
   var dateFilter = dateInp ? dateInp.value : '';
+
+  var traceHtml = '<div style="font-size:9px;color:#bbb;text-align:left;padding:4px 2px;font-family:monospace;border-bottom:1px dashed #eee;margin-bottom:6px">'
+    +'call#'+_rcptRenderCount+' | raw="'+rawQuery+'" | query="'+query+'" | date="'+dateFilter+'" | salesLog.length='+salesLog.length
+    +'</div>';
 
   var list = salesLog.filter(function(s){
     if(dateFilter){
@@ -1139,14 +1146,15 @@ function renderReceiptsList(query){
   if(!list.length){
     var dbg = window._rcptDebug;
     var dbgHtml = dbg ? '<div style="margin-top:12px;font-size:10px;color:#ccc">Loaded '+dbg.count+' total receipts'+(dbg.dates.length?' ('+dbg.dates[0]+' to '+dbg.dates[dbg.dates.length-1]+')':'')+'</div>' : '';
-    el.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa">'
+    el.innerHTML = traceHtml
+      +'<div style="text-align:center;padding:24px;color:#aaa">'
       +(query||dateFilter?'No receipts found.':'No receipts yet.')
       +dbgHtml
       +'</div>';
     return;
   }
 
-  el.innerHTML = list.map(function(s){
+  el.innerHTML = traceHtml + list.map(function(s){
     var sidx = salesLog.indexOf(s);
     var items = Array.isArray(s.items) ? s.items : [];
     var itemsStr = items.map(function(it){ return (it.qty||1)+'x '+(it.label||''); }).join(', ');

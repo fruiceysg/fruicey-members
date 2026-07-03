@@ -212,7 +212,7 @@ input:focus{border-color:#8fcea1}
     <h2>Check my card</h2>
     <p>Enter your phone number to view your rewards pass.</p>
     <label>Phone number</label>
-    <input type="tel" id="lk-phone" placeholder="e.g. 91234567" maxlength="12">
+    <input type="tel" id="lk-phone" placeholder="e.g. 91234567" inputmode="numeric" maxlength="8">
     <div style="font-size:11px;color:#aaa;margin-top:3px">No country code needed</div>
     <div class="err" id="lk-err"></div>
     <button class="btn btn-primary" id="lk-btn">View my rewards pass</button>
@@ -268,12 +268,17 @@ input:focus{border-color:#8fcea1}
     <label>Last name *</label>
     <input type="text" id="su-last" placeholder="Smith">
     <label>Phone number *</label>
-    <input type="tel" id="su-phone" placeholder="91234567">
+    <input type="tel" id="su-phone" placeholder="91234567" inputmode="numeric" maxlength="8">
     <div style="font-size:11px;color:#aaa;margin-top:3px">No country code needed</div>
     <label>Email *</label>
     <input type="email" id="su-email" placeholder="jane@email.com">
-    <label>Birthday (DD-MM) *</label>
-    <input type="text" id="su-bday" placeholder="e.g. 15-06" maxlength="5">
+    <label>Birthday *</label>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="text" id="su-bday-day" placeholder="DD" inputmode="numeric" maxlength="2" style="width:56px;text-align:center">
+      <span style="color:#bbb;font-weight:600">/</span>
+      <input type="text" id="su-bday-month" placeholder="MM" inputmode="numeric" maxlength="2" style="width:56px;text-align:center">
+      <span style="font-size:12px;color:#aaa">Day / Month</span>
+    </div>
 
     <div style="margin-top:14px">
       <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px">Terms & Conditions</div>
@@ -453,6 +458,37 @@ function showOk(id,msg){const el=document.getElementById(id);el.textContent=msg;
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
 function clearLookup(){document.getElementById('lk-phone').value='';hideErr('lk-err');curMember=null;}
 
+// ── Input restrictions: digits-only phone, auto-advancing DOB ──
+function restrictToDigits(id, maxLen){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', function(){
+    var v = el.value.replace(/\D/g,'');
+    if(maxLen) v = v.slice(0, maxLen);
+    el.value = v;
+  });
+}
+restrictToDigits('lk-phone', 8);
+restrictToDigits('su-phone', 8);
+
+function wireBdayBoxes(dayId, monthId){
+  var dayEl = document.getElementById(dayId);
+  var monEl = document.getElementById(monthId);
+  if(!dayEl || !monEl) return;
+  dayEl.addEventListener('input', function(){
+    var v = dayEl.value.replace(/\D/g,'').slice(0,2);
+    dayEl.value = v;
+    if(v.length === 2) monEl.focus();
+  });
+  monEl.addEventListener('input', function(){
+    monEl.value = monEl.value.replace(/\D/g,'').slice(0,2);
+  });
+  monEl.addEventListener('keydown', function(e){
+    if(e.key === 'Backspace' && monEl.value === '') dayEl.focus();
+  });
+}
+wireBdayBoxes('su-bday-day', 'su-bday-month');
+
 document.getElementById('lk-btn').addEventListener('click',async function(){
   const phone=document.getElementById('lk-phone').value.trim();
   hideErr('lk-err');
@@ -473,11 +509,15 @@ document.getElementById('su-btn').addEventListener('click',async function(){
   const last=document.getElementById('su-last').value.trim();
   const phone=np(document.getElementById('su-phone').value.trim());
   const email=document.getElementById('su-email').value.trim().toLowerCase();
-  const bday=document.getElementById('su-bday').value.trim();
+  const bdayDay=document.getElementById('su-bday-day').value.trim();
+  const bdayMonth=document.getElementById('su-bday-month').value.trim();
+  const bday=(bdayDay&&bdayMonth)?bdayDay.padStart(2,'0')+'-'+bdayMonth.padStart(2,'0'):'';
   const tc=document.getElementById('su-tc').checked;
   hideErr('su-err');hideErr('su-ok');
-  if(!first||!last||!phone||!email||!bday){showErr('su-err','All fields are required.');return;}
-  if(!/^\d{2}-\d{2}$/.test(bday)){showErr('su-err','Birthday must be DD-MM (e.g. 15-06).');return;}
+  if(!first||!last||!phone||!email||!bdayDay||!bdayMonth){showErr('su-err','All fields are required.');return;}
+  if(!bdayDay||!bdayMonth){showErr('su-err','Please enter your birthday (day and month).');return;}
+  var _dNum=parseInt(bdayDay,10), _mNum=parseInt(bdayMonth,10);
+  if(!(_dNum>=1&&_dNum<=31)||!(_mNum>=1&&_mNum<=12)){showErr('su-err','Please enter a valid day (1-31) and month (1-12).');return;}
   if(!tc){showErr('su-err','Please agree to the Terms & Conditions.');return;}
   this.textContent='Creating...';this.disabled=true;
   try{

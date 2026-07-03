@@ -173,8 +173,14 @@ input.err{border-color:var(--danger)!important}
         </div>
         <div class="form-row full"><label>Email <span class="req">*</span></label><input type="email" id="reg-email" placeholder="jane@example.com"></div>
         <div class="form-row">
-          <div><label>Phone (digits only) <span class="req">*</span></label><input type="tel" id="reg-phone" placeholder="e.g. 91234567"><div class="field-hint">No country code needed</div></div>
-          <div><label>Birthday (DD-MM) <span class="req">*</span></label><input type="text" id="reg-bday" placeholder="e.g. 15-06" maxlength="5"><div class="field-hint">Day-Month format</div></div>
+          <div><label>Phone (digits only) <span class="req">*</span></label><input type="tel" id="reg-phone" placeholder="e.g. 91234567" inputmode="numeric" maxlength="8"><div class="field-hint">No country code needed</div></div>
+          <div><label>Birthday <span class="req">*</span></label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="text" id="reg-bday-day" placeholder="DD" inputmode="numeric" maxlength="2" style="width:56px;text-align:center">
+            <span style="color:#bbb;font-weight:600">/</span>
+            <input type="text" id="reg-bday-month" placeholder="MM" inputmode="numeric" maxlength="2" style="width:56px;text-align:center">
+            <span class="field-hint" style="margin:0">Day / Month</span>
+          </div></div>
         </div>
         <div class="form-row full"><label>Member since <span class="req">*</span></label><input type="date" id="reg-date"></div>
         <button class="btn btn-primary" onclick="registerMember()"><i class="ti ti-user-plus"></i> Register member</button>
@@ -244,6 +250,34 @@ input.err{border-color:var(--danger)!important}
 <div class="toast" id="toast"></div>
 
 <script>
+function restrictToDigits(id, maxLen){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', function(){
+    var v = el.value.replace(/\D/g,'');
+    if(maxLen) v = v.slice(0, maxLen);
+    el.value = v;
+  });
+}
+function wireBdayBoxes(dayId, monthId){
+  var dayEl = document.getElementById(dayId);
+  var monEl = document.getElementById(monthId);
+  if(!dayEl || !monEl) return;
+  dayEl.addEventListener('input', function(){
+    var v = dayEl.value.replace(/\D/g,'').slice(0,2);
+    dayEl.value = v;
+    if(v.length === 2) monEl.focus();
+  });
+  monEl.addEventListener('input', function(){
+    monEl.value = monEl.value.replace(/\D/g,'').slice(0,2);
+  });
+  monEl.addEventListener('keydown', function(e){
+    if(e.key === 'Backspace' && monEl.value === '') dayEl.focus();
+  });
+}
+restrictToDigits('reg-phone', 8);
+wireBdayBoxes('reg-bday-day', 'reg-bday-month');
+
 // ── PIN PROTECTION ───────────────────────────────────────────
 const STAFF_PIN = '1234';
 (function(){
@@ -420,10 +454,14 @@ function showDiscount(){
 }
 
 function registerMember(){
-  const first=document.getElementById('reg-first').value.trim();const last=document.getElementById('reg-last').value.trim();const email=document.getElementById('reg-email').value.trim();const phone=normalisePhone(document.getElementById('reg-phone').value.trim());const bday=document.getElementById('reg-bday').value.trim();const since=document.getElementById('reg-date').value;
-  const checks=[{id:'reg-first',val:first,msg:'First name required'},{id:'reg-last',val:last,msg:'Last name required'},{id:'reg-email',val:email,msg:'Email required'},{id:'reg-phone',val:phone,msg:'Phone required'},{id:'reg-bday',val:bday,msg:'Birthday required (DD-MM)'},{id:'reg-date',val:since,msg:'Member since date required'}];
+  const first=document.getElementById('reg-first').value.trim();const last=document.getElementById('reg-last').value.trim();const email=document.getElementById('reg-email').value.trim();const phone=normalisePhone(document.getElementById('reg-phone').value.trim());const bdayDay=document.getElementById('reg-bday-day').value.trim();
+  const bdayMonth=document.getElementById('reg-bday-month').value.trim();
+  const bday=(bdayDay&&bdayMonth)?bdayDay.padStart(2,'0')+'-'+bdayMonth.padStart(2,'0'):'';
+  const since=document.getElementById('reg-date').value;
+  const checks=[{id:'reg-first',val:first,msg:'First name required'},{id:'reg-last',val:last,msg:'Last name required'},{id:'reg-email',val:email,msg:'Email required'},{id:'reg-phone',val:phone,msg:'Phone required'},{id:'reg-bday-day',val:bdayDay&&bdayMonth,msg:'Birthday required (day and month)'},{id:'reg-date',val:since,msg:'Member since date required'}];
   for(const c of checks){if(!c.val){showToast(c.msg);document.getElementById(c.id).classList.add('err');document.getElementById(c.id).focus();return;}document.getElementById(c.id).classList.remove('err');}
-  if(!/^\d{2}-\d{2}$/.test(bday)){showToast('Birthday must be DD-MM (e.g. 15-06)');document.getElementById('reg-bday').classList.add('err');return;}
+  var _dNum=parseInt(bdayDay,10), _mNum=parseInt(bdayMonth,10);
+  if(!(_dNum>=1&&_dNum<=31)||!(_mNum>=1&&_mNum<=12)){showToast('Please enter a valid day (1-31) and month (1-12)');document.getElementById('reg-bday-day').classList.add('err');return;}
   apiPost({action:'addMember',first,last,email,phone,bday,since}).then(res=>{
     if(res.error==='email_exists'){showToast('Email already registered');return;}
     if(res.error==='phone_exists'){showToast('Phone already registered');return;}

@@ -90,7 +90,7 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
     <div class="card">
       <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">Enter your registered phone number or email to access your membership.</p>
       <label>Phone number</label>
-      <input type="tel" id="lk-phone" placeholder="e.g. 91234567" onkeydown="if(event.key==='Enter')lookup()">
+      <input type="tel" id="lk-phone" placeholder="e.g. 91234567" inputmode="numeric" maxlength="8" onkeydown="if(event.key==='Enter')lookup()">
       <div class="field-hint">Numbers only, no country code needed</div>
       <label>Or email address</label>
       <input type="email" id="lk-email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')lookup()">
@@ -180,10 +180,15 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
           <div><label>Last name <span class="req">*</span></label><input type="text" id="a-last" placeholder="Smith"></div>
         </div>
         <label>Email <span class="req">*</span></label><input type="email" id="a-email" placeholder="jane@example.com">
-        <label>Phone (digits only) <span class="req">*</span></label><input type="tel" id="a-phone" placeholder="e.g. 91234567">
+        <label>Phone (digits only) <span class="req">*</span></label><input type="tel" id="a-phone" placeholder="e.g. 91234567" inputmode="numeric" maxlength="8">
         <div class="field-hint">No country code needed</div>
-        <label>Birthday (DD-MM) <span class="req">*</span></label><input type="text" id="a-bday" placeholder="e.g. 15-06" maxlength="5">
-        <div class="field-hint">Day-Month format, e.g. 15-06 for 15 June</div>
+        <label>Birthday <span class="req">*</span></label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="text" id="a-bday-day" placeholder="DD" inputmode="numeric" maxlength="2" style="width:56px;text-align:center">
+          <span style="color:#bbb;font-weight:600">/</span>
+          <input type="text" id="a-bday-month" placeholder="MM" inputmode="numeric" maxlength="2" style="width:56px;text-align:center">
+          <span class="field-hint" style="margin:0">Day / Month</span>
+        </div>
       </div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500">Terms &amp; Conditions <span class="req">*</span></div>
       <div class="tcbox">
@@ -205,6 +210,36 @@ input:focus,select:focus{border-color:#378ADD;box-shadow:0 0 0 3px rgba(55,138,2
 
 </div>
 <script>
+// ── Input restrictions: digits-only phone, auto-advancing DOB ──
+function restrictToDigits(id, maxLen){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', function(){
+    var v = el.value.replace(/\D/g,'');
+    if(maxLen) v = v.slice(0, maxLen);
+    el.value = v;
+  });
+}
+function wireBdayBoxes(dayId, monthId){
+  var dayEl = document.getElementById(dayId);
+  var monEl = document.getElementById(monthId);
+  if(!dayEl || !monEl) return;
+  dayEl.addEventListener('input', function(){
+    var v = dayEl.value.replace(/\D/g,'').slice(0,2);
+    dayEl.value = v;
+    if(v.length === 2) monEl.focus();
+  });
+  monEl.addEventListener('input', function(){
+    monEl.value = monEl.value.replace(/\D/g,'').slice(0,2);
+  });
+  monEl.addEventListener('keydown', function(e){
+    if(e.key === 'Backspace' && monEl.value === '') dayEl.focus();
+  });
+}
+restrictToDigits('lk-phone', 8);
+restrictToDigits('a-phone', 8);
+wireBdayBoxes('a-bday-day', 'a-bday-month');
+
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 
 const TIERS=[
@@ -318,11 +353,16 @@ async function redeemBday(){
 }
 
 async function submitApp(){
-  const first=document.getElementById('a-first').value.trim();const last=document.getElementById('a-last').value.trim();const email=document.getElementById('a-email').value.trim().toLowerCase();const phone=np(document.getElementById('a-phone').value.trim());const bday=document.getElementById('a-bday').value.trim();const tc=document.getElementById('a-tc').checked;
+  const first=document.getElementById('a-first').value.trim();const last=document.getElementById('a-last').value.trim();const email=document.getElementById('a-email').value.trim().toLowerCase();const phone=np(document.getElementById('a-phone').value.trim());
+  const bdayDay=document.getElementById('a-bday-day').value.trim();
+  const bdayMonth=document.getElementById('a-bday-month').value.trim();
+  const bday=(bdayDay&&bdayMonth)?bdayDay.padStart(2,'0')+'-'+bdayMonth.padStart(2,'0'):'';
+  const tc=document.getElementById('a-tc').checked;
   hide('a-err');hide('a-ok');
-  const chk=[{v:first,m:'Please enter your first name.'},{v:last,m:'Please enter your last name.'},{v:email,m:'Please enter your email.'},{v:phone,m:'Please enter your phone number.'},{v:bday,m:'Please enter your birthday (DD-MM).'}];
+  const chk=[{v:first,m:'Please enter your first name.'},{v:last,m:'Please enter your last name.'},{v:email,m:'Please enter your email.'},{v:phone,m:'Please enter your phone number.'},{v:bdayDay&&bdayMonth,m:'Please enter your birthday (day and month).'}];
   for(const c of chk){if(!c.v){showErr('a-err',c.m);return;}}
-  if(!/^\d{2}-\d{2}$/.test(bday)){showErr('a-err','Birthday must be DD-MM format (e.g. 15-06).');return;}
+  var _dNum=parseInt(bdayDay,10), _mNum=parseInt(bdayMonth,10);
+  if(!(_dNum>=1&&_dNum<=31)||!(_mNum>=1&&_mNum<=12)){showErr('a-err','Please enter a valid day (1-31) and month (1-12).');return;}
   if(!tc){showErr('a-err','Please agree to the Terms & Conditions.');return;}
   const btn=document.getElementById('a-btn');btn.disabled=true;btn.textContent='Submitting...';
   try{

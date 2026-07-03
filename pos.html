@@ -1071,9 +1071,17 @@ async function openReceiptsTab(){
       s.subtotal = parseFloat(s.subtotal||0);
       s.discount = parseFloat(s.discount||0);
       s.voided   = s.voided==='true'||s.voided===true;
-      return cleanSaleDate(s);
+      s = cleanSaleDate(s);
+      // Normalize date to a strict YYYY-MM-DD string no matter what came in
+      var m = String(s.date||'').match(/\d{4}-\d{2}-\d{2}/);
+      s.date = m ? m[0] : String(s.date||'');
+      return s;
     });
     salesLog = cleaned;
+    // Diagnostic: log total count and date range so we can verify data loaded correctly
+    var dates = cleaned.map(function(s){return s.date;}).filter(Boolean).sort();
+    console.log('[Receipts] Loaded', cleaned.length, 'total records. Date range:', dates[0], 'to', dates[dates.length-1]);
+    window._rcptDebug = {count: cleaned.length, dates: dates};
   }catch(e){
     console.error('openReceiptsTab error:', e);
     el.innerHTML = '<div style="color:#e74c3c;padding:24px">Could not connect to server.</div>';
@@ -1116,7 +1124,10 @@ function renderReceiptsList(query){
   var dateFilter = dateInp ? dateInp.value : '';
 
   var list = salesLog.filter(function(s){
-    if(dateFilter && s.date !== dateFilter) return false;
+    if(dateFilter){
+      var sd = String(s.date||'').slice(0,10);
+      if(sd !== dateFilter) return false;
+    }
     if(!query) return true;
     var rcptMatch  = (s.rcptNo||'').toUpperCase().includes(query);
     var nameMatch  = (s.member||'').toUpperCase().includes(query);
@@ -1126,8 +1137,11 @@ function renderReceiptsList(query){
   if(!dateFilter && !query) list = list.slice(0,50);
 
   if(!list.length){
+    var dbg = window._rcptDebug;
+    var dbgHtml = dbg ? '<div style="margin-top:12px;font-size:10px;color:#ccc">Loaded '+dbg.count+' total receipts'+(dbg.dates.length?' ('+dbg.dates[0]+' to '+dbg.dates[dbg.dates.length-1]+')':'')+'</div>' : '';
     el.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa">'
       +(query||dateFilter?'No receipts found.':'No receipts yet.')
+      +dbgHtml
       +'</div>';
     return;
   }

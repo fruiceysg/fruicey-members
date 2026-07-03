@@ -172,9 +172,12 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         </div>
       </div>
       <div id="pos-view-receipts" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-        <div style="padding:12px;flex-shrink:0">
+        <div style="padding:12px;flex-shrink:0;display:flex;gap:8px;flex-wrap:wrap">
+          <input type="date" id="rcpt-date-input"
+            style="padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;font-family:var(--font)">
           <input type="text" id="rcpt-search-input" placeholder="Search by name, phone, or receipt no..."
-            style="width:100%;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font)">
+            style="flex:1;min-width:180px;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font)">
+          <button id="rcpt-alldates-btn" style="padding:9px 14px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">All dates</button>
         </div>
         <div id="rcpt-search-results" style="flex:1;overflow-y:auto;padding:0 12px 12px;font-size:12px;color:#aaa;text-align:center"></div>
       </div></div>
@@ -1050,7 +1053,7 @@ async function doRcptLookup(){
 function viewSaleReceipt(idx){
   const sale = salesLog[idx];
   if(!sale) return;
-  showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
+  viewHistoricalReceipt(sale);
 }
 
 
@@ -1076,6 +1079,11 @@ async function openReceiptsTab(){
     el.innerHTML = '<div style="color:#e74c3c;padding:24px">Could not connect to server.</div>';
     return;
   }
+  var dateInp = document.getElementById('rcpt-date-input');
+  if(dateInp && !dateInp.value){
+    var now = new Date(); var sgt = new Date(now.getTime()+8*3600*1000);
+    dateInp.value = sgt.toISOString().slice(0,10);
+  }
   var inp = document.getElementById('rcpt-search-input');
   renderReceiptsList(inp ? inp.value : '');
 }
@@ -1084,6 +1092,11 @@ function searchReceipts(query){
   renderReceiptsList(query||'');
 }
 function doRcptSearch(){
+  var dateInp = document.getElementById('rcpt-date-input');
+  if(dateInp && !dateInp.value){
+    var now = new Date(); var sgt = new Date(now.getTime()+8*3600*1000);
+    dateInp.value = sgt.toISOString().slice(0,10);
+  }
   var inp = document.getElementById('rcpt-search-input');
   renderReceiptsList(inp ? inp.value : '');
 }
@@ -1097,18 +1110,24 @@ function renderReceiptsList(query){
   var el = document.getElementById('rcpt-search-results');
   if(!el) return;
   query = (query||'').trim().toUpperCase();
+  var qDigits = query.replace(/[^0-9]/g,'');
 
-  var list = query
-    ? salesLog.filter(function(s){
-        return (s.rcptNo||'').toUpperCase().includes(query)
-          || (s.memberPhone||'').replace(/\D/g,'').includes(query.replace(/\D/g,''))
-          || (s.member||'').toUpperCase().includes(query);
-      })
-    : salesLog.slice(0,50);
+  var dateInp = document.getElementById('rcpt-date-input');
+  var dateFilter = dateInp ? dateInp.value : '';
+
+  var list = salesLog.filter(function(s){
+    if(dateFilter && s.date !== dateFilter) return false;
+    if(!query) return true;
+    var rcptMatch  = (s.rcptNo||'').toUpperCase().includes(query);
+    var nameMatch  = (s.member||'').toUpperCase().includes(query);
+    var phoneMatch = qDigits.length > 0 && (s.memberPhone||'').replace(/\D/g,'').includes(qDigits);
+    return rcptMatch || nameMatch || phoneMatch;
+  });
+  if(!dateFilter && !query) list = list.slice(0,50);
 
   if(!list.length){
     el.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa">'
-      +(query?'No receipts found for <b>'+query+'</b>':'No receipts yet.')
+      +(query||dateFilter?'No receipts found.':'No receipts yet.')
       +'</div>';
     return;
   }
@@ -1126,13 +1145,13 @@ function renderReceiptsList(query){
       +(itemsStr?'<div style="font-size:11px;color:#bbb;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+itemsStr+'</div>':'')
       +'</div>';
   }).join('')
-  +(list.length===50&&!query?'<div style="text-align:center;font-size:11px;color:#ddd;padding:8px">Showing latest 50</div>':'');
+  +(list.length===50&&!query&&!dateFilter?'<div style="text-align:center;font-size:11px;color:#ddd;padding:8px">Showing latest 50 — pick a date or search to narrow down</div>':'');
 }
 
 function viewRcptResult(idx){
   var sale = salesLog[idx];
   if(!sale) return;
-  showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
+  viewHistoricalReceipt(sale);
 }
 
 function updateClock(){
@@ -1215,14 +1234,15 @@ function loadMemberHistory(phone){
   histEl.style.display='block';
 }
 function clearMemberDisplay(){document.getElementById('member-result').style.display='none';}
+var currentPosTab = 'menu';
 function switchPosTab(tab){
+  currentPosTab = tab;
   ['menu','member','receipts'].forEach(function(t){
     var view = document.getElementById('pos-view-'+t);
     var btn  = document.getElementById('pos-tab-'+t);
-    if(view) view.style.display = t===tab?(t==='menu'?'flex':'flex'):'none';
+    if(view) view.style.display = t===tab?'flex':'none';
     if(btn){ btn.style.color = t===tab?'#8fcea1':'#aaa'; btn.style.borderBottomColor = t===tab?'#8fcea1':'transparent'; }
   });
-  document.getElementById('pos-view-menu').style.display = tab==='menu'?'flex':'none';
   if(tab==='receipts') openReceiptsTab();
 }
 
@@ -1429,7 +1449,7 @@ document.addEventListener('click', function(e){
   if(rcptCard){
     const sidx = parseInt(rcptCard.dataset.sidx);
     var sale = salesLog[sidx];
-    if(sale) showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
+    if(sale) viewHistoricalReceipt(sale);
     return;
   }
 
@@ -1658,6 +1678,11 @@ function showReceipt(sale,changeDue,cashTendered){
 }
 function closeReceipt(){
   document.getElementById('receipt-modal').classList.remove('open');
+  // If just viewing a past receipt (from Sales report or Receipts tab), don't reset the active order
+  if(_viewingHistoricalReceipt){
+    _viewingHistoricalReceipt = false;
+    return;
+  }
   cart=[]; paymentMethod='';
   // Auto-clear member after tender
   currentMember=null; memberDiscount=0;
@@ -1668,6 +1693,11 @@ function closeReceipt(){
   document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('pay-active'));
   switchPosTab('menu');
   renderCart();
+}
+var _viewingHistoricalReceipt = false;
+function viewHistoricalReceipt(sale){
+  _viewingHistoricalReceipt = true;
+  showReceipt(sale, sale.changeDue||0, sale.cashTendered||0);
 }
 
 // ── SALES REPORT ─────────────────────────────────────────────────────
@@ -2020,6 +2050,17 @@ if(_rsi){
   _rsi.addEventListener('input', function(){ renderReceiptsList(this.value); });
   _rsi.addEventListener('keydown', function(e){ if(e.key==='Enter'){ renderReceiptsList(this.value); this.blur(); } });
 }
+var _rdi=document.getElementById('rcpt-date-input');
+if(_rdi) _rdi.addEventListener('change', function(){
+  var si=document.getElementById('rcpt-search-input');
+  renderReceiptsList(si?si.value:'');
+});
+var _rab=document.getElementById('rcpt-alldates-btn');
+if(_rab) _rab.addEventListener('click', function(){
+  var di=document.getElementById('rcpt-date-input'); if(di) di.value='';
+  var si=document.getElementById('rcpt-search-input');
+  renderReceiptsList(si?si.value:'');
+});
 }
 
 </script>

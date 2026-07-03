@@ -1452,6 +1452,13 @@ document.addEventListener('click', function(e){
     if(sale) viewHistoricalReceipt(sale);
     return;
   }
+  const allDatesBtn = e.target.closest('#rcpt-alldates-btn');
+  if(allDatesBtn){
+    var di = document.getElementById('rcpt-date-input'); if(di) di.value='';
+    var si = document.getElementById('rcpt-search-input');
+    renderReceiptsList(si ? si.value : '');
+    return;
+  }
 
 
   // Payment buttons
@@ -1460,6 +1467,25 @@ document.addEventListener('click', function(e){
     paymentMethod=payBtn.dataset.method;
     document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('pay-active'));
     payBtn.classList.add('pay-active'); return;
+  }
+});
+
+// ── Global delegated input/change listeners (Receipts tab search/date) ──
+document.addEventListener('input', function(e){
+  if(e.target && e.target.id === 'rcpt-search-input'){
+    renderReceiptsList(e.target.value);
+  }
+});
+document.addEventListener('keydown', function(e){
+  if(e.target && e.target.id === 'rcpt-search-input' && e.key === 'Enter'){
+    renderReceiptsList(e.target.value);
+    e.target.blur();
+  }
+});
+document.addEventListener('change', function(e){
+  if(e.target && e.target.id === 'rcpt-date-input'){
+    var si = document.getElementById('rcpt-search-input');
+    renderReceiptsList(si ? si.value : '');
   }
 });
 
@@ -2045,22 +2071,7 @@ document.getElementById('settle-btn').addEventListener('click', dailySettlement)
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 document.getElementById('print-btn').addEventListener('click', printReceipt);
-var _rsi=document.getElementById('rcpt-search-input');
-if(_rsi){
-  _rsi.addEventListener('input', function(){ renderReceiptsList(this.value); });
-  _rsi.addEventListener('keydown', function(e){ if(e.key==='Enter'){ renderReceiptsList(this.value); this.blur(); } });
-}
-var _rdi=document.getElementById('rcpt-date-input');
-if(_rdi) _rdi.addEventListener('change', function(){
-  var si=document.getElementById('rcpt-search-input');
-  renderReceiptsList(si?si.value:'');
-});
-var _rab=document.getElementById('rcpt-alldates-btn');
-if(_rab) _rab.addEventListener('click', function(){
-  var di=document.getElementById('rcpt-date-input'); if(di) di.value='';
-  var si=document.getElementById('rcpt-search-input');
-  renderReceiptsList(si?si.value:'');
-});
+// Receipts tab search/date/all-dates now wired via global delegated listeners below
 }
 
 </script>

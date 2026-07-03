@@ -180,7 +180,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button id="rcpt-clear-btn" style="padding:9px 14px;background:#f0f0f0;color:#555;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-family:var(--font)">Clear</button>
         </div>
         <div id="rcpt-search-results" style="font-size:12px;color:#aaa;text-align:center;padding:20px">Tap Refresh to load receipts</div>
-      </div>div>
+      </div></div>
       <div class="cart-footer">
         <div class="summary-row"><span>Subtotal</span><span id="sub-val">$0.00</span></div>
         <div class="disc-row" id="disc-row"><span id="disc-label">Discount</span><span id="disc-val"></span></div>
@@ -1437,13 +1437,7 @@ document.addEventListener('click', function(e){
     return;
   }
 
-  // Receipts tab — refresh button
-  const rcptRefreshBtn = e.target.closest('.rcpt-refresh-btn');
-  if(rcptRefreshBtn){
-    document.getElementById('rcpt-search-input').value='';
-    openReceiptsTab();
-    return;
-  }
+
   // Payment buttons
   const payBtn = e.target.closest('.pay-btn');
   if(payBtn && payBtn.dataset.method){
@@ -2025,12 +2019,16 @@ document.getElementById('settle-btn').addEventListener('click', dailySettlement)
 document.getElementById('clr-sales-btn').addEventListener('click', clearSalesLog);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });
 document.getElementById('print-btn').addEventListener('click', printReceipt);
-document.getElementById('rcpt-refresh-btn').addEventListener('click', openReceiptsTab);
-document.getElementById('rcpt-clear-btn').addEventListener('click', function(){
-  document.getElementById('rcpt-search-input').value='';
+var _rrb=document.getElementById('rcpt-refresh-btn');
+if(_rrb) _rrb.addEventListener('click', openReceiptsTab);
+var _rcb=document.getElementById('rcpt-clear-btn');
+if(_rcb) _rcb.addEventListener('click', function(){
+  var inp=document.getElementById('rcpt-search-input');
+  if(inp) inp.value='';
   renderReceiptsList('');
 });
-document.getElementById('rcpt-search-input').addEventListener('keydown', function(e){
+var _rsi=document.getElementById('rcpt-search-input');
+if(_rsi) _rsi.addEventListener('keydown', function(e){
   if(e.key==='Enter') renderReceiptsList(this.value);
 });
 }

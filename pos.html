@@ -176,10 +176,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">Search Receipts</div>
           <input type="text" id="rcpt-search-input" placeholder="Receipt no. or member phone..."
             style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font);margin-bottom:8px"
-            oninput="searchReceipts(this.value)">
+            oninput="doRcptSearch()">
           <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button onclick="searchReceipts(document.getElementById('rcpt-search-input').value||'')" class="btn-done" style="flex:1">Search</button>
-            <button onclick="document.getElementById('rcpt-search-input').value='';searchReceipts('')" class="btn-print" style="flex:1">Clear</button>
+            <button onclick="doRcptSearch()" class="btn-done" style="flex:1">Search</button>
+            <button onclick="doClearRcptSearch()" class="btn-print" style="flex:1">Clear</button>
           </div>
         </div>
         <div id="rcpt-search-results" style="font-size:12px;color:#aaa;text-align:center;padding:20px">
@@ -1099,6 +1099,15 @@ async function openReceiptsTab(){
 
 function searchReceipts(query){
   renderReceiptsList(query||'');
+}
+function doRcptSearch(){
+  var inp = document.getElementById('rcpt-search-input');
+  renderReceiptsList(inp ? inp.value : '');
+}
+function doClearRcptSearch(){
+  var inp = document.getElementById('rcpt-search-input');
+  if(inp) inp.value = '';
+  openReceiptsTab();
 }
 
 function renderReceiptsList(query){

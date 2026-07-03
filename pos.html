@@ -1265,7 +1265,7 @@ function switchPosTab(tab){
     if(view) view.style.display = t===tab?'flex':'none';
     if(btn){ btn.style.color = t===tab?'#8fcea1':'#aaa'; btn.style.borderBottomColor = t===tab?'#8fcea1':'transparent'; }
   });
-  if(tab==='receipts') openReceiptsTab();
+  if(tab==='receipts'){ openReceiptsTab(); startRcptPolling(); }
 }
 
 function clearMember(){
@@ -1491,6 +1491,26 @@ document.addEventListener('click', function(e){
     payBtn.classList.add('pay-active'); return;
   }
 });
+
+// ── BULLETPROOF POLLING: catches search/date changes regardless of event interference ──
+var _rcptLastQuery = null;
+var _rcptLastDate  = null;
+var _rcptPollHandle = null;
+function startRcptPolling(){
+  if(_rcptPollHandle) return;
+  _rcptPollHandle = setInterval(function(){
+    if(currentPosTab !== 'receipts') return;
+    var si = document.getElementById('rcpt-search-input');
+    var di = document.getElementById('rcpt-date-input');
+    var q  = si ? si.value : '';
+    var d  = di ? di.value : '';
+    if(q !== _rcptLastQuery || d !== _rcptLastDate){
+      _rcptLastQuery = q;
+      _rcptLastDate  = d;
+      renderReceiptsList(q);
+    }
+  }, 200);
+}
 
 // ── DIAGNOSTIC: global keystroke counter (independent of any element) ──
 var _globalKeyCount = 0;

@@ -1740,8 +1740,8 @@ async function checkout(){
   const isOnline = ONLINE_PLATFORMS.includes(paymentMethod);
   const total = isOnline ? 0 : +(sub-disc).toFixed(2);
   const now=new Date();
-  const _sgtD=new Date(now.getTime()+8*3600*1000); const dateStr=_sgtD.toISOString().split('T')[0];
-  const _sgt=new Date(now.getTime()+8*3600*1000); const h=_sgt.getUTCHours(),m=_sgt.getUTCMinutes(); const timeStr=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  const dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   const btn=document.getElementById('checkout-btn');
   btn.textContent='Processing...';btn.disabled=true;
   try{

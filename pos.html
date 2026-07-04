@@ -282,8 +282,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       </div>
       <div class="modal-body">
         <div style="text-align:center;margin-bottom:16px">
-          <div style="width:48px;height:48px;border-radius:50%;background:#eef5ff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
-            <i class="ti ti-report-money" style="font-size:22px;color:#1565c0"></i>
+          <div style="width:48px;height:48px;border-radius:50%;background:#fef0f0;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+            <i class="ti ti-report-money" style="font-size:22px;color:#e74c3c"></i>
           </div>
           <div style="font-size:12px;color:#888" id="settle-date-label"></div>
         </div>
@@ -320,7 +320,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px">
             <span style="font-size:14px;font-weight:700;color:#333">Total</span>
-            <span style="font-size:18px;font-weight:800;color:#1565c0" id="settle-total">$0.00</span>
+            <span style="font-size:18px;font-weight:800;color:#e74c3c" id="settle-total">$0.00</span>
           </div>
         </div>
         <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px;margin-bottom:16px;font-size:12px;color:#795548">
@@ -329,7 +329,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div id="settle-txn-count" style="font-size:12px;color:#aaa;text-align:center;margin-bottom:14px"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <button onclick="closeSettleModal()" class="btn-print">Cancel</button>
-          <button onclick="confirmSettle()" class="btn-done" style="background:#1565c0">Close Day</button>
+          <button onclick="confirmSettle()" class="btn-done" style="background:#e74c3c">Close Day</button>
         </div>
       </div>
     </div>
@@ -2069,7 +2069,6 @@ function exportProductsCSV(){
     label = monthStr;
   } else { showToast('Invalid choice'); return; }
   if(!filtered.length){ showToast('No sales for '+label); return; }
-  // Tally products
   const tally = {};
   filtered.filter(s=>!s.voided).forEach(s=>{
     (s.items||[]).forEach(i=>{
@@ -2083,7 +2082,6 @@ function exportProductsCSV(){
   if(!sorted.length){ showToast('No product data'); return; }
   const rows=[['Product','Qty Sold','Revenue ($)']];
   sorted.forEach(([name,d])=>rows.push([name, d.qty, d.revenue.toFixed(2)]));
-  // Totals row
   const totalQty = sorted.reduce((s,[,d])=>s+d.qty,0);
   const totalRev = sorted.reduce((s,[,d])=>s+d.revenue,0);
   rows.push(['TOTAL', totalQty, totalRev.toFixed(2)]);
@@ -2137,13 +2135,12 @@ function dailySettlement(){
   const today=_sgt.toISOString().split('T')[0];
   const todaySales=salesLog.filter(s=>s.date===today);
   if(!todaySales.length){showToast('No sales today to settle');return;}
-  const total   = todaySales.reduce((t,s)=>t+(s.voided?0:s.total),0);
-  const cash    = todaySales.filter(s=>!s.voided&&s.payment==='Cash').reduce((t,s)=>t+s.total,0);
-  const card    = todaySales.filter(s=>!s.voided&&s.payment==='Card').reduce((t,s)=>t+s.total,0);
-  const paynow  = todaySales.filter(s=>!s.voided&&s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
-  const count   = todaySales.length;
-  const voided  = todaySales.filter(s=>s.voided).length;
-  // Populate modal
+  const total  = todaySales.reduce((t,s)=>t+(s.voided?0:s.total),0);
+  const cash   = todaySales.filter(s=>!s.voided&&s.payment==='Cash').reduce((t,s)=>t+s.total,0);
+  const card   = todaySales.filter(s=>!s.voided&&s.payment==='Card').reduce((t,s)=>t+s.total,0);
+  const paynow = todaySales.filter(s=>!s.voided&&s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
+  const count  = todaySales.length;
+  const voided = todaySales.filter(s=>s.voided).length;
   document.getElementById('settle-date-label').textContent = today;
   document.getElementById('settle-cash').textContent   = '$'+cash.toFixed(2);
   document.getElementById('settle-card').textContent   = '$'+card.toFixed(2);
@@ -2160,19 +2157,18 @@ function closeSettleModal(){
 function updateSettleTotal(){
   const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
   const today=_sgt.toISOString().split('T')[0];
-  const posTot = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
-  const grab     = parseFloat(document.getElementById('settle-grab').value)||0;
-  const foodpanda= parseFloat(document.getElementById('settle-foodpanda').value)||0;
+  const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
+  const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
+  const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
   document.getElementById('settle-total').textContent = '$'+(posTot+grab+foodpanda).toFixed(2);
 }
 function confirmSettle(){
   const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
   const today=_sgt.toISOString().split('T')[0];
-  const posTot   = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
-  const grab     = parseFloat(document.getElementById('settle-grab').value)||0;
-  const foodpanda= parseFloat(document.getElementById('settle-foodpanda').value)||0;
+  const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
+  const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
+  const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
   const grandTotal = posTot+grab+foodpanda;
-  // Remove today from local salesLog only — Sheets untouched
   salesLog=salesLog.filter(s=>s.date!==today);
   closeSettleModal();
   renderSalesReport();

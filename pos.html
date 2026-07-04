@@ -232,6 +232,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <button class="btn-export" id="export-btn">Export Daily</button>
         <button class="btn-export" id="export-monthly-btn" style="background:#5aab74">Export Monthly</button>
         <button class="btn-export" id="settle-btn" style="background:#1565c0">Daily Settlement</button>
+        <button class="btn-export" id="export-products-btn" style="background:#7f88b3">Export Products</button>
       </div>
     </div>
   </div>
@@ -1974,11 +1975,11 @@ function renderSalesReport(){
   const monthSales2=salesLog.filter(s=>s.date&&s.date.startsWith(month2));
 
   el.innerHTML=
-    // Daily product breakdown
-    '<div style="font-size:13px;font-weight:700;color:#555;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Products sold today</div>'
-    +(todaySales2.length?buildProductChart(todaySales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales today</div>')
+    // Daily product breakdown — collapsible
+    '<div style="margin-bottom:4px"><button id="toggle-today-btn" onclick="var b=document.getElementById(\'today-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Products sold today\':\'▼ Products sold today\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Products sold today</button></div>'
+    +'<div id="today-chart-body" style="display:none">'+(todaySales2.length?buildProductChart(todaySales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales today</div>')+'</div>'
     // Monthly product breakdown — collapsible
-    +'<div style="margin:16px 0 4px"><button id="toggle-monthly-btn" onclick="var b=document.getElementById(\'monthly-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Products sold this month\':\'▼ Products sold this month\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Products sold this month</button></div>'
+    +'<div style="margin:12px 0 4px"><button id="toggle-monthly-btn" onclick="var b=document.getElementById(\'monthly-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Products sold this month\':\'▼ Products sold this month\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Products sold this month</button></div>'
     +'<div id="monthly-chart-body" style="display:none">'+(monthSales2.length?buildProductChart(monthSales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>')+'</div>'
     // Recent transactions
     +'<div style="font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Recent transactions</div>'
@@ -1991,6 +1992,48 @@ function renderSalesReport(){
     var remarksStr = s.items.filter(function(it){return it.remark;}).map(function(it){return it.remark;}).join('; ');
     return '<div style="padding:8px 0;border-bottom:.5px solid #f0f0f0">'      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'      +'<div style="flex:1;min-width:0;cursor:pointer" onclick="viewSaleReceipt('+i+')">'      +'<div style="display:flex;align-items:center;gap:6px">'      +'<div style="font-size:12px;font-weight:600">'+s.date+' '+s.time+'</div>'      +(s.rcptNo?'<div style="font-size:10px;color:#999;font-family:monospace">'+s.rcptNo+'</div>':'')      +'</div>'      +'<div style="font-size:11px;color:#aaa">'+s.payment+(s.member?' · '+s.member:'')+(s.voided?' · <span style="color:#e74c3c;font-weight:700">VOIDED</span>':'')+'</div>'      +'<div style="font-size:11px;color:#ccc">'+itemsHtml+'</div>'      +(remarksStr?'<div style="font-size:10px;color:#e67e22;font-style:italic;margin-top:1px">Remark: '+remarksStr+'</div>':'')      +(s.note?'<div style="font-size:10px;color:#aaa;font-style:italic">Note: '+s.note+'</div>':'')      +'</div>'      +'<div style="text-align:right;flex-shrink:0;margin-left:8px">'      +'<div style="font-size:13px;font-weight:700;color:'+(s.voided?'#e74c3c':'#8fcea1')+'">$'+s.total.toFixed(2)+'</div>'      +(s.discount>0?'<div style="font-size:10px;color:#27ae60">-$'+s.discount.toFixed(2)+' off</div>':'')      +'<button class="edit-txn-btn" data-i="'+i+'" style="margin-top:4px;padding:2px 8px;border:1px solid #ddd;border-radius:4px;background:#fafafa;cursor:pointer;font-size:10px;color:#888;font-family:var(--font)">Edit</button>'      +'</div></div></div>';
   }).join('');
+}
+
+function exportProductsCSV(){
+  const sgt = new Date(new Date().getTime()+8*3600*1000);
+  const todayStr = sgt.toISOString().slice(0,10);
+  const monthStr = todayStr.slice(0,7);
+  const choice = prompt('Export products sold:\n1 = Today ('+todayStr+')\n2 = This month ('+monthStr+')\n\nEnter 1 or 2:','1');
+  if(!choice) return;
+  let filtered, label;
+  if(choice.trim()==='1'){
+    filtered = salesLog.filter(s=>s.date===todayStr);
+    label = todayStr;
+  } else if(choice.trim()==='2'){
+    filtered = salesLog.filter(s=>s.date&&s.date.startsWith(monthStr));
+    label = monthStr;
+  } else { showToast('Invalid choice'); return; }
+  if(!filtered.length){ showToast('No sales for '+label); return; }
+  // Tally products
+  const tally = {};
+  filtered.filter(s=>!s.voided).forEach(s=>{
+    (s.items||[]).forEach(i=>{
+      const key = i.label||i.name||'Unknown';
+      if(!tally[key]) tally[key]={qty:0,revenue:0};
+      tally[key].qty += i.qty||1;
+      tally[key].revenue += (i.price||0)*(i.qty||1);
+    });
+  });
+  const sorted = Object.entries(tally).sort((a,b)=>b[1].qty-a[1].qty);
+  if(!sorted.length){ showToast('No product data'); return; }
+  const rows=[['Product','Qty Sold','Revenue ($)']];
+  sorted.forEach(([name,d])=>rows.push([name, d.qty, d.revenue.toFixed(2)]));
+  // Totals row
+  const totalQty = sorted.reduce((s,[,d])=>s+d.qty,0);
+  const totalRev = sorted.reduce((s,[,d])=>s+d.revenue,0);
+  rows.push(['TOTAL', totalQty, totalRev.toFixed(2)]);
+  const csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'products-'+label+'.csv';
+  a.click();
+  showToast('Exported products for '+label);
 }
 function exportSalesCSV(){
   // Show date picker modal
@@ -2140,6 +2183,7 @@ document.getElementById('sales-btn').addEventListener('click', openSales);
 document.getElementById('close-sales-btn').addEventListener('click', closeSales);
 document.getElementById('refresh-sales-btn').addEventListener('click', ()=>{ loadSalesFromSheets(); });
 document.getElementById('export-btn').addEventListener('click', exportSalesCSV);
+document.getElementById('export-products-btn').addEventListener('click', exportProductsCSV);
 document.getElementById('export-monthly-btn').addEventListener('click', exportMonthlyCSV);
 document.getElementById('settle-btn').addEventListener('click', dailySettlement);
 document.getElementById('member-phone').addEventListener('keydown', function(e){ if(e.key==='Enter') lookupMember(); });

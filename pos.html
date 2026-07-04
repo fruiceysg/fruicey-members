@@ -1894,11 +1894,9 @@ function cleanSaleDate(s){
     const m = totalMins % 60;
     s.time = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
   }
-  // Fix time if it comes as ISO string
+  // Fix time if it comes as ISO string — extract HH:MM directly, no offset
   if(s.time && typeof s.time === 'string' && s.time.includes('T')){
-    const d = new Date(s.time);
-    const sgt = new Date(d.getTime() + 8*3600*1000);
-    s.time = sgt.toISOString().slice(11,16);
+    s.time = s.time.slice(11,16);
   }
   return s;
 }

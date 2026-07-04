@@ -273,6 +273,68 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
   <!-- STAFF PASSWORD MODAL -->
+  <!-- DAILY SETTLEMENT MODAL -->
+  <div class="modal-bg" id="settle-modal">
+    <div class="modal-box" style="max-width:340px">
+      <div class="modal-hdr">
+        <span class="modal-hdr-title">Daily Settlement</span>
+        <button class="modal-close" onclick="closeSettleModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="width:48px;height:48px;border-radius:50%;background:#eef5ff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+            <i class="ti ti-report-money" style="font-size:22px;color:#1565c0"></i>
+          </div>
+          <div style="font-size:12px;color:#888" id="settle-date-label"></div>
+        </div>
+        <div style="background:#f8f8f8;border-radius:10px;padding:14px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#555">Cash</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-cash">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#555">Card</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-card">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#555">PayNow</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-paynow">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#555">Grab</span>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:13px;color:#aaa">$</span>
+              <input type="number" id="settle-grab" min="0" step="0.01" placeholder="0.00"
+                oninput="updateSettleTotal()"
+                style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#555">Foodpanda</span>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:13px;color:#aaa">$</span>
+              <input type="number" id="settle-foodpanda" min="0" step="0.01" placeholder="0.00"
+                oninput="updateSettleTotal()"
+                style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px">
+            <span style="font-size:14px;font-weight:700;color:#333">Total</span>
+            <span style="font-size:18px;font-weight:800;color:#1565c0" id="settle-total">$0.00</span>
+          </div>
+        </div>
+        <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px;margin-bottom:16px;font-size:12px;color:#795548">
+          ⚠️ This will clear today's transactions from the POS screen. All data remains saved in Google Sheets.
+        </div>
+        <div id="settle-txn-count" style="font-size:12px;color:#aaa;text-align:center;margin-bottom:14px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button onclick="closeSettleModal()" class="btn-print">Cancel</button>
+          <button onclick="confirmSettle()" class="btn-done" style="background:#1565c0">Close Day</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-bg" id="pw-modal">
     <div class="modal-box" style="max-width:320px">
       <div class="modal-hdr">
@@ -2072,26 +2134,51 @@ function exportMonthlyCSV(){
   showToast('Monthly report exported!');
 }
 
-async function dailySettlement(){
-  const okSettle = await requireStaffAuth('perform daily settlement');
-  if(!okSettle) return;
+function dailySettlement(){
   const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
   const today=_sgt.toISOString().split('T')[0];
   const todaySales=salesLog.filter(s=>s.date===today);
   if(!todaySales.length){showToast('No sales today to settle');return;}
-  const total=todaySales.reduce((t,s)=>t+s.total,0);
-  const cash=todaySales.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
-  const card=todaySales.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
-  const paynow=todaySales.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
-  if(!confirm('Settle '+today+'?\n\nCash: $'+cash.toFixed(2)+'\nCard: $'+card.toFixed(2)+'\nPayNow: $'+paynow.toFixed(2)+'\nTotal: $'+total.toFixed(2)+'\n\nThis will mark today as settled. Continue?'))return;
-  // Keep non-today sales, archive today
-  const settled=JSON.parse(localStorage.getItem('fruicey_settled')||'[]');
-  settled.push({date:today,sales:todaySales,settledAt:new Date().toISOString()});
-  try{localStorage.setItem('fruicey_settled',JSON.stringify(settled));}catch(e){}
-  // After settlement, only keep today's unsettled (filter out settled date)
-  salesLog=salesLog.filter(s=>s.date!==today); // Remove settled day
+  const total   = todaySales.reduce((t,s)=>t+(s.voided?0:s.total),0);
+  const cash    = todaySales.filter(s=>!s.voided&&s.payment==='Cash').reduce((t,s)=>t+s.total,0);
+  const card    = todaySales.filter(s=>!s.voided&&s.payment==='Card').reduce((t,s)=>t+s.total,0);
+  const paynow  = todaySales.filter(s=>!s.voided&&s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
+  const count   = todaySales.length;
+  const voided  = todaySales.filter(s=>s.voided).length;
+  // Populate modal
+  document.getElementById('settle-date-label').textContent = today;
+  document.getElementById('settle-cash').textContent   = '$'+cash.toFixed(2);
+  document.getElementById('settle-card').textContent   = '$'+card.toFixed(2);
+  document.getElementById('settle-paynow').textContent = '$'+paynow.toFixed(2);
+  document.getElementById('settle-grab').value = '';
+  document.getElementById('settle-foodpanda').value = '';
+  document.getElementById('settle-total').textContent  = '$'+total.toFixed(2);
+  document.getElementById('settle-txn-count').textContent = count+' transaction'+(count!==1?'s':'')+' today'+(voided?' ('+voided+' voided)':'');
+  document.getElementById('settle-modal').classList.add('open');
+}
+function closeSettleModal(){
+  document.getElementById('settle-modal').classList.remove('open');
+}
+function updateSettleTotal(){
+  const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
+  const today=_sgt.toISOString().split('T')[0];
+  const posTot = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
+  const grab     = parseFloat(document.getElementById('settle-grab').value)||0;
+  const foodpanda= parseFloat(document.getElementById('settle-foodpanda').value)||0;
+  document.getElementById('settle-total').textContent = '$'+(posTot+grab+foodpanda).toFixed(2);
+}
+function confirmSettle(){
+  const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
+  const today=_sgt.toISOString().split('T')[0];
+  const posTot   = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
+  const grab     = parseFloat(document.getElementById('settle-grab').value)||0;
+  const foodpanda= parseFloat(document.getElementById('settle-foodpanda').value)||0;
+  const grandTotal = posTot+grab+foodpanda;
+  // Remove today from local salesLog only — Sheets untouched
+  salesLog=salesLog.filter(s=>s.date!==today);
+  closeSettleModal();
   renderSalesReport();
-  showToast('Day settled! $'+total.toFixed(2)+' total.');
+  showToast('Day closed! $'+grandTotal.toFixed(2)+' total.');
 }
 
 

@@ -198,6 +198,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button class="pay-btn" data-method="Card"><i class="ti ti-credit-card"></i> Card</button>
           <button class="pay-btn" data-method="GrabFood" style="color:#00B14F;border-color:#00B14F"><i class="ti ti-bike"></i> GrabFood</button>
           <button class="pay-btn" data-method="FoodPanda" style="color:#D70F64;border-color:#D70F64"><i class="ti ti-bike"></i> FoodPanda</button>
+          <button class="pay-btn" data-method="Online Shop" style="color:#6796ce;border-color:#6796ce"><i class="ti ti-world"></i> Online Shop</button>
         </div>
         <button class="charge-btn" id="checkout-btn">Tender</button>
       </div>
@@ -229,7 +230,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div id="sales-list"></div>
       </div>
       <div class="sales-footer">
-        <button class="btn-export" id="export-btn" style="background:#7f88b3">Export Daily</button>
+        <button class="btn-export" id="export-btn" style="background:#6796ce">Export Daily</button>
         <button class="btn-export" id="export-monthly-btn" style="background:#99d1b4">Export Monthly</button>
         <button class="btn-export" id="export-products-btn" style="background:#f0da75;color:#333">Export Products</button>
         <button class="btn-export" id="settle-btn" style="background:#dd8581">Daily Settlement</button>
@@ -323,6 +324,15 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             <div style="display:flex;align-items:center;gap:4px">
               <span style="font-size:13px;color:#aaa">$</span>
               <input type="number" id="settle-foodpanda" min="0" step="0.01" placeholder="0.00"
+                oninput="updateSettleTotal()"
+                style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#6796ce">Online Shop</span>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:13px;color:#aaa">$</span>
+              <input type="number" id="settle-onlineshop" min="0" step="0.01" placeholder="0.00"
                 oninput="updateSettleTotal()"
                 style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
             </div>
@@ -752,7 +762,7 @@ const CAT_BG     = {'Shakes & Smoothies':'#e3f2fb','Superfood Bowls':'#e8f8ee','
 const CAT_ICONS  = {'Shakes & Smoothies':'ti-droplet','Superfood Bowls':'ti-bowl','Immunity Press':'ti-flask','Nutritional Press':'ti-pill','Juices':'ti-cup','Wellness Press':'ti-leaf','Longevity Press':'ti-heartbeat'};
 
 let cart = [], currentMember = null, memberDiscount = 0, currentCat = 'Shakes & Smoothies', paymentMethod = '';
-const ONLINE_PLATFORMS = ['GrabFood','FoodPanda'];
+const ONLINE_PLATFORMS = ['GrabFood','FoodPanda','Online Shop'];
 let stockStatus = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg // id -> true/false
 let salesLog = []; // always loaded fresh from Sheets
@@ -2157,6 +2167,7 @@ function dailySettlement(){
   document.getElementById('settle-grab').value = '';
   document.getElementById('settle-mdr').value = '';
   document.getElementById('settle-foodpanda').value = '';
+  document.getElementById('settle-onlineshop').value = '';
   document.getElementById('settle-total').textContent  = '$'+total.toFixed(2);
   document.getElementById('settle-txn-count').textContent = count+' transaction'+(count!==1?'s':'')+' today'+(voided?' ('+voided+' voided)':'');
   document.getElementById('settle-modal').classList.add('open');
@@ -2169,18 +2180,20 @@ function updateSettleTotal(){
   const today=_sgt.toISOString().split('T')[0];
   const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
   const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
-  const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
-  const mdr       = parseFloat(document.getElementById('settle-mdr').value)||0;
-  document.getElementById('settle-total').textContent = '$'+(posTot+grab+foodpanda-mdr).toFixed(2);
+  const foodpanda   = parseFloat(document.getElementById('settle-foodpanda').value)||0;
+  const onlineshop  = parseFloat(document.getElementById('settle-onlineshop').value)||0;
+  const mdr         = parseFloat(document.getElementById('settle-mdr').value)||0;
+  document.getElementById('settle-total').textContent = '$'+(posTot+grab+foodpanda+onlineshop-mdr).toFixed(2);
 }
 function confirmSettle(){
   const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
   const today=_sgt.toISOString().split('T')[0];
   const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
   const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
-  const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
-  const mdr       = parseFloat(document.getElementById('settle-mdr').value)||0;
-  const grandTotal = posTot+grab+foodpanda-mdr;
+  const foodpanda   = parseFloat(document.getElementById('settle-foodpanda').value)||0;
+  const onlineshop  = parseFloat(document.getElementById('settle-onlineshop').value)||0;
+  const mdr         = parseFloat(document.getElementById('settle-mdr').value)||0;
+  const grandTotal  = posTot+grab+foodpanda+onlineshop-mdr;
   salesLog=salesLog.filter(s=>s.date!==today);
   closeSettleModal();
   renderSalesReport();

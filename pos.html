@@ -284,7 +284,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       <div class="modal-body">
         <div style="text-align:center;margin-bottom:16px">
           <div style="width:48px;height:48px;border-radius:50%;background:#fef0f0;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
-            <i class="ti ti-report-money" style="font-size:22px;color:#e74c3c"></i>
+            <i class="ti ti-report-money" style="font-size:22px;color:#dd8581"></i>
           </div>
           <div style="font-size:12px;color:#888" id="settle-date-label"></div>
         </div>
@@ -305,41 +305,33 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             <span style="font-size:13px;color:#555;padding-left:12px">MDR (—)</span>
             <div style="display:flex;align-items:center;gap:4px">
               <span style="font-size:13px;color:#aaa">$</span>
-              <input type="number" id="settle-mdr" min="0" step="0.01" placeholder="0.00"
-                oninput="updateSettleTotal()"
-                style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
+              <input type="number" id="settle-mdr" min="0" step="0.01" placeholder="0.00" oninput="updateSettleTotal()" style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#555">Grab</span>
             <div style="display:flex;align-items:center;gap:4px">
               <span style="font-size:13px;color:#aaa">$</span>
-              <input type="number" id="settle-grab" min="0" step="0.01" placeholder="0.00"
-                oninput="updateSettleTotal()"
-                style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
+              <input type="number" id="settle-grab" min="0" step="0.01" placeholder="0.00" oninput="updateSettleTotal()" style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#555">Foodpanda</span>
             <div style="display:flex;align-items:center;gap:4px">
               <span style="font-size:13px;color:#aaa">$</span>
-              <input type="number" id="settle-foodpanda" min="0" step="0.01" placeholder="0.00"
-                oninput="updateSettleTotal()"
-                style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
+              <input type="number" id="settle-foodpanda" min="0" step="0.01" placeholder="0.00" oninput="updateSettleTotal()" style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#6796ce">Online Shop</span>
             <div style="display:flex;align-items:center;gap:4px">
               <span style="font-size:13px;color:#aaa">$</span>
-              <input type="number" id="settle-onlineshop" min="0" step="0.01" placeholder="0.00"
-                oninput="updateSettleTotal()"
-                style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
+              <input type="number" id="settle-onlineshop" min="0" step="0.01" placeholder="0.00" oninput="updateSettleTotal()" style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px">
             <span style="font-size:14px;font-weight:700;color:#333">Total</span>
-            <span style="font-size:18px;font-weight:800;color:#e74c3c" id="settle-total">$0.00</span>
+            <span style="font-size:18px;font-weight:800;color:#dd8581" id="settle-total">$0.00</span>
           </div>
         </div>
         <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px;margin-bottom:16px;font-size:12px;color:#795548">
@@ -348,7 +340,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div id="settle-txn-count" style="font-size:12px;color:#aaa;text-align:center;margin-bottom:14px"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <button onclick="closeSettleModal()" class="btn-print">Cancel</button>
-          <button onclick="confirmSettle()" class="btn-done" style="background:#e74c3c">Close Day</button>
+          <button onclick="confirmSettle()" class="btn-done" style="background:#dd8581">Close Day</button>
         </div>
       </div>
     </div>
@@ -1998,6 +1990,7 @@ function renderSalesReport(){
         <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${d.total.toFixed(2)}</td></tr>
         <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='GrabFood'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
         <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='FoodPanda'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
+        <tr style="background:#f0f5ff"><td style="padding:7px 10px;border:1px solid #eee;color:#6796ce">Online Shop</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Online Shop'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
       </table>
     </div>
     <div style="margin-bottom:16px">
@@ -2014,6 +2007,7 @@ function renderSalesReport(){
         <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${m.total.toFixed(2)}</td></tr>
         <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='GrabFood'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
         <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='FoodPanda'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
+        <tr style="background:#f0f5ff"><td style="padding:7px 10px;border:1px solid #eee;color:#6796ce">Online Shop</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Online Shop'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
       </table>
     </div>`;
 
@@ -2054,10 +2048,8 @@ function renderSalesReport(){
   const monthSales2=salesLog.filter(s=>s.date&&s.date.startsWith(month2));
 
   el.innerHTML=
-    // Daily product breakdown — collapsible
     '<div style="margin-bottom:4px"><button id="toggle-today-btn" onclick="var b=document.getElementById(\'today-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Products sold today\':\'▼ Products sold today\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Products sold today</button></div>'
     +'<div id="today-chart-body" style="display:none">'+(todaySales2.length?buildProductChart(todaySales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales today</div>')+'</div>'
-    // Monthly product breakdown — collapsible
     +'<div style="margin:12px 0 4px"><button id="toggle-monthly-btn" onclick="var b=document.getElementById(\'monthly-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Products sold this month\':\'▼ Products sold this month\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Products sold this month</button></div>'
     +'<div id="monthly-chart-body" style="display:none">'+(monthSales2.length?buildProductChart(monthSales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>')+'</div>'
     // Recent transactions
@@ -2080,37 +2072,20 @@ function exportProductsCSV(){
   const choice = prompt('Export products sold:\n1 = Today ('+todayStr+')\n2 = This month ('+monthStr+')\n\nEnter 1 or 2:','1');
   if(!choice) return;
   let filtered, label;
-  if(choice.trim()==='1'){
-    filtered = salesLog.filter(s=>s.date===todayStr);
-    label = todayStr;
-  } else if(choice.trim()==='2'){
-    filtered = salesLog.filter(s=>s.date&&s.date.startsWith(monthStr));
-    label = monthStr;
-  } else { showToast('Invalid choice'); return; }
+  if(choice.trim()==='1'){ filtered=salesLog.filter(s=>s.date===todayStr); label=todayStr; }
+  else if(choice.trim()==='2'){ filtered=salesLog.filter(s=>s.date&&s.date.startsWith(monthStr)); label=monthStr; }
+  else { showToast('Invalid choice'); return; }
   if(!filtered.length){ showToast('No sales for '+label); return; }
-  const tally = {};
-  filtered.filter(s=>!s.voided).forEach(s=>{
-    (s.items||[]).forEach(i=>{
-      const key = i.label||i.name||'Unknown';
-      if(!tally[key]) tally[key]={qty:0,revenue:0};
-      tally[key].qty += i.qty||1;
-      tally[key].revenue += (i.price||0)*(i.qty||1);
-    });
-  });
-  const sorted = Object.entries(tally).sort((a,b)=>b[1].qty-a[1].qty);
+  const tally={};
+  filtered.filter(s=>!s.voided).forEach(s=>{(s.items||[]).forEach(i=>{const key=i.label||i.name||'Unknown';if(!tally[key])tally[key]={qty:0,revenue:0};tally[key].qty+=i.qty||1;tally[key].revenue+=(i.price||0)*(i.qty||1);});});
+  const sorted=Object.entries(tally).sort((a,b)=>b[1].qty-a[1].qty);
   if(!sorted.length){ showToast('No product data'); return; }
   const rows=[['Product','Qty Sold','Revenue ($)']];
-  sorted.forEach(([name,d])=>rows.push([name, d.qty, d.revenue.toFixed(2)]));
-  const totalQty = sorted.reduce((s,[,d])=>s+d.qty,0);
-  const totalRev = sorted.reduce((s,[,d])=>s+d.revenue,0);
-  rows.push(['TOTAL', totalQty, totalRev.toFixed(2)]);
-  const csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob = new Blob([csv],{type:'text/csv'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'products-'+label+'.csv';
-  a.click();
-  showToast('Exported products for '+label);
+  sorted.forEach(([name,d])=>rows.push([name,d.qty,d.revenue.toFixed(2)]));
+  rows.push(['TOTAL',sorted.reduce((s,[,d])=>s+d.qty,0),sorted.reduce((s,[,d])=>s+d.revenue,0).toFixed(2)]);
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='products-'+label+'.csv';a.click();showToast('Exported products for '+label);
 }
 function exportSalesCSV(){
   // Show date picker modal
@@ -2172,17 +2147,15 @@ function dailySettlement(){
   document.getElementById('settle-txn-count').textContent = count+' transaction'+(count!==1?'s':'')+' today'+(voided?' ('+voided+' voided)':'');
   document.getElementById('settle-modal').classList.add('open');
 }
-function closeSettleModal(){
-  document.getElementById('settle-modal').classList.remove('open');
-}
+function closeSettleModal(){ document.getElementById('settle-modal').classList.remove('open'); }
 function updateSettleTotal(){
   const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
   const today=_sgt.toISOString().split('T')[0];
   const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
   const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
-  const foodpanda   = parseFloat(document.getElementById('settle-foodpanda').value)||0;
-  const onlineshop  = parseFloat(document.getElementById('settle-onlineshop').value)||0;
-  const mdr         = parseFloat(document.getElementById('settle-mdr').value)||0;
+  const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
+  const onlineshop= parseFloat(document.getElementById('settle-onlineshop').value)||0;
+  const mdr       = parseFloat(document.getElementById('settle-mdr').value)||0;
   document.getElementById('settle-total').textContent = '$'+(posTot+grab+foodpanda+onlineshop-mdr).toFixed(2);
 }
 function confirmSettle(){
@@ -2190,13 +2163,12 @@ function confirmSettle(){
   const today=_sgt.toISOString().split('T')[0];
   const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
   const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
-  const foodpanda   = parseFloat(document.getElementById('settle-foodpanda').value)||0;
-  const onlineshop  = parseFloat(document.getElementById('settle-onlineshop').value)||0;
-  const mdr         = parseFloat(document.getElementById('settle-mdr').value)||0;
-  const grandTotal  = posTot+grab+foodpanda+onlineshop-mdr;
+  const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
+  const onlineshop= parseFloat(document.getElementById('settle-onlineshop').value)||0;
+  const mdr       = parseFloat(document.getElementById('settle-mdr').value)||0;
+  const grandTotal= posTot+grab+foodpanda+onlineshop-mdr;
   salesLog=salesLog.filter(s=>s.date!==today);
-  closeSettleModal();
-  renderSalesReport();
+  closeSettleModal(); renderSalesReport();
   showToast('Day closed! $'+grandTotal.toFixed(2)+' total.');
 }
 

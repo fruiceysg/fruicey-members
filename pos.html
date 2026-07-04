@@ -293,12 +293,21 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-cash">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#555">PayNow</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-paynow">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#555">Card</span>
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-card">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
-            <span style="font-size:13px;color:#555">PayNow</span>
-            <span style="font-size:13px;font-weight:600;color:#333" id="settle-paynow">$0.00</span>
+            <span style="font-size:13px;color:#555;padding-left:12px">MDR (—)</span>
+            <div style="display:flex;align-items:center;gap:4px">
+              <span style="font-size:13px;color:#aaa">$</span>
+              <input type="number" id="settle-mdr" min="0" step="0.01" placeholder="0.00"
+                oninput="updateSettleTotal()"
+                style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
+            </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#555">Grab</span>
@@ -2146,6 +2155,7 @@ function dailySettlement(){
   document.getElementById('settle-card').textContent   = '$'+card.toFixed(2);
   document.getElementById('settle-paynow').textContent = '$'+paynow.toFixed(2);
   document.getElementById('settle-grab').value = '';
+  document.getElementById('settle-mdr').value = '';
   document.getElementById('settle-foodpanda').value = '';
   document.getElementById('settle-total').textContent  = '$'+total.toFixed(2);
   document.getElementById('settle-txn-count').textContent = count+' transaction'+(count!==1?'s':'')+' today'+(voided?' ('+voided+' voided)':'');
@@ -2160,7 +2170,8 @@ function updateSettleTotal(){
   const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
   const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
   const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
-  document.getElementById('settle-total').textContent = '$'+(posTot+grab+foodpanda).toFixed(2);
+  const mdr       = parseFloat(document.getElementById('settle-mdr').value)||0;
+  document.getElementById('settle-total').textContent = '$'+(posTot+grab+foodpanda-mdr).toFixed(2);
 }
 function confirmSettle(){
   const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
@@ -2168,7 +2179,8 @@ function confirmSettle(){
   const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
   const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
   const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
-  const grandTotal = posTot+grab+foodpanda;
+  const mdr       = parseFloat(document.getElementById('settle-mdr').value)||0;
+  const grandTotal = posTot+grab+foodpanda-mdr;
   salesLog=salesLog.filter(s=>s.date!==today);
   closeSettleModal();
   renderSalesReport();

@@ -762,7 +762,7 @@ let salesLog = []; // always loaded fresh from Sheets
 
 // ── API ──────────────────────────────────────────────────────────────
 function np(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
-async function apiGet(params){const r=await fetch(API+'?'+new URLSearchParams(params));return r.json();}
+async function apiGet(params){const r=await fetch(API+'?'+new URLSearchParams({...params, _:Date.now()}), {cache:'no-store'});return r.json();}
 async function apiPost(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.json();}
 
 // ── CLOCK ────────────────────────────────────────────────────────────

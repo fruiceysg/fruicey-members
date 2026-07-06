@@ -126,13 +126,18 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
     </div>
   </div>
 
+  <div id="new-order-banner" onclick="goToNewOrder()" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#e74c3c;color:#fff;padding:12px 16px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);font-family:var(--font)">
+    🔔 <span id="new-order-banner-text">New order received!</span> — Tap to view
+    <button onclick="event.stopPropagation();dismissNewOrderBanner()" style="margin-left:12px;background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;vertical-align:middle">✕</button>
+  </div>
+
   <div class="layout">
     <div class="catalogue">
       <div class="pos-tabs">
         <button class="pos-tab active" id="pos-tab-menu" onclick="switchPosTab('menu')">Menu</button>
         <button class="pos-tab" id="pos-tab-member" onclick="switchPosTab('member')">Member</button>
         <button class="pos-tab" id="pos-tab-receipts" onclick="switchPosTab('receipts')">Receipts</button>
-        <button class="pos-tab" id="pos-tab-orders" onclick="switchPosTab('orders')">App Orders</button>
+        <button class="pos-tab" id="pos-tab-orders" onclick="switchPosTab('orders')" style="position:relative">App Orders<span id="app-orders-dot" style="display:none;position:absolute;top:4px;right:4px;width:9px;height:9px;background:#e74c3c;border-radius:50%;box-shadow:0 0 0 2px #fff"></span></button>
       </div>
       <div id="pos-view-menu" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0">
         <div id="cat-tabs" class="cat-tabs"></div>
@@ -509,6 +514,7 @@ function doLogin(){
   renderCart();
   initPOSListeners();
   loadSalesFromSheets().catch(()=>{});
+  startNewOrderPolling();
 }
 
 // ── STAFF AUTH MODAL ─────────────────────────────────────────
@@ -562,6 +568,7 @@ function doLogout(){
   sessionStorage.removeItem('fruicey_staff');
   cart = []; currentMember = null; memberDiscount = 0; paymentMethod = '';
   memberPhoneVal = '';
+  if(_newOrderPollHandle){ clearInterval(_newOrderPollHandle); _newOrderPollHandle = null; }
   document.getElementById('pos-app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-username').value = '';
@@ -1149,6 +1156,10 @@ async function loadAppOrders(){
   const el = document.getElementById('app-orders-list');
   if(!el) return;
   el.innerHTML = '<div style="padding:24px">Loading orders...</div>';
+  // Opening this tab means staff has seen the orders — clear the notification dot
+  const dot = document.getElementById('app-orders-dot');
+  if(dot) dot.style.display = 'none';
+  dismissNewOrderBanner();
   try{
     const res = await apiGet({action:'getOrders'});
     if(res.error){ el.innerHTML = '<div style="color:#e74c3c;padding:24px">Error: '+res.error+'</div>'; return; }
@@ -1156,9 +1167,66 @@ async function loadAppOrders(){
     if(!orders.length){ el.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa">No app orders yet</div>'; return; }
     window._appOrders = orders;
     renderAppOrders(orders);
+    // Mark all currently-visible orders as seen so polling doesn't re-alert on them
+    orders.forEach(function(o){ _seenOrderIds.add(o.id); });
   }catch(e){
     el.innerHTML = '<div style="color:#e74c3c;padding:24px">Could not connect to server.</div>';
   }
+}
+
+// ── NEW ORDER POLLING / NOTIFICATION ──────────────────────────
+let _seenOrderIds = new Set();
+let _seenOrderIdsInitialized = false;
+let _newOrderPollHandle = null;
+let _latestNewOrderId = null;
+
+function startNewOrderPolling(){
+  if(_newOrderPollHandle) return;
+  pollNewAppOrders(); // run once immediately to establish baseline
+  _newOrderPollHandle = setInterval(pollNewAppOrders, 20000);
+}
+
+async function pollNewAppOrders(){
+  try{
+    const res = await apiGet({action:'getOrders'});
+    if(res.error || !res.orders) return;
+    const orders = res.orders;
+    if(!_seenOrderIdsInitialized){
+      // First run — record existing orders without alerting, so old orders don't trigger a false alarm
+      orders.forEach(function(o){ _seenOrderIds.add(o.id); });
+      _seenOrderIdsInitialized = true;
+      return;
+    }
+    const freshOrders = orders.filter(function(o){ return !_seenOrderIds.has(o.id); });
+    if(freshOrders.length){
+      freshOrders.forEach(function(o){ _seenOrderIds.add(o.id); });
+      _latestNewOrderId = freshOrders[0].id;
+      showNewOrderAlert(freshOrders.length, freshOrders[0]);
+    }
+  }catch(e){ /* silent — will retry on next interval */ }
+}
+
+function showNewOrderAlert(count, order){
+  // Red dot on the tab
+  const dot = document.getElementById('app-orders-dot');
+  if(dot) dot.style.display = 'block';
+  // Banner pop-up (skip if staff is already on the App Orders tab)
+  if(currentPosTab === 'orders'){ loadAppOrders(); return; }
+  const banner = document.getElementById('new-order-banner');
+  const text   = document.getElementById('new-order-banner-text');
+  if(text) text.textContent = count > 1 ? (count+' new orders received!') : ('New order from '+(order.name||'a customer')+'!');
+  if(banner) banner.style.display = 'block';
+  showToast('🔔 New app order received!');
+}
+
+function goToNewOrder(){
+  dismissNewOrderBanner();
+  switchPosTab('orders');
+}
+
+function dismissNewOrderBanner(){
+  const banner = document.getElementById('new-order-banner');
+  if(banner) banner.style.display = 'none';
 }
 
 function renderAppOrders(orders){
@@ -2310,6 +2378,7 @@ if(checkLogin()){
   loadStock();
   renderCart();
   initPOSListeners();
+  startNewOrderPolling();
 } else {
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('pos-app').style.display='none';

@@ -649,7 +649,8 @@ const CATALOGUE = {
     {id:'ju29',name:'Soursop Coconut',         sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]},
     {id:'ju30',name:'Strawberry Coconut',      sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]},
     {id:'ju31',name:'Mango Coconut',           sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]},
-    {id:'ju00',name:'Custom Juice',            sizes:[{l:'',p:0.00}]}
+    {id:'ju00',name:'Custom Juice',            sizes:[{l:'',p:0.00}]},
+    {id:'juCF',name:'Custom Fruit',            sizes:[{l:'',p:0.00}]}
   ],
   'Immunity Press': [
     {id:'ip01',name:'Energy',   sizes:[{l:'Bottled',p:6.40},{l:'Iced S',p:5.40}]},
@@ -1517,6 +1518,17 @@ document.addEventListener('click', function(e){
       const remark = prompt('Enter juice description (e.g. Watermelon + Mango):','') || '';
       const label = remark ? 'Custom: '+remark : 'Custom Juice';
       cart.push({id:'ju00', name:'Custom Juice', size:'', label:label, price:customPrice, qty:1, remark:remark});
+      renderCart(); return;
+    }
+    // Custom Fruit — show price + remark input
+    if(sizeBtn.dataset.pid === 'juCF'){
+      const priceStr = prompt('Custom Fruit — Enter price ($):','');
+      if(!priceStr) return;
+      const customPrice = parseFloat(priceStr);
+      if(isNaN(customPrice)||customPrice<0){ showToast('Invalid price'); return; }
+      const remark = prompt('Enter fruit description (e.g. Sliced Dragon Fruit):','') || '';
+      const label = remark ? 'Custom Fruit: '+remark : 'Custom Fruit';
+      cart.push({id:'juCF', name:'Custom Fruit', size:'', label:label, price:customPrice, qty:1, remark:remark});
       renderCart(); return;
     }
     // Custom Bowl — show price + description input

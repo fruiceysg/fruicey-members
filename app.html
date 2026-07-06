@@ -484,10 +484,10 @@ function closeOrderReceipt(){
 
 const CATALOGUE = {
   'Superfood Bowls': [
-    {id:'sb01',name:'Rainbowl Acai',        sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90}]},
-    {id:'sb02',name:'Dreamy Acai',          sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90}]},
-    {id:'sb03',name:'Nostalgic Acai',       sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90}]},
-    {id:'sb04',name:'Berry Acai',           sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90}]},
+    {id:'sb01',name:'Rainbowl Acai',        sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
+    {id:'sb02',name:'Dreamy Acai',          sizes:[{l:'Dessert',p:6.90},{l:'Meal',p:9.90},{l:'Dessert Sorbet',p:7.40},{l:'Meal Sorbet',p:10.40}]},
+    {id:'sb03',name:'Nostalgic Acai',       sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
+    {id:'sb04',name:'Berry Acai',           sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
     {id:'sb05',name:'Double Rainbowl Acai', sizes:[{l:'Regular',p:10.90},{l:'Sorbet',p:11.90}]},
     {id:'sb06',name:'Galaxy Dream Acai',    sizes:[{l:'Regular',p:9.90},{l:'Sorbet',p:10.90}]}
   ],
@@ -548,13 +548,13 @@ const CATALOGUE = {
     {id:'ju31',name:'Mango Coconut',           sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]}
   ],
   'Immunity Press': [
-    {id:'ip01',name:'Energy',   sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
+    {id:'ip01',name:'Energy',   sizes:[{l:'Bottled',p:6.40},{l:'Iced S',p:5.40}]},
     {id:'ip02',name:'Soothe',   sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
     {id:'ip03',name:'Restore',  sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
     {id:'ip04',name:'Calm',     sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
     {id:'ip05',name:'Cleanse',  sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
     {id:'ip06',name:'Defence',  sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
-    {id:'ip07',name:'Repair',   sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
+    {id:'ip07',name:'Repair',   sizes:[{l:'Bottled',p:6.40},{l:'Iced S',p:5.40}]},
     {id:'ip08',name:'Regulate', sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]}
   ],
   'Nutritional Press': [
@@ -654,6 +654,9 @@ let stockStatus   = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg
 let stampMember   = null;
 let cart          = [];
+function saveCart(){ try{ sessionStorage.setItem('fruicey_cart', JSON.stringify(cart)); }catch(e){} }
+function loadCart(){ try{ const c = sessionStorage.getItem('fruicey_cart'); if(c) cart = JSON.parse(c); }catch(e){} }
+loadCart();
 let currentCat    = '';
 let collectMode   = 'ASAP';
 let collectTime   = 'ASAP';
@@ -751,6 +754,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // Init
+  updateCartBadge();
   document.getElementById('scr-home').classList.add('active');
   document.getElementById('nav-home').classList.add('active');
   initHomeScreen();
@@ -769,9 +773,7 @@ const PRODUCT_MAP = {};
 Object.values(CATALOGUE).forEach(prods => prods.forEach(p => { PRODUCT_MAP[p.id] = p; }));
 
 function initMenu(){
-  if(currentCat) return; // already init
-  currentCat = CATS[0];
-  renderCatPills();
+  if(!currentCat){ currentCat = CATS[0]; renderCatPills(); }
   // Load stock status then render
   apiGet({action:'getStock'}).then(res=>{
     if(res.stock) stockStatus = res.stock;
@@ -876,6 +878,7 @@ document.addEventListener('click', function(e){
 });
 
 function updateCartBadge(){
+  saveCart();
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const count = cart.reduce((s,i)=>s+i.qty,0);
   const badge = document.getElementById('cart-badge');
@@ -971,9 +974,11 @@ async function checkout(){
 
 function showPayNow(order){
   const sub = parseFloat(order.total);
+  let items = order.items;
+  try{ items = typeof items==='string' ? JSON.parse(items) : (items||[]); }catch(e){ items = []; }
   document.getElementById('paynow-amount').textContent = '$'+sub.toFixed(2);
   document.getElementById('paynow-orderid').textContent = order.id;
-  document.getElementById('paynow-items').textContent = order.items.map(i=>i.qty+'x '+i.label).join(', ');
+  document.getElementById('paynow-items').textContent = items.map(i=>i.qty+'x '+i.label).join(', ');
   document.getElementById('paynow-collect').textContent = order.collectTime==='ASAP'?'ASAP':order.collectTime;
   document.getElementById('paynow-modal').classList.add('open');
 }

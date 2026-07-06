@@ -1358,6 +1358,7 @@ function switchPosTab(tab){
     if(btn){ btn.style.color = t===tab?'#8fcea1':'#aaa'; btn.style.borderBottomColor = t===tab?'#8fcea1':'transparent'; }
   });
   if(tab==='receipts'){ openReceiptsTab(); startRcptPolling(); }
+  if(tab==='menu'){ loadStock(); }
 }
 
 function clearMember(){

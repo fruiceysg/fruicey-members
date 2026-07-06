@@ -132,6 +132,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <button class="pos-tab active" id="pos-tab-menu" onclick="switchPosTab('menu')">Menu</button>
         <button class="pos-tab" id="pos-tab-member" onclick="switchPosTab('member')">Member</button>
         <button class="pos-tab" id="pos-tab-receipts" onclick="switchPosTab('receipts')">Receipts</button>
+        <button class="pos-tab" id="pos-tab-orders" onclick="switchPosTab('orders')">App Orders</button>
       </div>
       <div id="pos-view-menu" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0">
         <div id="cat-tabs" class="cat-tabs"></div>
@@ -181,6 +182,13 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button id="rcpt-alldates-btn" style="padding:9px 14px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">All dates</button>
         </div>
         <div id="rcpt-search-results" style="flex:1;overflow-y:auto;padding:0 12px 12px;font-size:12px;color:#aaa;text-align:center"></div>
+      </div>
+      <div id="pos-view-orders" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+        <div style="padding:12px;flex-shrink:0;display:flex;gap:8px;align-items:center">
+          <span style="font-size:13px;font-weight:600;color:#555">Customer app orders — tap to change status</span>
+          <button onclick="loadAppOrders()" style="margin-left:auto;padding:6px 12px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font)">Refresh</button>
+        </div>
+        <div id="app-orders-list" style="flex:1;overflow-y:auto;padding:0 12px 12px;font-size:12px;color:#aaa;text-align:center"></div>
       </div></div>
       <div class="cart-panel">
       <div class="cart-hdr">
@@ -1133,6 +1141,84 @@ function viewSaleReceipt(idx){
 }
 
 
+// ── APP ORDERS (admin status management) ──────────────────────
+const ORDER_STATUSES = ['Pending','Processing','Ready','Completed','Cancelled'];
+const STATUS_COLORS = {Pending:'#f0c040',Processing:'#1565c0',Ready:'#5aab74',Completed:'#8fcea1',Cancelled:'#e74c3c'};
+
+async function loadAppOrders(){
+  const el = document.getElementById('app-orders-list');
+  if(!el) return;
+  el.innerHTML = '<div style="padding:24px">Loading orders...</div>';
+  try{
+    const res = await apiGet({action:'getOrders'});
+    if(res.error){ el.innerHTML = '<div style="color:#e74c3c;padding:24px">Error: '+res.error+'</div>'; return; }
+    const orders = res.orders||[];
+    if(!orders.length){ el.innerHTML = '<div style="text-align:center;padding:24px;color:#aaa">No app orders yet</div>'; return; }
+    window._appOrders = orders;
+    renderAppOrders(orders);
+  }catch(e){
+    el.innerHTML = '<div style="color:#e74c3c;padding:24px">Could not connect to server.</div>';
+  }
+}
+
+function renderAppOrders(orders){
+  const el = document.getElementById('app-orders-list');
+  if(!el) return;
+  el.innerHTML = orders.map(function(o, idx){
+    let items = [];
+    try{ items = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
+    const itemsStr = items.map(function(i){ return (i.qty||1)+'x '+(i.label||i.name||''); }).join(', ');
+    const status = o.status || 'Pending';
+    const statusColor = STATUS_COLORS[status] || '#aaa';
+    const buttons = ORDER_STATUSES.filter(function(s){ return s !== status; }).map(function(s){
+      return '<button class="app-order-status-btn" data-oid="'+o.id+'" data-status="'+s+'" style="padding:5px 10px;border:1px solid '+STATUS_COLORS[s]+';border-radius:6px;background:#fff;color:'+STATUS_COLORS[s]+';cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">'+s+'</button>';
+    }).join('');
+    return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;background:#fafafa">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+      +'<span style="font-family:monospace;font-size:12px;font-weight:700;color:#333">'+o.id+'</span>'
+      +'<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+statusColor+'22;color:'+statusColor+'">'+status+'</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:#555;margin-bottom:2px"><b>'+(o.name||'')+'</b> · '+(o.phone||'')+'</div>'
+      +'<div style="font-size:11px;color:#888">'+(o.createdAt?formatDateTime(o.createdAt):'')+' · Collect: '+(o.collectTime||'ASAP')+'</div>'
+      +'<div style="font-size:11px;color:#aaa;margin:4px 0">'+itemsStr+'</div>'
+      +(o.notes?'<div style="font-size:11px;color:#e67e22;font-style:italic;margin-bottom:4px">Note: '+o.notes+'</div>':'')
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
+      +'<span style="font-size:13px;font-weight:700;color:#8fcea1">$'+parseFloat(o.total||0).toFixed(2)+'</span>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+buttons+'</div>'
+      +'</div></div>';
+  }).join('');
+}
+
+function formatDateTime(s){
+  if(!s) return '';
+  try{
+    const d = new Date(s);
+    if(isNaN(d.getTime())) return String(s);
+    return d.toLocaleDateString('en-SG',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){ return String(s); }
+}
+
+async function updateAppOrderStatus(orderId, newStatus){
+  try{
+    const res = await apiPost({action:'updateOrderStatus', id:orderId, status:newStatus});
+    if(res.success){
+      showToast('Order '+orderId+' marked '+newStatus);
+      loadAppOrders();
+    } else {
+      showToast('Could not update order status');
+    }
+  }catch(e){
+    showToast('Connection error');
+  }
+}
+
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('.app-order-status-btn');
+  if(btn && btn.dataset.oid){
+    updateAppOrderStatus(btn.dataset.oid, btn.dataset.status);
+  }
+});
+
 // ── RECEIPTS TAB ─────────────────────────────────────────────
 async function openReceiptsTab(){
   var el = document.getElementById('rcpt-search-results');
@@ -1351,7 +1437,7 @@ function clearMemberDisplay(){document.getElementById('member-result').style.dis
 var currentPosTab = 'menu';
 function switchPosTab(tab){
   currentPosTab = tab;
-  ['menu','member','receipts'].forEach(function(t){
+  ['menu','member','receipts','orders'].forEach(function(t){
     var view = document.getElementById('pos-view-'+t);
     var btn  = document.getElementById('pos-tab-'+t);
     if(view) view.style.display = t===tab?'flex':'none';
@@ -1359,6 +1445,7 @@ function switchPosTab(tab){
   });
   if(tab==='receipts'){ openReceiptsTab(); startRcptPolling(); }
   if(tab==='menu'){ loadStock(); }
+  if(tab==='orders'){ loadAppOrders(); }
 }
 
 function clearMember(){

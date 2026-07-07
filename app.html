@@ -232,7 +232,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
     <div class="card-title">Opening Hours</div>
     <div style="font-size:13px;color:var(--text2);line-height:2">
       <div style="display:flex;justify-content:space-between"><span>Monday – Saturday</span><span style="font-weight:600">11:30am – 8:30pm</span></div>
-      <div style="display:flex;justify-content:space-between;color:#e74c3c"><span>Sunday</span><span>Closed</span></div>
+      <div style="display:flex;justify-content:space-between"><span>Monday – Saturday</span><span style="font-weight:600">11:00am – 8:00pm</span></div>
     </div>
     <div style="margin-top:10px;font-size:12px;color:var(--text3)">Self-collection only. Pre-orders via PayNow.</div>
   </div>
@@ -267,7 +267,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
       </div>
       <div id="time-slots-row" style="display:none;margin-bottom:12px">
         <div style="font-size:12px;color:var(--text3);margin-bottom:6px">Select a time slot (Mon-Sat, 11:30am–8:30pm)</div>
-        <div id="time-slots-container" class="time-slots"></div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px">Select a time slot (Mon-Sat, 11:00am–8:00pm)</div>
       </div>
       <div class="field">
         <label>Special requests (optional)</label>
@@ -954,11 +954,10 @@ function renderCartItems(){
 // ── COLLECTION TIME ───────────────────────────────────────────
 function renderTimeSlots(){
   const slots = [];
-  // Generate 30-min slots from 11:30 to 20:30
+  // Generate 30-min slots from 11:00 to 20:00
   for(let h=11;h<=20;h++){
     for(let m=0;m<60;m+=30){
-      if(h===11&&m<30) continue;
-      if(h===20&&m>30) continue;
+      if(h===20&&m>0) continue;
       const label = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
       slots.push(label);
     }

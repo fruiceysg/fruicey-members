@@ -2390,7 +2390,17 @@ if(checkLogin()){
 async function loadStock(){
   try{
     const res = await apiGet({action:'getStock'});
-    if(res.stock) stockStatus = res.stock;
+    if(res.stock){
+      // Initialize fresh stock status object
+      stockStatus = {};
+      
+      // Ensure all values are proper booleans
+      Object.keys(res.stock).forEach(id => {
+        const val = res.stock[id];
+        // Parse any representation (true, 'true', false, 'false') to boolean
+        stockStatus[id] = (val === true || val === 'true');
+      });
+    }
   }catch(e){ console.log('Could not load stock'); }
   renderProducts();
 }

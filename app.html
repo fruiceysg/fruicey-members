@@ -63,6 +63,16 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .err{color:#e74c3c;font-size:12px;margin-top:6px;display:none}
 .ok{color:var(--green-dark);font-size:12px;margin-top:6px;display:none}
 
+.logout-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center}
+.logout-modal{background:#fff;border-radius:16px;padding:32px 24px;text-align:center;width:280px;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
+.logout-modal img{height:60px;margin-bottom:12px}
+.logout-modal .babydoll{font-size:20px;color:var(--green);margin-bottom:8px}
+.logout-modal p{font-size:13px;color:var(--text2);margin-bottom:20px}
+.logout-modal .btn-row{display:flex;gap:10px}
+.logout-modal .btn-row button{flex:1;padding:10px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--body)}
+.logout-modal .btn-cancel{background:#f0f0f0;color:var(--text)}
+.logout-modal .btn-logout{background:#e74c3c;color:#fff}
+  
 /* HOME */
 .home-hero{padding:0;position:relative;overflow:hidden}
 .hero-banner{position:relative;width:100%;aspect-ratio:1600/493;overflow:hidden;background:#f5f5f7}
@@ -1381,12 +1391,18 @@ async function loadAccount(){
 }
 
 function logout(){
-  if(!confirm('Log out?')) return;
+  document.getElementById('logout-modal').style.display='flex';
+}
+function closeLogoutModal(){
+  document.getElementById('logout-modal').style.display='none';
+}
+function confirmLogout(){
+  closeLogoutModal();
   currentUser=null; cart=[];
   sessionStorage.removeItem('fruicey_user');
   updateCartBadge();
   goTab('home');
-  showToast('Logged out.');
+  document.getElementById('home-greeting').textContent = 'Welcome to Fruicey!';
 }
 
 
@@ -1440,6 +1456,20 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
   </div>
 </div>
+
+<!-- LOGOUT MODAL -->
+<div class="logout-modal-bg" id="logout-modal" style="display:none" onclick="if(event.target===this)closeLogoutModal()">
+  <div class="logout-modal">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAB4CAYAAABIFc8gAACcZ0lEQVR4nOz9SZBlx3XnDf58uMObYsyInDMxJWZwAiVKACWVQH1VguobKFm3CTJrE7QiV6I2ojZFrYq1KWojakUu2kRtiuw2K9K6v09kW7XIGgiQopAcMRGZSOQ8RGSMb7qDu59e+H0vXmQCJEBKHL7OA3uIyPdu3OfXr9/jZ/if/1Eiwh25I3fkjvwyiP55D+CO3JE7ckfertxRWHfkjtyRXxq5o7DuyB25I780ckdh3ZE7ckd+aeSOwrojd+SO/NLIHYV1R+7IHfmlkTsK647ckTvySyN3FNYduSN35JdG7iisO3JH7sgvjdxRWHfkjtyRXxq5o7DuyB25I780ckdh3ZE7ckd+aeSOwrojd+SO/NKIhTDzz/36S4D1Y04gxDPoyf/X3Xbu/5vbBaxdu9n2v37G2y5g7drNtv/1M972v/8/B0oM1C7z3yMAAAAASUVORK5CYII=" alt="Fruicey" style="height:36px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto">
+    <div class="babydoll">See you soon!</div>
+    <p>Are you sure you want to log out?</p>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+      <button class="btn-logout" onclick="confirmLogout()">Log Out</button>
+    </div>
+  </div>
+</div>  
+  
 <!-- QR CAMERA SCANNER MODAL -->
 <div class="qr-scanner-modal" id="qr-scanner-modal">
   <button class="qr-scanner-close" onclick="closeQRScanner()">✕</button>

@@ -834,6 +834,9 @@ function renderCatPills(){
     const style = isActive ? ' style="background:'+color+';border-color:'+color+';color:#fff"' : '';
     return '<button class="cat-pill'+(isActive?' active':'')+'"'+style+' data-cat="'+encodeURIComponent(c)+'">'+c+'</button>';
   }).join('');
+  // Auto-scroll active pill into view
+  const active = el.querySelector('.cat-pill.active');
+  if(active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
 }
 
 function renderProducts(){

@@ -71,7 +71,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .hero-banner-dots{position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:center;gap:6px;z-index:2}
 .hero-banner-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);transition:background .2s}
 .hero-banner-dot.active{background:#fff}
-.home-hero h1{font-family:var(--font);font-size:28px;margin-bottom:4px}
+.home-hero h1{font-family:var(--font);font-size:28px;position:absolute;bottom:16px;left:20px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.5);margin:0}
 .home-hero p{font-size:13px;opacity:.9}
 .hero-star{position:absolute;right:-60px;bottom:-60px;width:220px;opacity:.15;transform:rotate(30deg)}
 .quick-links{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px}
@@ -206,6 +206,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 <div class="screen" id="scr-home">
 <div class="home-hero">
   <img src="https://lh3.googleusercontent.com/d/1YpXxWMujS-eS4rDWxkG2NgdO80HmZVeB=w1200" style="width:100%;display:block" alt="Fruicey">
+  <h1 id="home-greeting">Welcome to Fruicey!</h1>
 </div>
   
 

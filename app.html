@@ -1387,31 +1387,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 const CAT_COLORS = {'Shakes & Smoothies':'#6796ce','Juices':'#86b3d4','Superfood Bowls':'#7f88b3','Immunity Press':'#99d1b4','Nutritional Press':'#f0da75','Wellness Press':'#dd8581','Longevity Press':'#de9f4f'}
-// ── SWIPE BETWEEN MENU CATEGORIES ────────────────────────────
-(function(){
-  let touchStartX = 0;
-  let touchEndX = 0;
-  const grid = document.getElementById('product-grid');
-  
-  grid.addEventListener('touchstart', function(e){
-    touchStartX = e.changedTouches[0].screenX;
-  }, {passive:true});
-  
-  grid.addEventListener('touchend', function(e){
-    touchEndX = e.changedTouches[0].screenX;
-    const diff = touchStartX - touchEndX;
-    if(Math.abs(diff) < 60) return;
-    
-    const idx = CATS.indexOf(currentCat);
-    if(diff > 0 && idx < CATS.length - 1){
-      currentCat = CATS[idx + 1];
-      renderCatPills(); renderProducts();
-    } else if(diff < 0 && idx > 0){
-      currentCat = CATS[idx - 1];
-      renderCatPills(); renderProducts();
-    }
-  }, {passive:true});
-})();
 </script>
 
 <!-- ORDER RECEIPT MODAL -->

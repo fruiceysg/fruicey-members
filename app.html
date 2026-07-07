@@ -974,7 +974,7 @@ function renderTimeSlots(){
     '<div class="time-slot'+(collectTime===t?' selected':'')+'" data-time="'+t+'">'+t+'</div>'
   ).join('');
 }
-
+  
 document.addEventListener('click', function(e){
   const collectOpt = e.target.closest('.collect-opt');
   if(collectOpt){

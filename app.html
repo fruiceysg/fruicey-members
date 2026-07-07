@@ -727,7 +727,8 @@ function goTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('scr-'+tab).classList.add('active');
   document.getElementById('nav-'+tab).classList.add('active');
-  currentScreen = tab;
+currentScreen = tab;
+  if(tab==='home')    initHomeScreen();
   if(tab==='menu')    initMenu();
   if(tab==='orders')  loadOrders();
   if(tab==='rewards') loadRewards();

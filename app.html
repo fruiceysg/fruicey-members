@@ -1571,6 +1571,13 @@ function toggleCreditCheckout(){
   }
 }
 
+// Auto-refresh credit balance every 30 seconds when on Account tab
+setInterval(function(){
+  if(currentUser && document.getElementById('scr-account') && document.getElementById('scr-account').style.display !== 'none'){
+    loadUserCredit();
+  }
+}, 30000);
+
 const CAT_COLORS = {'Shakes & Smoothies':'#6796ce','Juices':'#86b3d4','Superfood Bowls':'#7f88b3','Immunity Press':'#99d1b4','Nutritional Press':'#f0da75','Wellness Press':'#dd8581','Longevity Press':'#de9f4f'}
 // ── SWIPE BETWEEN MENU CATEGORIES ────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){

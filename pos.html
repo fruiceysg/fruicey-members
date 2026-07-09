@@ -1924,6 +1924,7 @@ function clearCart(){
 // ── CREDIT PAYMENT ──────────────────────────────────────────────────
 let posCreditBalance = 0;
 let posCreditPhone = '';
+let posCreditUse = 0;
 
 async function selectCreditPayment(){
   // Need a member linked to use credit
@@ -1939,23 +1940,34 @@ async function selectCreditPayment(){
     posCreditBalance = parseFloat(res.balance||0);
     posCreditPhone = np(currentMember.phone);
     if(posCreditBalance <= 0){ showToast('This member has $0 credit balance'); return; }
-    // Select Credit as payment method
-    paymentMethod = 'Credit';
-    document.querySelectorAll('.pay-btn').forEach(b=>{b.classList.remove('selected');if(b.dataset.method==='Credit')b.classList.add('selected');});
-    // Show credit info
+    // Calculate credit usage
     const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
     const disc = memberDiscount>0?+(sub*memberDiscount/100).toFixed(2):0;
     const total = +(sub-disc).toFixed(2);
-    const creditUse = Math.min(posCreditBalance, total);
-    const remaining = +(total - creditUse).toFixed(2);
+    posCreditUse = Math.min(posCreditBalance, total);
+    const remaining = +(total - posCreditUse).toFixed(2);
+    // Show credit info
     const info = document.getElementById('pos-credit-info');
     if(remaining > 0){
-      info.innerHTML = '<b>'+currentMember.first+'</b> has <b style="color:#f39c12">$'+posCreditBalance.toFixed(2)+'</b> credit. Will deduct <b>$'+creditUse.toFixed(2)+'</b>. Remaining <b style="color:#e74c3c">$'+remaining.toFixed(2)+'</b> to be paid separately.';
+      info.innerHTML = '<b>'+currentMember.first+'</b> has <b style="color:#f39c12">$'+posCreditBalance.toFixed(2)+'</b> credit. Will deduct <b>$'+posCreditUse.toFixed(2)+'</b>.<br>Remaining <b style="color:#e74c3c">$'+remaining.toFixed(2)+'</b> — select payment method below for the balance.';
+      // Don't auto-select Credit as sole payment — let staff pick remaining method
+      paymentMethod = '';
+      document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('selected'));
     } else {
       info.innerHTML = '<b>'+currentMember.first+'</b> has <b style="color:#f39c12">$'+posCreditBalance.toFixed(2)+'</b> credit. Order <b style="color:#27ae60">fully covered</b>.';
+      paymentMethod = 'Credit';
+      document.querySelectorAll('.pay-btn').forEach(b=>{b.classList.remove('selected');if(b.dataset.method==='Credit')b.classList.add('selected');});
     }
     info.style.display = 'block';
   }catch(e){ showToast('Error checking credit balance'); }
+}
+
+function resetCreditState(){
+  posCreditBalance = 0;
+  posCreditPhone = '';
+  posCreditUse = 0;
+  var info = document.getElementById('pos-credit-info');
+  if(info) info.style.display = 'none';
 }
 
 // ── CHECKOUT ─────────────────────────────────────────────────────────
@@ -1987,13 +1999,19 @@ async function checkout(){
     };
     // Save to Sheets (Sheets is the ONLY source of truth)
     try{
-      // Deduct credit if payment method is Credit
-      if(paymentMethod === 'Credit' && posCreditPhone){
-        const creditUse = Math.min(posCreditBalance, total);
-        if(creditUse > 0){
-          await apiPost({action:'deductCredit', phone:posCreditPhone, amount:creditUse, desc:'POS Sale '+sale.rcptNo});
-          sale.creditUsed = creditUse;
-          sale.creditRemaining = +(total - creditUse).toFixed(2);
+      // Deduct credit if credit was used (split or full)
+      if(posCreditUse > 0 && posCreditPhone){
+        const creditRes = await apiPost({action:'deductCredit', phone:posCreditPhone, amount:posCreditUse, desc:'POS Sale '+sale.rcptNo});
+        if(creditRes.success){
+          sale.creditUsed = posCreditUse;
+          sale.creditRemaining = +(total - posCreditUse).toFixed(2);
+          sale.newCreditBalance = creditRes.newBalance;
+          // For split payment, label payment as "Credit + X"
+          if(posCreditUse < total && paymentMethod && paymentMethod !== 'Credit'){
+            sale.payment = 'Credit+'+paymentMethod;
+          } else {
+            sale.payment = 'Credit';
+          }
         }
       }
       if(currentMember && currentMember.phone && !isOnline){
@@ -2075,6 +2093,9 @@ function showReceipt(sale,changeDue,cashTendered){
     +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#27ae60;margin-bottom:3px"><span>Discount</span><span>-$'+disc.toFixed(2)+'</span></div>':'')
     +'<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;margin-bottom:6px"><span>Total Amount</span><span style="color:#E91E8C">$'+total.toFixed(2)+'</span></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span>Payment Mode</span><span style="font-weight:600">'+sale.payment+'</span></div>'
+    +(sale.creditUsed?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#f39c12;margin-bottom:3px"><span>Credit Used</span><span>-$'+(+sale.creditUsed).toFixed(2)+'</span></div>':'')
+    +(sale.creditUsed&&sale.creditRemaining>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span>Balance Paid</span><span>$'+(+sale.creditRemaining).toFixed(2)+'</span></div>':'')
+    +(sale.newCreditBalance!==undefined?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px"><span>Credit Balance</span><span>$'+(+sale.newCreditBalance).toFixed(2)+'</span></div>':'')
     +(sale.payment==='Cash'?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:2px"><span>Cash Tendered</span><span>$'+cashTendered.toFixed(2)+'</span></div><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#27ae60"><span>Change Due</span><span>$'+changeDue.toFixed(2)+'</span></div>':'')
     +'</div>'
     +'<div style="text-align:center;margin-top:14px;padding-top:10px;border-top:2px dashed #ddd;font-size:10px;color:#888;line-height:1.8">Thank You For Visiting Fruicey!<br><b style="color:#555">www.fruicey.sg</b></div>'
@@ -2094,6 +2115,8 @@ function closeReceipt(){
     return;
   }
   cart=[]; paymentMethod='';
+  // Reset credit state
+  resetCreditState();
   // Auto-clear member after tender
   currentMember=null; memberDiscount=0;
   memberPhoneVal='';
@@ -2567,14 +2590,22 @@ setInterval(function(){
   }).catch(function(){});
 }, 30000);
 
-// Clear credit info when payment method changes
+// Clear credit info when payment method changes (but keep credit if split payment)
 document.addEventListener('click', function(e){
   var payBtn = e.target.closest('.pay-btn');
   if(payBtn && payBtn.dataset.method !== 'Credit'){
-    var info = document.getElementById('pos-credit-info');
-    if(info) info.style.display = 'none';
-    posCreditBalance = 0;
-    posCreditPhone = '';
+    // If credit is active (split payment), don't clear — just select the remaining payment method
+    if(posCreditUse > 0){
+      paymentMethod = payBtn.dataset.method;
+      document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('selected'));
+      payBtn.classList.add('selected');
+    } else {
+      var info = document.getElementById('pos-credit-info');
+      if(info) info.style.display = 'none';
+      posCreditBalance = 0;
+      posCreditPhone = '';
+      posCreditUse = 0;
+    }
   }
 });
 

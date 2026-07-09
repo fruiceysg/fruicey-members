@@ -138,6 +138,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <button class="pos-tab" id="pos-tab-member" onclick="switchPosTab('member')">Member</button>
         <button class="pos-tab" id="pos-tab-receipts" onclick="switchPosTab('receipts')">Receipts</button>
         <button class="pos-tab" id="pos-tab-orders" onclick="switchPosTab('orders')" style="position:relative">App Orders<span id="app-orders-dot" style="display:none;position:absolute;top:4px;right:4px;width:9px;height:9px;background:#e74c3c;border-radius:50%;box-shadow:0 0 0 2px #fff"></span></button>
+        <button class="pos-tab" id="pos-tab-credit" onclick="switchPosTab('credit')" style="position:relative">Credit<span id="credit-dot" style="display:none;position:absolute;top:4px;right:4px;width:9px;height:9px;background:#f39c12;border-radius:50%;box-shadow:0 0 0 2px #fff"></span></button>
       </div>
       <div id="pos-view-menu" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0">
         <div id="cat-tabs" class="cat-tabs"></div>
@@ -194,6 +195,13 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button onclick="loadAppOrders()" style="margin-left:auto;padding:6px 12px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font)">Refresh</button>
         </div>
         <div id="app-orders-list" style="flex:1;overflow-y:auto;padding:0 12px 12px;font-size:12px;color:#aaa;text-align:center"></div>
+      </div>
+      <div id="pos-view-credit" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+        <div style="padding:12px;flex-shrink:0;display:flex;gap:8px;align-items:center">
+          <span style="font-size:13px;font-weight:600;color:#555">Pending Credit Deposits</span>
+          <button onclick="loadPendingDeposits()" style="margin-left:auto;padding:6px 12px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font)">Refresh</button>
+        </div>
+        <div id="pending-deposits-list" style="flex:1;overflow-y:auto;padding:0 12px 12px;font-size:12px;color:#aaa;text-align:center"></div>
       </div></div>
       <div class="cart-panel">
       <div class="cart-hdr">
@@ -212,7 +220,9 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button class="pay-btn" data-method="GrabFood" style="color:#00B14F;border-color:#00B14F"><i class="ti ti-bike"></i> GrabFood</button>
           <button class="pay-btn" data-method="FoodPanda" style="color:#D70F64;border-color:#D70F64"><i class="ti ti-bike"></i> FoodPanda</button>
           <button class="pay-btn" data-method="Online Shop" style="color:#6796ce;border-color:#6796ce"><i class="ti ti-world"></i> Online Shop</button>
+          <button class="pay-btn" data-method="Credit" style="color:#f39c12;border-color:#f39c12" onclick="selectCreditPayment()"><i class="ti ti-wallet"></i> Credit</button>
         </div>
+        <div id="pos-credit-info" style="display:none;background:#fef9e7;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px"></div>
         <button class="charge-btn" id="checkout-btn">Tender</button>
       </div>
     </div>
@@ -1505,7 +1515,7 @@ function clearMemberDisplay(){document.getElementById('member-result').style.dis
 var currentPosTab = 'menu';
 function switchPosTab(tab){
   currentPosTab = tab;
-  ['menu','member','receipts','orders'].forEach(function(t){
+  ['menu','member','receipts','orders','credit'].forEach(function(t){
     var view = document.getElementById('pos-view-'+t);
     var btn  = document.getElementById('pos-tab-'+t);
     if(view) view.style.display = t===tab?'flex':'none';
@@ -1514,6 +1524,7 @@ function switchPosTab(tab){
   if(tab==='receipts'){ openReceiptsTab(); startRcptPolling(); }
   if(tab==='menu'){ loadStock(); }
   if(tab==='orders'){ loadAppOrders(); }
+  if(tab==='credit'){ loadPendingDeposits(); }
 }
 
 function clearMember(){
@@ -1910,6 +1921,43 @@ function clearCart(){
   renderCart();
 }
 
+// ── CREDIT PAYMENT ──────────────────────────────────────────────────
+let posCreditBalance = 0;
+let posCreditPhone = '';
+
+async function selectCreditPayment(){
+  // Need a member linked to use credit
+  if(!currentMember){
+    showToast('Link a member first to use Credit');
+    switchPosTab('member');
+    return;
+  }
+  // Fetch credit balance
+  try{
+    const res = await apiGet({action:'getMemberCredit', phone:np(currentMember.phone)});
+    if(res.error === 'not_found'){ showToast('No credit account found for this member'); return; }
+    posCreditBalance = parseFloat(res.balance||0);
+    posCreditPhone = np(currentMember.phone);
+    if(posCreditBalance <= 0){ showToast('This member has $0 credit balance'); return; }
+    // Select Credit as payment method
+    paymentMethod = 'Credit';
+    document.querySelectorAll('.pay-btn').forEach(b=>{b.classList.remove('selected');if(b.dataset.method==='Credit')b.classList.add('selected');});
+    // Show credit info
+    const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
+    const disc = memberDiscount>0?+(sub*memberDiscount/100).toFixed(2):0;
+    const total = +(sub-disc).toFixed(2);
+    const creditUse = Math.min(posCreditBalance, total);
+    const remaining = +(total - creditUse).toFixed(2);
+    const info = document.getElementById('pos-credit-info');
+    if(remaining > 0){
+      info.innerHTML = '<b>'+currentMember.first+'</b> has <b style="color:#f39c12">$'+posCreditBalance.toFixed(2)+'</b> credit. Will deduct <b>$'+creditUse.toFixed(2)+'</b>. Remaining <b style="color:#e74c3c">$'+remaining.toFixed(2)+'</b> to be paid separately.';
+    } else {
+      info.innerHTML = '<b>'+currentMember.first+'</b> has <b style="color:#f39c12">$'+posCreditBalance.toFixed(2)+'</b> credit. Order <b style="color:#27ae60">fully covered</b>.';
+    }
+    info.style.display = 'block';
+  }catch(e){ showToast('Error checking credit balance'); }
+}
+
 // ── CHECKOUT ─────────────────────────────────────────────────────────
 async function checkout(){
   if(!cart.length){showToast('Cart is empty');return;}
@@ -1939,6 +1987,15 @@ async function checkout(){
     };
     // Save to Sheets (Sheets is the ONLY source of truth)
     try{
+      // Deduct credit if payment method is Credit
+      if(paymentMethod === 'Credit' && posCreditPhone){
+        const creditUse = Math.min(posCreditBalance, total);
+        if(creditUse > 0){
+          await apiPost({action:'deductCredit', phone:posCreditPhone, amount:creditUse, desc:'POS Sale '+sale.rcptNo});
+          sale.creditUsed = creditUse;
+          sale.creditRemaining = +(total - creditUse).toFixed(2);
+        }
+      }
       if(currentMember && currentMember.phone && !isOnline){
         await apiPost({
           action:'recordMemberSpend',
@@ -2447,6 +2504,75 @@ document.getElementById('member-phone').addEventListener('keydown', function(e){
 document.getElementById('print-btn').addEventListener('click', printReceipt);
 // Receipts tab search/date/all-dates now wired via global delegated listeners below
 }
+
+// ── CREDIT DEPOSIT MANAGEMENT ────────────────────────────────────────
+async function loadPendingDeposits(){
+  var list = document.getElementById('pending-deposits-list');
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb">Loading...</div>';
+  try{
+    var res = await apiGet({action:'getPendingDeposits'});
+    var deposits = res.deposits||[];
+    var dot = document.getElementById('credit-dot');
+    if(dot) dot.style.display = deposits.length ? 'block' : 'none';
+    if(!deposits.length){
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb">No pending deposits</div>';
+      return;
+    }
+    list.innerHTML = deposits.map(function(d){
+      return '<div style="background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:12px;margin-bottom:8px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+        +'<div><b>'+d.name+'</b><span style="color:#999;font-size:11px;margin-left:6px">'+d.phone+'</span></div>'
+        +'<div style="font-size:18px;font-weight:700;color:#f39c12">$'+parseFloat(d.amount).toFixed(2)+'</div>'
+        +'</div>'
+        +'<div style="font-size:11px;color:#999;margin-bottom:8px">Requested: '+d.createdAt+'</div>'
+        +'<div style="display:flex;gap:6px">'
+        +'<button onclick="approveDep(\''+d.id+'\')" style="flex:1;padding:8px;background:#27ae60;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px">✓ Approve</button>'
+        +'<button onclick="rejectDep(\''+d.id+'\')" style="flex:1;padding:8px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px">✕ Reject</button>'
+        +'</div></div>';
+    }).join('');
+  }catch(e){ list.innerHTML = '<div style="padding:20px;text-align:center;color:#e74c3c">Error loading deposits</div>'; }
+}
+
+async function approveDep(id){
+  if(!confirm('Approve this deposit? Make sure PayNow payment was received.')) return;
+  try{
+    var res = await apiPost({action:'approveDeposit', id:id});
+    if(res.success){
+      showToast('Deposit approved! New balance: $'+parseFloat(res.newBalance).toFixed(2));
+      loadPendingDeposits();
+    } else { showToast(res.error||'Error approving'); }
+  }catch(e){ showToast('Connection error'); }
+}
+
+async function rejectDep(id){
+  if(!confirm('Reject this deposit?')) return;
+  try{
+    var res = await apiPost({action:'rejectDeposit', id:id});
+    if(res.success){
+      showToast('Deposit rejected');
+      loadPendingDeposits();
+    } else { showToast(res.error||'Error rejecting'); }
+  }catch(e){ showToast('Connection error'); }
+}
+
+// Poll for pending deposits every 30 seconds
+setInterval(function(){
+  apiGet({action:'getPendingDeposits'}).then(function(res){
+    var dot = document.getElementById('credit-dot');
+    if(dot) dot.style.display = (res.deposits&&res.deposits.length) ? 'block' : 'none';
+  }).catch(function(){});
+}, 30000);
+
+// Clear credit info when payment method changes
+document.addEventListener('click', function(e){
+  var payBtn = e.target.closest('.pay-btn');
+  if(payBtn && payBtn.dataset.method !== 'Credit'){
+    var info = document.getElementById('pos-credit-info');
+    if(info) info.style.display = 'none';
+    posCreditBalance = 0;
+    posCreditPhone = '';
+  }
+});
 
 </script>
 </body>

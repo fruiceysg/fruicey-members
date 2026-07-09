@@ -276,6 +276,15 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
         <textarea id="order-notes" rows="2" placeholder="e.g. Less ice, no sugar..." style="width:100%;padding:8px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;resize:none"></textarea>
       </div>
       <div class="total-row"><span>Total</span><span id="cart-total-val">$0.00</span></div>
+      <div id="credit-checkout-row" style="display:none;background:#f0faf3;border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <label style="font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="use-credit-cb" onchange="toggleCreditCheckout()"> Use Fruicey Credit
+          </label>
+          <span style="font-size:13px;font-weight:600;color:var(--green)" id="credit-avail-label">$0.00</span>
+        </div>
+        <div id="credit-split-info" style="display:none;font-size:12px;color:var(--text3);margin-top:6px"></div>
+      </div>
       <button class="btn btn-primary" id="checkout-btn" onclick="checkout()">Place Order & Pay via PayNow</button>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="closeCart()">Continue shopping</button>
     </div>
@@ -365,6 +374,17 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
     <div class="card-title">Profile</div>
     <div class="info-row"><span class="info-label">Email</span><span class="info-val" id="acc-email"></span></div>
     <div class="info-row"><span class="info-label">Phone</span><span class="info-val" id="acc-phone2"></span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Fruicey Credit</div>
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:32px;font-weight:700;color:var(--green)" id="acc-credit-balance">$0.00</div>
+      <div style="font-size:12px;color:var(--text3)">Available balance</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary" style="flex:1;font-size:13px" onclick="openAddCredit()">Add Credit</button>
+      <button class="btn btn-secondary" style="flex:1;font-size:13px" onclick="openCreditHistory()">History</button>
+    </div>
   </div>
   <div class="card" style="padding:0;overflow:hidden">
     <div class="info-row" style="padding:14px 16px;cursor:pointer" onclick="goTab('orders')"><span>My Orders</span><i class="ti ti-chevron-right" style="color:var(--text3)"></i></div>
@@ -940,7 +960,7 @@ function updateCartBadge(){
   else { badge.classList.remove('show'); }
 }
 
-function openCart(){ renderCartItems(); document.getElementById('cart-sheet').classList.add('open'); }
+function openCart(){ renderCartItems(); loadUserCredit(); document.getElementById('cart-sheet').classList.add('open'); }
 function closeCart(){ document.getElementById('cart-sheet').classList.remove('open'); }
 
 function renderCartItems(){
@@ -1039,8 +1059,19 @@ async function checkout(){
     });
 
     if(res.success){
+      // Deduct credit if used
+      const useCreditCb = document.getElementById('use-credit-cb');
+      if(useCreditCb && useCreditCb.checked && userCreditBalance > 0){
+        const creditUse = Math.min(userCreditBalance, sub);
+        try{
+          await apiPost({action:'deductCredit', phone:currentUser.phone, amount:creditUse, desc:'Order '+res.orderId});
+          userCreditBalance = Math.max(0, userCreditBalance - creditUse);
+        }catch(e){ console.log('Credit deduction error', e); }
+      }
       const orderId = res.orderId;
       closeCart();
+      // Reset credit checkbox
+      if(useCreditCb){ useCreditCb.checked = false; toggleCreditCheckout(); }
       showPayNow(res.order);
     } else { showToast('Error placing order. Please try again.'); }
   }catch(e){ showToast('Connection error.'); }
@@ -1387,6 +1418,7 @@ async function loadAccount(){
   document.getElementById('acc-name').textContent=currentUser.first+' '+currentUser.last;
   document.getElementById('acc-phone').textContent=currentUser.phone;
   document.getElementById('acc-email').textContent=currentUser.email;
+  loadUserCredit();
 }
 
 function logout(){
@@ -1412,6 +1444,105 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
+
+// ── CREDIT ACCOUNT SYSTEM ─────────────────────────────────────
+let userCreditBalance = 0;
+
+async function loadUserCredit(){
+  if(!currentUser) return;
+  try{
+    const res = await apiGet({action:'getMemberCredit', phone:currentUser.phone});
+    if(res.balance !== undefined){
+      userCreditBalance = parseFloat(res.balance||0);
+      const el = document.getElementById('acc-credit-balance');
+      if(el) el.textContent = '$'+userCreditBalance.toFixed(2);
+      const avail = document.getElementById('credit-avail-label');
+      if(avail) avail.textContent = '$'+userCreditBalance.toFixed(2);
+      const row = document.getElementById('credit-checkout-row');
+      if(row) row.style.display = userCreditBalance > 0 ? 'block' : 'none';
+    }
+  }catch(e){ console.log('loadUserCredit error', e); }
+}
+
+function openAddCredit(){
+  if(!currentUser){ showToast('Please log in first'); return; }
+  document.getElementById('credit-amount-input').value = '';
+  document.getElementById('credit-err').textContent = '';
+  document.getElementById('add-credit-modal').classList.add('open');
+}
+function closeAddCredit(){ document.getElementById('add-credit-modal').classList.remove('open'); }
+
+async function submitCreditDeposit(){
+  const amount = parseFloat(document.getElementById('credit-amount-input').value||0);
+  if(amount < 20){ document.getElementById('credit-err').textContent = 'Minimum deposit is $20'; return; }
+  const btn = document.getElementById('credit-submit-btn');
+  btn.textContent = 'Submitting...'; btn.disabled = true;
+  try{
+    const res = await apiPost({action:'requestDeposit', phone:currentUser.phone, amount});
+    if(res.success){
+      closeAddCredit();
+      showToast('Deposit request of $'+amount.toFixed(2)+' submitted! Awaiting approval.');
+    } else {
+      document.getElementById('credit-err').textContent = res.message || res.error || 'Error submitting deposit';
+    }
+  }catch(e){ document.getElementById('credit-err').textContent = 'Connection error'; }
+  btn.textContent = 'Request Deposit'; btn.disabled = false;
+}
+
+function openCreditHistory(){
+  if(!currentUser){ showToast('Please log in first'); return; }
+  document.getElementById('credit-history-modal').classList.add('open');
+  loadCreditHistory();
+}
+function closeCreditHistory(){ document.getElementById('credit-history-modal').classList.remove('open'); }
+
+async function loadCreditHistory(){
+  const list = document.getElementById('credit-history-list');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:#bbb">Loading...</div>';
+  try{
+    const res = await apiGet({action:'getMemberCredit', phone:currentUser.phone});
+    if(!res.history || !res.history.length){
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#bbb">No transactions yet</div>';
+      return;
+    }
+    list.innerHTML = res.history.map(h => {
+      const isDeposit = h.type === 'deposit';
+      const isDeduct = h.type === 'deduct';
+      const isRefund = h.type === 'refund';
+      const color = isDeduct ? '#e74c3c' : '#27ae60';
+      const sign = isDeduct ? '' : '+';
+      const statusBadge = h.status === 'pending' ? '<span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:10px;font-size:10px;margin-left:6px">Pending</span>' : '';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0">'
+        +'<div><div style="font-size:13px;font-weight:500">'+h.desc+statusBadge+'</div>'
+        +'<div style="font-size:11px;color:#999">'+h.createdAt+'</div></div>'
+        +'<div style="font-size:14px;font-weight:600;color:'+color+'">'+sign+'$'+Math.abs(parseFloat(h.amount)).toFixed(2)+'</div>'
+        +'</div>';
+    }).join('');
+  }catch(e){ list.innerHTML = '<div style="text-align:center;padding:20px;color:#e74c3c">Error loading history</div>'; }
+}
+
+function toggleCreditCheckout(){
+  const cb = document.getElementById('use-credit-cb');
+  const info = document.getElementById('credit-split-info');
+  const btn = document.getElementById('checkout-btn');
+  if(cb.checked && userCreditBalance > 0){
+    const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+    const creditUse = Math.min(userCreditBalance, total);
+    const remaining = +(total - creditUse).toFixed(2);
+    if(remaining > 0){
+      info.style.display = 'block';
+      info.innerHTML = 'Credit: -$'+creditUse.toFixed(2)+' · Remaining: <b>$'+remaining.toFixed(2)+'</b> via PayNow';
+      btn.textContent = 'Place Order · $'+remaining.toFixed(2)+' via PayNow';
+    } else {
+      info.style.display = 'block';
+      info.innerHTML = 'Fully covered by credit!';
+      btn.textContent = 'Place Order · Paid by Credit';
+    }
+  } else {
+    info.style.display = 'none';
+    btn.textContent = 'Place Order & Pay via PayNow';
+  }
+}
 
 const CAT_COLORS = {'Shakes & Smoothies':'#6796ce','Juices':'#86b3d4','Superfood Bowls':'#7f88b3','Immunity Press':'#99d1b4','Nutritional Press':'#f0da75','Wellness Press':'#dd8581','Longevity Press':'#de9f4f'}
 // ── SWIPE BETWEEN MENU CATEGORIES ────────────────────────────
@@ -1455,6 +1586,37 @@ document.addEventListener('DOMContentLoaded', function(){
   <video class="qr-scanner-video" id="qr-scanner-video" playsinline autoplay muted></video>
   <div class="qr-scanner-frame"></div>
   <div class="qr-scanner-hint">Point your camera at the QR code shown by our crew</div>
+</div>
+
+<!-- ADD CREDIT MODAL -->
+<div class="modal-bg" id="add-credit-modal" onclick="if(event.target===this)closeAddCredit()">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Fruicey Credit</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:12px">Deposit via PayNow. Minimum $20. Staff will approve once payment is verified.</div>
+    <div class="field">
+      <label>Deposit amount ($)</label>
+      <input type="number" id="credit-amount-input" min="20" step="1" placeholder="20" style="font-size:18px;text-align:center">
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-secondary" style="flex:1;font-size:13px;min-width:60px" onclick="document.getElementById('credit-amount-input').value=20">$20</button>
+      <button class="btn btn-secondary" style="flex:1;font-size:13px;min-width:60px" onclick="document.getElementById('credit-amount-input').value=50">$50</button>
+      <button class="btn btn-secondary" style="flex:1;font-size:13px;min-width:60px" onclick="document.getElementById('credit-amount-input').value=100">$100</button>
+    </div>
+    <div class="err" id="credit-err"></div>
+    <button class="btn btn-primary" id="credit-submit-btn" onclick="submitCreditDeposit()">Request Deposit</button>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="closeAddCredit()">Cancel</button>
+  </div>
+</div>
+
+<!-- CREDIT HISTORY MODAL -->
+<div class="modal-bg" id="credit-history-modal" onclick="if(event.target===this)closeCreditHistory()">
+  <div class="modal-box" style="max-width:420px;max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Credit History</div>
+    <div id="credit-history-list" style="padding-bottom:12px"></div>
+    <button class="btn btn-secondary" onclick="closeCreditHistory()">Close</button>
+  </div>
 </div>
 
 </body>

@@ -1501,7 +1501,7 @@ async function submitCreditDeposit(){
 }
 
 function sendCreditWhatsApp(){
-  const amount = window._pendingCreditAmount || 0;
+  const amount = parseFloat(window._pendingCreditAmount) || 0;
   const msg = encodeURIComponent(
     'Hi Fruicey! I\'ve made a PayNow payment to top up my Fruicey Credit.\n'+
     'Here\'s my payment screenshot below.\n\n'+

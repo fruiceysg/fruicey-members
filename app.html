@@ -1489,6 +1489,9 @@ async function submitCreditDeposit(){
       document.getElementById('credit-step-amount').style.display = 'none';
       document.getElementById('credit-step-paynow').style.display = 'block';
       document.getElementById('credit-paynow-amount').textContent = '$'+amount.toFixed(2);
+      // Copy QR image from original PayNow modal
+      var origQR = document.querySelector('#paynow-modal .paynow-box img');
+      if(origQR) document.getElementById('credit-paynow-qr').src = origQR.src;
       window._pendingCreditAmount = amount;
     } else {
       document.getElementById('credit-err').textContent = res.message || res.error || 'Error submitting deposit';

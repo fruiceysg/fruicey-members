@@ -894,7 +894,8 @@ let _cashSale = null;
 
 function openCashModal(sale){
   _cashSale = sale;
-  const total = sale.total;
+  // Use _cashTotal for split credit+cash, otherwise full total
+  const total = sale._cashTotal !== undefined ? sale._cashTotal : sale.total;
   document.getElementById('cash-total-display').textContent = '$'+total.toFixed(2);
   document.getElementById('cash-tendered').value = '';
   document.getElementById('change-display').textContent = '$0.00';
@@ -912,7 +913,7 @@ function closeCashModal(){
 function updateChange(){
   if(!_cashSale) return;
   const tendered = parseFloat(document.getElementById('cash-tendered').value)||0;
-  const total    = _cashSale.total;
+  const total    = _cashSale._cashTotal !== undefined ? _cashSale._cashTotal : _cashSale.total;
   const change   = tendered - total;
   document.getElementById('change-display').textContent = change >= 0 ? '$'+change.toFixed(2) : '$0.00';
   document.getElementById('change-display').style.color = change >= 0 ? '#27ae60' : '#e74c3c';
@@ -922,7 +923,7 @@ function updateChange(){
 async function confirmCashTender(){
   if(!_cashSale) return;
   const tendered = parseFloat(document.getElementById('cash-tendered').value)||0;
-  const total    = _cashSale.total;
+  const total    = _cashSale._cashTotal !== undefined ? _cashSale._cashTotal : _cashSale.total;
   if(tendered < total){
     document.getElementById('cash-err').style.display = 'block';
     return;
@@ -2110,9 +2111,15 @@ async function checkout(){
       console.log('Sheet save failed — keeping local copy',e);
       salesLog.unshift(sale);
     }
-    if(paymentMethod === 'Cash'){
+    if(paymentMethod === 'Cash' || (posCreditPhone && posCreditBalance > 0 && paymentMethod === 'Cash')){
+      // For split credit+cash, show remaining amount in cash modal
+      var cashTotal = sale.total;
+      if(sale.creditUsed && sale.creditUsed > 0){
+        cashTotal = +(sale.total - sale.creditUsed).toFixed(2);
+      }
+      var cashSale = Object.assign({}, sale, {_cashTotal: cashTotal});
       closeSales();
-      openCashModal(sale);
+      openCashModal(cashSale);
     } else {
       showReceipt(sale);
     }

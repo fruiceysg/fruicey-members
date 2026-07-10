@@ -329,7 +329,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             <span style="font-size:13px;color:#f39c12">Credit</span>
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-credit">$0.00</span>
           </div>
-          <div style="font-size:11px;font-weight:600;color:#5b7db1;margin:10px 0 6px">FRUICEY APP</div>
+          <div style="font-size:11px;font-weight:600;color:#888;margin:10px 0 6px">FRUICEY APP</div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#5b7db1">App PayNow</span>
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-app-paynow">$0.00</span>
@@ -363,6 +363,28 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <button onclick="closeSettleModal()" class="btn-print">Cancel</button>
           <button onclick="confirmSettle()" class="btn-done" style="background:#dd8581">Close Day</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM ACTION MODAL -->
+  <div class="modal-bg" id="confirm-action-modal">
+    <div class="modal-box" style="max-width:340px">
+      <div class="modal-hdr">
+        <span class="modal-hdr-title" id="confirm-action-title">Confirm</span>
+        <button class="modal-close" onclick="closeConfirmModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px" id="confirm-action-icon-wrap">
+            <i class="ti ti-alert-circle" style="font-size:22px" id="confirm-action-icon"></i>
+          </div>
+          <div style="font-size:13px;color:#555;line-height:1.5" id="confirm-action-msg"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button onclick="closeConfirmModal()" class="btn-print">Cancel</button>
+          <button onclick="executeConfirmAction()" class="btn-done" id="confirm-action-btn" style="background:#8fcea1">Confirm</button>
         </div>
       </div>
     </div>
@@ -2641,26 +2663,53 @@ async function loadPendingDeposits(){
   }catch(e){ list.innerHTML = '<div style="padding:20px;text-align:center;color:#e74c3c">Error loading deposits</div>'; }
 }
 
+// ── CONFIRM ACTION MODAL ─────────────────────────────────────────
+var _confirmCallback = null;
+function showConfirmModal(title, msg, btnLabel, btnColor, iconBg, iconColor, callback){
+  document.getElementById('confirm-action-title').textContent = title;
+  document.getElementById('confirm-action-msg').innerHTML = msg;
+  document.getElementById('confirm-action-btn').textContent = btnLabel;
+  document.getElementById('confirm-action-btn').style.background = btnColor;
+  document.getElementById('confirm-action-icon-wrap').style.background = iconBg;
+  document.getElementById('confirm-action-icon').style.color = iconColor;
+  _confirmCallback = callback;
+  document.getElementById('confirm-action-modal').classList.add('open');
+}
+function closeConfirmModal(){ document.getElementById('confirm-action-modal').classList.remove('open'); _confirmCallback=null; }
+function executeConfirmAction(){ if(_confirmCallback){ _confirmCallback(); } closeConfirmModal(); }
+
 async function approveDep(id){
-  if(!confirm('Approve this deposit? Make sure PayNow payment was received.')) return;
-  try{
-    var res = await apiPost({action:'approveDeposit', id:id});
-    if(res.success){
-      showToast('Deposit approved! New balance: $'+parseFloat(res.newBalance).toFixed(2));
-      loadPendingDeposits();
-    } else { showToast(res.error||'Error approving'); }
-  }catch(e){ showToast('Connection error'); }
+  showConfirmModal(
+    'Approve Deposit',
+    'Approve this credit deposit?<br><br><span style="font-size:12px;color:#888">Make sure PayNow payment was received before approving.</span>',
+    'Approve', '#27ae60', '#f0faf4', '#27ae60',
+    async function(){
+      try{
+        var res = await apiPost({action:'approveDeposit', id:id});
+        if(res.success){
+          showToast('Deposit approved! New balance: $'+parseFloat(res.newBalance).toFixed(2));
+          loadPendingDeposits();
+        } else { showToast(res.error||'Error approving'); }
+      }catch(e){ showToast('Connection error'); }
+    }
+  );
 }
 
 async function rejectDep(id){
-  if(!confirm('Reject this deposit?')) return;
-  try{
-    var res = await apiPost({action:'rejectDeposit', id:id});
-    if(res.success){
-      showToast('Deposit rejected');
-      loadPendingDeposits();
-    } else { showToast(res.error||'Error rejecting'); }
-  }catch(e){ showToast('Connection error'); }
+  showConfirmModal(
+    'Reject Deposit',
+    'Are you sure you want to reject this deposit?<br><br><span style="font-size:12px;color:#888">This cannot be undone.</span>',
+    'Reject', '#e74c3c', '#fef0f0', '#e74c3c',
+    async function(){
+      try{
+        var res = await apiPost({action:'rejectDeposit', id:id});
+        if(res.success){
+          showToast('Deposit rejected');
+          loadPendingDeposits();
+        } else { showToast(res.error||'Error rejecting'); }
+      }catch(e){ showToast('Connection error'); }
+    }
+  );
 }
 
 // Poll for pending deposits every 30 seconds

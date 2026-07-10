@@ -312,6 +312,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <div style="font-size:12px;color:#888" id="settle-date-label"></div>
         </div>
         <div style="background:#f8f8f8;border-radius:10px;padding:14px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px">IN-STORE</div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#555">Cash</span>
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-cash">$0.00</span>
@@ -325,35 +326,33 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-card">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
-            <span style="font-size:13px;color:#555;padding-left:12px">MDR (—)</span>
-            <div style="display:flex;align-items:center;gap:4px">
-              <span style="font-size:13px;color:#aaa">$</span>
-              <input type="number" id="settle-mdr" min="0" step="0.01" placeholder="0.00" oninput="updateSettleTotal()" style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
-            </div>
+            <span style="font-size:13px;color:#f39c12">Credit</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-credit">$0.00</span>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#5b7db1;margin:10px 0 6px">FRUICEY APP</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#5b7db1">App PayNow</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-app-paynow">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
-            <span style="font-size:13px;color:#00B14F">Grab</span>
-            <div style="display:flex;align-items:center;gap:4px">
-              <span style="font-size:13px;color:#aaa">$</span>
-              <input type="number" id="settle-grab" min="0" step="0.01" placeholder="0.00" oninput="updateSettleTotal()" style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
-            </div>
+            <span style="font-size:13px;color:#f39c12">App Credit</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-app-credit">$0.00</span>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#888;margin:10px 0 6px">PLATFORMS</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#00B14F">GrabFood</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-grab">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
-            <span style="font-size:13px;color:#D70F64">Foodpanda</span>
-            <div style="display:flex;align-items:center;gap:4px">
-              <span style="font-size:13px;color:#aaa">$</span>
-              <input type="number" id="settle-foodpanda" min="0" step="0.01" placeholder="0.00" oninput="updateSettleTotal()" style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
-            </div>
+            <span style="font-size:13px;color:#D70F64">FoodPanda</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-panda">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#6796ce">Online Shop</span>
-            <div style="display:flex;align-items:center;gap:4px">
-              <span style="font-size:13px;color:#aaa">$</span>
-              <input type="number" id="settle-onlineshop" min="0" step="0.01" placeholder="0.00" oninput="updateSettleTotal()" style="width:80px;padding:4px 6px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;font-weight:600;text-align:right;font-family:var(--font);outline:none">
-            </div>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-online">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px">
-            <span style="font-size:14px;font-weight:700;color:#333">Total</span>
+            <span style="font-size:14px;font-weight:700;color:#333">Grand Total</span>
             <span style="font-size:18px;font-weight:800;color:#dd8581" id="settle-total">$0.00</span>
           </div>
         </div>
@@ -2300,6 +2299,7 @@ function renderSalesReport(){
         </tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Cash'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.cash.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Card'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.card.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#e74c3c;padding-left:20px">— MDR</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"></td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="report-mdr-daily" step="0.01" min="0" placeholder="0.00" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px;color:#e74c3c"></td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='PayNow'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.paynow.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>(s.payment==='Credit'||(s.payment||'').startsWith('Credit+'))&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.credit.toFixed(2)}</td></tr>
         <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${d.total.toFixed(2)}</td></tr>
@@ -2322,6 +2322,7 @@ function renderSalesReport(){
         </tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Cash'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.cash.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Card'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.card.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#e74c3c;padding-left:20px">— MDR</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"></td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="report-mdr-monthly" step="0.01" min="0" placeholder="0.00" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px;color:#e74c3c"></td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='PayNow'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.paynow.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>(s.payment==='Credit'||(s.payment||'').startsWith('Credit+'))&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.credit.toFixed(2)}</td></tr>
         <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${m.total.toFixed(2)}</td></tr>
@@ -2453,47 +2454,55 @@ function dailySettlement(){
   const today=_sgt.toISOString().split('T')[0];
   const todaySales=salesLog.filter(s=>s.date===today);
   if(!todaySales.length){showToast('No sales today to settle');return;}
-  const total  = todaySales.reduce((t,s)=>t+(s.voided?0:s.total),0);
-  const cash   = todaySales.filter(s=>!s.voided&&s.payment==='Cash').reduce((t,s)=>t+s.total,0);
-  const card   = todaySales.filter(s=>!s.voided&&s.payment==='Card').reduce((t,s)=>t+s.total,0);
-  const paynow = todaySales.filter(s=>!s.voided&&s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
+  const active = todaySales.filter(s=>!s.voided);
+  const cash   = active.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
+  const card   = active.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
+  const paynow = active.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
+  let credit = 0;
+  active.forEach(function(s){
+    var p = s.payment||'';
+    if(p==='Credit') credit+=s.total;
+    else if(p.startsWith('Credit+')) credit+=parseFloat(s.creditUsed)||0;
+  });
+  // Split payment remainders go to their respective methods
+  let splitPaynow=0, splitCash=0, splitCard=0;
+  active.filter(s=>(s.payment||'').startsWith('Credit+')).forEach(function(s){
+    var rem = s.total - (parseFloat(s.creditUsed)||0);
+    var other = (s.payment||'').replace('Credit+','');
+    if(other==='PayNow') splitPaynow+=rem;
+    else if(other==='Cash') splitCash+=rem;
+    else if(other==='Card') splitCard+=rem;
+  });
+  const appPaynow = active.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').reduce((t,s)=>t+s.total,0);
+  const appCredit = active.filter(s=>s.payment==='App Credit').reduce((t,s)=>t+s.total,0);
+  const grab   = active.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0);
+  const panda  = active.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0);
+  const online = active.filter(s=>s.payment==='Online Shop').reduce((t,s)=>t+s.total,0);
+  const grandTotal = active.reduce((t,s)=>t+s.total,0);
   const count  = todaySales.length;
   const voided = todaySales.filter(s=>s.voided).length;
   document.getElementById('settle-date-label').textContent = today;
-  document.getElementById('settle-cash').textContent   = '$'+cash.toFixed(2);
-  document.getElementById('settle-card').textContent   = '$'+card.toFixed(2);
-  document.getElementById('settle-paynow').textContent = '$'+paynow.toFixed(2);
-  document.getElementById('settle-grab').value = '';
-  document.getElementById('settle-mdr').value = '';
-  document.getElementById('settle-foodpanda').value = '';
-  document.getElementById('settle-onlineshop').value = '';
-  document.getElementById('settle-total').textContent  = '$'+total.toFixed(2);
+  document.getElementById('settle-cash').textContent    = '$'+(cash+splitCash).toFixed(2);
+  document.getElementById('settle-paynow').textContent  = '$'+(paynow+splitPaynow).toFixed(2);
+  document.getElementById('settle-card').textContent    = '$'+(card+splitCard).toFixed(2);
+  document.getElementById('settle-credit').textContent  = '$'+credit.toFixed(2);
+  document.getElementById('settle-app-paynow').textContent = '$'+appPaynow.toFixed(2);
+  document.getElementById('settle-app-credit').textContent = '$'+appCredit.toFixed(2);
+  document.getElementById('settle-grab').textContent    = '$'+grab.toFixed(2);
+  document.getElementById('settle-panda').textContent   = '$'+panda.toFixed(2);
+  document.getElementById('settle-online').textContent  = '$'+online.toFixed(2);
+  document.getElementById('settle-total').textContent   = '$'+grandTotal.toFixed(2);
   document.getElementById('settle-txn-count').textContent = count+' transaction'+(count!==1?'s':'')+' today'+(voided?' ('+voided+' voided)':'');
   document.getElementById('settle-modal').classList.add('open');
 }
 function closeSettleModal(){ document.getElementById('settle-modal').classList.remove('open'); }
-function updateSettleTotal(){
-  const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
-  const today=_sgt.toISOString().split('T')[0];
-  const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
-  const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
-  const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
-  const onlineshop= parseFloat(document.getElementById('settle-onlineshop').value)||0;
-  const mdr       = parseFloat(document.getElementById('settle-mdr').value)||0;
-  document.getElementById('settle-total').textContent = '$'+(posTot+grab+foodpanda+onlineshop-mdr).toFixed(2);
-}
 function confirmSettle(){
   const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
   const today=_sgt.toISOString().split('T')[0];
-  const posTot    = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
-  const grab      = parseFloat(document.getElementById('settle-grab').value)||0;
-  const foodpanda = parseFloat(document.getElementById('settle-foodpanda').value)||0;
-  const onlineshop= parseFloat(document.getElementById('settle-onlineshop').value)||0;
-  const mdr       = parseFloat(document.getElementById('settle-mdr').value)||0;
-  const grandTotal= posTot+grab+foodpanda+onlineshop-mdr;
+  const total = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
   salesLog=salesLog.filter(s=>s.date!==today);
   closeSettleModal(); renderSalesReport();
-  showToast('Day closed! $'+grandTotal.toFixed(2)+' total.');
+  showToast('Day closed! $'+total.toFixed(2)+' total.');
 }
 
 

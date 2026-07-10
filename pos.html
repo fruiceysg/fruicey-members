@@ -326,6 +326,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-card">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#e74c3c;padding-left:10px">— MDR</span>
+            <span style="font-size:13px;font-weight:600;color:#e74c3c" id="settle-mdr">-$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#f39c12">Credit</span>
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-credit">$0.00</span>
           </div>
@@ -2555,16 +2559,18 @@ function dailySettlement(){
   });
   const appPaynow = active.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').reduce((t,s)=>t+s.total,0);
   const appCredit = active.filter(s=>s.payment==='App Credit').reduce((t,s)=>t+s.total,0);
-  const grab   = active.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0);
-  const panda  = active.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0);
-  const online = active.filter(s=>s.payment==='Online Shop').reduce((t,s)=>t+s.total,0);
-  const grandTotal = active.reduce((t,s)=>t+s.total,0);
+  const grab   = active.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-grab-daily')||{}).value)||0);
+  const panda  = active.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-panda-daily')||{}).value)||0);
+  const online = active.filter(s=>s.payment==='Online Shop').reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-online-daily')||{}).value)||0);
+  const mdr    = parseFloat((document.getElementById('report-mdr-daily')||{}).value)||0;
+  const grandTotal = active.reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-grab-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-panda-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-online-daily')||{}).value)||0) - mdr;
   const count  = todaySales.length;
   const voided = todaySales.filter(s=>s.voided).length;
   document.getElementById('settle-date-label').textContent = today;
   document.getElementById('settle-cash').textContent    = '$'+(cash+splitCash).toFixed(2);
   document.getElementById('settle-paynow').textContent  = '$'+(paynow+splitPaynow).toFixed(2);
   document.getElementById('settle-card').textContent    = '$'+(card+splitCard).toFixed(2);
+  document.getElementById('settle-mdr').textContent     = mdr > 0 ? '-$'+mdr.toFixed(2) : '-$0.00';
   document.getElementById('settle-credit').textContent  = '$'+credit.toFixed(2);
   document.getElementById('settle-app-paynow').textContent = '$'+appPaynow.toFixed(2);
   document.getElementById('settle-app-credit').textContent = '$'+appCredit.toFixed(2);

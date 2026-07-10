@@ -2000,6 +2000,19 @@ function resetCreditState(){
 // ── CHECKOUT ─────────────────────────────────────────────────────────
 async function checkout(){
   if(!cart.length){showToast('Cart is empty');return;}
+  // If credit is active but doesn't cover full total, need another payment method
+  if(posCreditPhone && posCreditBalance > 0){
+    const cartTotal = cart.reduce((s,i)=>s+i.price*i.qty,0);
+    const cartDisc = memberDiscount>0?+(cartTotal*memberDiscount/100).toFixed(2):0;
+    const actualTotal = +(cartTotal-cartDisc).toFixed(2);
+    if(posCreditBalance < actualTotal && (!paymentMethod || paymentMethod === 'Credit')){
+      showToast('Credit doesn\'t cover full total. Select a payment method for the remaining balance.');
+      return;
+    }
+    if(posCreditBalance >= actualTotal){
+      paymentMethod = 'Credit';
+    }
+  }
   if(!paymentMethod){showToast('Select a payment method');return;}
   const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
   const disc=memberDiscount>0?+(sub*memberDiscount/100).toFixed(2):0;
@@ -2027,6 +2040,10 @@ async function checkout(){
     // Save to Sheets (Sheets is the ONLY source of truth)
     try{
       // Deduct credit if credit was used (split or full)
+      // Recalculate credit use based on actual cart total (cart may have changed since Credit button was clicked)
+      if(posCreditPhone && posCreditBalance > 0){
+        posCreditUse = Math.min(posCreditBalance, total);
+      }
       if(posCreditUse > 0 && posCreditPhone){
         const creditRes = await apiPost({action:'deductCredit', phone:posCreditPhone, amount:posCreditUse, desc:'POS Sale '+sale.rcptNo});
         if(creditRes.success){

@@ -2366,30 +2366,60 @@ function renderSalesReport(){
     </div>`;
 
   // Product sales breakdown
-  function buildProductChart(sales){
-    const tally = {};
-    sales.filter(s=>!s.voided).forEach(s=>{
-      (s.items||[]).forEach(i=>{
-        const key = i.label||i.name||'Unknown';
-        if(!tally[key]) tally[key]={qty:0,revenue:0};
-        tally[key].qty += i.qty||1;
-        tally[key].revenue += (i.price||0)*(i.qty||1);
+  function buildCategoryChart(sales){
+    // Build product ID to category mapping
+    var idToCat = {};
+    Object.keys(CATALOGUE).forEach(function(cat){
+      CATALOGUE[cat].forEach(function(p){
+        p.sizes.forEach(function(sz){
+          // Match by product name patterns in sale items
+          idToCat[p.id] = cat;
+        });
       });
     });
-    const sorted = Object.entries(tally).sort((a,b)=>b[1].qty-a[1].qty);
-    if(!sorted.length) return '<div style="font-size:12px;color:#bbb;padding:8px 0">No data</div>';
-    const maxQty = sorted[0][1].qty;
-    return sorted.map(([label,data])=>{
-      const pct = Math.round(data.qty/maxQty*100);
+    // Tally by category
+    var catTally = {};
+    Object.keys(CAT_COLORS).forEach(function(cat){ catTally[cat] = {qty:0, revenue:0}; });
+    sales.filter(function(s){return !s.voided;}).forEach(function(s){
+      (s.items||[]).forEach(function(i){
+        var label = i.label||i.name||'';
+        var matched = false;
+        Object.keys(CATALOGUE).forEach(function(cat){
+          CATALOGUE[cat].forEach(function(p){
+            if(label.indexOf(p.name) !== -1){
+              catTally[cat].qty += i.qty||1;
+              catTally[cat].revenue += (i.price||0)*(i.qty||1);
+              matched = true;
+            }
+          });
+        });
+        if(!matched){
+          if(!catTally['Others']) catTally['Others'] = {qty:0, revenue:0};
+          catTally['Others'].qty += i.qty||1;
+          catTally['Others'].revenue += (i.price||0)*(i.qty||1);
+        }
+      });
+    });
+    var entries = Object.entries(catTally).filter(function(e){return e[1].qty > 0;}).sort(function(a,b){return b[1].qty - a[1].qty;});
+    if(!entries.length) return '<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>';
+    var maxQty = entries[0][1].qty;
+    var totalQty = entries.reduce(function(t,e){return t+e[1].qty;},0);
+    var totalRev = entries.reduce(function(t,e){return t+e[1].revenue;},0);
+    return entries.map(function(e){
+      var cat = e[0], data = e[1];
+      var pct = Math.round(data.qty/maxQty*100);
+      var color = CAT_COLORS[cat]||'#aaa';
       return '<div style="padding:6px 0;border-bottom:.5px solid #f5f5f5">'
         +'<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
-        +'<span style="font-size:12px;color:#333;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">'+label+'</span>'
-        +'<span style="font-size:12px;font-weight:700;color:#555;flex-shrink:0">'+data.qty+' sold</span>'
+        +'<span style="font-size:12px;color:'+color+';font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">'+cat+'</span>'
+        +'<span style="font-size:12px;color:#555;flex-shrink:0">'+data.qty+' sold · $'+data.revenue.toFixed(2)+'</span>'
         +'</div>'
         +'<div style="height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden">'
-        +'<div style="height:100%;width:'+pct+'%;background:#8fcea1;border-radius:3px;transition:width .3s"></div>'
+        +'<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:3px;transition:width .3s"></div>'
         +'</div></div>';
-    }).join('');
+    }).join('')
+    +'<div style="padding:8px 0;display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#333">'
+    +'<span>Total</span><span>'+totalQty+' sold · $'+totalRev.toFixed(2)+'</span></div>';
   }
 
   // Recent transactions
@@ -2402,10 +2432,8 @@ function renderSalesReport(){
   const monthSales2=salesLog.filter(s=>s.date&&s.date.startsWith(month2));
 
   el.innerHTML=
-    '<div style="margin-bottom:4px"><button id="toggle-today-btn" onclick="var b=document.getElementById(\'today-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Products sold today\':\'▼ Products sold today\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Products sold today</button></div>'
-    +'<div id="today-chart-body" style="display:none">'+(todaySales2.length?buildProductChart(todaySales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales today</div>')+'</div>'
-    +'<div style="margin:12px 0 4px"><button id="toggle-monthly-btn" onclick="var b=document.getElementById(\'monthly-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Products sold this month\':\'▼ Products sold this month\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Products sold this month</button></div>'
-    +'<div id="monthly-chart-body" style="display:none">'+(monthSales2.length?buildProductChart(monthSales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>')+'</div>'
+    '<div style="margin-bottom:4px"><button onclick="var b=document.getElementById(\'cat-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Category sold this month\':\'▼ Category sold this month\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Category sold this month</button></div>'
+    +'<div id="cat-chart-body" style="display:none">'+buildCategoryChart(monthSales2)+'</div>'
     // Recent transactions
     +'<div style="font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Recent transactions</div>'
     +salesLog.filter(function(s){return s.date===today;}).map((s,i)=>{

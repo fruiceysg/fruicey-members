@@ -343,7 +343,7 @@ input:focus{border-color:#8fcea1}
 
   <div class="complete-banner" id="complete-banner">
     <h3> Rewards Pass Complete!</h3>
-    <p>Show this to our crew to redeem your free medium juice or shake!</p>
+    <p>Show this to our crew to redeem your free prize!</p>
   </div>
 
 
@@ -367,13 +367,7 @@ input:focus{border-color:#8fcea1}
       <div class="wheel-result-drink" id="wheel-result-name"></div>
       <div class="wheel-result-desc" id="wheel-result-reward"></div>
       <div id="wheel-result-desc" style="font-size:12px;opacity:.85;margin-top:6px"></div>
-    <div class="wheel-result-note">
-      Show this screen to our crew upon redemption or making payment.<br>
-      Screenshots are <strong>not accepted</strong> for redemption.<br>
-      Un-redeemed prizes can be traced back in store.
-    </div>
-    <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:10px;margin-bottom:6px">Tap Back to save your prize for next use.</div>
-    <button id="wheel-redeem-btn" style="display:none;margin-top:12px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:10px 24px;font-size:14px;font-family:'BabyDoll',cursive;cursor:pointer;width:100%">Click to Redeem</button>
+    <button id="wheel-redeem-btn" style="display:none;margin-top:16px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:10px 24px;font-size:14px;font-family:'BabyDoll',cursive;cursor:pointer;width:100%">Click to Save your prize</button>
     </div>
   </div>
     <div class="stamp-grid" id="stamp-grid"></div>
@@ -753,19 +747,22 @@ function startStampScan(){
   });
 }document.getElementById('spin-btn').addEventListener('click', spinWheel);
 const redeemCardBtn = document.getElementById('wheel-redeem-btn');
-if(redeemCardBtn) redeemCardBtn.addEventListener('click', redeemCard);
+if(redeemCardBtn) redeemCardBtn.addEventListener('click', saveCardPrize);
 
-async function redeemCard(){
+async function saveCardPrize(){
   if(!curMember) return;
-  if(!confirm('Has the crew given you your free drink? Tap OK to confirm and reset your stamp card.')) return;
   try{
-    const res = await apiPost({action:'redeemStampCard', phone:np(curMember.phone)});
+    // saveSpinResult now also resets stamps to 0 and increments cardsCompleted
+    const segment = WHEEL_SEGMENTS.find(s=>s.name===document.getElementById('wheel-result-name').textContent);
+    if(!segment){ showToast('Error saving prize'); return; }
+    const res = await apiPost({action:'saveSpinResult', phone:np(curMember.phone), spinResult:segment.name});
     if(res.success){
-      showToast('Redeemed! Your stamp card has been reset. Start collecting again!');
+      showToast('Prize saved! You can redeem it anytime within 30 days.');
       document.getElementById('wheel-section').classList.remove('show');
       document.getElementById('complete-banner').classList.remove('show');
       document.getElementById('wheel-result').style.display='none';
-      // Refresh card
+      hasSpun = false;
+      // Refresh card — will show saved prize box and reset stamps
       const updated = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
       if(updated.member){ curMember=updated.member; renderCard(updated.member); }
     }
@@ -960,11 +957,6 @@ function showWheelResult(segment) {
   hasSpun = true;
   const btn = document.getElementById('spin-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Already spun!'; btn.style.background = '#ccc'; }
-  // Save spin result to Google Sheets so it persists across devices
-  if(curMember){
-    apiPost({action:'saveSpinResult', phone:np(curMember.phone), spinResult:segment.name})
-      .catch(e=>console.log('Could not save spin result'));
-  }
 }
 
 

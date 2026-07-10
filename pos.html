@@ -2366,26 +2366,18 @@ function renderSalesReport(){
     </div>`;
 
   // Product sales breakdown
+  var CAT_ORDER = ['Superfood Bowls','Shakes & Smoothies','Juices','Immunity Press','Nutritional Press','Longevity Press','Wellness Press'];
+
   function buildCategoryChart(sales){
-    // Build product ID to category mapping
-    var idToCat = {};
-    Object.keys(CATALOGUE).forEach(function(cat){
-      CATALOGUE[cat].forEach(function(p){
-        p.sizes.forEach(function(sz){
-          // Match by product name patterns in sale items
-          idToCat[p.id] = cat;
-        });
-      });
-    });
-    // Tally by category
+    // Tally by category using fixed tab order
     var catTally = {};
-    Object.keys(CAT_COLORS).forEach(function(cat){ catTally[cat] = {qty:0, revenue:0}; });
+    CAT_ORDER.forEach(function(cat){ catTally[cat] = {qty:0, revenue:0}; });
     sales.filter(function(s){return !s.voided;}).forEach(function(s){
       (s.items||[]).forEach(function(i){
         var label = i.label||i.name||'';
         var matched = false;
-        Object.keys(CATALOGUE).forEach(function(cat){
-          CATALOGUE[cat].forEach(function(p){
+        CAT_ORDER.forEach(function(cat){
+          (CATALOGUE[cat]||[]).forEach(function(p){
             if(label.indexOf(p.name) !== -1){
               catTally[cat].qty += i.qty||1;
               catTally[cat].revenue += (i.price||0)*(i.qty||1);
@@ -2400,13 +2392,15 @@ function renderSalesReport(){
         }
       });
     });
-    var entries = Object.entries(catTally).filter(function(e){return e[1].qty > 0;}).sort(function(a,b){return b[1].qty - a[1].qty;});
-    if(!entries.length) return '<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>';
-    var maxQty = entries[0][1].qty;
-    var totalQty = entries.reduce(function(t,e){return t+e[1].qty;},0);
-    var totalRev = entries.reduce(function(t,e){return t+e[1].revenue;},0);
-    return entries.map(function(e){
-      var cat = e[0], data = e[1];
+    var allCats = CAT_ORDER.slice();
+    if(catTally['Others'] && catTally['Others'].qty > 0) allCats.push('Others');
+    var maxQty = 1;
+    allCats.forEach(function(c){ if(catTally[c] && catTally[c].qty > maxQty) maxQty = catTally[c].qty; });
+    var totalQty = 0, totalRev = 0;
+    allCats.forEach(function(c){ if(catTally[c]){ totalQty+=catTally[c].qty; totalRev+=catTally[c].revenue; } });
+    if(!totalQty) return '<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>';
+    return allCats.map(function(cat){
+      var data = catTally[cat]||{qty:0,revenue:0};
       var pct = Math.round(data.qty/maxQty*100);
       var color = CAT_COLORS[cat]||'#aaa';
       return '<div style="padding:6px 0;border-bottom:.5px solid #f5f5f5">'
@@ -2422,6 +2416,33 @@ function renderSalesReport(){
     +'<span>Total</span><span>'+totalQty+' sold · $'+totalRev.toFixed(2)+'</span></div>';
   }
 
+  function buildProductChart(sales){
+    var tally = {};
+    sales.filter(function(s){return !s.voided;}).forEach(function(s){
+      (s.items||[]).forEach(function(i){
+        var key = i.label||i.name||'Unknown';
+        if(!tally[key]) tally[key]={qty:0,revenue:0};
+        tally[key].qty += i.qty||1;
+        tally[key].revenue += (i.price||0)*(i.qty||1);
+      });
+    });
+    var sorted = Object.entries(tally).sort(function(a,b){return b[1].qty-a[1].qty;});
+    if(!sorted.length) return '<div style="font-size:12px;color:#bbb;padding:8px 0">No data</div>';
+    var maxQty = sorted[0][1].qty;
+    return sorted.map(function(e){
+      var label=e[0], data=e[1];
+      var pct = Math.round(data.qty/maxQty*100);
+      return '<div style="padding:6px 0;border-bottom:.5px solid #f5f5f5">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+        +'<span style="font-size:12px;color:#333;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">'+label+'</span>'
+        +'<span style="font-size:12px;font-weight:700;color:#555;flex-shrink:0">'+data.qty+' sold</span>'
+        +'</div>'
+        +'<div style="height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden">'
+        +'<div style="height:100%;width:'+pct+'%;background:#8fcea1;border-radius:3px;transition:width .3s"></div>'
+        +'</div></div>';
+    }).join('');
+  }
+
   // Recent transactions
   const el=document.getElementById('sales-list');
   if(!salesLog.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:#bbb">No sales yet</div>';return;}
@@ -2434,6 +2455,8 @@ function renderSalesReport(){
   el.innerHTML=
     '<div style="margin-bottom:4px"><button onclick="var b=document.getElementById(\'cat-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Category sold this month\':\'▼ Category sold this month\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Category sold this month</button></div>'
     +'<div id="cat-chart-body" style="display:none">'+buildCategoryChart(monthSales2)+'</div>'
+    +'<div style="margin:12px 0 4px"><button onclick="var b=document.getElementById(\'prod-chart-body\');var open=b.style.display!==\'none\';b.style.display=open?\'none\':\'block\';this.textContent=open?\'▶ Products sold this month\':\'▼ Products sold this month\'" style="background:none;border:none;padding:0;cursor:pointer;font-size:13px;font-weight:700;color:#555;font-family:var(--font)">▶ Products sold this month</button></div>'
+    +'<div id="prod-chart-body" style="display:none">'+(monthSales2.length?buildProductChart(monthSales2):'<div style="font-size:12px;color:#bbb;padding:8px 0">No sales this month</div>')+'</div>'
     // Recent transactions
     +'<div style="font-size:13px;font-weight:700;color:#555;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0">Recent transactions</div>'
     +salesLog.filter(function(s){return s.date===today;}).map((s,i)=>{

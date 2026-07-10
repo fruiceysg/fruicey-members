@@ -571,21 +571,70 @@ function renderCard(member){
   if(stamps>=TOTAL_STAMPS){banner.classList.add('show');}else{banner.classList.remove('show');}
 
   checkWheelVisibility(stamps);
-  // Restore saved spin result if exists (prevents re-spin on page reload)
+
+  // Show saved prize if exists (card may have reset to 0 but prize is saved)
+  var prizeBox = document.getElementById('saved-prize-box');
+  if(!prizeBox){
+    // Create saved prize box if it doesn't exist
+    var cardEl = document.getElementById('stamp-grid');
+    if(cardEl){
+      var div = document.createElement('div');
+      div.id = 'saved-prize-box';
+      div.style.cssText = 'display:none;margin:16px 0;border-radius:14px;padding:16px;text-align:center';
+      div.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:4px" id="saved-prize-name"></div>'
+        +'<div style="font-size:18px;font-weight:800;margin-bottom:4px" id="saved-prize-reward"></div>'
+        +'<div style="font-size:12px;margin-bottom:8px" id="saved-prize-desc"></div>'
+        +'<div style="font-size:11px;margin-bottom:10px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.5)" id="saved-prize-expiry"></div>'
+        +'<button onclick="redeemSavedPrize()" style="padding:10px 24px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)">Redeem Now</button>';
+      cardEl.parentNode.insertBefore(div, cardEl.nextSibling);
+      prizeBox = div;
+    }
+  }
+  if(prizeBox && member.spinResult && member.spinResult !== ''){
+    var savedSeg = WHEEL_SEGMENTS.find(s=>s.name===member.spinResult);
+    if(savedSeg){
+      prizeBox.style.display = 'block';
+      prizeBox.style.background = savedSeg.color;
+      prizeBox.style.color = '#fff';
+      document.getElementById('saved-prize-name').textContent = '🎉 ' + savedSeg.name;
+      document.getElementById('saved-prize-reward').textContent = savedSeg.reward;
+      document.getElementById('saved-prize-desc').textContent = savedSeg.desc||'';
+      // Calculate expiry
+      var awardDate = member.spinResultDate ? new Date(member.spinResultDate) : new Date();
+      var expiryDate = new Date(awardDate);
+      expiryDate.setDate(expiryDate.getDate() + 30);
+      var now = new Date();
+      var daysLeft = Math.ceil((expiryDate - now) / (1000*60*60*24));
+      if(daysLeft <= 0){
+        document.getElementById('saved-prize-expiry').innerHTML = '⚠️ This prize has <b>expired</b>';
+        document.getElementById('saved-prize-expiry').style.background = 'rgba(231,76,60,0.3)';
+      } else if(daysLeft <= 7){
+        document.getElementById('saved-prize-expiry').innerHTML = '⏰ Expires in <b>'+daysLeft+' day'+(daysLeft!==1?'s':'')+'</b> · Won on '+member.spinResultDate;
+        document.getElementById('saved-prize-expiry').style.background = 'rgba(255,200,0,0.3)';
+      } else {
+        document.getElementById('saved-prize-expiry').innerHTML = '📅 Valid until '+(expiryDate.getDate()+'/'+( expiryDate.getMonth()+1)+'/'+expiryDate.getFullYear())+' · Won on '+member.spinResultDate;
+        document.getElementById('saved-prize-expiry').style.background = 'rgba(255,255,255,0.5)';
+      }
+    }
+  } else if(prizeBox){
+    prizeBox.style.display = 'none';
+  }
+
+  // Restore saved spin result if stamps are full (prevents re-spin on page reload)
   if(parseInt(stamps)>=TOTAL_STAMPS && member.spinResult && member.spinResult!==''){
     hasSpun = true;
     const spinBtn = document.getElementById('spin-btn');
     if(spinBtn){ spinBtn.disabled=true; spinBtn.textContent='Already spun!'; spinBtn.style.background='#ccc'; }
     // Find the segment that matches saved result
-    const savedSeg = WHEEL_SEGMENTS.find(s=>s.name===member.spinResult);
-    if(savedSeg){
+    const savedSeg2 = WHEEL_SEGMENTS.find(s=>s.name===member.spinResult);
+    if(savedSeg2){
       const el=document.getElementById('wheel-result');
       if(el){
-        el.style.display='block'; el.style.background=savedSeg.color;
-        document.getElementById('wheel-result-name').textContent=savedSeg.name;
-        document.getElementById('wheel-result-reward').textContent=savedSeg.reward;
+        el.style.display='block'; el.style.background=savedSeg2.color;
+        document.getElementById('wheel-result-name').textContent=savedSeg2.name;
+        document.getElementById('wheel-result-reward').textContent=savedSeg2.reward;
         const descEl=document.getElementById('wheel-result-desc');
-        if(descEl) descEl.textContent=savedSeg.desc||'';
+        if(descEl) descEl.textContent=savedSeg2.desc||'';
         const redeemEl=document.getElementById('wheel-redeem-btn');
         if(redeemEl) redeemEl.style.display='block';
       }
@@ -721,6 +770,25 @@ async function redeemCard(){
       if(updated.member){ curMember=updated.member; renderCard(updated.member); }
     }
   } catch(e){ showToast('Connection error. Please try again.'); }
+}
+
+async function redeemSavedPrize(){
+  if(!curMember) return;
+  try{
+    var res = await apiPost({action:'redeemStampCard', phone:np(curMember.phone)});
+    if(res.success){
+      showToast('Prize redeemed! Enjoy!');
+      // Refresh card
+      var updated = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
+      if(updated.member){ curMember=updated.member; renderCard(updated.member); }
+    } else if(res.error === 'prize_expired'){
+      showToast(res.message || 'This prize has expired');
+      var updated2 = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
+      if(updated2.member){ curMember=updated2.member; renderCard(updated2.member); }
+    } else {
+      showToast(res.error || 'Error redeeming prize');
+    }
+  }catch(e){ showToast('Connection error'); }
 }
 
 checkQRToken();

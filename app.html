@@ -1046,6 +1046,15 @@ async function checkout(){
   const btn   = document.getElementById('checkout-btn');
   btn.textContent='Placing order...'; btn.disabled=true;
 
+  // Determine payment method
+  const useCreditCb = document.getElementById('use-credit-cb');
+  const useCredit = useCreditCb && useCreditCb.checked && userCreditBalance > 0;
+  const creditUse = useCredit ? Math.min(userCreditBalance, sub) : 0;
+  const remaining = +(sub - creditUse).toFixed(2);
+  let payLabel = 'App PayNow';
+  if(useCredit && remaining <= 0) payLabel = 'App Credit';
+  else if(useCredit && remaining > 0) payLabel = 'App Credit+PayNow';
+
   try{
     const res = await apiPost({
       action:'placeOrder',
@@ -1055,14 +1064,13 @@ async function checkout(){
       items:  cart,
       total:  sub.toFixed(2),
       collectTime: collectMode==='ASAP'?'ASAP':(collectDate+' '+collectTime),
-      notes
+      notes,
+      payment: payLabel
     });
 
     if(res.success){
       // Deduct credit if used
-      const useCreditCb = document.getElementById('use-credit-cb');
-      if(useCreditCb && useCreditCb.checked && userCreditBalance > 0){
-        const creditUse = Math.min(userCreditBalance, sub);
+      if(useCredit && creditUse > 0){
         try{
           await apiPost({action:'deductCredit', phone:currentUser.phone, amount:creditUse, desc:'Order '+res.orderId});
           userCreditBalance = Math.max(0, userCreditBalance - creditUse);
@@ -1072,7 +1080,13 @@ async function checkout(){
       closeCart();
       // Reset credit checkbox
       if(useCreditCb){ useCreditCb.checked = false; toggleCreditCheckout(); }
-      showPayNow(res.order);
+      // Skip PayNow screen if fully paid by credit
+      if(payLabel === 'App Credit'){
+        showToast('Order placed! Paid with Fruicey Credit.');
+        goTab('orders');
+      } else {
+        showPayNow(res.order);
+      }
     } else { showToast('Error placing order. Please try again.'); }
   }catch(e){ showToast('Connection error.'); }
   btn.textContent='Place Order & Pay via PayNow'; btn.disabled=false;

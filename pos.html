@@ -1281,6 +1281,33 @@ async function updateAppOrderStatus(orderId, newStatus){
     const res = await apiPost({action:'updateOrderStatus', id:orderId, status:newStatus});
     if(res.success){
       showToast('Order '+orderId+' marked '+newStatus);
+      // Auto-add to POSSales when order is Completed
+      if(newStatus === 'Completed'){
+        try{
+          const orderRes = await apiGet({action:'getOrder', id:orderId});
+          if(orderRes.order){
+            const o = orderRes.order;
+            const items = typeof o.items === 'string' ? o.items : JSON.stringify(o.items||[]);
+            const now = new Date();
+            const sgt = new Date(now.getTime() + 8*3600*1000);
+            await apiPost({
+              action:'addPOSSale',
+              id: 'app_'+orderId,
+              rcptNo: orderId,
+              date: sgt.toISOString().slice(0,10),
+              time: sgt.toISOString().slice(11,16),
+              items: items,
+              subtotal: o.total||'0',
+              discount: '0',
+              total: o.total||'0',
+              payment: o.payment || 'PayNow',
+              member: o.name||'',
+              memberPhone: o.phone||'',
+              creditUsed: ''
+            });
+          }
+        }catch(e){ console.log('Could not sync app order to POSSales',e); }
+      }
       loadAppOrders();
     } else {
       showToast('Could not update order status');
@@ -2034,7 +2061,7 @@ async function checkout(){
         subtotal: sub.toFixed(2),
         discount: disc.toFixed(2),
         total: total.toFixed(2),
-        payment: paymentMethod,
+        payment: sale.payment,
         member: sale.member||'',
         memberPhone: sale.memberPhone||'',
         creditUsed: sale.creditUsed ? sale.creditUsed.toFixed(2) : ''
@@ -2211,16 +2238,21 @@ function renderSalesReport(){
 
   // Payment breakdown helper
   function payBreakdown(sales){
-    const inStore       = sales.filter(s=>!ONLINE_PLATFORMS.includes(s.payment));
+    const inStore       = sales.filter(s=>!ONLINE_PLATFORMS.includes(s.payment) && !(s.payment||'').startsWith('App '));
     const inStoreActive = inStore.filter(s=>!s.voided);
     const cash    = inStoreActive.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
     const card    = inStoreActive.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
     const paynow  = inStoreActive.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
-    const credit  = inStoreActive.filter(s=>s.payment==='Credit').reduce((t,s)=>t+s.total,0);
+    const credit  = inStoreActive.filter(s=>s.payment==='Credit'||(s.payment||'').startsWith('Credit+')).reduce((t,s)=>t+s.total,0);
+    const appPaynow = sales.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').reduce((t,s)=>t+s.total,0);
+    const appCredit = sales.filter(s=>s.payment==='App Credit').reduce((t,s)=>t+s.total,0);
+    const appTotal  = appPaynow + appCredit;
     const grab    = sales.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0);
     const panda   = sales.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0);
+    const online  = sales.filter(s=>s.payment==='Online Shop').reduce((t,s)=>t+s.total,0);
     const total   = inStoreActive.reduce((t,s)=>t+s.total,0);
-    return {cash,card,paynow,credit,grab,panda,total,count:inStoreActive.length,onlineCount:sales.length-inStore.length};
+    return {cash,card,paynow,credit,appPaynow,appCredit,appTotal,grab,panda,online,total,count:inStoreActive.length,
+      appCount:sales.filter(s=>(s.payment||'').startsWith('App ')).length};
   }
   const d=payBreakdown(todaySales);
   const m=payBreakdown(monthSales);
@@ -2237,11 +2269,15 @@ function renderSalesReport(){
         <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Cash'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.cash.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Card'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.card.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='PayNow'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.paynow.toFixed(2)}</td></tr>
-        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Credit'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.credit.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>(s.payment==='Credit'||(s.payment||'').startsWith('Credit+'))&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.credit.toFixed(2)}</td></tr>
         <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${d.total.toFixed(2)}</td></tr>
-        <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='GrabFood'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
-        <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='FoodPanda'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
-        <tr style="background:#f0f5ff"><td style="padding:7px 10px;border:1px solid #eee;color:#6796ce">Online Shop</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Online Shop'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
+        <tr style="background:#eef6ff"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1;font-weight:600" colspan="3">Fruicey App</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.appPaynow.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">App Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='App Credit').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.appCredit.toFixed(2)}</td></tr>
+        <tr style="font-weight:600;background:#e8f0fe"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.appCount}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#5b7db1">$${d.appTotal.toFixed(2)}</td></tr>
+        <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-grab-daily" step="0.01" min="0" placeholder="0.00" value="${d.grab||''}" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
+        <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-panda-daily" step="0.01" min="0" placeholder="0.00" value="${d.panda||''}" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
+        <tr style="background:#f0f5ff"><td style="padding:7px 10px;border:1px solid #eee;color:#6796ce">Online Shop</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Online Shop').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-online-daily" step="0.01" min="0" placeholder="0.00" value="${d.online||''}" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
       </table>
     </div>
     <div style="margin-bottom:16px">
@@ -2255,11 +2291,15 @@ function renderSalesReport(){
         <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Cash'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.cash.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Card'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.card.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='PayNow'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.paynow.toFixed(2)}</td></tr>
-        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Credit'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.credit.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>(s.payment==='Credit'||(s.payment||'').startsWith('Credit+'))&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.credit.toFixed(2)}</td></tr>
         <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${m.total.toFixed(2)}</td></tr>
-        <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='GrabFood'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
-        <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='FoodPanda'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
-        <tr style="background:#f0f5ff"><td style="padding:7px 10px;border:1px solid #eee;color:#6796ce">Online Shop</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Online Shop'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#aaa">—</td></tr>
+        <tr style="background:#eef6ff"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1;font-weight:600" colspan="3">Fruicey App</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.appPaynow.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">App Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='App Credit').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.appCredit.toFixed(2)}</td></tr>
+        <tr style="font-weight:600;background:#e8f0fe"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.appCount}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#5b7db1">$${m.appTotal.toFixed(2)}</td></tr>
+        <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.grab.toFixed(2)}</td></tr>
+        <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.panda.toFixed(2)}</td></tr>
+        <tr style="background:#f0f5ff"><td style="padding:7px 10px;border:1px solid #eee;color:#6796ce">Online Shop</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Online Shop').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.online.toFixed(2)}</td></tr>
       </table>
     </div>`;
 

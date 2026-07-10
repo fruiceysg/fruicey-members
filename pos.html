@@ -2257,10 +2257,25 @@ function renderSalesReport(){
   function payBreakdown(sales){
     const inStore       = sales.filter(s=>!ONLINE_PLATFORMS.includes(s.payment) && !(s.payment||'').startsWith('App '));
     const inStoreActive = inStore.filter(s=>!s.voided);
-    const cash    = inStoreActive.filter(s=>s.payment==='Cash').reduce((t,s)=>t+s.total,0);
-    const card    = inStoreActive.filter(s=>s.payment==='Card').reduce((t,s)=>t+s.total,0);
-    const paynow  = inStoreActive.filter(s=>s.payment==='PayNow').reduce((t,s)=>t+s.total,0);
-    const credit  = inStoreActive.filter(s=>s.payment==='Credit'||(s.payment||'').startsWith('Credit+')).reduce((t,s)=>t+s.total,0);
+    // For split payments (Credit+X), count creditUsed under Credit and remainder under X
+    let cash=0, card=0, paynow=0, credit=0;
+    inStoreActive.forEach(function(s){
+      var p = s.payment||'';
+      var t = s.total||0;
+      var cu = parseFloat(s.creditUsed)||0;
+      if(p==='Cash') cash+=t;
+      else if(p==='Card') card+=t;
+      else if(p==='PayNow') paynow+=t;
+      else if(p==='Credit') credit+=t;
+      else if(p.startsWith('Credit+')){
+        credit+=cu;
+        var remainder = +(t-cu).toFixed(2);
+        var otherMethod = p.replace('Credit+','');
+        if(otherMethod==='Cash') cash+=remainder;
+        else if(otherMethod==='Card') card+=remainder;
+        else if(otherMethod==='PayNow') paynow+=remainder;
+      }
+    });
     const appPaynow = sales.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').reduce((t,s)=>t+s.total,0);
     const appCredit = sales.filter(s=>s.payment==='App Credit').reduce((t,s)=>t+s.total,0);
     const appTotal  = appPaynow + appCredit;

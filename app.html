@@ -877,7 +877,7 @@ function initHomeScreen(){
 const CATS = Object.keys(CATALOGUE);
 const PRODUCT_MAP = {};
 Object.values(CATALOGUE).forEach(prods => prods.forEach(p => { PRODUCT_MAP[p.id] = p; }));
-const PREMIUM_CATS = new Set(['Smoothie Bowls','Smoothies','Immunity Press','Nutritional Press','Longevity Press','Wellness Press']);
+const PREMIUM_CATS = new Set(['Superfood Bowls','Shakes & Smoothies','Immunity Press','Nutritional Press','Longevity Press','Wellness Press']);
 
 function initMenu(){
   if(!currentCat){ currentCat = CATS[0]; renderCatPills(); }

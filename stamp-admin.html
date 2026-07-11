@@ -125,6 +125,7 @@ input:focus{border-color:var(--green)}
     <button class="tab" id="tab-members"   onclick="switchTab('members')">Members</button>
     <button class="tab" id="tab-stamp"     onclick="switchTab('stamp')">Issue Stamp QR</button>
     <button class="tab" id="tab-join"      onclick="switchTab('join')">Join Rewards</button>
+    <button class="tab" id="tab-prizes"    onclick="switchTab('prizes')">Prizes Given</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -200,6 +201,18 @@ input:focus{border-color:var(--green)}
         3. Fill in name, phone, email and birthday<br>
         4. Start collecting stamps!
       </div>
+    </div>
+  </div>
+
+  <!-- PRIZES GIVEN -->
+  <div class="section" id="sec-prizes">
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Prizes given out</span>
+        <button class="btn btn-outline" style="font-size:12px;padding:4px 12px" onclick="loadPrizes()">Refresh</button>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin:6px 0 14px;line-height:1.5">Every wheel prize redeemed by a customer is recorded here and in the <b>PrizeLog</b> tab of the Google Sheet.</p>
+      <div id="prize-list"><div class="empty">Loading&hellip;</div></div>
     </div>
   </div>
 
@@ -301,6 +314,7 @@ function switchTab(tab){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('sec-'+tab).classList.add('active');
+  if(tab==='prizes') loadPrizes();
 }
 
 // ── DATA ──────────────────────────────────────────────────────
@@ -313,6 +327,30 @@ async function loadData(){
     renderDashboard();
     renderMembers();
   }catch(e){ showToast('Could not load members'); }
+}
+
+// ── PRIZES GIVEN ──────────────────────────────────────────────
+async function loadPrizes(){
+  const list=document.getElementById('prize-list');
+  list.innerHTML='<div class="empty">Loading&hellip;</div>';
+  try{
+    const res=await apiGet({action:'getPrizeLog'});
+    const prizes=res.prizes||[];
+    if(!prizes.length){ list.innerHTML='<div class="empty">No prizes redeemed yet</div>'; return; }
+    list.innerHTML=prizes.map(p=>{
+      const name=(p.name||'').trim()||'Unknown';
+      const parts=name.split(' ');
+      const redeemed=formatDate((p.redeemedAt||'').split(' ')[0]||'');
+      const won=p.wonDate?formatDate(p.wonDate):'&mdash;';
+      return '<div class="member-row"><div class="avatar">'+initials(parts[0]||'',parts[1]||'')+'</div>'
+        +'<div class="member-info"><div class="member-name">'+name+'</div>'
+        +'<div class="member-meta">'+(p.phone||'')+' &middot; won '+won+'</div></div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">'
+        +'<span class="badge badge-complete">'+(p.prize||'Prize')+'</span>'
+        +'<span style="font-size:11px;color:var(--text2)">Redeemed '+redeemed+'</span>'
+        +'</div></div>';
+    }).join('');
+  }catch(e){ list.innerHTML='<div class="empty">Could not load prizes</div>'; }
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────

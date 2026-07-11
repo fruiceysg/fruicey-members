@@ -379,7 +379,7 @@ input:focus{border-color:#8fcea1}
       <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
     </div>
 
-    <button class="scan-qr-btn" onclick="startStampScan()">📷 Scan QR to Get Stamp</button>
+    <button class="scan-qr-btn" id="scan-qr-btn" onclick="startStampScan()">Scan QR to Get Stamp</button>
 
   </div>
 
@@ -422,7 +422,6 @@ input:focus{border-color:#8fcea1}
     <div style="font-size:11px;color:#aaa;text-align:center;margin-bottom:8px">
        Ask our crew for the QR code to earn your next stamp!
     </div>
-    <button class="btn btn-secondary" onclick="showScr('scr-lookup');clearLookup()">← Back</button>
   </div>
 </div>
 
@@ -569,9 +568,9 @@ function renderCard(member){
   // Show saved prize if exists (card may have reset to 0 but prize is saved)
   var prizeBox = document.getElementById('saved-prize-box');
   if(!prizeBox){
-    // Create saved prize box if it doesn't exist
-    var cardEl = document.getElementById('stamp-grid');
-    if(cardEl){
+    // Create saved prize box if it doesn't exist — placed directly under the Scan QR button
+    var anchorEl = document.getElementById('scan-qr-btn') || document.getElementById('stamp-grid');
+    if(anchorEl){
       var div = document.createElement('div');
       div.id = 'saved-prize-box';
       div.style.cssText = 'display:none;margin:16px 0;border-radius:14px;padding:16px;text-align:center';
@@ -579,8 +578,8 @@ function renderCard(member){
         +'<div style="font-size:18px;font-weight:800;margin-bottom:4px" id="saved-prize-reward"></div>'
         +'<div style="font-size:12px;margin-bottom:8px" id="saved-prize-desc"></div>'
         +'<div style="font-size:11px;margin-bottom:10px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.5)" id="saved-prize-expiry"></div>'
-        +'<button onclick="redeemSavedPrize()" style="padding:10px 24px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)">Redeem Now</button>';
-      cardEl.parentNode.insertBefore(div, cardEl.nextSibling);
+        +'<button id="saved-prize-redeem-btn" onclick="redeemSavedPrize()" style="padding:10px 24px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)">Redeem Now</button>';
+      anchorEl.parentNode.insertBefore(div, anchorEl.nextSibling);
       prizeBox = div;
     }
   }
@@ -590,7 +589,7 @@ function renderCard(member){
       prizeBox.style.display = 'block';
       prizeBox.style.background = savedSeg.color;
       prizeBox.style.color = '#fff';
-      document.getElementById('saved-prize-name').textContent = '🎉 ' + savedSeg.name;
+      document.getElementById('saved-prize-name').textContent = savedSeg.name;
       document.getElementById('saved-prize-reward').textContent = savedSeg.reward;
       document.getElementById('saved-prize-desc').textContent = savedSeg.desc||'';
       // Calculate expiry
@@ -599,15 +598,21 @@ function renderCard(member){
       expiryDate.setDate(expiryDate.getDate() + 30);
       var now = new Date();
       var daysLeft = Math.ceil((expiryDate - now) / (1000*60*60*24));
+      var fmt = function(d){ return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear(); };
+      var wonOnStr = fmt(awardDate);
+      var redeemBtn = document.getElementById('saved-prize-redeem-btn');
       if(daysLeft <= 0){
-        document.getElementById('saved-prize-expiry').innerHTML = '⚠️ This prize has <b>expired</b>';
+        document.getElementById('saved-prize-expiry').innerHTML = 'This prize has <b>expired</b>';
         document.getElementById('saved-prize-expiry').style.background = 'rgba(231,76,60,0.3)';
+        if(redeemBtn){ redeemBtn.textContent = 'Expired'; redeemBtn.disabled = true; redeemBtn.style.opacity = '0.6'; redeemBtn.style.cursor = 'not-allowed'; }
       } else if(daysLeft <= 7){
-        document.getElementById('saved-prize-expiry').innerHTML = '⏰ Expires in <b>'+daysLeft+' day'+(daysLeft!==1?'s':'')+'</b> · Won on '+member.spinResultDate;
+        document.getElementById('saved-prize-expiry').innerHTML = 'Expires in <b>'+daysLeft+' day'+(daysLeft!==1?'s':'')+'</b> · Won on '+wonOnStr;
         document.getElementById('saved-prize-expiry').style.background = 'rgba(255,200,0,0.3)';
+        if(redeemBtn){ redeemBtn.textContent = 'Redeem Now · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'; redeemBtn.disabled = false; redeemBtn.style.opacity = '1'; redeemBtn.style.cursor = 'pointer'; }
       } else {
-        document.getElementById('saved-prize-expiry').innerHTML = '📅 Valid until '+(expiryDate.getDate()+'/'+( expiryDate.getMonth()+1)+'/'+expiryDate.getFullYear())+' · Won on '+member.spinResultDate;
+        document.getElementById('saved-prize-expiry').innerHTML = 'Valid until '+fmt(expiryDate)+' · Won on '+wonOnStr;
         document.getElementById('saved-prize-expiry').style.background = 'rgba(255,255,255,0.5)';
+        if(redeemBtn){ redeemBtn.textContent = 'Redeem Now · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'; redeemBtn.disabled = false; redeemBtn.style.opacity = '1'; redeemBtn.style.cursor = 'pointer'; }
       }
     }
   } else if(prizeBox){

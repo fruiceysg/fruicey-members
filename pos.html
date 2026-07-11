@@ -799,6 +799,40 @@ const IMG = {
   'lp04': '1YaiZqrDn0H5Kd_SGr8Gy9koqoFvicea-',
   'lp05': '15d7Xghl9k_bTN5k6i9XWbTCWVIszxcVa',
   'lp06': '1h7bM7Lxv82nr-4Ysf2XE7jrZ46x7K0w9',
+
+  // Juices (js01 to js31) — add Google Drive file IDs from your Drive folder
+  // To find the ID: open your Drive, right-click image → Get link → copy ID between /d/ and /view
+  'ju01': 'REPLACE_WITH_js01_ID', // Watermelon Lemonade
+  'ju02': 'REPLACE_WITH_js02_ID', // Watermelon Pineapple
+  'ju03': 'REPLACE_WITH_js03_ID', // Watermelon Lychee
+  'ju04': 'REPLACE_WITH_js04_ID', // Watermelon Strawberry
+  'ju05': 'REPLACE_WITH_js05_ID', // Watermelon Soursop
+  'ju06': 'REPLACE_WITH_js06_ID', // Strawberry Soursop
+  'ju07': 'REPLACE_WITH_js07_ID', // Peanut Butter Banana
+  'ju08': 'REPLACE_WITH_js08_ID', // Chocolate Banana
+  'ju09': 'REPLACE_WITH_js09_ID', // Chocolate Avocado
+  'ju10': 'REPLACE_WITH_js10_ID', // Apple Beetroot Carrot
+  'ju11': 'REPLACE_WITH_js11_ID', // Apple Celery Cucumber
+  'ju12': 'REPLACE_WITH_js12_ID', // Apple Pineapple
+  'ju13': 'REPLACE_WITH_js13_ID', // Pineapple Orange
+  'ju14': 'REPLACE_WITH_js14_ID', // Orange Passion
+  'ju15': 'REPLACE_WITH_js15_ID', // Mango Orange
+  'ju16': 'REPLACE_WITH_js16_ID', // Apple Orange
+  'ju17': 'REPLACE_WITH_js17_ID', // Watermelon Yakult
+  'ju18': 'REPLACE_WITH_js18_ID', // Apple Yakult
+  'ju19': 'REPLACE_WITH_js19_ID', // Carrot Orange
+  'ju20': 'REPLACE_WITH_js20_ID', // Carrot Milk
+  'ju21': 'REPLACE_WITH_js21_ID', // Watermelon Milk
+  'ju22': 'REPLACE_WITH_js22_ID', // Avocado Shake
+  'ju23': 'REPLACE_WITH_js23_ID', // Papaya Shake
+  'ju24': 'REPLACE_WITH_js24_ID', // Mango Shake
+  'ju25': 'REPLACE_WITH_js25_ID', // Banana Shake
+  'ju26': 'REPLACE_WITH_js26_ID', // Strawberry Shake
+  'ju27': 'REPLACE_WITH_js27_ID', // Strawberry Banana Shake
+  'ju28': 'REPLACE_WITH_js28_ID', // Avocado Coconut
+  'ju29': 'REPLACE_WITH_js29_ID', // Soursop Coconut
+  'ju30': 'REPLACE_WITH_js30_ID', // Strawberry Coconut
+  'ju31': 'REPLACE_WITH_js31_ID', // Mango Coconut
 };
 const CAT_COLORS = {'Shakes & Smoothies':'#6796ce','Juices':'#86b3d4','Superfood Bowls':'#7f88b3','Immunity Press':'#99d1b4','Nutritional Press':'#f0da75','Wellness Press':'#dd8581','Longevity Press':'#de9f4f'};
 const CAT_BG     = {'Shakes & Smoothies':'#e3f2fb','Superfood Bowls':'#e8f8ee','Immunity Press':'#fef0e2','Nutritional Press':'#f2eafa','Juices':'#fce4f0'};
@@ -808,6 +842,17 @@ let cart = [], currentMember = null, memberDiscount = 0, currentCat = 'Shakes & 
 const ONLINE_PLATFORMS = ['GrabFood','FoodPanda','Online Shop'];
 let stockStatus = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg // id -> true/false
+
+// ── HELPER: Batch-update juice image IDs ──────────────────────────────────────
+// Once you have all 31 file IDs from your Drive folder, paste this in the browser console:
+// batchFillJuiceImageIDs({ju01:'ID1',ju02:'ID2',...ju31:'ID31'})
+function batchFillJuiceImageIDs(idMap) {
+  let changed = 0;
+  Object.keys(idMap).forEach(pid => {
+    if(IMG[pid]){ IMG[pid] = idMap[pid]; changed++; }
+  });
+  console.log('Updated '+changed+' juice image IDs. Refresh the page to see images.');
+}
 let salesLog = []; // always loaded fresh from Sheets
 
 // ── API ──────────────────────────────────────────────────────────────

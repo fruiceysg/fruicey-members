@@ -91,6 +91,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .product-card{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06)}
 .product-img{width:100%;height:110px;object-fit:contain;background:#fff;display:block;padding:4px}
 .product-img-placeholder{width:100%;height:80px;background:linear-gradient(135deg,var(--green-light),#e8f5e9);display:flex;align-items:center;justify-content:center}
+.product-info-btn{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;z-index:6;display:flex;align-items:center;justify-content:center;line-height:1;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.product-info-btn:active{background:rgba(0,0,0,.7)}
 .product-body{padding:8px}
 .product-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.3;min-height:30px}
 .size-btns{display:flex;flex-wrap:wrap;gap:4px}
@@ -682,42 +684,40 @@ const IMG = {
   'lp04': '1YaiZqrDn0H5Kd_SGr8Gy9koqoFvicea-',
   'lp05': '15d7Xghl9k_bTN5k6i9XWbTCWVIszxcVa',
   'lp06': '1h7bM7Lxv82nr-4Ysf2XE7jrZ46x7K0w9',
-  'ju01': '1Q952jqXV3Ms08GA2P5q2n2Naldge01B4',
-  'ju02': '1GZN4cO0wFaEXi5UQ1J15DWWBpbsBwpXy',
-  'ju03': '1l17NRlL1IjNdf_NLn0qYWZeOEhZ29fr9',
-  'ju04': '11dYanz-qRUVUa21k8yEgxNbLoA6V6d3g',
-  'ju05': '1xH9IqB9fUkfx31sWNjKLY9Qxe4Me487z',
-  'ju06': '1i5AwZWgkjOiu6ENc-vCRY5yfCNFPakRk',
-  'ju07': '1Wp4Dgd6JlDra92Crw6CG8obUWmntwZzG',
-  'ju08': '18n_9Lm525zMTXVMy8Sy5BuERyZeExPLP',
-  'ju09': '1XIX-ek0RVgCLYTtsLRIfUl2-R4szq3Bh',
-  'ju10': '11LIN-ELoQDM-bnUhefVGEAgsTN0vzEgw',
-  'ju11': '1nIJs7gmq8mnMZtuAxbOw2yKcwS4F5fa-',
-  'ju12': '1dUfG_fvLK6PuWRre9EVvcWAVzsp0mKt3',
-  'ju13': '1uaZjJs02WNhwjYEVZNDZpbUBOOlY2-fk',
-  'ju14': '1quZHXuMvF83TgszcGS1tvONr5lzeCoDv',
-  'ju15': '1yasCUS7BMEerka6Rofig5OFqpaXiHV2J',
-  'ju16': '18Qr3e8zQQYYzHxU0Cr7-US3RiOQZU8ty',
-  'ju17': '1Vg5GimdjwlH0Fzg-JQqByiMxVw8Hn-wJ',
-  'ju18': '1JWYTEd2bJRxdhiatA8C-5zobIJcHuzZW',
-  'ju19': '1kf7VE1Yvw7Y6WN0SOgUwz8R5_aESB0iy',
-  'ju20': '1t8LimAx65o7aS4-vb1AFEqoBeCoGSC6M',
-  'ju21': '1yktJHachqWBb_M3F5pXTWAL8DnMq-1Fw',
-  'ju22': '1S_393WO0onTjZR2WlfoZgtmtX-TMPbOY',
-  'ju23': '1ybqYm45hBh0BEBLcG5aZHUH9DXwFHPB_',
-  'ju24': '1q_iNPMUnxT4ViTJ9thp1wM-oDpTqsdQe',
-  'ju25': '1IWqrNTHhNOUKwW35H1Wow70j20IHxCMr',
-  'ju26': '1eU7bmvplSZKWUE1zYNhB9_CaoXgk-itR',
-  'ju27': '1re494qX4UN4i8MY90lRdwDBSOcTrKakR',
-  'ju28': '17QxCpnEhUexLC5YDtU1uU8Q0ABs8NQbU',
-  'ju29': '16biJPYgocPBL_dk78riJMfVXC9xBp5Fr',
-  'ju30': '1Dkxl555XYakA6W6zn6kTEXsSVDDEL77f',
-  'ju31': '1yKMhEUGn2Dp_nWxzeKzV8_bMIvwvlX4u',
+  'ju01': '',
+  'ju02': '',
+  'ju03': '',
+  'ju04': '',
+  'ju05': '',
+  'ju06': '',
+  'ju07': '',
+  'ju08': '',
+  'ju09': '',
+  'ju10': '',
+  'ju11': '',
+  'ju12': '',
+  'ju13': '',
+  'ju14': '',
+  'ju15': '',
+  'ju16': '',
+  'ju17': '',
+  'ju18': '',
+  'ju19': '',
+  'ju20': '',
+  'ju21': '',
+  'ju22': '',
+  'ju23': '',
+  'ju24': '',
+  'ju25': '',
+  'ju26': '',
+  'ju27': '',
+  'ju28': '',
+  'ju29': '',
+  'ju30': '',
+  'ju31': '',
 };
-// ── INFO IMAGES (for premium categories: sb, ss, ip, np, lp, wp) ────
-// Add entries here as you upload info images to Google Drive, e.g.:
+// ── INFO IMAGES (hover/tap to view for: sb, ss, ip, np, lp, wp) ──
 const IMG_INFO = {
-  'sb01': '1SuSzreM-Jf4OLv4x6PBFORmmWZGh16Lw',
 };
 // ── CONFIG ────────────────────────────────────────────────────
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
@@ -875,7 +875,7 @@ function initHomeScreen(){
 const CATS = Object.keys(CATALOGUE);
 const PRODUCT_MAP = {};
 Object.values(CATALOGUE).forEach(prods => prods.forEach(p => { PRODUCT_MAP[p.id] = p; }));
-const PREMIUM_CATS = new Set(['Smoothie Bowls', 'Smoothies', 'Immunity Press', 'Nutritional Press', 'Longevity Press', 'Wellness Press']);
+const PREMIUM_CATS = new Set(['Smoothie Bowls','Smoothies','Immunity Press','Nutritional Press','Longevity Press','Wellness Press']);
 
 function initMenu(){
   if(!currentCat){ currentCat = CATS[0]; renderCatPills(); }
@@ -904,51 +904,32 @@ function renderProducts(){
   const grid  = document.getElementById('product-grid');
   grid.innerHTML = '';
   const isPremium = PREMIUM_CATS.has(currentCat);
-  
   prods.forEach(p => {
     const card = document.createElement('div');
     card.className = 'product-card';
     card.style.position = 'relative';
     card.style.overflow = 'hidden';
     const fileId = IMG[p.id];
-    const infoFileId = (isPremium && IMG_INFO[p.id] && IMG_INFO[p.id] !== 'REPLACE_WITH_FILE_ID') ? IMG_INFO[p.id] : null;
-    
+    const infoId = isPremium && IMG_INFO[p.id] ? IMG_INFO[p.id] : null;
     if(fileId){
       const img = document.createElement('img');
       img.className = 'product-img';
       img.src = 'https://lh3.googleusercontent.com/d/'+fileId+'=w400';
       img.loading = 'lazy';
-      img.dataset.pid = p.id;
-      
-      // Add hover + click for premium categories with info image
-      if(isPremium && infoFileId){
-        img.style.cursor = 'pointer';
-        img.style.transition = 'opacity 0.3s ease';
-        
-        // Hover: swap to info image
-        img.addEventListener('mouseenter', function(){
-          this.dataset.mainSrc = this.src;
-          this.src = 'https://lh3.googleusercontent.com/d/'+infoFileId+'=w400';
-          this.style.opacity = '0.9';
-        });
-        img.addEventListener('mouseleave', function(){
-          this.src = this.dataset.mainSrc;
-          this.style.opacity = '1';
-        });
-        
-        // Click: show enlarged info modal
-        img.addEventListener('click', function(e){
-          e.stopPropagation();
-          openProductInfoModal(infoFileId, p.name);
-        });
-      }
-      
       card.appendChild(img);
     } else {
       const ph = document.createElement('div');
       ph.className = 'product-img-placeholder';
       ph.innerHTML = '<i class="ti ti-cup" style="font-size:28px;color:var(--green);opacity:.5"></i>';
       card.appendChild(ph);
+    }
+    // Info button for premium categories with info image
+    if(infoId){
+      const infoBtn = document.createElement('button');
+      infoBtn.className = 'product-info-btn';
+      infoBtn.innerHTML = 'i';
+      infoBtn.onclick = function(e){ e.stopPropagation(); openProductInfoModal(infoId, p.name); };
+      card.appendChild(infoBtn);
     }
     // Pre-order ribbon
     if(PREORDER_IDS.has(p.id)){
@@ -1596,17 +1577,15 @@ function sendCreditWhatsApp(){
   showToast('Payment sent! Credit will be added once approved.');
 }
 
+// ── PRODUCT INFO MODAL ────────────────────────────────────────
 function openProductInfoModal(fileId, productName){
-  const modal = document.getElementById('product-info-modal');
-  const img = document.getElementById('product-info-img');
-  const title = document.getElementById('product-info-title');
-  img.src = 'https://lh3.googleusercontent.com/d/'+fileId+'=w800';
-  title.textContent = productName + ' - Info';
-  modal.classList.add('open');
+  document.getElementById('product-info-img').src = 'https://lh3.googleusercontent.com/d/'+fileId+'=w800';
+  document.getElementById('product-info-title').textContent = productName;
+  document.getElementById('product-info-modal').classList.add('open');
 }
-
 function closeProductInfoModal(){
   document.getElementById('product-info-modal').classList.remove('open');
+  document.getElementById('product-info-img').src = '';
 }
 
 function openCreditHistory(){
@@ -1764,16 +1743,14 @@ document.addEventListener('DOMContentLoaded', function(){
   </div>
 </div>
 
-<!-- PRODUCT INFO IMAGE MODAL -->
+<!-- PRODUCT INFO MODAL -->
 <div class="modal-bg" id="product-info-modal" onclick="if(event.target===this)closeProductInfoModal()">
-  <div class="modal-box" style="max-width:90vw;max-height:90vh;padding:0;display:flex;flex-direction:column">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #f0f0f0">
-      <div id="product-info-title" class="modal-title" style="margin:0">Product Info</div>
-      <button onclick="closeProductInfoModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>
+  <div class="modal-box" style="max-width:92vw;max-height:90vh;padding:12px;display:flex;flex-direction:column;align-items:center">
+    <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div id="product-info-title" style="font-family:var(--font);font-size:16px;font-weight:600;color:var(--text)"></div>
+      <button onclick="closeProductInfoModal()" style="background:none;border:none;font-size:26px;cursor:pointer;color:#999;padding:0 4px;line-height:1">&times;</button>
     </div>
-    <div style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:16px">
-      <img id="product-info-img" src="" alt="Product Info" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px">
-    </div>
+    <img id="product-info-img" src="" alt="Product Info" style="max-width:100%;max-height:78vh;object-fit:contain;border-radius:8px">
   </div>
 </div>
 

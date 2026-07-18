@@ -293,7 +293,7 @@ function doLogout(){
 
 
 const API      = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
-const STAMP_URL = 'https://fruiceysg.github.io/fruicey-members/stamp.html';
+const STAMP_URL = 'https://app.fruicey.sg/stamp.html';
 
 async function apiGet(p){ const r=await fetch(API+'?'+new URLSearchParams(p)); return r.json(); }
 async function apiPost(b){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)}); return r.json(); }

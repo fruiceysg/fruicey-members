@@ -135,6 +135,7 @@ body.home-active .login-star{display:none}
 
 /* HOME FOOTER */
 .home-footer{text-align:center;font-family:var(--font);color:var(--text2);padding:28px 16px 34px;line-height:1.6;font-size:15px}
+.home-footer .footer-year{font-family:var(--body);letter-spacing:.3px}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
 .hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
@@ -261,9 +262,9 @@ body.home-active .login-star{display:none}
 .qr-scanner-hint{position:relative;z-index:2;color:#fff;font-size:14px;margin-top:20px;text-align:center;padding:0 24px}
 .qr-scanner-close{position:absolute;top:20px;right:20px;z-index:3;background:rgba(255,255,255,.2);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer}
 
-/* ═══ TABLET / DESKTOP — scale the app up instead of locking it to phone size ═══ */
+/* ═══ TABLET / DESKTOP — fluid width that fills the screen (caps at 1600px) ═══ */
 @media (min-width:520px){
-  :root{--app-w:720px}
+  :root{--app-w:min(94vw,1600px)}
   html{background:#eef1f0}
   body{max-width:var(--app-w);margin:0 auto;background:#fff;box-shadow:0 0 50px rgba(0,0,0,.08);min-height:100vh}
   /* Re-anchor fixed elements to the centered column */
@@ -283,7 +284,7 @@ body.home-active .login-star{display:none}
   .home-footer{font-size:17px;padding:34px 16px 40px}
 }
 @media (min-width:900px){
-  :root{--app-w:1000px;--nav:68px}
+  :root{--nav:68px}
   .product-grid{grid-template-columns:repeat(4,1fr);gap:16px;padding:16px 24px}
   .product-img{height:180px}
   .product-name{font-size:14px}
@@ -298,6 +299,10 @@ body.home-active .login-star{display:none}
   .drawer-link{font-size:20px;padding:16px 24px}
   .home-footer{font-size:19px;padding:40px 16px 48px}
   .btn{font-size:17px;padding:15px}
+}
+@media (min-width:1300px){
+  .product-grid{grid-template-columns:repeat(5,1fr);gap:18px;padding:18px 28px}
+  .product-img{height:200px}
 }
 </style>
 </head>
@@ -359,7 +364,7 @@ body.home-active .login-star{display:none}
 
   <footer class="home-footer">
     <div>Born in Singapore</div>
-    <div>&copy; 2026 Fruicey Singapore</div>
+    <div>&copy; <span class="footer-year">2026</span> Fruicey Singapore</div>
   </footer>
 </div>
 

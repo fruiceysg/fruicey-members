@@ -132,6 +132,9 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 body.home-active{background:#fff}
 body.home-active .login-star{display:none}
 #scr-home{background:#fff}
+
+/* HOME FOOTER */
+.home-footer{text-align:center;font-family:var(--font);color:var(--text2);padding:28px 16px 34px;line-height:1.6;font-size:15px}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
 .hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
@@ -328,18 +331,10 @@ body.home-active .login-star{display:none}
     <img class="feature-img" src="feature6.jpg" alt="Fruicey feature 6" loading="lazy">
   </div>
 
-  <div class="promo-banner" style="margin-top:12px">
-    <h3>Fruicey Rewards Pass</h3>
-    <p>Collect 9 stamps and spin our sure-win prize wheel! Sign up free under Rewards tab.</p>
-  </div>
-  <div class="card">
-    <div class="card-title">Opening Hours</div>
-    <div style="font-size:13px;color:var(--text2);line-height:2">
-      <div style="display:flex;justify-content:space-between"><span>Monday – Saturday</span><span style="font-weight:600">11:00am – 8:00pm</span></div>
-      <div style="display:flex;justify-content:space-between;color:#e74c3c"><span>Sunday</span><span>Closed</span></div>
-    </div>
-    <div style="margin-top:10px;font-size:12px;color:var(--text3)">Self-collection only. Pre-orders via PayNow.</div>
-  </div>
+  <footer class="home-footer">
+    <div>Born in Singapore</div>
+    <div>&copy; 2026 Fruicey Singapore</div>
+  </footer>
 </div>
 
 <!-- ═══ MENU ═══ -->
@@ -975,6 +970,7 @@ function goTab(tab) {
   document.getElementById('scr-'+tab).classList.add('active');
   document.getElementById('nav-'+tab).classList.add('active');
   document.body.classList.toggle('home-active', tab === 'home');
+  document.documentElement.style.background = (tab === 'home') ? '#fff' : '';
 currentScreen = tab;
   if(tab==='home')    initHomeScreen();
   if(tab==='menu')    initMenu();
@@ -1056,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('scr-home').classList.add('active');
   document.getElementById('nav-home').classList.add('active');
   document.body.classList.add('home-active');
+  document.documentElement.style.background = '#fff';
   initHomeScreen();
   // Hide loader
   const loader = document.getElementById('app-loader');

@@ -115,6 +115,14 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* HERO LANDING */
 .hero-landing{position:relative}
 .hero-landing-img{width:100%;height:auto;display:block;background:var(--green-light)}
+
+/* 3-SLIDE SLIDING BANNER */
+.pslider{position:relative;width:100%;overflow:hidden;background:var(--green-light)}
+.pslider-track{display:flex;width:100%;transition:transform .6s cubic-bezier(.4,0,.2,1)}
+.pslider-slide{flex:0 0 100%;width:100%;height:auto;display:block}
+.pslider-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:7px;z-index:2}
+.pslider-dot{width:8px;height:8px;border-radius:50%;border:none;padding:0;background:rgba(255,255,255,.55);cursor:pointer;transition:background .2s,transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.pslider-dot.active{background:#fff;transform:scale(1.25)}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
 .hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
@@ -250,7 +258,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
   .cart-badge{right:calc(50% - 240px + 16px)}
   .cart-panel{left:calc(50% - 240px);right:calc(50% - 240px)}
   .drawer-panel{left:calc(50% - 240px)}
-  #fullscreen-btn{right:calc(50% - 240px + 10px)!important}
+  #fullscreen-btn{right:calc(50% - 240px + 6px)!important}
   #fullscreen-label{right:calc(50% - 240px + 6px)!important}
 }
 </style>
@@ -282,14 +290,25 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
     <img class="site-logo" id="home-logo" alt="Fruicey">
   </header>
 
-  <!-- Hero landing -->
+  <!-- Hero landing banner -->
   <div class="hero-landing">
     <img class="hero-landing-img" src="hero-banner.jpg" alt="Fruicey fresh juices" onerror="this.onerror=null;this.src='https://lh3.googleusercontent.com/d/1YpXxWMujS-eS4rDWxkG2NgdO80HmZVeB=w1200'">
-    <div class="hero-landing-copy">
-      <h1 id="home-greeting">Singapore&rsquo;s Most Personal<br>Juice Experience</h1>
-      <p>Experience the difference with daily fresh selections. Every juice crafted with expertise, zero shortcuts, and a personal touch that makes all the difference in your wellness journey.</p>
+  </div>
+
+  <!-- 3-slide sliding banner -->
+  <div class="pslider" id="pslider">
+    <div class="pslider-track" id="pslider-track">
+      <img class="pslider-slide" src="slide1.jpg" alt="Fruicey slide 1">
+      <img class="pslider-slide" src="slide2.jpg" alt="Fruicey slide 2">
+      <img class="pslider-slide" src="slide3.jpg" alt="Fruicey slide 3">
+    </div>
+    <div class="pslider-dots">
+      <button class="pslider-dot active" onclick="goSlide(0)" aria-label="Slide 1"></button>
+      <button class="pslider-dot" onclick="goSlide(1)" aria-label="Slide 2"></button>
+      <button class="pslider-dot" onclick="goSlide(2)" aria-label="Slide 3"></button>
     </div>
   </div>
+
 
 
   <div class="quick-links">
@@ -931,26 +950,20 @@ async function apiGet(params){ const p=new URLSearchParams({...params, _:Date.no
 async function apiPost(body){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)}); return r.json(); }
 
 // ── NAVIGATION ────────────────────────────────────────────────
-// ── HERO BANNER SLIDER ─────────────────────────────────────────
-let heroSlideIndex = 0;
-const HERO_REAL_SLIDES = 2; // number of actual unique slides (a 3rd cloned slide enables the seamless loop)
-function advanceHeroSlide(){
-  heroSlideIndex++;
-  const track = document.getElementById('hero-banner-track');
-  if(!track) return;
-  track.style.transition = 'transform 1.1s cubic-bezier(.65,0,.35,1)';
-  track.style.transform = 'translateX(-' + (heroSlideIndex * (100/3)) + '%)';
-  document.querySelectorAll('.hero-banner-dot').forEach((d,i)=>d.classList.toggle('active', i===(heroSlideIndex % HERO_REAL_SLIDES)));
-  if(heroSlideIndex === HERO_REAL_SLIDES){
-    // Reached the cloned slide — snap back to the real first slide with no visible transition
-    setTimeout(function(){
-      track.style.transition = 'none';
-      heroSlideIndex = 0;
-      track.style.transform = 'translateX(0%)';
-    }, 1100);
-  }
+// ── HOME 3-SLIDE BANNER SLIDER ─────────────────────────────────
+let pSlide = 0;
+const P_SLIDES = 3;
+let pTimer = null;
+function renderSlider(){
+  const t = document.getElementById('pslider-track');
+  if(!t) return;
+  t.style.transform = 'translateX(-' + (pSlide * 100) + '%)';
+  document.querySelectorAll('.pslider-dot').forEach((d,i)=>d.classList.toggle('active', i===pSlide));
 }
-setInterval(advanceHeroSlide, 5000);
+function nextSlide(){ pSlide = (pSlide + 1) % P_SLIDES; renderSlider(); }
+function goSlide(i){ pSlide = ((i % P_SLIDES) + P_SLIDES) % P_SLIDES; renderSlider(); resetSliderTimer(); }
+function resetSliderTimer(){ if(pTimer) clearInterval(pTimer); pTimer = setInterval(nextSlide, 5000); }
+resetSliderTimer();
 
 function goTab(tab) {
   if(!currentUser && tab !== 'home' && tab !== 'menu') { openLogin(); return; }
@@ -2030,8 +2043,8 @@ document.addEventListener('DOMContentLoaded', function(){
 </div>
 
 <!-- FULLSCREEN BUTTON -->
-<button id="fullscreen-btn" onclick="toggleFullscreen()" style="position:fixed;top:10px;right:10px;z-index:999;background:rgba(255,255,255,.85);border:1.5px solid rgba(0,0,0,.15);border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--green);box-shadow:0 2px 8px rgba(0,0,0,.1);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)" title="Fullscreen">⛶</button>
-<div id="fullscreen-label" style="position:fixed;top:46px;right:6px;z-index:999;width:42px;text-align:center;font-size:9px;font-weight:600;color:var(--green);pointer-events:none;text-shadow:0 1px 3px rgba(255,255,255,.9)">Full screen</div>
+<button id="fullscreen-btn" onclick="toggleFullscreen()" style="position:fixed;top:8px;right:6px;z-index:999;width:42px;padding:0;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--green);display:flex;align-items:center;justify-content:center;text-shadow:0 1px 3px rgba(255,255,255,.9)" title="Fullscreen">⛶</button>
+<div id="fullscreen-label" style="position:fixed;top:32px;right:6px;z-index:999;width:42px;text-align:center;font-size:9px;font-weight:600;color:var(--green);pointer-events:none;text-shadow:0 1px 3px rgba(255,255,255,.9)">Full screen</div>
 
 </body>
 </html>

@@ -125,8 +125,13 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .pslider-dot.active{background:#fff;transform:scale(1.25)}
 
 /* 6 FEATURE IMAGES (full-width, uncropped, swappable) */
-.home-features{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.home-features{display:flex;flex-direction:column;gap:0;margin-top:0}
 .feature-img{width:100%;height:auto;display:block;background:var(--green-light)}
+
+/* HOME TAB: clean plain background (does not affect other tabs) */
+body.home-active{background:#fff}
+body.home-active .login-star{display:none}
+#scr-home{background:#fff}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
 .hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
@@ -323,20 +328,6 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
     <img class="feature-img" src="feature6.jpg" alt="Fruicey feature 6" loading="lazy">
   </div>
 
-  <div class="quick-links">
-    <div class="quick-card" onclick="goTab('menu')">
-      <i class="ti ti-cup"></i><span>Order Now</span>
-    </div>
-    <div class="quick-card" onclick="goTab('orders')">
-      <i class="ti ti-receipt"></i><span>My Orders</span>
-    </div>
-    <div class="quick-card" onclick="goTab('rewards')">
-      <i class="ti ti-star"></i><span>Rewards Pass</span>
-    </div>
-    <div class="quick-card" onclick="goTab('account')">
-      <i class="ti ti-user-circle"></i><span>My Account</span>
-    </div>
-  </div>
   <div class="promo-banner" style="margin-top:12px">
     <h3>Fruicey Rewards Pass</h3>
     <p>Collect 9 stamps and spin our sure-win prize wheel! Sign up free under Rewards tab.</p>
@@ -983,6 +974,7 @@ function goTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('scr-'+tab).classList.add('active');
   document.getElementById('nav-'+tab).classList.add('active');
+  document.body.classList.toggle('home-active', tab === 'home');
 currentScreen = tab;
   if(tab==='home')    initHomeScreen();
   if(tab==='menu')    initMenu();
@@ -1063,6 +1055,7 @@ document.addEventListener('DOMContentLoaded', function(){
   updateCartBadge();
   document.getElementById('scr-home').classList.add('active');
   document.getElementById('nav-home').classList.add('active');
+  document.body.classList.add('home-active');
   initHomeScreen();
   // Hide loader
   const loader = document.getElementById('app-loader');

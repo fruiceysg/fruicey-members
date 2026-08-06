@@ -88,6 +88,46 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .promo-banner h3{font-family:var(--font);color:var(--green-dark);font-size:16px;margin-bottom:4px}
 .promo-banner p{font-size:12px;color:var(--text2);line-height:1.5}
 
+/* HOME SITE HEADER (top bar with menu + logo) */
+.site-header{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--border)}
+.site-menu-btn{width:40px;height:40px;flex-shrink:0;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;color:var(--text);transition:background .15s}
+.site-menu-btn:active{background:var(--green-light)}
+.site-menu-btn i{font-size:26px}
+.site-header img.site-logo{height:30px;display:block}
+
+/* DRAWER (slide-out nav) */
+.drawer{position:fixed;inset:0;z-index:300;display:none}
+.drawer.open{display:block}
+.drawer-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;transition:opacity .28s ease}
+.drawer.open .drawer-backdrop{opacity:1}
+.drawer-panel{position:absolute;top:0;left:0;bottom:0;width:80%;max-width:320px;background:#fff;box-shadow:2px 0 24px rgba(0,0,0,.18);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto}
+.drawer.open .drawer-panel{transform:translateX(0)}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
+.drawer-head img{height:32px;display:block}
+.drawer-close{width:34px;height:34px;border:none;background:none;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:22px}
+.drawer-links{padding:6px 0;flex:1}
+.drawer-link{display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;border:none;background:none;font-family:var(--body);font-size:15px;color:var(--text);cursor:pointer;text-align:left;border-bottom:1px solid #f4f4f4}
+.drawer-link:active{background:var(--green-light)}
+.drawer-link i{font-size:20px;color:var(--green-dark);flex-shrink:0;width:22px;text-align:center}
+.drawer-link .drawer-link-arrow{margin-left:auto;font-size:16px;color:var(--text3)}
+.drawer-foot{padding:16px 20px;font-size:11px;color:var(--text3);line-height:1.6;border-top:1px solid var(--border)}
+
+/* HERO LANDING */
+.hero-landing{position:relative}
+.hero-landing-img{width:100%;display:block;aspect-ratio:1600/900;object-fit:cover;background:var(--green-light)}
+.hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
+.hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
+.hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
+
+/* COMING SOON PANEL */
+.soon-sheet{position:fixed;inset:0;z-index:320;display:none}
+.soon-sheet.open{display:block}
+.soon-sheet .soon-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+.soon-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border-radius:18px;padding:26px 24px;width:82%;max-width:320px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.soon-card i{font-size:44px;color:var(--green);display:block;margin-bottom:12px}
+.soon-card h3{font-family:var(--font);font-size:20px;color:var(--green-dark);margin:0 0 8px}
+.soon-card p{font-size:13px;color:var(--text2);line-height:1.6;margin:0 0 18px}
+
 /* MENU */
 .cat-tabs{display:flex;overflow-x:auto;padding:10px 16px;gap:8px;background:#fff;border-bottom:1px solid var(--border);scrollbar-width:none}
 .cat-tabs::-webkit-scrollbar{display:none}
@@ -222,11 +262,22 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 <!-- ═══ HOME ═══ -->
 <div class="screen" id="scr-home">
-<div class="home-hero">
-  <img src="https://lh3.googleusercontent.com/d/1YpXxWMujS-eS4rDWxkG2NgdO80HmZVeB=w1200" style="width:100%;display:block" alt="Fruicey">
-  <h1 id="home-greeting">Welcome to Fruicey!</h1>
-</div>
-  
+
+  <!-- Top site header: menu button + logo -->
+  <header class="site-header">
+    <button class="site-menu-btn" onclick="openDrawer()" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
+    <img class="site-logo" id="home-logo" alt="Fruicey">
+  </header>
+
+  <!-- Hero landing -->
+  <div class="hero-landing">
+    <img class="hero-landing-img" src="https://lh3.googleusercontent.com/d/1YpXxWMujS-eS4rDWxkG2NgdO80HmZVeB=w1200" alt="Fruicey fresh juices">
+    <div class="hero-landing-copy">
+      <h1 id="home-greeting">Singapore&rsquo;s Most Personal<br>Juice Experience</h1>
+      <p>Experience the difference with daily fresh selections. Every juice crafted with expertise, zero shortcuts, and a personal touch that makes all the difference in your wellness journey.</p>
+    </div>
+  </div>
+
 
   <div class="quick-links">
     <div class="quick-card" onclick="goTab('menu')">
@@ -265,6 +316,38 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
   </div>
   <div id="cat-tabs" class="cat-tabs"></div>
   <div id="product-grid" class="product-grid"></div>
+</div>
+
+<!-- ═══ DRAWER MENU ═══ -->
+<div class="drawer" id="site-drawer">
+  <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+  <div class="drawer-panel">
+    <div class="drawer-head">
+      <img id="drawer-logo" alt="Fruicey">
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <nav class="drawer-links">
+      <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Locations and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
+      <button class="drawer-link" onclick="drawerSoon('Story')"><i class="ti ti-book"></i>Story<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="drawerSoon('Blog')"><i class="ti ti-news"></i>Blog<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="drawerSoon('Marketplace')"><i class="ti ti-building-store"></i>Marketplace<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="drawerSoon('Fresh Presses')"><i class="ti ti-bottle"></i>Fresh Presses<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="drawerSoon('Corporate Events')"><i class="ti ti-briefcase"></i>Corporate Events<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="drawerSoon('Shipping and Delivery')"><i class="ti ti-truck-delivery"></i>Shipping and Delivery<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+    </nav>
+    <div class="drawer-foot">68 Jalan Jurong Kechil, #01-10<br>Suites at Bukit Timah, Singapore 596180</div>
+  </div>
+</div>
+
+<!-- ═══ COMING SOON ═══ -->
+<div class="soon-sheet" id="soon-sheet">
+  <div class="soon-backdrop" onclick="closeSoon()"></div>
+  <div class="soon-card">
+    <i class="ti ti-seeding"></i>
+    <h3 id="soon-title">Coming soon</h3>
+    <p id="soon-text">This section is being crafted &mdash; check back shortly!</p>
+    <button class="btn btn-primary" onclick="closeSoon()">Got it</button>
+  </div>
 </div>
 
 <!-- CART BADGE -->
@@ -950,10 +1033,33 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // ── HOME ──────────────────────────────────────────────────────
 function initHomeScreen(){
-  if(currentUser){
-    document.getElementById('home-greeting').textContent = 'Hi, '+currentUser.first+'!';
+  // Reuse the logo already embedded in the Menu header (avoids duplicating base64)
+  var srcLogo = document.querySelector('#scr-menu .app-header img');
+  if(srcLogo){
+    var hl = document.getElementById('home-logo');
+    var dl = document.getElementById('drawer-logo');
+    if(hl) hl.src = srcLogo.src;
+    if(dl) dl.src = srcLogo.src;
   }
 }
+
+// ── DRAWER MENU ───────────────────────────────────────────────
+function openDrawer(){ document.getElementById('site-drawer').classList.add('open'); }
+function closeDrawer(){ document.getElementById('site-drawer').classList.remove('open'); }
+
+function openLocationsReviews(){
+  closeDrawer();
+  // Opens the Fruicey listing on Google Maps (address + reviews)
+  window.open('https://www.google.com/maps/search/?api=1&query=Fruicey%2068%20Jalan%20Jurong%20Kechil%20%2301-10%20Singapore%20596180', '_blank');
+}
+
+function drawerSoon(name){
+  closeDrawer();
+  document.getElementById('soon-title').textContent = name;
+  document.getElementById('soon-text').textContent = '“'+name+'” is being crafted — check back shortly!';
+  document.getElementById('soon-sheet').classList.add('open');
+}
+function closeSoon(){ document.getElementById('soon-sheet').classList.remove('open'); }
 
 // ── MENU ──────────────────────────────────────────────────────
 const CATS = Object.keys(CATALOGUE);

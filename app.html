@@ -128,6 +128,20 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .home-features{display:flex;flex-direction:column;gap:0;margin-top:0}
 .feature-img{width:100%;height:auto;display:block;background:var(--green-light)}
 
+/* WHY CHOOSE US (3 image + write-up rows) */
+.why-section{max-width:1000px;margin:0 auto;padding:30px 20px 18px}
+.why-title{font-family:var(--font);color:var(--green-dark);font-size:26px;text-align:center;margin:0 0 24px}
+.why-row{display:flex;align-items:center;gap:18px;margin-bottom:24px}
+.why-img{width:40%;max-width:240px;flex-shrink:0;height:auto;display:block;border-radius:16px;background:var(--green-light)}
+.why-text h3{font-family:var(--font);color:var(--green-dark);font-size:20px;margin:0 0 8px}
+.why-text p{font-size:14px;color:var(--text2);line-height:1.7;margin:0}
+@media (min-width:900px){
+  .why-title{font-size:32px}
+  .why-row{gap:28px;margin-bottom:34px}
+  .why-text h3{font-size:24px}
+  .why-text p{font-size:16px;line-height:1.8}
+}
+
 /* HOME TAB: clean plain background (does not affect other tabs) */
 body.home-active{background:#fff}
 body.home-active .login-star{display:none}
@@ -361,8 +375,33 @@ body.home-active .login-star{display:none}
   </div>
 
   <!-- 6 feature images (swappable: replace the file of the same name) -->
+  <!-- Why Choose Us (replaces feature1) -->
+  <section class="why-section">
+    <h2 class="why-title">Why Choose Us</h2>
+    <div class="why-row">
+      <img class="why-img" src="why1.jpg" alt="Why Fruicey 1" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="why-text">
+        <h3>[Reason 1 title]</h3>
+        <p>[Reason 1 &mdash; paste your write-up here.]</p>
+      </div>
+    </div>
+    <div class="why-row">
+      <img class="why-img" src="why2.jpg" alt="Why Fruicey 2" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="why-text">
+        <h3>[Reason 2 title]</h3>
+        <p>[Reason 2 &mdash; paste your write-up here.]</p>
+      </div>
+    </div>
+    <div class="why-row">
+      <img class="why-img" src="why3.jpg" alt="Why Fruicey 3" loading="lazy" onerror="this.style.visibility='hidden'">
+      <div class="why-text">
+        <h3>[Reason 3 title]</h3>
+        <p>[Reason 3 &mdash; paste your write-up here.]</p>
+      </div>
+    </div>
+  </section>
+
   <div class="home-features">
-    <img class="feature-img" src="feature1.jpg" alt="Fruicey feature 1" loading="lazy">
     <img class="feature-img" src="feature2.jpg" alt="Fruicey feature 2" loading="lazy">
     <img class="feature-img" src="feature3.jpg" alt="Fruicey feature 3" loading="lazy">
     <img class="feature-img" src="feature4.jpg" alt="Fruicey feature 4" loading="lazy">
@@ -397,22 +436,20 @@ body.home-active .login-star{display:none}
     <div class="story-block">
       <img class="story-img" src="story1.jpg" alt="Fruicey story 1" loading="lazy" onerror="this.style.display='none'">
       <p>Made with Passion for a Mission:
-         Building a Better Future
-         Fruicey is a living canvas of creativity, wellness, and purpose. Our journey began in a world of colour and imagination, shaped by childhood afternoons with LEGO bricks and sketchbooks. That early love for design evolved into a career in graphic storytelling, and eventually into a deeper calling: to nourish people through intentional products that reflect both artistry and care.
+Building a Better Future
 
-         As we ventured into retail, we didn’t just sell - we listened, learned, and aligned our work with values that matter. Fruicey became a reflection of everything we believe in: clarity, community, and the quiet power of thoughtful innovation.
+Fruicey is a living canvas of creativity, wellness, and purpose. Our journey began in a world of colour and imagination, shaped by childhood afternoons with LEGO bricks and sketchbooks. That early love for design evolved into a career in graphic storytelling, and eventually into a deeper calling: to nourish people through intentional products that reflect both artistry and care.
 
-         We source responsibly, create with integrity, and design experiences that spark joy. Every fruit-infused blend is crafted to be more than refreshing - it’s a symbol of possibility. From our commitment to sustainable sourcing to our engagement with local communities, Fruicey is built to empower future generations through education, mentorship, and wellness.
+As we ventured into retail, we didn&rsquo;t just sell - we listened, learned, and aligned our work with values that matter. Fruicey became a reflection of everything we believe in: clarity, community, and the quiet power of thoughtful innovation.
 
+We source responsibly, create with integrity, and design experiences that spark joy. Every fruit-infused blend is crafted to be more than refreshing - it&rsquo;s a symbol of possibility. From our commitment to sustainable sourcing to our engagement with local communities, Fruicey is built to empower future generations through education, mentorship, and wellness.
 
-         Our mission is simple:
-         To infuse creativity into everyday nourishment.
-         To build systems that honor nature, inspire self-expression, and support growth.
-         To lead with clarity and begin with gratitude.
+Our mission is simple:
+To infuse creativity into everyday nourishment.
+To build systems that honor nature, inspire self-expression, and support growth.
+To lead with clarity and begin with gratitude.
 
-
-         Whether you’re sipping a clarity blend, exploring our vibrant retail space, or joining our movement for intentional living,
-        Fruicey invites you to be part of a future that’s colourful, conscious, and kind.</p>
+Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space, or joining our movement for intentional living, Fruicey invites you to be part of a future that&rsquo;s colourful, conscious, and kind.</p>
     </div>
 
     <div class="story-block">

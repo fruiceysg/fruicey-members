@@ -35,7 +35,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav);background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.06)}
 .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);transition:color .15s;border:none;background:none;font-family:var(--body)}
 .nav-tab.active{color:var(--green)}
-.nav-tab i{font-size:22px}
+.nav-tab i{font-size:27px}
 .nav-tab span{font-size:10px;font-weight:500}
 
 /* SCREENS */
@@ -314,7 +314,7 @@ body.home-active .login-star{display:none}
   .card{margin:18px 24px;padding:22px}
   .card-title{font-size:20px}
   .order-card{margin:16px 24px}
-  .nav-tab i{font-size:26px}
+  .nav-tab i{font-size:31px}
   .nav-tab span{font-size:12px}
   .site-header{padding:14px 24px}
   .site-header img.site-logo{height:62px}
@@ -356,7 +356,12 @@ body.home-active .login-star{display:none}
     <img class="site-logo" id="home-logo" alt="Fruicey">
   </header>
 
-  <!-- 3-slide sliding banner (top tier) -->
+  <!-- Hero landing banner -->
+  <div class="hero-landing">
+    <img class="hero-landing-img" src="hero-banner.jpg" alt="Fruicey fresh juices" onerror="this.onerror=null;this.src='https://lh3.googleusercontent.com/d/1YpXxWMujS-eS4rDWxkG2NgdO80HmZVeB=w1200'">
+  </div>
+
+  <!-- 3-slide sliding banner (under hero) -->
   <div class="pslider" id="pslider">
     <div class="pslider-track" id="pslider-track">
       <img class="pslider-slide" src="slide1.jpg" alt="Fruicey slide 1">
@@ -368,11 +373,6 @@ body.home-active .login-star{display:none}
       <button class="pslider-dot" onclick="goSlide(1)" aria-label="Slide 2"></button>
       <button class="pslider-dot" onclick="goSlide(2)" aria-label="Slide 3"></button>
     </div>
-  </div>
-
-  <!-- Hero landing banner -->
-  <div class="hero-landing">
-    <img class="hero-landing-img" src="hero-banner.jpg" alt="Fruicey fresh juices" onerror="this.onerror=null;this.src='https://lh3.googleusercontent.com/d/1YpXxWMujS-eS4rDWxkG2NgdO80HmZVeB=w1200'">
   </div>
 
   <!-- 6 feature images (swappable: replace the file of the same name) -->

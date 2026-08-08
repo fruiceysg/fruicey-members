@@ -115,6 +115,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* HERO LANDING */
 .hero-landing{position:relative}
 .hero-landing-img{width:100%;height:auto;display:block;background:var(--green-light)}
+.hero-wave{width:100%;line-height:0;margin-top:-20px;position:relative;z-index:2;pointer-events:none}
+.hero-wave svg{display:block;width:100%;height:90px}
 
 /* 3-SLIDE SLIDING BANNER */
 .pslider{position:relative;width:100%;overflow:hidden;background:var(--green-light)}
@@ -361,6 +363,13 @@ body.home-active .login-star{display:none}
     <img class="hero-landing-img" src="hero-banner.jpg" alt="Fruicey fresh juices" onerror="this.onerror=null;this.src='https://lh3.googleusercontent.com/d/1YpXxWMujS-eS4rDWxkG2NgdO80HmZVeB=w1200'">
   </div>
 
+  <!-- Blue wave blend below hero -->
+  <div class="hero-wave" aria-hidden="true">
+    <svg viewBox="0 0 1440 90" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,34 C180,74 360,6 540,30 C720,54 900,86 1080,60 C1260,36 1350,20 1440,42 L1440,90 L0,90 Z" fill="#69c8e4"></path>
+    </svg>
+  </div>
+
   <!-- 3-slide sliding banner -->
   <div class="pslider" id="pslider">
     <div class="pslider-track" id="pslider-track">
@@ -377,7 +386,6 @@ body.home-active .login-star{display:none}
 
   <!-- 6 feature images (swappable: replace the file of the same name) -->
   <div class="home-features">
-    <img class="feature-img" src="feature2.jpg" alt="Fruicey feature 2" loading="lazy">
     <img class="feature-img" src="feature3.jpg" alt="Fruicey feature 3" loading="lazy">
     <img class="feature-img" src="feature4.jpg" alt="Fruicey feature 4" loading="lazy">
   </div>

@@ -126,6 +126,10 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* 6 FEATURE IMAGES (full-width, uncropped, swappable) */
 .home-features{display:flex;flex-direction:column;gap:0;margin-top:0}
+
+/* TOP BANNER (boxed, contained, aspect preserved) */
+.top-banner-box{max-width:860px;margin:16px auto;padding:0 16px}
+.top-banner-box img{width:100%;height:auto;display:block;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
 .feature-img{width:100%;height:auto;display:block;background:var(--green-light)}
 
 /* WHY CHOOSE US (contained cards, alternating) */
@@ -357,12 +361,7 @@ body.home-active .login-star{display:none}
     <img class="site-logo" id="home-logo" alt="Fruicey">
   </header>
 
-  <!-- Top banner (above hero) -->
-  <div class="hero-landing">
-    <img class="hero-landing-img" src="top-banner.jpg" alt="Fruicey top banner" loading="lazy" onerror="this.style.display='none'">
-  </div>
-
-  <!-- 3-slide sliding banner (under hero) -->
+  <!-- 3-slide sliding banner (top) -->
   <div class="pslider" id="pslider">
     <div class="pslider-track" id="pslider-track">
       <img class="pslider-slide" src="slide1.jpg" alt="Fruicey slide 1">
@@ -377,6 +376,11 @@ body.home-active .login-star{display:none}
       <button class="pslider-dot" onclick="goSlide(2)" aria-label="Slide 3"></button>
       <button class="pslider-dot" onclick="goSlide(3)" aria-label="Slide 4"></button>
     </div>
+  </div>
+
+  <!-- Top banner (boxed, below slider) -->
+  <div class="top-banner-box">
+    <img src="top-banner.jpg" alt="Fruicey top banner" loading="lazy" onerror="this.style.display='none'">
   </div>
 
   <!-- 6 feature images (swappable: replace the file of the same name) -->

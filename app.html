@@ -502,11 +502,12 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <button class="drawer-close" onclick="closeDrawer()" aria-label="Close"><i class="ti ti-x"></i></button>
     </div>
     <nav class="drawer-links">
-      <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Locations and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
+      <button class="drawer-link" onclick="closeDrawer();goTab('menu')"><i class="ti ti-cup"></i>Menu<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="drawerSoon('Subscriptions')"><i class="ti ti-calendar-repeat"></i>Subscriptions<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openStory()"><i class="ti ti-book"></i>Story<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openBlog()"><i class="ti ti-brand-instagram"></i>Blog<span class="drawer-link-arrow ti ti-external-link"></span></button>
-      <button class="drawer-link" onclick="closeDrawer();goTab('menu')"><i class="ti ti-cup"></i>Menu<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
-      <button class="drawer-link" onclick="drawerSoon('Corporate Events')"><i class="ti ti-briefcase"></i>Corporate Events<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Location and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
+      <button class="drawer-link" onclick="openCorporate()"><i class="ti ti-briefcase"></i>Corporate Events<span class="drawer-link-arrow ti ti-mail"></span></button>
       <button class="drawer-link" onclick="drawerSoon('Shipping and Delivery')"><i class="ti ti-truck-delivery"></i>Shipping and Delivery<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
     </nav>
     <div class="drawer-foot">68 Jalan Jurong Kechil, #01-10<br>Suites at Bukit Timah, Singapore 596180</div>
@@ -1244,6 +1245,11 @@ function closeDrawer(){ document.getElementById('site-drawer').classList.remove(
 function openBlog(){
   closeDrawer();
   window.open('https://www.instagram.com/fruiceysg', '_blank');
+}
+
+function openCorporate(){
+  closeDrawer();
+  window.location.href = 'mailto:wilson@fruicey.sg?subject=Corporate%20Events%20Enquiry';
 }
 
 function openLocationsReviews(){

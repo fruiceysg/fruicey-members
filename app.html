@@ -372,11 +372,14 @@ body.home-active .login-star{display:none}
       <img class="pslider-slide" src="slide1.jpg" alt="Fruicey slide 1">
       <img class="pslider-slide" src="slide2.jpg" alt="Fruicey slide 2">
       <img class="pslider-slide" src="slide3.jpg" alt="Fruicey slide 3">
+      <img class="pslider-slide" src="slide4.jpg" alt="Fruicey slide 4">
+      <img class="pslider-slide" src="slide1.jpg" alt="" aria-hidden="true">
     </div>
     <div class="pslider-dots">
       <button class="pslider-dot active" onclick="goSlide(0)" aria-label="Slide 1"></button>
       <button class="pslider-dot" onclick="goSlide(1)" aria-label="Slide 2"></button>
       <button class="pslider-dot" onclick="goSlide(2)" aria-label="Slide 3"></button>
+      <button class="pslider-dot" onclick="goSlide(3)" aria-label="Slide 4"></button>
     </div>
   </div>
 
@@ -1095,18 +1098,40 @@ async function apiGet(params){ const p=new URLSearchParams({...params, _:Date.no
 async function apiPost(body){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)}); return r.json(); }
 
 // ── NAVIGATION ────────────────────────────────────────────────
-// ── HOME 3-SLIDE BANNER SLIDER ─────────────────────────────────
+// ── HOME SLIDER (seamless one-way loop) ────────────────────────
 let pSlide = 0;
-const P_SLIDES = 3;
+const P_REAL = 4;              // real slides (a cloned 1st slide sits at the end)
+const P_EASE = 'transform .6s cubic-bezier(.4,0,.2,1)';
 let pTimer = null;
-function renderSlider(){
+function updateDots(){
+  const active = pSlide % P_REAL;
+  document.querySelectorAll('.pslider-dot').forEach((d,i)=>d.classList.toggle('active', i===active));
+}
+function nextSlide(){
   const t = document.getElementById('pslider-track');
   if(!t) return;
+  pSlide++;
+  t.style.transition = P_EASE;
   t.style.transform = 'translateX(-' + (pSlide * 100) + '%)';
-  document.querySelectorAll('.pslider-dot').forEach((d,i)=>d.classList.toggle('active', i===pSlide));
+  updateDots();
+  if(pSlide === P_REAL){
+    // reached the cloned first slide — snap back to the real start with no visible jump
+    setTimeout(function(){
+      t.style.transition = 'none';
+      pSlide = 0;
+      t.style.transform = 'translateX(0)';
+    }, 620);
+  }
 }
-function nextSlide(){ pSlide = (pSlide + 1) % P_SLIDES; renderSlider(); }
-function goSlide(i){ pSlide = ((i % P_SLIDES) + P_SLIDES) % P_SLIDES; renderSlider(); resetSliderTimer(); }
+function goSlide(i){
+  const t = document.getElementById('pslider-track');
+  if(!t) return;
+  pSlide = ((i % P_REAL) + P_REAL) % P_REAL;
+  t.style.transition = P_EASE;
+  t.style.transform = 'translateX(-' + (pSlide * 100) + '%)';
+  updateDots();
+  resetSliderTimer();
+}
 function resetSliderTimer(){ if(pTimer) clearInterval(pTimer); pTimer = setInterval(nextSlide, 5000); }
 resetSliderTimer();
 

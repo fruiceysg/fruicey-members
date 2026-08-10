@@ -504,9 +504,8 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <nav class="drawer-links">
       <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Locations and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
       <button class="drawer-link" onclick="openStory()"><i class="ti ti-book"></i>Story<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
-      <button class="drawer-link" onclick="drawerSoon('Blog')"><i class="ti ti-news"></i>Blog<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
-      <button class="drawer-link" onclick="drawerSoon('Marketplace')"><i class="ti ti-building-store"></i>Marketplace<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
-      <button class="drawer-link" onclick="drawerSoon('Fresh Presses')"><i class="ti ti-bottle"></i>Fresh Presses<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="openBlog()"><i class="ti ti-brand-instagram"></i>Blog<span class="drawer-link-arrow ti ti-external-link"></span></button>
+      <button class="drawer-link" onclick="closeDrawer();goTab('menu')"><i class="ti ti-cup"></i>Menu<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="drawerSoon('Corporate Events')"><i class="ti ti-briefcase"></i>Corporate Events<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="drawerSoon('Shipping and Delivery')"><i class="ti ti-truck-delivery"></i>Shipping and Delivery<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
     </nav>
@@ -1242,9 +1241,13 @@ function initHomeScreen(){
 function openDrawer(){ document.getElementById('site-drawer').classList.add('open'); }
 function closeDrawer(){ document.getElementById('site-drawer').classList.remove('open'); }
 
+function openBlog(){
+  closeDrawer();
+  window.open('https://www.instagram.com/fruiceysg', '_blank');
+}
+
 function openLocationsReviews(){
   closeDrawer();
-  // Opens the Fruicey listing on Google Maps (address + reviews)
   window.open('https://www.google.com/maps/search/?api=1&query=Fruicey%2068%20Jalan%20Jurong%20Kechil%20%2301-10%20Singapore%20596180', '_blank');
 }
 

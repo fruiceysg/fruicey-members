@@ -129,15 +129,16 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* TOP BANNER (boxed, contained, aspect preserved) */
 .top-banner-box{max-width:860px;margin:16px auto;padding:0 16px}
-.top-banner-box img{width:100%;height:auto;display:block;border-radius:0;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.top-banner-box img{width:100%;height:auto;display:block;border-radius:0;border:2px solid #c4c4c4;box-shadow:0 6px 18px rgba(0,0,0,.06)}
 .feature-img{width:100%;height:auto;display:block;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.06);background:var(--green-light)}
 
 /* WHY CHOOSE US (contained cards, alternating) */
 .why-section{max-width:1000px;margin:0 auto;padding:30px 16px 20px}
 .why-title{font-family:var(--font);color:var(--green-dark);font-size:26px;text-align:center;margin:0 0 22px}
-.why-row{display:flex;align-items:center;gap:20px;margin-bottom:16px;background:var(--green-light);border-radius:0;padding:18px;box-shadow:0 6px 18px rgba(0,0,0,.05)}
-.why-row:nth-of-type(even){flex-direction:row-reverse;background:#e8f6fb}
-.why-img{width:38%;max-width:230px;flex-shrink:0;height:auto;display:block;border-radius:0;background:rgba(255,255,255,.55)}
+.why-row{display:flex;align-items:stretch;gap:20px;margin-bottom:16px;background:#fff;border:2px solid #c4c4c4;border-radius:0;padding:16px;box-shadow:none}
+.why-row:nth-of-type(even){flex-direction:row-reverse}
+.why-img{width:38%;max-width:230px;flex-shrink:0;height:auto;display:block;border-radius:0;background:#f3f3f3;align-self:flex-start}
+.why-text{align-self:center}
 .why-text h3{font-family:var(--font);color:var(--green-dark);font-size:20px;margin:0 0 8px}
 .why-text p{font-size:14px;color:var(--text2);line-height:1.7;margin:0}
 .why-quote{font-family:var(--font);font-style:italic;color:var(--green);border-left:3px solid var(--green);padding-left:12px;margin:10px 0 0!important;line-height:1.5}

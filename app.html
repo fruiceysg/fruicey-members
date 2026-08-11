@@ -127,26 +127,29 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* 6 FEATURE IMAGES (boxed, contained, rounded — matches top banner) */
 .home-features{display:flex;flex-direction:column;gap:16px;max-width:860px;margin:16px auto;padding:0 16px}
 
-/* TOP BANNER (boxed, contained, aspect preserved) */
-.top-banner-box{max-width:860px;margin:16px auto;padding:0 16px}
-.top-banner-box img{width:100%;height:auto;display:block;border-radius:0;border:2px solid #c4c4c4;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+/* TOP BANNER (full-width, vertical space only) */
+.top-banner-box{margin:16px 0;padding:0}
+.top-banner-box img{width:100%;height:auto;display:block;border-radius:0}
 .feature-img{width:100%;height:auto;display:block;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.06);background:var(--green-light)}
 
-/* WHY CHOOSE US (contained cards, alternating) */
-.why-section{max-width:1000px;margin:0 auto;padding:30px 16px 20px}
-.why-title{font-family:var(--font);color:var(--green-dark);font-size:26px;text-align:center;margin:0 0 22px}
-.why-row{display:flex;align-items:stretch;gap:20px;margin-bottom:16px;background:#fff;border:2px solid #c4c4c4;border-radius:0;padding:16px;box-shadow:none}
-.why-row:nth-of-type(even){flex-direction:row-reverse}
-.why-img{width:38%;max-width:230px;flex-shrink:0;height:auto;display:block;border-radius:0;background:#f3f3f3;align-self:flex-start}
-.why-text{align-self:center}
-.why-text h3{font-family:var(--font);color:var(--green-dark);font-size:20px;margin:0 0 8px}
+/* WHY CHOOSE US (image-top cards, responsive grid) */
+.why-section{display:grid;grid-template-columns:1fr;gap:20px;max-width:1040px;margin:0 auto;padding:34px 16px 26px}
+.why-title{grid-column:1/-1;font-family:var(--font);color:var(--green-dark);font-size:26px;text-align:center;margin:0 0 4px}
+.why-row{display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.07)}
+.why-row:nth-of-type(even){flex-direction:column}
+.why-img{width:100%;max-width:none;height:auto;display:block;background:#eef4ee;border-radius:0;flex-shrink:0}
+.why-text{padding:20px 20px 24px}
+.why-text h3{font-family:var(--font);color:var(--green-dark);font-size:20px;margin:0 0 12px;position:relative;padding-bottom:10px}
+.why-text h3::after{content:"";position:absolute;left:0;bottom:0;width:40px;height:3px;background:var(--green);border-radius:2px}
 .why-text p{font-size:14px;color:var(--text2);line-height:1.7;margin:0}
-.why-quote{font-family:var(--font);font-style:italic;color:var(--green);border-left:3px solid var(--green);padding-left:12px;margin:10px 0 0!important;line-height:1.5}
+.why-quote{font-family:var(--font);font-style:italic;color:var(--green);margin:14px 0 0!important;line-height:1.5;text-align:center;border-top:1px dashed #cde3d6;padding-top:12px}
+@media (min-width:760px){
+  .why-section{grid-template-columns:repeat(3,1fr);gap:24px}
+}
 @media (min-width:900px){
   .why-title{font-size:32px}
-  .why-row{gap:32px;margin-bottom:22px;padding:28px;border-radius:0}
-  .why-text h3{font-size:24px}
-  .why-text p{font-size:16px;line-height:1.8}
+  .why-text h3{font-size:22px}
+  .why-text p{font-size:15px;line-height:1.75}
 }
 
 /* HOME TAB: clean plain background (does not affect other tabs) */
@@ -418,8 +421,8 @@ body.home-active .login-star{display:none}
     </div>
   </section>
 
-  <div class="home-features">
-    <img class="feature-img" src="feature4.jpg" alt="Fruicey feature 4" loading="lazy">
+  <div class="top-banner-box">
+    <img src="feature4.jpg" alt="Fruicey feature 4" loading="lazy">
   </div>
 
   <footer class="home-footer">

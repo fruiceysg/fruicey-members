@@ -132,6 +132,13 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .top-banner-box img{width:100%;height:auto;display:block;border-radius:0}
 .feature-img{width:100%;height:auto;display:block;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.06);background:var(--green-light)}
 
+/* Desktop-only horizontal nudges for specific boxed features */
+@media (min-width:900px){
+  .feature-img[src="feature1.jpg"]{transform:translateX(40px)}
+  .feature-img[src="feature2.jpg"]{transform:translateX(-40px)}
+  .feature-img[src="feature5.jpg"]{transform:translateX(40px)}
+}
+
 /* WHY CHOOSE US (image-top cards, responsive grid) */
 .why-section{display:grid;grid-template-columns:1fr;gap:20px;max-width:1040px;margin:0 auto;padding:34px 16px 26px}
 .why-title{grid-column:1/-1;font-family:var(--font);color:var(--green-dark);font-size:26px;text-align:center;margin:0 0 4px}
@@ -400,7 +407,10 @@ body.home-active .login-star{display:none}
 
   <div class="home-features">
     <img class="feature-img" src="feature5.jpg" alt="Fruicey feature 5" loading="lazy">
-    <img class="feature-img" src="feature6.jpg" alt="Fruicey feature 6" loading="lazy">
+  </div>
+
+  <div class="top-banner-box">
+    <img src="feature6.jpg" alt="Fruicey feature 6" loading="lazy">
   </div>
 
   <!-- Why Choose Us (in old feature5 position) -->

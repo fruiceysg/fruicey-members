@@ -179,9 +179,9 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 }
 
 /* HOME TAB: clean plain background (does not affect other tabs) */
-body.home-active{background:#8fcea1}
+body.home-active{background:#e6e4d8}
 body.home-active .login-star{display:none}
-#scr-home{background:#8fcea1}
+#scr-home{background:#e6e4d8}
 
 /* HOME FOOTER */
 .home-footer{text-align:center;font-family:var(--font);color:var(--text2);padding:28px 16px 34px;line-height:1.6;font-size:15px}
@@ -391,7 +391,12 @@ body.home-active .login-star{display:none}
     <img class="site-logo" id="home-logo" alt="Fruicey">
   </header>
 
-  <!-- 3-slide sliding banner (top) -->
+  <!-- Top banner (top) -->
+  <div class="top-banner-box">
+    <img src="top-banner.jpg" alt="Fruicey top banner" loading="eager" onerror="this.style.display='none'">
+  </div>
+
+  <!-- 3-slide sliding banner (below top banner) -->
   <div class="pslider" id="pslider">
     <div class="pslider-track" id="pslider-track">
       <img class="pslider-slide" src="slide1.jpg" alt="Fruicey slide 1">
@@ -406,11 +411,6 @@ body.home-active .login-star{display:none}
       <button class="pslider-dot" onclick="goSlide(2)" aria-label="Slide 3"></button>
       <button class="pslider-dot" onclick="goSlide(3)" aria-label="Slide 4"></button>
     </div>
-  </div>
-
-  <!-- Top banner (boxed, below slider) -->
-  <div class="top-banner-box">
-    <img src="top-banner.jpg" alt="Fruicey top banner" loading="eager" onerror="this.style.display='none'">
   </div>
 
   <!-- 6 feature images (swappable: replace the file of the same name) -->
@@ -1200,7 +1200,7 @@ function goTab(tab) {
   document.getElementById('scr-'+tab).classList.add('active');
   document.getElementById('nav-'+tab).classList.add('active');
   document.body.classList.toggle('home-active', tab === 'home');
-  document.documentElement.style.background = (tab === 'home') ? '#8fcea1' : '';
+  document.documentElement.style.background = (tab === 'home') ? '#e6e4d8' : '';
 currentScreen = tab;
   if(tab==='home')    initHomeScreen();
   if(tab==='menu')    initMenu();
@@ -1301,7 +1301,7 @@ document.addEventListener('DOMContentLoaded', function(){
   document.getElementById('scr-home').classList.add('active');
   document.getElementById('nav-home').classList.add('active');
   document.body.classList.add('home-active');
-  document.documentElement.style.background = '#8fcea1';
+  document.documentElement.style.background = '#e6e4d8';
   initHomeScreen();
   initReveal();
   // Hide loader

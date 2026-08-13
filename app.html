@@ -140,14 +140,21 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat-cta i{font-size:15px}
 .feat-cta-left{left:6%}
 .feat-cta-right{right:6%}
-.feat1 .feat-cta{background:#dd8581;bottom:24%}
-.feat2 .feat-cta{background:#dda04f;bottom:24%}
-.feat6 .feat-cta{background:#7f88b3}
+.feat1 .feat-cta{background:#dd8581;bottom:24%;left:12%}
+.feat2 .feat-cta{background:#dda04f;bottom:24%;right:20%}
+.feat6 .feat-cta{background:#7f88b3;left:12%}
+
+/* Scroll-reveal animation for home features */
+.reveal{opacity:0;transform:translateY(42px);transition:opacity 1.2s cubic-bezier(.16,1,.3,1),transform 1.2s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+@media (prefers-reduced-motion:reduce){
+  .reveal{opacity:1!important;transform:none!important;transition:none}
+}
 
 /* Desktop-only horizontal nudges for specific boxed features */
 @media (min-width:900px){
-  .feature-wrap.feat1{transform:translateX(130px)}
-  .feature-wrap.feat2{transform:translateX(-130px)}
+  .feature-wrap.feat1{position:relative;left:130px}
+  .feature-wrap.feat2{position:relative;left:-130px}
   .feat-cta{font-size:15px;padding:12px 22px}
 }
 
@@ -1208,6 +1215,19 @@ function goMenuCat(cat){
   renderCatPills();
 }
 
+function initReveal(){
+  var sel = '#scr-home .feature-wrap, #scr-home .home-features > .feature-img, #scr-home .top-banner-box:not(.feature-wrap), #scr-home .why-row';
+  var els = document.querySelectorAll(sel);
+  els.forEach(function(el){ el.classList.add('reveal'); });
+  if(!('IntersectionObserver' in window)){ els.forEach(function(el){ el.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {threshold:0.12, rootMargin:'0px 0px -6% 0px'});
+  els.forEach(function(el){ io.observe(el); });
+}
+
 function showTabLoader(containerId){
   const el = document.getElementById(containerId);
   if(el) el.innerHTML = '<div class="tab-loader"><div class="loader-spinner"></div></div>';
@@ -1283,6 +1303,7 @@ document.addEventListener('DOMContentLoaded', function(){
   document.body.classList.add('home-active');
   document.documentElement.style.background = '#fff';
   initHomeScreen();
+  initReveal();
   // Hide loader
   const loader = document.getElementById('app-loader');
   if(loader){ loader.classList.add('hide'); setTimeout(()=>loader.remove(), 500); }

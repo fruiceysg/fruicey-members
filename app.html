@@ -1209,7 +1209,7 @@ function goTab(tab) {
   document.body.classList.toggle('home-active', tab === 'home');
   document.documentElement.style.background = (tab === 'home') ? '#f1f1f1' : '';
 currentScreen = tab;
-  if(tab==='home')    initHomeScreen();
+  if(tab==='home')    { initHomeScreen(); replayReveal(); }
   if(tab==='menu')    initMenu();
   if(tab==='orders')  loadOrders();
   if(tab==='rewards') loadRewards();
@@ -1222,17 +1222,24 @@ function goMenuCat(cat){
   renderCatPills();
 }
 
+var revealIO = null;
+function _revealEls(){ return document.querySelectorAll('#scr-home .feat1, #scr-home .feat2, #scr-home .feat6'); }
 function initReveal(){
-  var sel = '#scr-home .feat1, #scr-home .feat2, #scr-home .feat6';
-  var els = document.querySelectorAll(sel);
+  var els = _revealEls();
   els.forEach(function(el){ el.classList.add('reveal'); });
   if(!('IntersectionObserver' in window)){ els.forEach(function(el){ el.classList.add('in'); }); return; }
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
-    });
+  revealIO = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); } });
   }, {threshold:0.12, rootMargin:'0px 0px -6% 0px'});
-  els.forEach(function(el){ io.observe(el); });
+  els.forEach(function(el){ revealIO.observe(el); });
+}
+function replayReveal(){
+  if(!revealIO){ return; }
+  var els = _revealEls();
+  els.forEach(function(el){ el.classList.remove('in'); revealIO.unobserve(el); });
+  var home = document.getElementById('scr-home');
+  if(home){ void home.offsetHeight; }   // force reflow so the transition restarts
+  els.forEach(function(el){ revealIO.observe(el); });
 }
 
 function showTabLoader(containerId){

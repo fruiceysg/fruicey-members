@@ -1247,7 +1247,7 @@ currentScreen = tab;
 
 function openChat(){
   var f = document.getElementById('chat-frame');
-  if(f && f.src.indexOf('fruicey-chat') === -1){ f.src = 'https://fruicey-chat.vercel.app'; }
+  if(f && f.src.indexOf('fruicey-chat') === -1){ f.src = 'https://fruiceysg.github.io/fruicey-chat/'; }
   document.getElementById('chat-overlay').classList.add('open');
 }
 function closeChat(){ document.getElementById('chat-overlay').classList.remove('open'); }
@@ -2370,7 +2370,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <div class="chat-head">
       <span>Fruicey Assistant</span>
       <div class="chat-actions">
-        <a href="https://fruicey-chat.vercel.app" target="_blank" rel="noopener" title="Open in new tab"><i class="ti ti-external-link"></i></a>
+        <a href="https://fruiceysg.github.io/fruicey-chat/" target="_blank" rel="noopener" title="Open in new tab"><i class="ti ti-external-link"></i></a>
         <button onclick="closeChat()" aria-label="Close"><i class="ti ti-x"></i></button>
       </div>
     </div>

@@ -200,19 +200,9 @@ body.home-active .login-star{display:none}
 .home-footer{text-align:center;font-family:var(--font);color:var(--text2);padding:28px 16px 34px;line-height:1.6;font-size:15px;background:#fff}
 .top-banner-box.partners-box{margin-bottom:0}
 
-/* AI CHAT WIDGET */
-#chat-fab{position:fixed;right:16px;bottom:calc(var(--nav) + 16px);z-index:120;width:56px;height:56px;border-radius:50%;border:none;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer;transition:transform .12s}
-#chat-fab:active{transform:scale(.94)}
-#chat-fab i{font-size:28px}
-.chat-overlay{position:fixed;inset:0;z-index:400;display:none}
-.chat-overlay.open{display:block}
-.chat-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
-.chat-window{position:absolute;right:16px;bottom:16px;width:min(92vw,384px);height:min(82vh,620px);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.32);display:flex;flex-direction:column}
-.chat-head{display:flex;align-items:center;justify-content:space-between;padding:10px 8px 10px 14px;background:var(--green);color:#fff;font-family:var(--font);font-size:17px}
-.chat-head .chat-actions{display:flex;align-items:center;gap:2px}
-.chat-head a,.chat-head button{color:#fff;background:none;border:none;cursor:pointer;font-size:19px;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;text-decoration:none;border-radius:8px}
-.chat-head a:active,.chat-head button:active{background:rgba(255,255,255,.2)}
-#chat-frame{flex:1;width:100%;border:none;background:#fff}
+/* AI CHAT WIDGET (self-contained floating widget, embedded as a transparent iframe) */
+#fq-embed{position:fixed;right:0;bottom:var(--nav);width:104px;height:104px;border:none;background:transparent;z-index:150;transition:width .28s ease,height .28s ease}
+#fq-embed.open{width:min(100vw,392px);height:min(100%,648px)}
 
 /* STORY SCREEN */
 #scr-story{background:#fff;min-height:calc(100vh - var(--nav))}
@@ -1245,12 +1235,15 @@ currentScreen = tab;
   if(tab==='account') loadAccount();
 }
 
-function openChat(){
-  var f = document.getElementById('chat-frame');
-  if(f && f.src.indexOf('fruicey-chat') === -1){ f.src = 'https://fruiceysg.github.io/fruicey-chat/'; }
-  document.getElementById('chat-overlay').classList.add('open');
-}
-function closeChat(){ document.getElementById('chat-overlay').classList.remove('open'); }
+// Chat widget: resize the embed iframe when the widget opens/closes
+window.addEventListener('message', function(e){
+  if(typeof e.data !== 'string') return;
+  if(e.origin.indexOf('fruiceysg.github.io') === -1) return;
+  var fr = document.getElementById('fq-embed');
+  if(!fr) return;
+  if(e.data === 'fq-open') fr.classList.add('open');
+  else if(e.data === 'fq-close') fr.classList.remove('open');
+});
 
 function goMenuCat(cat){
   currentCat = cat;
@@ -2362,21 +2355,8 @@ document.addEventListener('DOMContentLoaded', function(){
   </div>
 </div>
 
-<!-- AI CHAT WIDGET -->
-<button id="chat-fab" onclick="openChat()" aria-label="Chat with us"><i class="ti ti-message-chatbot"></i></button>
-<div class="chat-overlay" id="chat-overlay">
-  <div class="chat-backdrop" onclick="closeChat()"></div>
-  <div class="chat-window">
-    <div class="chat-head">
-      <span>Fruicey Assistant</span>
-      <div class="chat-actions">
-        <a href="https://fruiceysg.github.io/fruicey-chat/" target="_blank" rel="noopener" title="Open in new tab"><i class="ti ti-external-link"></i></a>
-        <button onclick="closeChat()" aria-label="Close"><i class="ti ti-x"></i></button>
-      </div>
-    </div>
-    <iframe id="chat-frame" title="Fruicey Assistant" src="about:blank" allow="microphone; clipboard-write"></iframe>
-  </div>
-</div>
+<!-- AI CHAT WIDGET (embeds the self-contained widget; it resizes via postMessage) -->
+<iframe id="fq-embed" src="https://fruiceysg.github.io/fruicey-chat/" title="Fruicey Assistant" allow="clipboard-write"></iframe>
 
 <!-- FULLSCREEN BUTTON -->
 <button id="fullscreen-btn" onclick="toggleFullscreen()" style="position:fixed;top:8px;right:6px;z-index:999;width:42px;padding:0;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--green);display:flex;align-items:center;justify-content:center;text-shadow:0 1px 3px rgba(255,255,255,.9)" title="Fullscreen">⛶</button>

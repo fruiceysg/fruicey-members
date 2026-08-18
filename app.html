@@ -147,14 +147,16 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat3 .feat-cta{background:#fff;color:#97d2b4;left:6%;top:64%;bottom:auto;transform:translateY(-50%)}
 .feat3 .feat-cta:active{transform:translateY(-50%) scale(.96)}
 
-/* feature5: two buttons side by side on the right */
-.feat5-btns{position:absolute;right:6%;bottom:9%;top:auto;transform:none;display:flex;flex-direction:row;gap:8px;align-items:center;z-index:6}
-.feat5-btn{display:inline-flex;align-items:center;justify-content:center;padding:9px 14px;border:1.5px solid #6796ce;border-radius:999px;background:#fff;color:#6796ce;font-family:var(--body);font-weight:700;font-size:12px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22);white-space:nowrap;transition:transform .12s,box-shadow .12s}
-.feat5-btn:hover{box-shadow:0 6px 18px rgba(0,0,0,.28)}
-.feat5-btn:active{transform:scale(.96)}
+/* feature7: two buttons side by side on the right */
+.feat7-btns{position:absolute;right:6%;bottom:9%;top:auto;transform:none;display:flex;flex-direction:row;gap:8px;align-items:center;z-index:6}
+.feat7-btn{display:inline-flex;align-items:center;justify-content:center;padding:9px 14px;border:1.5px solid #7f88b3;border-radius:999px;background:#fff;color:#7f88b3;font-family:var(--body);font-weight:700;font-size:12px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22);white-space:nowrap;transition:transform .12s,box-shadow .12s}
+.feat7-btn:hover{box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.feat7-btn:active{transform:scale(.96)}
+/* feature5: single Inquire button (bottom-right) */
+.feat5-inquire{background:#fff;color:#6796ce;border:1.5px solid #6796ce}
 @media (min-width:900px){
-  .feat5-btn{font-size:15px;padding:12px 22px}
-  .feat5-btns{gap:12px}
+  .feat7-btn{font-size:15px;padding:12px 22px}
+  .feat7-btns{gap:12px}
 }
 
 /* Scroll-reveal animation for home features */
@@ -454,10 +456,7 @@ body.home-active .login-star{display:none}
 
   <div class="top-banner-box feature-wrap feat5">
     <img src="feature5.jpg" alt="Fruicey feature 5" loading="eager">
-    <div class="feat5-btns">
-      <button class="feat5-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/profilecalculator.html','_blank')">Explore your Nutri-Profile</button>
-      <button class="feat5-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/acaibowlcalculator.html','_blank')">Build Your Acai Bowl</button>
-    </div>
+    <button class="feat-cta feat-cta-right feat5-inquire" onclick="window.location.href='mailto:wilson@fruicey.sg?subject=Enquiry'">Inquire</button>
   </div>
 
   <div class="top-banner-box feature-wrap feat6">
@@ -465,8 +464,12 @@ body.home-active .login-star{display:none}
     <button class="feat-cta feat-cta-left" onclick="goMenuCat('Superfood Bowls')">Superfood Bowls</button>
   </div>
 
-  <div class="top-banner-box">
+  <div class="top-banner-box feature-wrap feat7">
     <img src="feature7.jpg" alt="Fruicey feature 7" loading="eager">
+    <div class="feat7-btns">
+      <button class="feat7-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/profilecalculator.html','_blank')">Explore your Nutri-Profile</button>
+      <button class="feat7-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/acaibowlcalculator.html','_blank')">Build Your Acai Bowl</button>
+    </div>
   </div>
 
   <!-- Why Choose Us (in old feature5 position) -->

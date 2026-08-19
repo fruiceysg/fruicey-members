@@ -20,7 +20,7 @@
   --border:#eee;--card:#fff;
   --font:'BabyDoll','Comic Sans MS',cursive;
   --body:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --r:12px;--nav:60px;
+  --r:12px;--nav:60px;--header-h:67px;
 }
 body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100vh;padding-bottom:var(--nav)}
 #app-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f7;z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease}
@@ -43,7 +43,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .screen.active{display:block}
 
 /* HEADER */
-.app-header{background:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.app-header{background:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;min-height:var(--header-h);box-sizing:border-box}
 .app-header img{height:28px}
 .app-header-title{font-family:var(--font);font-size:18px;color:var(--green)}
 .header-right{margin-left:auto;font-size:12px;color:var(--text3)}
@@ -352,7 +352,7 @@ body.home-active .login-star{display:none}
 
 /* ═══ TABLET / DESKTOP — full width, no cap, no side margins ═══ */
 @media (min-width:520px){
-  :root{--app-w:100%}
+  :root{--app-w:100%;--header-h:75px}
   html{background:#eef1f0}
   body{max-width:var(--app-w);margin:0 auto;background:#fff;box-shadow:0 0 50px rgba(0,0,0,.08);min-height:100vh}
   /* Re-anchor fixed elements to the centered column */
@@ -372,7 +372,7 @@ body.home-active .login-star{display:none}
   .home-footer{font-size:17px;padding:34px 16px 40px}
 }
 @media (min-width:900px){
-  :root{--nav:68px}
+  :root{--nav:68px;--header-h:91px}
   .product-grid{grid-template-columns:repeat(4,1fr);gap:16px;padding:16px 24px}
   .product-img{height:180px}
   .product-name{font-size:14px}

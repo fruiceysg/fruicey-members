@@ -44,9 +44,9 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* HEADER */
 .app-header{background:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;min-height:var(--header-h);box-sizing:border-box}
-.app-header img{height:28px}
-.app-header-title{font-family:var(--font);font-size:18px;color:var(--green)}
-.header-right{margin-left:auto;font-size:12px;color:var(--text3)}
+.app-header img{height:46px}
+.app-header-title{font-family:var(--font);font-size:24px;color:var(--green)}
+.header-right{margin-left:auto;font-size:12px;color:var(--text3);margin-right:44px}
 
 /* CARDS */
 .card{background:rgba(255,255,255,.92);border-radius:var(--r);padding:16px;margin:12px 16px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
@@ -369,6 +369,7 @@ body.home-active .login-star{display:none}
   .card{margin:16px 20px;padding:20px}
   .order-card{margin:14px 20px}
   .site-header img.site-logo{height:54px}
+  .app-header img{height:54px}
   .home-footer{font-size:17px;padding:34px 16px 40px}
 }
 @media (min-width:900px){
@@ -383,6 +384,8 @@ body.home-active .login-star{display:none}
   .nav-tab span{font-size:12px}
   .site-header{padding:14px 24px}
   .site-header img.site-logo{height:62px}
+  .app-header img{height:62px}
+  .app-header-title{font-size:28px}
   .site-menu-btn i{font-size:30px}
   .drawer-link{font-size:20px;padding:16px 24px}
   .home-footer{font-size:19px;padding:40px 16px 48px}
@@ -2427,7 +2430,7 @@ document.addEventListener('DOMContentLoaded', function(){
 <iframe id="fq-embed" src="https://fruiceysg.github.io/fruicey-chat/" title="Fruicey Assistant" allow="clipboard-write"></iframe>
 
 <!-- FULLSCREEN BUTTON -->
-<button id="fullscreen-btn" onclick="toggleFullscreen()" style="position:fixed;top:8px;right:6px;z-index:999;width:42px;padding:0;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--green);display:flex;align-items:center;justify-content:center;text-shadow:0 1px 3px rgba(255,255,255,.9)" title="Fullscreen">⛶</button>
+<button id="fullscreen-btn" onclick="toggleFullscreen()" style="position:fixed;top:8px;right:6px;z-index:999;width:42px;padding:0;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--green);display:flex;align-items:center;justify-content:center;text-shadow:0 1px 3px rgba(255,255,255,.9)" title="Fullscreen"><i class="ti ti-maximize"></i></button>
 <div id="fullscreen-label" style="position:fixed;top:32px;right:6px;z-index:999;width:42px;text-align:center;font-size:9px;font-weight:600;color:var(--green);pointer-events:none;text-shadow:0 1px 3px rgba(255,255,255,.9)">Full screen</div>
 
 </body>

@@ -135,6 +135,9 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* Feature CTA pill buttons */
 .feature-wrap{position:relative}
+/* Hide feature buttons until their image has loaded (prevents mid-screen button flash) */
+.feature-wrap .feat-cta,.feature-wrap .feat7-btns{opacity:0;transition:opacity .3s ease}
+.feature-wrap.img-loaded .feat-cta,.feature-wrap.img-loaded .feat7-btns{opacity:1}
 .feat-cta{position:absolute;bottom:9%;display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border:none;border-radius:999px;background:var(--green);color:#fff;font-family:var(--body);font-weight:700;font-size:12px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22);white-space:nowrap;transition:transform .12s,box-shadow .12s}
 .feat-cta:hover{box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .feat-cta:active{transform:scale(.96)}
@@ -143,7 +146,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat-cta-right{right:6%}
 .feat1 .feat-cta{background:#dd8581;bottom:24%;left:9%}
 .feat2 .feat-cta{background:#dda04f;bottom:24%;right:15%}
-.feat6 .feat-cta{background:#fff;color:#7f88b3;border:1.5px solid #7f88b3;left:7%}
+.feat6 .feat-cta{background:#fff;color:#7f88b3;border:none;left:7%}
 .feat3 .feat-cta{background:#fff;color:#97d2b4;left:6%;top:64%;bottom:auto;transform:translateY(-50%)}
 .feat3 .feat-cta:active{transform:translateY(-50%) scale(.96)}
 
@@ -1255,6 +1258,17 @@ window.addEventListener('message', function(e){
   else if(e.data === 'fq-close') fr.classList.remove('open');
 });
 
+// Reveal each feature's buttons only after its image has loaded (avoids mispositioned flash)
+function initFeatureButtons(){
+  document.querySelectorAll('#scr-home .feature-wrap').forEach(function(wrap){
+    var img = wrap.querySelector('img');
+    if(!img){ wrap.classList.add('img-loaded'); return; }
+    var reveal = function(){ wrap.classList.add('img-loaded'); };
+    if(img.complete && img.naturalHeight > 0){ reveal(); }
+    else { img.addEventListener('load', reveal); img.addEventListener('error', reveal); }
+  });
+}
+
 function goMenuCat(cat){
   currentCat = cat;
   goTab('menu');
@@ -1357,6 +1371,7 @@ document.addEventListener('DOMContentLoaded', function(){
   document.documentElement.style.background = '#f1f1f1';
   initHomeScreen();
   initReveal();
+  initFeatureButtons();
   // Hide loader
   const loader = document.getElementById('app-loader');
   if(loader){ loader.classList.add('hide'); setTimeout(()=>loader.remove(), 500); }

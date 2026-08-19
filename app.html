@@ -130,6 +130,12 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* TOP BANNER (full-width, vertical space only) */
 .top-banner-box{margin:16px 0;padding:0}
 .top-banner-box.tb-top{margin:0}
+
+/* Waving red & white canopy (animated SVG) above the top banner */
+.canopy{width:100%;height:66px;line-height:0;overflow:visible;position:relative;z-index:5;pointer-events:none}
+.canopy svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.16));transform-origin:top center;animation:canopySway 5s ease-in-out infinite}
+@keyframes canopySway{0%,100%{transform:skewX(0deg)}50%{transform:skewX(-1.1deg)}}
+@media (prefers-reduced-motion:reduce){.canopy svg{animation:none}}
 .top-banner-box img{width:100%;height:auto;display:block;border-radius:0}
 .feature-img{width:100%;height:auto;display:block;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.06);background:var(--green-light)}
 
@@ -414,6 +420,24 @@ body.home-active .login-star{display:none}
     <button class="site-menu-btn" onclick="openDrawer()" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
     <img class="site-logo" id="home-logo" alt="Fruicey">
   </header>
+
+  <!-- Waving canopy -->
+  <div class="canopy" aria-hidden="true">
+    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="cstripes" width="120" height="80" patternUnits="userSpaceOnUse">
+          <rect width="60" height="80" fill="#d7322d"/><rect x="60" width="60" height="80" fill="#fbfbfb"/>
+        </pattern>
+        <filter id="cloth" x="-5%" y="-5%" width="110%" height="130%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.028" numOctaves="2" seed="4" result="n">
+            <animate attributeName="baseFrequency" dur="7s" values="0.012 0.026;0.015 0.032;0.012 0.026" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+      <path d="M0,0 H1200 V48 Q1170,74 1140,48 Q1110,74 1080,48 Q1050,74 1020,48 Q990,74 960,48 Q930,74 900,48 Q870,74 840,48 Q810,74 780,48 Q750,74 720,48 Q690,74 660,48 Q630,74 600,48 Q570,74 540,48 Q510,74 480,48 Q450,74 420,48 Q390,74 360,48 Q330,74 300,48 Q270,74 240,48 Q210,74 180,48 Q150,74 120,48 Q90,74 60,48 Q30,74 0,48 Z" fill="url(#cstripes)" filter="url(#cloth)"/>
+    </svg>
+  </div>
 
   <!-- Top banner (top) -->
   <div class="top-banner-box tb-top">

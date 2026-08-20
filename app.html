@@ -1312,7 +1312,9 @@ function goSlide(i){
   resetSliderTimer();
 }
 function resetSliderTimer(){ if(pTimer) clearInterval(pTimer); pTimer = setInterval(nextSlide, 5000); }
-resetSliderTimer();
+// Hold on the first slide until the whole page has fully loaded, then begin sliding
+if(document.readyState === 'complete'){ resetSliderTimer(); }
+else { window.addEventListener('load', function(){ resetSliderTimer(); }); }
 
 function goTab(tab) {
   if(!currentUser && tab !== 'home' && tab !== 'menu') { openLogin(); return; }

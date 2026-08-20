@@ -275,7 +275,7 @@ body:has(.modal-bg.open) #fullscreen-btn,
 body:has(.modal-bg.open) #fullscreen-label,
 body:has(.cart-sheet.open) #fullscreen-btn,
 body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
-#product-detail-modal .modal-box{transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.68,0,1);padding:0 0 24px}
+#product-detail-modal .modal-box{transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.68,0,1);padding:0 0 24px;overscroll-behavior:contain}
 .pd-handle{width:42px;height:4px;border-radius:2px;background:#ddd;margin:10px auto 2px;flex-shrink:0}
 .pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 18px 6px}
 .pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15}
@@ -368,6 +368,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:flex-end;justify-content:center}
+#login-modal{z-index:400}
 .modal-bg.open{display:flex}
 #product-info-modal{transition:background .3s ease}
 #product-info-modal .modal-box{transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.68,0,1)}
@@ -1578,6 +1579,11 @@ function renderProducts(){
     name.className = 'product-name';
     name.textContent = p.name;
     body.appendChild(name);
+    const minP = Math.min.apply(null, p.sizes.map(s=>s.p));
+    const price = document.createElement('div');
+    price.className = 'product-price';
+    price.textContent = (p.sizes.length>1 ? 'from ' : '') + '$'+minP.toFixed(2);
+    body.appendChild(price);
     card.appendChild(body);
     if(isAvail){ card.onclick = function(){ openProductDetail(p.id); }; }
     grid.appendChild(card);
@@ -1654,8 +1660,9 @@ function initProductDetailSwipe(){
     if(!dragging) return;
     curY = e.touches[0].clientY;
     const dy = curY - startY;
-    box.style.transform = dy > 0 ? 'translateY('+dy+'px)' : 'translateY(0)';
-  }, {passive:true});
+    if(dy > 0){ e.preventDefault(); box.style.transform = 'translateY('+dy+'px)'; }
+    else { box.style.transform = 'translateY(0)'; }
+  }, {passive:false});
   box.addEventListener('touchend', function(){
     if(!dragging) return;
     dragging = false;

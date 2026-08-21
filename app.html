@@ -571,12 +571,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
     </svg>
   </div>
 
-  <!-- Top banner (top) -->
-  <div class="top-banner-box tb-top">
-    <img src="top-banner.jpg" alt="Fruicey top banner" loading="eager" onerror="this.style.display='none'">
-  </div>
-
-  <!-- 3-slide sliding banner (below top banner) -->
+  <!-- 3-slide sliding banner (top) -->
   <div class="pslider" id="pslider">
     <div class="pslider-track" id="pslider-track">
       <img class="pslider-slide" src="slide1.jpg" alt="Fruicey slide 1">
@@ -591,6 +586,11 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
       <button class="pslider-dot" onclick="goSlide(2)" aria-label="Slide 3"></button>
       <button class="pslider-dot" onclick="goSlide(3)" aria-label="Slide 4"></button>
     </div>
+  </div>
+
+  <!-- Top banner (below sliding banner) -->
+  <div class="top-banner-box tb-top">
+    <img src="top-banner.jpg" alt="Fruicey top banner" loading="eager" onerror="this.style.display='none'">
   </div>
 
   <!-- 6 feature images (swappable: replace the file of the same name) -->
@@ -1002,7 +1002,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: kcal on product card + note label style (rev F)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: swap top-banner / sliding banner (rev G)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){

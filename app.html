@@ -324,7 +324,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-opt{display:flex;align-items:center;justify-content:space-between;width:100%;padding:15px 18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;transition:transform .12s,border-color .15s,background .15s;font-family:var(--body)}
 .pd-opt:active{transform:scale(.98)}
 .pd-opt.added{border-color:var(--green);background:var(--green-light)}
-.pd-opt-label{font-size:15px;font-weight:600;color:var(--text)}
+.pd-opt-label{flex:1;text-align:left;padding-right:10px;font-size:15px;font-weight:600;color:var(--text)}
 .pd-opt-right{display:flex;align-items:center;gap:12px}
 .pd-opt-price{font-size:16px;font-weight:700;color:var(--green-dark)}
 .pd-opt-add{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -1002,7 +1002,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: superfood-bowls calories + option labels + note (rev D)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: bowl option labels + left-align + note (rev E)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1074,10 +1074,10 @@ function closeOrderReceipt(){
 
 const CATALOGUE = {
   'Superfood Bowls': [
-    {id:'sb01',name:'Rainbowl Acai',        cal:319, sizes:[{l:'Dessert - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb02',name:'Dreamy Acai',          cal:376, sizes:[{l:'Dessert - Unsweetened Smoothie Pulps',p:6.90},{l:'Meal - Unsweetened Smoothie Pulps',p:9.90},{l:'Dessert Sorbet - Tasty Sorbet Swirls',p:7.40},{l:'Meal Sorbet - Tasty Sorbet Swirls',p:10.40}]},
-    {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb01',name:'Rainbowl Acai',        cal:319, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb02',name:'Dreamy Acai',          cal:376, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:6.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:9.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:7.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:10.40}]},
+    {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
     {id:'sb05',name:'Double Rainbowl Acai', cal:445, sizes:[{l:'Unsweetened Smoothie Pulps',p:10.90},{l:'Tasty Sorbet Swirls',p:11.90}]},
     {id:'sb06',name:'Galaxy Dream Acai',    cal:610, sizes:[{l:'Unsweetened Smoothie Pulps',p:9.90},{l:'Tasty Sorbet Swirls',p:10.90}]}
   ],
@@ -2816,7 +2816,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="pd-options" class="pd-options"></div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (Optional)</label>
-      <textarea id="pd-note" class="pd-note" rows="2" placeholder="e.g. less sweet, no banana, extra granola…"></textarea>
+      <textarea id="pd-note" class="pd-note" rows="2" placeholder=""></textarea>
     </div>
   </div>
 </div>

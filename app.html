@@ -403,6 +403,32 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   #credit-history-modal .modal-handle{display:none}
 }
 
+/* PRODUCT INFO IMAGE VIEWER + ZOOM */
+#product-info-modal .modal-box{max-width:92vw;max-height:92vh;padding:12px;display:flex;flex-direction:column;align-items:center}
+.pi-handle{width:36px;height:4px;border-radius:2px;background:#ddd;margin-bottom:8px;flex-shrink:0}
+.pi-topbar{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.pi-title{font-family:var(--font);font-size:16px;font-weight:600;color:var(--text)}
+.pi-close{background:none;border:none;font-size:26px;cursor:pointer;color:#999;padding:0 4px;line-height:1}
+.pi-zoom{position:relative;overflow:hidden;border-radius:8px;background:#fafafa;max-width:100%;display:flex;align-items:center;justify-content:center}
+#product-info-img{display:block;width:auto;height:auto;max-width:100%;max-height:82vh;object-fit:contain;transform-origin:center center;transition:transform .15s ease-out;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none}
+.pi-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:4px 10px;border-radius:12px;pointer-events:none;opacity:0;transition:opacity .2s;display:flex;align-items:center;gap:4px;white-space:nowrap;z-index:2}
+.pi-hint i{font-size:13px}
+.pi-enlarge{position:absolute;bottom:10px;right:10px;width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.pi-enlarge i{font-size:22px}
+.pi-enlarge:active{background:rgba(0,0,0,.8)}
+/* Desktop (mouse): hover-to-zoom magnifier */
+@media (hover:hover) and (pointer:fine){
+  #product-info-modal .modal-box{max-width:min(760px,82vw)}
+  .pi-zoom.pi-can-zoom{cursor:zoom-in}
+  .pi-zoom.pi-can-zoom:hover .pi-hint{opacity:1}
+}
+/* Touch devices: enlarge button + drag-to-pan instead of hover */
+@media (hover:none){
+  .pi-enlarge{display:flex}
+  .pi-zoom.pi-zoomed{cursor:grab}
+  #product-info-img{transition:transform .12s ease-out}
+}
+
 /* TOAST */
 .toast{position:fixed;bottom:calc(var(--nav)+16px);left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;font-family:var(--font)}
 .toast.show{opacity:1}
@@ -2322,8 +2348,9 @@ function sendCreditWhatsApp(){
 function openProductInfoModal(fileId, productName){
   const modal = document.getElementById('product-info-modal');
   const img = document.getElementById('product-info-img');
-  img.src = 'https://lh3.googleusercontent.com/d/'+fileId+'=w800';
+  img.src = 'https://lh3.googleusercontent.com/d/'+fileId+'=w1200';
   document.getElementById('product-info-title').textContent = productName;
+  if(window.__piResetZoom) window.__piResetZoom();
   modal.classList.add('open');
   // Trigger background fade after display:flex is set
   requestAnimationFrame(()=>{ modal.style.background = 'rgba(0,0,0,.45)'; });
@@ -2331,6 +2358,7 @@ function openProductInfoModal(fileId, productName){
 function closeProductInfoModal(){
   const modal = document.getElementById('product-info-modal');
   const box = modal.querySelector('.modal-box');
+  if(window.__piResetZoom) window.__piResetZoom();
   modal.style.background = 'rgba(0,0,0,0)';
   box.style.transform = 'translateY(100%)';
   setTimeout(()=>{
@@ -2339,6 +2367,81 @@ function closeProductInfoModal(){
     document.getElementById('product-info-img').src = '';
   }, 350);
 }
+
+// ── PRODUCT INFO ZOOM (desktop hover magnifier / mobile enlarge + drag pan) ──
+(function(){
+  var canHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  var ZOOM = 2.4;
+  var zoomEl, imgEl, enlargeBtn;
+  var zoomed=false, panning=false, panX=0, panY=0, startX=0, startY=0;
+
+  function applyPan(){ imgEl.style.transform = 'translate('+panX+'px,'+panY+'px) scale('+ZOOM+')'; }
+  function clampPan(){
+    var r = zoomEl.getBoundingClientRect();
+    var maxX = r.width*(ZOOM-1)/2, maxY = r.height*(ZOOM-1)/2;
+    panX = Math.max(-maxX, Math.min(maxX, panX));
+    panY = Math.max(-maxY, Math.min(maxY, panY));
+  }
+  function enterZoom(){
+    zoomed=true; panX=0; panY=0;
+    zoomEl.classList.add('pi-zoomed');
+    imgEl.style.transformOrigin='center center';
+    applyPan();
+    if(enlargeBtn) enlargeBtn.innerHTML='<i class="ti ti-zoom-out"></i>';
+  }
+  function resetZoom(){
+    zoomed=false; panning=false; panX=0; panY=0;
+    if(zoomEl) zoomEl.classList.remove('pi-zoomed');
+    if(imgEl){ imgEl.style.transform=''; imgEl.style.transformOrigin='center center'; }
+    if(enlargeBtn) enlargeBtn.innerHTML='<i class="ti ti-zoom-in"></i>';
+  }
+  window.__piResetZoom = resetZoom;
+
+  function init(){
+    zoomEl = document.getElementById('pi-zoom');
+    imgEl  = document.getElementById('product-info-img');
+    enlargeBtn = document.getElementById('pi-enlarge');
+    if(!zoomEl || !imgEl) return;
+
+    if(canHover){
+      // Desktop: move the mouse over the image to magnify that spot
+      zoomEl.classList.add('pi-can-zoom');
+      zoomEl.addEventListener('mousemove', function(e){
+        var r = zoomEl.getBoundingClientRect();
+        var x = ((e.clientX - r.left)/r.width)*100;
+        var y = ((e.clientY - r.top)/r.height)*100;
+        imgEl.style.transformOrigin = x+'% '+y+'%';
+        imgEl.style.transform = 'scale('+ZOOM+')';
+      });
+      zoomEl.addEventListener('mouseleave', function(){
+        imgEl.style.transform = '';
+      });
+    } else {
+      // Touch: tap enlarge to zoom, then drag to pan; tap again to reset
+      enlargeBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        zoomed ? resetZoom() : enterZoom();
+      });
+      zoomEl.addEventListener('touchstart', function(e){
+        if(!zoomed) return;            // when not zoomed, let swipe-to-close handle it
+        e.stopPropagation();           // block sheet swipe while panning
+        var t=e.touches[0]; startX=t.clientX-panX; startY=t.clientY-panY; panning=true;
+      }, {passive:true});
+      zoomEl.addEventListener('touchmove', function(e){
+        if(!zoomed || !panning) return;
+        e.stopPropagation(); e.preventDefault();
+        var t=e.touches[0]; panX=t.clientX-startX; panY=t.clientY-startY;
+        clampPan(); applyPan();
+      }, {passive:false});
+      zoomEl.addEventListener('touchend', function(e){
+        if(zoomed) e.stopPropagation();
+        panning=false;
+      }, {passive:true});
+    }
+  }
+  if(document.readyState!=='loading') init();
+  else document.addEventListener('DOMContentLoaded', init);
+})();
 
 // ── SWIPE DOWN TO CLOSE ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
@@ -2547,13 +2650,17 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <!-- PRODUCT INFO MODAL -->
 <div class="modal-bg" id="product-info-modal" onclick="if(event.target===this)closeProductInfoModal()">
-  <div class="modal-box" style="max-width:92vw;max-height:90vh;padding:12px;display:flex;flex-direction:column;align-items:center">
-    <div style="width:36px;height:4px;border-radius:2px;background:#ddd;margin-bottom:8px;flex-shrink:0"></div>
-    <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div id="product-info-title" style="font-family:var(--font);font-size:16px;font-weight:600;color:var(--text)"></div>
-      <button onclick="closeProductInfoModal()" style="background:none;border:none;font-size:26px;cursor:pointer;color:#999;padding:0 4px;line-height:1">&times;</button>
+  <div class="modal-box pi-box">
+    <div class="pi-handle"></div>
+    <div class="pi-topbar">
+      <div id="product-info-title" class="pi-title"></div>
+      <button onclick="closeProductInfoModal()" class="pi-close" aria-label="Close">&times;</button>
     </div>
-    <img id="product-info-img" src="" alt="Product Info" style="max-width:100%;max-height:78vh;object-fit:contain;border-radius:8px">
+    <div id="pi-zoom" class="pi-zoom">
+      <img id="product-info-img" src="" alt="Product Info">
+      <div class="pi-hint"><i class="ti ti-zoom-in"></i> Hover to zoom</div>
+      <button id="pi-enlarge" class="pi-enlarge" type="button" aria-label="Enlarge image"><i class="ti ti-zoom-in"></i></button>
+    </div>
   </div>
 </div>
 

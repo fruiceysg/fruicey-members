@@ -285,8 +285,25 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 18px 6px}
 .pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15}
 .pd-close{background:none;border:none;font-size:28px;color:#999;cursor:pointer;line-height:1;padding:0 2px}
-.pd-imgwrap{width:100%;background:#f7f7f7;display:flex;align-items:center;justify-content:center;padding:10px;min-height:120px}
-.pd-imgwrap img{max-width:100%;max-height:44vh;object-fit:contain;border-radius:10px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none}
+.pd-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.pd-zoombtn{display:none;background:none;border:none;color:#666;cursor:pointer;padding:0 2px;line-height:1}
+.pd-zoombtn i{font-size:23px}
+.pd-imgwrap{position:relative;overflow:hidden;width:100%;background:#f7f7f7;display:flex;align-items:center;justify-content:center;padding:10px;min-height:120px}
+.pd-imgwrap img{max-width:100%;max-height:54vh;object-fit:contain;border-radius:10px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none;transform-origin:center center;transition:transform .15s ease-out}
+.pd-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:4px 10px;border-radius:12px;pointer-events:none;opacity:0;transition:opacity .2s;display:flex;align-items:center;gap:4px;white-space:nowrap;z-index:2}
+.pd-hint i{font-size:13px}
+.pd-enlarge{position:absolute;bottom:10px;right:10px;width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.pd-enlarge i{font-size:22px}
+.pd-enlarge:active{background:rgba(0,0,0,.8)}
+@media (hover:hover) and (pointer:fine){
+  .pd-zoombtn{display:inline-flex;align-items:center}
+  .pd-imgwrap.pd-can-zoom{cursor:zoom-in}
+  .pd-imgwrap.pd-can-zoom:hover .pd-hint{opacity:1}
+}
+@media (hover:none){
+  .pd-enlarge{display:flex}
+  .pd-imgwrap.pd-zoomed{cursor:grab}
+}
 .pd-preorder{margin:12px 18px 0;background:#fff3e0;color:#e67e22;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;text-align:center}
 .pd-choose{font-family:var(--body);font-size:12px;color:var(--text3);padding:16px 18px 8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
 .pd-options{display:flex;flex-direction:column;gap:10px;padding:0 18px}
@@ -971,7 +988,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: modal-centering + product-info-zoom (rev A)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: product-DETAIL zoom + modal-centering (rev B)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1672,8 +1689,9 @@ function openProductDetail(pid){
   const wrap = document.getElementById('pd-imgwrap');
   if(imgId){
     wrap.style.display = 'flex';
-    document.getElementById('pd-img').src = 'https://lh3.googleusercontent.com/d/'+imgId+'=w800';
+    document.getElementById('pd-img').src = 'https://lh3.googleusercontent.com/d/'+imgId+'=w1200';
   } else { wrap.style.display = 'none'; }
+  if(window.__pdResetZoom) window.__pdResetZoom();
   document.getElementById('pd-preorder').style.display = PREORDER_IDS.has(p.id) ? 'block' : 'none';
   const opts = document.getElementById('pd-options');
   const choose = document.getElementById('pd-choose');
@@ -1704,6 +1722,7 @@ function openProductDetail(pid){
 function closeProductDetail(){
   const m = document.getElementById('product-detail-modal');
   const box = m.querySelector('.modal-box');
+  if(window.__pdResetZoom) window.__pdResetZoom();
   if(window.matchMedia('(min-width:900px)').matches){ box.style.opacity='0'; box.style.transform='scale(.92)'; }
   else { box.style.transform='translateY(100%)'; }
   setTimeout(()=>{ m.classList.remove('open'); box.style.transform=''; box.style.opacity=''; document.getElementById('pd-img').src=''; }, 350);
@@ -2373,8 +2392,8 @@ function closeProductInfoModal(){
   }, 350);
 }
 
-// ── PRODUCT INFO ZOOM (desktop hover magnifier + button / mobile enlarge, drag pan, double-tap) ──
-(function(){
+// ── IMAGE ZOOM (desktop hover magnifier + button / mobile enlarge, drag pan, double-tap) ──
+function makeImageZoom(cfg){
   var canHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
   var ZOOM = 2.4;
   var zoomEl, imgEl, enlargeBtn, zoomBtn;
@@ -2395,7 +2414,7 @@ function closeProductInfoModal(){
   }
   function enterZoom(){            // touch: centred zoom, then drag to pan
     zoomed=true; panX=0; panY=0;
-    zoomEl.classList.add('pi-zoomed');
+    zoomEl.classList.add(cfg.zoomedClass);
     imgEl.style.transformOrigin='center center';
     applyPan(); setIcons();
   }
@@ -2407,22 +2426,21 @@ function closeProductInfoModal(){
   }
   function resetZoom(){
     zoomed=false; panning=false; panX=0; panY=0;
-    if(zoomEl) zoomEl.classList.remove('pi-zoomed');
+    if(zoomEl) zoomEl.classList.remove(cfg.zoomedClass);
     if(imgEl){ imgEl.style.transform=''; imgEl.style.transformOrigin='center center'; }
     setIcons();
   }
-  window.__piResetZoom = resetZoom;
 
   function init(){
-    zoomEl = document.getElementById('pi-zoom');
-    imgEl  = document.getElementById('product-info-img');
-    enlargeBtn = document.getElementById('pi-enlarge');
-    zoomBtn = document.getElementById('pi-zoombtn');
+    zoomEl = document.getElementById(cfg.zoomId);
+    imgEl  = document.getElementById(cfg.imgId);
+    enlargeBtn = document.getElementById(cfg.enlargeId);
+    zoomBtn = document.getElementById(cfg.btnId);
     if(!zoomEl || !imgEl) return;
 
     if(canHover){
       // Desktop: move the mouse over the image to magnify that spot
-      zoomEl.classList.add('pi-can-zoom');
+      zoomEl.classList.add(cfg.canZoomClass);
       zoomEl.addEventListener('mousemove', function(e){
         var r = zoomEl.getBoundingClientRect();
         var x = ((e.clientX - r.left)/r.width)*100;
@@ -2440,7 +2458,7 @@ function closeProductInfoModal(){
       });
     } else {
       // Touch: tap enlarge (or double-tap the image) to zoom, drag to pan
-      enlargeBtn.addEventListener('click', function(e){
+      if(enlargeBtn) enlargeBtn.addEventListener('click', function(e){
         e.stopPropagation();
         zoomed ? resetZoom() : enterZoom();
       });
@@ -2464,7 +2482,7 @@ function closeProductInfoModal(){
         if(zoomed) e.stopPropagation();
         panning=false;
         // Ignore taps on the enlarge button and any drag gestures
-        if((e.target.closest && e.target.closest('.pi-enlarge')) || moved){ lastTap=0; return; }
+        if((e.target.closest && e.target.closest(cfg.enlargeSel)) || moved){ lastTap=0; return; }
         var t=(e.changedTouches && e.changedTouches[0]) || {};
         var now=Date.now();
         if(now-lastTap < 300 && Math.abs((t.clientX||0)-lastTapX)<30 && Math.abs((t.clientY||0)-lastTapY)<30){
@@ -2476,9 +2494,21 @@ function closeProductInfoModal(){
       }, {passive:true});
     }
   }
-  if(document.readyState!=='loading') init();
-  else document.addEventListener('DOMContentLoaded', init);
+  return { init: init, reset: resetZoom };
+}
+
+// Product-detail card (the size-picker sheet) — the image users actually see
+var pdZoom = makeImageZoom({zoomId:'pd-imgwrap', imgId:'pd-img', enlargeId:'pd-enlarge', btnId:'pd-zoombtn', canZoomClass:'pd-can-zoom', zoomedClass:'pd-zoomed', enlargeSel:'.pd-enlarge'});
+window.__pdResetZoom = pdZoom.reset;
+// Product-info image viewer (kept in sync in case it's used)
+var piZoom = makeImageZoom({zoomId:'pi-zoom', imgId:'product-info-img', enlargeId:'pi-enlarge', btnId:'pi-zoombtn', canZoomClass:'pi-can-zoom', zoomedClass:'pi-zoomed', enlargeSel:'.pi-enlarge'});
+window.__piResetZoom = piZoom.reset;
+(function(){
+  function initAll(){ pdZoom.init(); piZoom.init(); }
+  if(document.readyState!=='loading') initAll();
+  else document.addEventListener('DOMContentLoaded', initAll);
 })();
+
 
 // ── SWIPE DOWN TO CLOSE ──────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function(){
@@ -2710,9 +2740,16 @@ document.addEventListener('DOMContentLoaded', function(){
     <div class="pd-handle"></div>
     <div class="pd-head">
       <div id="pd-name" class="pd-name"></div>
-      <button class="pd-close" onclick="closeProductDetail()" aria-label="Close">&times;</button>
+      <div class="pd-actions">
+        <button id="pd-zoombtn" class="pd-zoombtn" type="button" aria-label="Zoom in"><i class="ti ti-zoom-in"></i></button>
+        <button class="pd-close" onclick="closeProductDetail()" aria-label="Close">&times;</button>
+      </div>
     </div>
-    <div id="pd-imgwrap" class="pd-imgwrap"><img id="pd-img" alt=""></div>
+    <div id="pd-imgwrap" class="pd-imgwrap">
+      <img id="pd-img" alt="">
+      <div class="pd-hint"><i class="ti ti-zoom-in"></i> Hover to zoom</div>
+      <button id="pd-enlarge" class="pd-enlarge" type="button" aria-label="Enlarge image"><i class="ti ti-zoom-in"></i></button>
+    </div>
     <div id="pd-preorder" class="pd-preorder" style="display:none">Pre-order item &mdash; made available on collection day</div>
     <div id="pd-choose" class="pd-choose">Choose an option</div>
     <div id="pd-options" class="pd-options"></div>

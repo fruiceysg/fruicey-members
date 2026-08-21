@@ -290,7 +290,14 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 }
 .pd-handle{width:42px;height:4px;border-radius:2px;background:#ddd;margin:10px auto 2px;flex-shrink:0}
 .pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 18px 6px}
+.pd-head-text{flex:1;min-width:0}
 .pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15}
+.pd-cal{font-family:var(--body);font-size:12px;color:var(--text2);margin-top:3px;font-weight:600}
+.pd-note-wrap{padding:4px 18px 2px;display:flex;flex-direction:column}
+.pd-note-label{font-family:var(--body);font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.pd-note{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:var(--body);resize:none;outline:none;background:#fafafa;color:var(--text)}
+.pd-note:focus{border-color:var(--green);background:#fff}
+.cart-note{font-size:11px;color:var(--text2);font-style:italic;margin-top:2px}
 .pd-close{background:none;border:none;font-size:28px;color:#999;cursor:pointer;line-height:1;padding:0 2px}
 .pd-actions{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .pd-zoombtn{display:none;background:none;border:none;color:#666;cursor:pointer;padding:0 2px;line-height:1}
@@ -995,7 +1002,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: mobile chat viewport-fit (rev C)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: superfood-bowls calories + option labels + note (rev D)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1067,12 +1074,12 @@ function closeOrderReceipt(){
 
 const CATALOGUE = {
   'Superfood Bowls': [
-    {id:'sb01',name:'Rainbowl Acai',        sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
-    {id:'sb02',name:'Dreamy Acai',          sizes:[{l:'Dessert',p:6.90},{l:'Meal',p:9.90},{l:'Dessert Sorbet',p:7.40},{l:'Meal Sorbet',p:10.40}]},
-    {id:'sb03',name:'Nostalgic Acai',       sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
-    {id:'sb04',name:'Berry Acai',           sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
-    {id:'sb05',name:'Double Rainbowl Acai', sizes:[{l:'Regular',p:10.90},{l:'Sorbet',p:11.90}]},
-    {id:'sb06',name:'Galaxy Dream Acai',    sizes:[{l:'Regular',p:9.90},{l:'Sorbet',p:10.90}]}
+    {id:'sb01',name:'Rainbowl Acai',        cal:319, sizes:[{l:'Dessert - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb02',name:'Dreamy Acai',          cal:376, sizes:[{l:'Dessert - Unsweetened Smoothie Pulps',p:6.90},{l:'Meal - Unsweetened Smoothie Pulps',p:9.90},{l:'Dessert Sorbet - Tasty Sorbet Swirls',p:7.40},{l:'Meal Sorbet - Tasty Sorbet Swirls',p:10.40}]},
+    {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb05',name:'Double Rainbowl Acai', cal:445, sizes:[{l:'Unsweetened Smoothie Pulps',p:10.90},{l:'Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb06',name:'Galaxy Dream Acai',    cal:610, sizes:[{l:'Unsweetened Smoothie Pulps',p:9.90},{l:'Tasty Sorbet Swirls',p:10.90}]}
   ],
   'Shakes & Smoothies': [
     {id:'ss01',name:'Coco Chacha',              sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
@@ -1707,10 +1714,14 @@ function addSizeToCart(pid, size, price, el){
   if(!currentUser){ openLogin(); return; }
   if(stockStatus[pid] === false){ showToast('Sorry, this item is out of stock'); return; }
   const prod = PRODUCT_MAP[pid];
+  const noteEl = document.getElementById('pd-note');
+  const noteWrap = document.getElementById('pd-note-wrap');
+  const note = (noteEl && noteWrap && noteWrap.style.display !== 'none') ? noteEl.value.trim() : '';
   const label = prod.name + (size ? ' ('+size+')' : '');
-  const exist = cart.find(i=>i.id===pid && i.size===size);
-  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size, label, price, qty:1}); }
+  const exist = cart.find(i=>i.id===pid && i.size===size && (i.note||'')===note);
+  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size, label, price, qty:1, note}); }
   updateCartBadge();
+  if(noteEl) noteEl.value = '';
   if(el){ el.classList.add('added'); setTimeout(()=>el.classList.remove('added'), 450); }
   showToast(label+' added!');
 }
@@ -1724,6 +1735,15 @@ function openProductDetail(pid){
   const fileId = IMG[p.id];
   const imgId  = infoId || fileId;
   document.getElementById('pd-name').textContent = p.name;
+  const calEl = document.getElementById('pd-cal');
+  if(p.cal){ calEl.textContent = p.cal + ' kcal'; calEl.style.display = ''; }
+  else { calEl.textContent = ''; calEl.style.display = 'none'; }
+  // "Note to Wilson" field — shown for Superfood Bowls
+  const noteWrap = document.getElementById('pd-note-wrap');
+  const noteEl = document.getElementById('pd-note');
+  const showNote = (p.id||'').indexOf('sb') === 0;
+  if(noteEl) noteEl.value = '';
+  if(noteWrap) noteWrap.style.display = showNote ? 'flex' : 'none';
   const wrap = document.getElementById('pd-imgwrap');
   if(imgId){
     wrap.style.display = 'flex';
@@ -1835,7 +1855,7 @@ function closeCart(){ document.getElementById('cart-sheet').classList.remove('op
 function renderCartItems(){
   const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
   document.getElementById('cart-items').innerHTML = cart.length ?
-    cart.map((item,i)=>'<div class="cart-row"><div class="cart-info"><div class="cart-name">'+item.label+'</div><div class="cart-price">$'+item.price.toFixed(2)+' each</div></div>'
+    cart.map((item,i)=>'<div class="cart-row"><div class="cart-info"><div class="cart-name">'+item.label+'</div>'+(item.note?'<div class="cart-note">“'+item.note.replace(/</g,'&lt;')+'”</div>':'')+'<div class="cart-price">$'+item.price.toFixed(2)+' each</div></div>'
       +'<div class="qty-ctrl"><button class="qty-btn" data-i="'+i+'" data-d="-1">−</button><span class="qty-num">'+item.qty+'</span><button class="qty-btn" data-i="'+i+'" data-d="1">+</button></div>'
       +'<div class="cart-item-total">$'+(item.price*item.qty).toFixed(2)+'</div></div>').join('')
     : '<div style="text-align:center;padding:2rem;color:#bbb">No items in cart</div>';
@@ -2777,7 +2797,10 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="modal-box">
     <div class="pd-handle"></div>
     <div class="pd-head">
-      <div id="pd-name" class="pd-name"></div>
+      <div class="pd-head-text">
+        <div id="pd-name" class="pd-name"></div>
+        <div id="pd-cal" class="pd-cal" style="display:none"></div>
+      </div>
       <div class="pd-actions">
         <button id="pd-zoombtn" class="pd-zoombtn" type="button" aria-label="Zoom in"><i class="ti ti-zoom-in"></i></button>
         <button class="pd-close" onclick="closeProductDetail()" aria-label="Close">&times;</button>
@@ -2791,6 +2814,10 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="pd-preorder" class="pd-preorder" style="display:none">Pre-order item &mdash; made available on collection day</div>
     <div id="pd-choose" class="pd-choose">Choose an option</div>
     <div id="pd-options" class="pd-options"></div>
+    <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
+      <label class="pd-note-label" for="pd-note">Note to Wilson (Optional)</label>
+      <textarea id="pd-note" class="pd-note" rows="2" placeholder="e.g. less sweet, no banana, extra granola…"></textarea>
+    </div>
   </div>
 </div>
 

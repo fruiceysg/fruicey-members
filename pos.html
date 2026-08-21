@@ -636,12 +636,12 @@ const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-S
 
 const CATALOGUE = {
   'Superfood Bowls': [
-    {id:'sb01',name:'Rainbowl Acai',        cal:319, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb02',name:'Dreamy Acai',          cal:376, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:6.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:9.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:7.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:10.40}]},
-    {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb05',name:'Double Rainbowl Acai', cal:445, sizes:[{l:'Unsweetened Smoothie Pulps',p:10.90},{l:'Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb06',name:'Galaxy Dream Acai',    cal:610, sizes:[{l:'Unsweetened Smoothie Pulps',p:9.90},{l:'Tasty Sorbet Swirls',p:10.90}]},
+    {id:'sb01',name:'Rainbowl Acai',        sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
+    {id:'sb02',name:'Dreamy Acai',          sizes:[{l:'Dessert',p:6.90},{l:'Meal',p:9.90},{l:'Dessert Sorbet',p:7.40},{l:'Meal Sorbet',p:10.40}]},
+    {id:'sb03',name:'Nostalgic Acai',       sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
+    {id:'sb04',name:'Berry Acai',           sizes:[{l:'Dessert',p:7.90},{l:'Meal',p:10.90},{l:'Dessert Sorbet',p:8.40},{l:'Meal Sorbet',p:11.90}]},
+    {id:'sb05',name:'Double Rainbowl Acai', sizes:[{l:'Regular',p:10.90},{l:'Sorbet',p:11.90}]},
+    {id:'sb06',name:'Galaxy Dream Acai',    sizes:[{l:'Regular',p:9.90},{l:'Sorbet',p:10.90}]},
     {id:'sb00',name:'Custom Bowl',          sizes:[{l:'Custom Price',p:0}]}
   ],
   'Shakes & Smoothies': [
@@ -1317,10 +1317,6 @@ function renderAppOrders(orders){
     let items = [];
     try{ items = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
     const itemsStr = items.map(function(i){ return (i.qty||1)+'x '+(i.label||i.name||''); }).join(', ');
-    const esc = function(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
-    const itemNotesHtml = items.filter(function(i){ return i.note; }).map(function(i){
-      return '<div style="font-size:11px;color:#e67e22;font-weight:600;margin-bottom:2px">📝 '+esc(i.label||i.name||'')+': '+esc(i.note)+'</div>';
-    }).join('');
     const status = o.status || 'Pending';
     const statusColor = STATUS_COLORS[status] || '#aaa';
     const buttons = ORDER_STATUSES.filter(function(s){ return s !== status; }).map(function(s){
@@ -1334,8 +1330,7 @@ function renderAppOrders(orders){
       +'<div style="font-size:12px;color:#555;margin-bottom:2px"><b>'+(o.name||'')+'</b> · '+(o.phone||'')+'</div>'
       +'<div style="font-size:11px;color:#888">'+(o.createdAt?formatDateTime(o.createdAt):'')+' · Collect: '+(o.collectTime||'ASAP')+'</div>'
       +'<div style="font-size:11px;color:#aaa;margin:4px 0">'+itemsStr+'</div>'
-      +itemNotesHtml
-      +(o.notes?'<div style="font-size:11px;color:#e67e22;font-style:italic;margin-bottom:4px">Note: '+esc(o.notes)+'</div>':'')
+      +(o.notes?'<div style="font-size:11px;color:#e67e22;font-style:italic;margin-bottom:4px">Note: '+o.notes+'</div>':'')
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
       +'<span style="font-size:13px;font-weight:700;color:#8fcea1">$'+parseFloat(o.total||0).toFixed(2)+'</span>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+buttons+'</div>'

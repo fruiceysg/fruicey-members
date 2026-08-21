@@ -39,7 +39,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .nav-tab span{font-size:10px;font-weight:500}
 
 /* SCREENS */
-.screen{display:none;min-height:calc(100vh - var(--nav));overflow-y:auto;position:relative;z-index:1}
+.screen{display:none;min-height:calc(100vh - var(--nav));position:relative;z-index:1}
 .screen.active{display:block}
 
 /* HEADER */
@@ -131,6 +131,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .top-banner-box{margin:16px 0;padding:0}
 .top-banner-box.tb-top{margin:0}
 
+/* Sticky top bar: keeps header + canopy pinned while the page scrolls */
+.home-topbar{position:sticky;top:0;z-index:60;background:#fff}
 /* Waving red & white canopy (animated SVG) above the top banner */
 .canopy{width:100%;height:80px;line-height:0;overflow:hidden;position:relative;z-index:5;pointer-events:none;background:#fff}
 .canopy svg{width:100%;height:160px;display:block;margin-top:-80px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.16));transform-origin:top center;animation:canopySway 5s ease-in-out infinite}
@@ -546,6 +548,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 <!-- ═══ HOME ═══ -->
 <div class="screen" id="scr-home">
 
+  <!-- Sticky top bar: header + canopy stay pinned while scrolling -->
+  <div class="home-topbar">
   <!-- Top site header: menu button + logo -->
   <header class="site-header">
     <button class="site-menu-btn" onclick="openDrawer()" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
@@ -570,6 +574,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
       <rect width="100%" height="160" fill="url(#cscal)" filter="url(#cloth)"/>
     </svg>
   </div>
+  </div><!-- /home-topbar -->
 
   <!-- 3-slide sliding banner (top) -->
   <div class="pslider" id="pslider">
@@ -1002,7 +1007,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: swap top-banner / sliding banner (rev G)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: sticky header + canopy (rev H)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){

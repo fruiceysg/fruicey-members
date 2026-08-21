@@ -223,7 +223,14 @@ body.home-active .login-star{display:none}
 
 /* AI CHAT WIDGET (self-contained floating widget, embedded as a transparent iframe) */
 #fq-embed{position:fixed;right:0;bottom:var(--nav);width:104px;height:104px;border:none;background:transparent;z-index:150;transition:width .28s ease,height .28s ease}
-#fq-embed.open{width:min(100vw,392px);height:min(100%,648px)}
+#fq-embed.open{width:min(100vw,392px);height:min(100dvh,648px)}
+/* Mobile: chat fills the visible screen. JS refines this with visualViewport so the
+   URL bar and on-screen keyboard never cover the chat (fallback here uses dvh). */
+@media (max-width:899px){
+  #fq-embed.open{width:100vw;height:100dvh;top:0;left:0;right:auto;bottom:auto;border-radius:0}
+  body:has(#fq-embed.open) #fullscreen-btn,
+  body:has(#fq-embed.open) #fullscreen-label{display:none!important}
+}
 
 /* STORY SCREEN */
 #scr-story{background:#fff;min-height:calc(100vh - var(--nav))}
@@ -988,7 +995,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: product-DETAIL zoom + modal-centering (rev B)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: mobile chat viewport-fit (rev C)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1404,15 +1411,46 @@ currentScreen = tab;
   if(tab==='account') loadAccount();
 }
 
-// Chat widget: resize the embed iframe when the widget opens/closes
-window.addEventListener('message', function(e){
-  if(typeof e.data !== 'string') return;
-  if(e.origin.indexOf('fruiceysg.github.io') === -1) return;
-  var fr = document.getElementById('fq-embed');
-  if(!fr) return;
-  if(e.data === 'fq-open') fr.classList.add('open');
-  else if(e.data === 'fq-close') fr.classList.remove('open');
-});
+// Chat widget: size the embed iframe when it opens/closes.
+// On mobile we track the visualViewport so the chat always fits the visible
+// area — never hidden behind the browser URL bar or the on-screen keyboard.
+(function(){
+  function fr(){ return document.getElementById('fq-embed'); }
+  function isMobile(){ return window.matchMedia('(max-width:899px)').matches; }
+  function clearInline(){
+    var f=fr(); if(!f) return;
+    f.style.top=f.style.left=f.style.right=f.style.bottom=f.style.width=f.style.height='';
+  }
+  function layout(){
+    var f=fr(); if(!f || !f.classList.contains('open')) return;
+    if(isMobile() && window.visualViewport){
+      var vv=window.visualViewport;
+      f.style.width  = vv.width  + 'px';
+      f.style.height = vv.height + 'px';   // excludes the keyboard
+      f.style.top    = vv.offsetTop  + 'px'; // sits below the URL bar
+      f.style.left   = vv.offsetLeft + 'px';
+      f.style.right  = 'auto';
+      f.style.bottom = 'auto';
+    } else {
+      clearInline(); // desktop: let the CSS corner panel size it
+    }
+  }
+  window.__fqLayout = layout;
+
+  window.addEventListener('message', function(e){
+    if(typeof e.data !== 'string') return;
+    if(e.origin.indexOf('fruiceysg.github.io') === -1) return;
+    var f=fr(); if(!f) return;
+    if(e.data === 'fq-open'){ f.classList.add('open'); layout(); }
+    else if(e.data === 'fq-close'){ f.classList.remove('open'); clearInline(); }
+  });
+
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', layout);
+    window.visualViewport.addEventListener('scroll', layout);
+  }
+  window.addEventListener('orientationchange', function(){ setTimeout(layout, 300); });
+})();
 
 // Reveal each feature's buttons only after its image has loaded (avoids mispositioned flash)
 function initFeatureButtons(){
@@ -2757,7 +2795,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </div>
 
 <!-- AI CHAT WIDGET (embeds the self-contained widget; it resizes via postMessage) -->
-<iframe id="fq-embed" src="https://fruiceysg.github.io/fruicey-chat/" title="Fruicey Assistant" allow="clipboard-write"></iframe>
+<iframe id="fq-embed" src="https://fruiceysg.github.io/fruicey-chat/?v=2" title="Fruicey Assistant" allow="clipboard-write"></iframe>
 
 <!-- FULLSCREEN BUTTON -->
 <button id="fullscreen-btn" onclick="toggleFullscreen()" style="position:fixed;top:8px;right:6px;z-index:999;width:42px;padding:0;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--green);display:flex;align-items:center;justify-content:center;text-shadow:0 1px 3px rgba(255,255,255,.9)" title="Fullscreen"><i class="ti ti-maximize"></i></button>

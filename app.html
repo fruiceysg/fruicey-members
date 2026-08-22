@@ -264,11 +264,12 @@ body.home-active .login-star{display:none}
 .product-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06);cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;flex-direction:column}
 .product-card:active{transform:scale(.98)}
 .product-card.oos{opacity:.55;cursor:default}
-.product-img{width:100%;height:132px;object-fit:contain;background:#fff;display:block;padding:6px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none}
+.product-img{width:100%;height:132px;object-fit:contain;background:#fff;display:block;padding:6px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none;transition:transform .25s ease}
 .product-img-wrap{position:relative;width:100%}
 .product-img-hover{position:absolute;inset:0;opacity:0;transition:opacity .25s ease}
 @media (hover:hover) and (pointer:fine){
   .product-card:hover .product-img-hover{opacity:1}
+  .product-card.zoom-hover:hover .product-img{transform:scale(1.08)}
 }
 .product-img-placeholder{width:100%;height:80px;background:linear-gradient(135deg,var(--green-light),#e8f5e9);display:flex;align-items:center;justify-content:center}
 #product-info-img{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none}
@@ -1017,7 +1018,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: desktop shakes hover-image (rev L)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: shakes hover mix — swap + cup-scale (rev M)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1648,6 +1649,8 @@ const CATS = Object.keys(CATALOGUE);
 const PRODUCT_MAP = {};
 Object.values(CATALOGUE).forEach(prods => prods.forEach(p => { PRODUCT_MAP[p.id] = p; }));
 const PREMIUM_CATS = new Set(['Superfood Bowls','Shakes & Smoothies','Immunity Press','Nutritional Press','Longevity Press','Wellness Press']);
+// Shakes that keep the info image + zoom in the pop-up (no card image-swap; cup scales on hover instead)
+const NO_HOVER_SWAP = new Set(['ss13','ss14','ss15','ss16','ss17']);
 
 function initMenu(){
   if(!currentCat){ currentCat = CATS[0]; renderCatPills(); }
@@ -1682,7 +1685,9 @@ function renderProducts(){
     card.style.position = 'relative';
     const fileId = IMG[p.id];
     const isAvail = stockStatus[p.id] !== false;
-    const hoverId = (currentCat === 'Shakes & Smoothies' && IMG_INFO[p.id] && window.matchMedia('(hover:hover) and (pointer:fine)').matches) ? IMG_INFO[p.id] : null;
+    const isShake = currentCat === 'Shakes & Smoothies';
+    const desktopHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+    const hoverId = (isShake && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id) && desktopHover) ? IMG_INFO[p.id] : null;
     if(fileId && hoverId){
       // Desktop: hover swaps to the product's info image (CSS handles the fade, hover-only)
       const iwrap = document.createElement('div');
@@ -1704,6 +1709,8 @@ function renderProducts(){
       img.src = 'https://lh3.googleusercontent.com/d/'+fileId+'=w400';
       img.loading = 'lazy';
       card.appendChild(img);
+      // Desktop shakes without an image-swap: the cup grows a little on hover
+      if(isShake && desktopHover){ card.classList.add('zoom-hover'); }
     } else {
       const ph = document.createElement('div');
       ph.className = 'product-img-placeholder';
@@ -1773,7 +1780,7 @@ function openProductDetail(pid){
   let imgId  = infoId || fileId;
   // Desktop: for Shakes & Smoothies the image is shown via card hover, so the pop-up is just options
   const desktopHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-  if(currentCat === 'Shakes & Smoothies' && desktopHover && IMG_INFO[p.id]){ imgId = null; }
+  if(currentCat === 'Shakes & Smoothies' && desktopHover && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = null; }
   document.getElementById('pd-name').textContent = p.name;
   // "Note to Wilson" field — shown for Superfood Bowls
   const noteWrap = document.getElementById('pd-note-wrap');

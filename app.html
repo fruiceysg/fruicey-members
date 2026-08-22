@@ -1018,7 +1018,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: shakes hover mix — swap + cup-scale (rev M)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: swap-shakes main image + zoom in pop-up (rev N)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1780,7 +1780,8 @@ function openProductDetail(pid){
   let imgId  = infoId || fileId;
   // Desktop: for Shakes & Smoothies the image is shown via card hover, so the pop-up is just options
   const desktopHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-  if(currentCat === 'Shakes & Smoothies' && desktopHover && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = null; }
+  // Desktop: the 12 swap-shakes show their MAIN image (not the hover/info image) in the pop-up, with hover-zoom
+  if(currentCat === 'Shakes & Smoothies' && desktopHover && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = fileId; }
   document.getElementById('pd-name').textContent = p.name;
   // "Note to Wilson" field — shown for Superfood Bowls
   const noteWrap = document.getElementById('pd-note-wrap');

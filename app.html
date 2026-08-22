@@ -1018,7 +1018,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: swap-shakes main image + zoom in pop-up (rev N)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: bowls hover-swap + main-image pop-up (rev O)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1651,6 +1651,8 @@ Object.values(CATALOGUE).forEach(prods => prods.forEach(p => { PRODUCT_MAP[p.id]
 const PREMIUM_CATS = new Set(['Superfood Bowls','Shakes & Smoothies','Immunity Press','Nutritional Press','Longevity Press','Wellness Press']);
 // Shakes that keep the info image + zoom in the pop-up (no card image-swap; cup scales on hover instead)
 const NO_HOVER_SWAP = new Set(['ss13','ss14','ss15','ss16','ss17']);
+// Categories where the card hover-swaps main->info and the pop-up shows the MAIN image with zoom
+const HOVER_SWAP_CATS = new Set(['Shakes & Smoothies','Superfood Bowls']);
 
 function initMenu(){
   if(!currentCat){ currentCat = CATS[0]; renderCatPills(); }
@@ -1687,7 +1689,7 @@ function renderProducts(){
     const isAvail = stockStatus[p.id] !== false;
     const isShake = currentCat === 'Shakes & Smoothies';
     const desktopHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-    const hoverId = (isShake && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id) && desktopHover) ? IMG_INFO[p.id] : null;
+    const hoverId = (HOVER_SWAP_CATS.has(currentCat) && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id) && desktopHover) ? IMG_INFO[p.id] : null;
     if(fileId && hoverId){
       // Desktop: hover swaps to the product's info image (CSS handles the fade, hover-only)
       const iwrap = document.createElement('div');
@@ -1780,8 +1782,8 @@ function openProductDetail(pid){
   let imgId  = infoId || fileId;
   // Desktop: for Shakes & Smoothies the image is shown via card hover, so the pop-up is just options
   const desktopHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-  // Desktop: the 12 swap-shakes show their MAIN image (not the hover/info image) in the pop-up, with hover-zoom
-  if(currentCat === 'Shakes & Smoothies' && desktopHover && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = fileId; }
+  // Desktop: swap categories (shakes ss01-12, all bowls) show their MAIN image (not the info image) in the pop-up, with hover-zoom
+  if(HOVER_SWAP_CATS.has(currentCat) && desktopHover && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = fileId; }
   document.getElementById('pd-name').textContent = p.name;
   // "Note to Wilson" field — shown for Superfood Bowls
   const noteWrap = document.getElementById('pd-note-wrap');

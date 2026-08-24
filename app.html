@@ -314,6 +314,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-cs-view{background:#fff;color:var(--green-dark)}
 .pd-drizzles-wrap{padding:8px 18px 2px}
 .pd-drizzles-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.pd-drizzles-hint{font-weight:600;text-transform:none;letter-spacing:0;color:var(--text3);opacity:.85}
 .pd-drizzles{display:flex;flex-direction:column;gap:8px}
 .pd-drizzle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;font-family:var(--body);transition:border-color .15s,background .15s}
 .pd-drizzle .pd-drizzle-name{font-size:14px;font-weight:600;color:var(--text);text-align:left}
@@ -1046,7 +1047,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: add-ons in cart total only, base option price (rev U)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: drizzles above sizes (add-ons apply on add) (rev V)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -3006,12 +3007,12 @@ document.addEventListener('DOMContentLoaded', function(){
       <button id="pd-enlarge" class="pd-enlarge" type="button" aria-label="Enlarge image"><i class="ti ti-zoom-in"></i></button>
     </div>
     <div id="pd-preorder" class="pd-preorder" style="display:none">Pre-order item &mdash; made available on collection day</div>
-    <div id="pd-choose" class="pd-choose">Choose an option</div>
-    <div id="pd-options" class="pd-options"></div>
     <div id="pd-drizzles-wrap" class="pd-drizzles-wrap" style="display:none">
-      <div class="pd-drizzles-label">Add-on Drizzles</div>
+      <div class="pd-drizzles-label">Add-on Drizzles <span class="pd-drizzles-hint">— pick before adding your bowl</span></div>
       <div id="pd-drizzles" class="pd-drizzles"></div>
     </div>
+    <div id="pd-choose" class="pd-choose">Choose an option</div>
+    <div id="pd-options" class="pd-options"></div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (Optional)</label>
       <textarea id="pd-note" class="pd-note" rows="2" placeholder=""></textarea>

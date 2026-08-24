@@ -1046,7 +1046,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: option stepper + live add-on price + continue shopping (rev T)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: add-ons in cart total only, base option price (rev U)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1874,19 +1874,12 @@ function removeSizeFromCart(pid, size){
   refreshPdOptions();
 }
 
-// Refresh option rows: price reflects selected add-ons, qty reflects the cart
+// Refresh option rows: quantity reflects the cart (prices stay at base; add-ons show in the cart total)
 function refreshPdOptions(){
   const wrap = document.getElementById('pd-options');
   if(!wrap) return;
-  const drizzWrap = document.getElementById('pd-drizzles-wrap');
-  let addonTotal = 0;
-  if(drizzWrap && drizzWrap.style.display !== 'none'){
-    addonTotal = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')].reduce((s,a)=>s+parseFloat(a.dataset.price||0),0);
-  }
   wrap.querySelectorAll('.pd-opt').forEach(row=>{
-    const pid=row.dataset.pid, size=row.dataset.size, base=parseFloat(row.dataset.base||0);
-    const priceEl=row.querySelector('.pd-opt-price');
-    if(priceEl) priceEl.textContent = '$'+(Math.round((base+addonTotal)*100)/100).toFixed(2);
+    const pid=row.dataset.pid, size=row.dataset.size;
     const qty=cart.filter(i=>i.id===pid && i.size===size).reduce((s,i)=>s+i.qty,0);
     const qtyEl=row.querySelector('.pd-opt-qty'); if(qtyEl) qtyEl.textContent=qty;
     const minus=row.querySelector('.pd-opt-minus'); if(minus) minus.disabled = qty<=0;

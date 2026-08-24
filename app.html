@@ -305,9 +305,13 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-head-text{flex:1;min-width:0}
 .pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15}
 .pd-note-wrap{padding:4px 18px 2px;display:flex;flex-direction:column}
-.pd-cart-summary{position:sticky;bottom:0;margin:14px 0 -24px;padding:14px 18px calc(14px + 24px);background:var(--green);color:#fff;display:none;align-items:center;justify-content:space-between;gap:8px;font-weight:700;font-family:var(--font);font-size:14px;cursor:pointer;z-index:3}
+.pd-cart-summary{position:sticky;bottom:0;margin:14px 0 -24px;padding:14px 18px calc(14px + 24px);background:var(--green);color:#fff;display:none;flex-direction:column;gap:10px;z-index:3}
 .pd-cart-summary.show{display:flex}
-.pd-cart-summary .pd-cs-cta{display:flex;align-items:center;gap:4px;opacity:.95;white-space:nowrap}
+.pd-cs-total{display:flex;align-items:center;gap:6px;font-weight:700;font-family:var(--font);font-size:14px}
+.pd-cs-actions{display:flex;gap:10px}
+.pd-cs-actions button{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer}
+.pd-cs-continue{background:rgba(255,255,255,.22);color:#fff}
+.pd-cs-view{background:#fff;color:var(--green-dark)}
 .pd-drizzles-wrap{padding:8px 18px 2px}
 .pd-drizzles-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .pd-drizzles{display:flex;flex-direction:column;gap:8px}
@@ -345,14 +349,19 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-preorder{margin:12px 18px 0;background:#fff3e0;color:#e67e22;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;text-align:center}
 .pd-choose{font-family:var(--body);font-size:12px;color:var(--text3);padding:16px 18px 8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
 .pd-options{display:flex;flex-direction:column;gap:10px;padding:0 18px}
-.pd-opt{display:flex;align-items:center;justify-content:space-between;width:100%;padding:15px 18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;transition:transform .12s,border-color .15s,background .15s;font-family:var(--body)}
-.pd-opt:active{transform:scale(.98)}
+.pd-opt{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;transition:border-color .15s,background .15s;font-family:var(--body)}
 .pd-opt.added{border-color:var(--green);background:var(--green-light)}
+.pd-opt.has-qty{border-color:var(--green)}
 .pd-opt-label{flex:1;text-align:left;padding-right:10px;font-size:15px;font-weight:600;color:var(--text)}
 .pd-opt-right{display:flex;align-items:center;gap:12px}
-.pd-opt-price{font-size:16px;font-weight:700;color:var(--green-dark)}
-.pd-opt-add{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.pd-opt-add i{font-size:18px}
+.pd-opt-price{font-size:16px;font-weight:700;color:var(--green-dark);min-width:52px;text-align:right}
+.pd-opt-step{display:flex;align-items:center;gap:8px}
+.pd-opt-minus,.pd-opt-plus{width:30px;height:30px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0}
+.pd-opt-plus{background:var(--green);color:#fff}
+.pd-opt-minus{background:#eee;color:#555}
+.pd-opt-minus:disabled{opacity:.35;cursor:default}
+.pd-opt-minus i,.pd-opt-plus i{font-size:18px}
+.pd-opt-qty{min-width:16px;text-align:center;font-weight:700;font-size:15px;color:var(--text)}
 .pd-oos{padding:20px 18px;text-align:center;color:#e74c3c;font-weight:700}
 .pd-cartbar{display:flex;gap:10px;padding:14px 18px 0}
 .pd-cartbtn{flex:1;padding:14px;border:none;border-radius:12px;background:var(--green);color:#fff;font-family:var(--font);font-size:16px;font-weight:600;cursor:pointer}
@@ -1037,7 +1046,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: desktop cart pill (right) / mobile bar (rev S)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: option stepper + live add-on price + continue shopping (rev T)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1801,7 +1810,7 @@ function renderProducts(){
 // Toggle add-on drizzle selection (multi-select) in the product detail sheet
 document.addEventListener('click', function(e){
   const d = e.target.closest && e.target.closest('#pd-drizzles .pd-drizzle');
-  if(d){ e.stopPropagation(); d.classList.toggle('selected'); }
+  if(d){ e.stopPropagation(); d.classList.toggle('selected'); refreshPdOptions(); }
 });
 
 // Live cart total shown inside the product detail sheet (so the total is visible while selecting)
@@ -1840,9 +1849,49 @@ function addSizeToCart(pid, size, price, el){
   const exist = cart.find(i=>i.id===pid && i.size===size && (i.note||'')===note && (i.addonSig||'')===addonSig);
   if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size, label, price:finalPrice, qty:1, note, addons, addonSig}); }
   updateCartBadge();
-  if(noteEl) noteEl.value = '';
-  if(el){ el.classList.add('added'); setTimeout(()=>el.classList.remove('added'), 450); }
+  const row = (el && el.closest) ? el.closest('.pd-opt') : el;
+  if(row){ row.classList.add('added'); setTimeout(()=>row.classList.remove('added'), 450); }
+  refreshPdOptions();
   showToast(label+' added!');
+}
+
+// Remove one of a size from the cart (from the detail sheet stepper)
+function removeSizeFromCart(pid, size){
+  const noteEl = document.getElementById('pd-note');
+  const noteWrap = document.getElementById('pd-note-wrap');
+  const note = (noteEl && noteWrap && noteWrap.style.display !== 'none') ? noteEl.value.trim() : '';
+  const drizzWrap = document.getElementById('pd-drizzles-wrap');
+  let sig = '';
+  if(drizzWrap && drizzWrap.style.display !== 'none'){
+    sig = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')].map(a=>a.dataset.name).sort().join('|');
+  }
+  // Prefer the exact current variant; otherwise remove the last line of this size
+  let idx = cart.findIndex(i=>i.id===pid && i.size===size && (i.note||'')===note && (i.addonSig||'')===sig);
+  if(idx < 0){ for(let k=cart.length-1;k>=0;k--){ if(cart[k].id===pid && cart[k].size===size){ idx=k; break; } } }
+  if(idx < 0) return;
+  cart[idx].qty--; if(cart[idx].qty<=0) cart.splice(idx,1);
+  updateCartBadge();
+  refreshPdOptions();
+}
+
+// Refresh option rows: price reflects selected add-ons, qty reflects the cart
+function refreshPdOptions(){
+  const wrap = document.getElementById('pd-options');
+  if(!wrap) return;
+  const drizzWrap = document.getElementById('pd-drizzles-wrap');
+  let addonTotal = 0;
+  if(drizzWrap && drizzWrap.style.display !== 'none'){
+    addonTotal = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')].reduce((s,a)=>s+parseFloat(a.dataset.price||0),0);
+  }
+  wrap.querySelectorAll('.pd-opt').forEach(row=>{
+    const pid=row.dataset.pid, size=row.dataset.size, base=parseFloat(row.dataset.base||0);
+    const priceEl=row.querySelector('.pd-opt-price');
+    if(priceEl) priceEl.textContent = '$'+(Math.round((base+addonTotal)*100)/100).toFixed(2);
+    const qty=cart.filter(i=>i.id===pid && i.size===size).reduce((s,i)=>s+i.qty,0);
+    const qtyEl=row.querySelector('.pd-opt-qty'); if(qtyEl) qtyEl.textContent=qty;
+    const minus=row.querySelector('.pd-opt-minus'); if(minus) minus.disabled = qty<=0;
+    row.classList.toggle('has-qty', qty>0);
+  });
 }
 
 // Open the kiosk-style product detail sheet
@@ -1899,11 +1948,16 @@ function openProductDetail(pid){
     choose.style.display = '';
     opts.innerHTML = p.sizes.map(s => {
       const size = (s.l||'').replace(/"/g,'&quot;');
-      return '<button class="pd-opt" onclick="addSizeToCart(\''+p.id+'\',\''+size+'\','+s.p+',this)">'
+      return '<div class="pd-opt" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'">'
         + '<span class="pd-opt-label">'+(s.l||'Regular')+'</span>'
         + '<span class="pd-opt-right"><span class="pd-opt-price">$'+s.p.toFixed(2)+'</span>'
-        + '<span class="pd-opt-add"><i class="ti ti-plus"></i></span></span></button>';
+        + '<span class="pd-opt-step">'
+        +   '<button type="button" class="pd-opt-minus" onclick="removeSizeFromCart(\''+p.id+'\',\''+size+'\')" aria-label="Remove one"><i class="ti ti-minus"></i></button>'
+        +   '<span class="pd-opt-qty">0</span>'
+        +   '<button type="button" class="pd-opt-plus" onclick="addSizeToCart(\''+p.id+'\',\''+size+'\','+s.p+',this)" aria-label="Add one"><i class="ti ti-plus"></i></button>'
+        + '</span></span></div>';
     }).join('');
+    refreshPdOptions();
   }
   var m = document.getElementById('product-detail-modal');
   var box = m.querySelector('.modal-box');
@@ -1912,6 +1966,7 @@ function openProductDetail(pid){
   else { box.style.transform = 'translateY(100%)'; }
   m.classList.add('open');
   updatePdCartSummary();
+  refreshPdOptions();
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }
     else { box.style.transform = 'translateY(0)'; }
@@ -2968,9 +3023,12 @@ document.addEventListener('DOMContentLoaded', function(){
       <label class="pd-note-label" for="pd-note">Note to Wilson (Optional)</label>
       <textarea id="pd-note" class="pd-note" rows="2" placeholder=""></textarea>
     </div>
-    <div id="pd-cart-summary" class="pd-cart-summary" onclick="closeProductDetail();openCart();">
-      <span id="pd-cart-summary-text"></span>
-      <span class="pd-cs-cta">View Cart <i class="ti ti-chevron-right" style="font-size:16px"></i></span>
+    <div id="pd-cart-summary" class="pd-cart-summary">
+      <div class="pd-cs-total" id="pd-cart-summary-text"></div>
+      <div class="pd-cs-actions">
+        <button type="button" class="pd-cs-continue" onclick="closeProductDetail()">Continue Shopping</button>
+        <button type="button" class="pd-cs-view" onclick="closeProductDetail();openCart();">View Cart</button>
+      </div>
     </div>
   </div>
 </div>

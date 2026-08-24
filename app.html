@@ -224,7 +224,9 @@ body.home-active .login-star{display:none}
 .top-banner-box.partners-box{margin-bottom:0}
 
 /* AI CHAT WIDGET (self-contained floating widget, embedded as a transparent iframe) */
-#fq-embed{position:fixed;right:0;bottom:var(--nav);width:104px;height:104px;border:none;background:transparent;z-index:150;transition:width .28s ease,height .28s ease}
+#fq-embed{position:fixed;right:0;bottom:var(--nav);width:104px;height:104px;border:none;background:transparent;z-index:150;transition:width .28s ease,height .28s ease,bottom .28s ease}
+/* When the cart bar is visible, lift the collapsed chat bubble above it */
+body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 #fq-embed.open{width:min(100vw,392px);height:min(100dvh,648px)}
 /* Mobile: chat fills the visible screen. JS refines this with visualViewport so the
    URL bar and on-screen keyboard never cover the chat (fallback here uses dvh). */
@@ -303,6 +305,9 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-head-text{flex:1;min-width:0}
 .pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15}
 .pd-note-wrap{padding:4px 18px 2px;display:flex;flex-direction:column}
+.pd-cart-summary{position:sticky;bottom:0;margin:14px 0 -24px;padding:14px 18px calc(14px + 24px);background:var(--green);color:#fff;display:none;align-items:center;justify-content:space-between;gap:8px;font-weight:700;font-family:var(--font);font-size:14px;cursor:pointer;z-index:3}
+.pd-cart-summary.show{display:flex}
+.pd-cart-summary .pd-cs-cta{display:flex;align-items:center;gap:4px;opacity:.95;white-space:nowrap}
 .pd-drizzles-wrap{padding:8px 18px 2px}
 .pd-drizzles-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .pd-drizzles{display:flex;flex-direction:column;gap:8px}
@@ -353,8 +358,9 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-cartbtn{flex:1;padding:14px;border:none;border-radius:12px;background:var(--green);color:#fff;font-family:var(--font);font-size:16px;font-weight:600;cursor:pointer}
 
 /* CART BADGE */
-.cart-badge{position:fixed;bottom:calc(var(--nav) + 12px);right:16px;background:var(--green);color:#fff;border-radius:25px;padding:10px 18px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(143,206,161,.5);cursor:pointer;display:none;align-items:center;gap:8px;z-index:110;font-family:var(--font)}
+.cart-badge{position:fixed;left:0;right:0;bottom:var(--nav);background:var(--green);color:#fff;padding:13px 18px;font-size:14px;font-weight:600;box-shadow:0 -3px 14px rgba(0,0,0,.14);cursor:pointer;display:none;align-items:center;justify-content:space-between;gap:8px;z-index:140;font-family:var(--font)}
 .cart-badge.show{display:flex}
+.cart-badge .cart-badge-cta{display:flex;align-items:center;gap:4px;opacity:.95;white-space:nowrap}
 
 /* CART SHEET */
 .cart-sheet{position:fixed;inset:0;z-index:200;display:none}
@@ -504,7 +510,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   body{max-width:var(--app-w);margin:0 auto;background:#fff;box-shadow:0 0 50px rgba(0,0,0,.08);min-height:100vh}
   /* Re-anchor fixed elements to the centered column */
   .bottom-nav{left:50%;right:auto;transform:translateX(-50%);width:100%;max-width:var(--app-w)}
-  .cart-badge{right:calc(50% - var(--app-w)/2 + 16px)}
+  .cart-badge{left:0;right:0}
   .cart-panel{left:calc(50% - var(--app-w)/2);right:calc(50% - var(--app-w)/2)}
   .drawer-panel{left:calc(50% - var(--app-w)/2)}
   #fullscreen-btn{right:calc(50% - var(--app-w)/2 + 6px)!important}
@@ -521,6 +527,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 }
 @media (min-width:900px){
   :root{--nav:68px;--header-h:91px}
+  /* Cart bar as a compact pill on the right (desktop only) */
+  .cart-badge{left:auto;right:24px;bottom:calc(var(--nav) + 12px);width:auto;border-radius:26px;padding:12px 22px;gap:16px;box-shadow:0 6px 20px rgba(90,171,116,.45)}
   .product-grid{grid-template-columns:repeat(4,1fr);gap:16px;padding:16px 24px}
   .product-img{height:180px}
   .product-name{font-size:14px}
@@ -1029,7 +1037,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: bowl add-on drizzles (rev Q)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: desktop cart pill (right) / mobile bar (rev S)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1796,6 +1804,20 @@ document.addEventListener('click', function(e){
   if(d){ e.stopPropagation(); d.classList.toggle('selected'); }
 });
 
+// Live cart total shown inside the product detail sheet (so the total is visible while selecting)
+function updatePdCartSummary(){
+  const el = document.getElementById('pd-cart-summary');
+  if(!el) return;
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const count = cart.reduce((s,i)=>s+i.qty,0);
+  if(count){
+    el.classList.add('show');
+    document.getElementById('pd-cart-summary-text').innerHTML = '<i class="ti ti-shopping-cart" style="font-size:16px;vertical-align:-2px"></i> '+count+' item'+(count>1?'s':'')+' &nbsp;·&nbsp; $'+total.toFixed(2);
+  } else {
+    el.classList.remove('show');
+  }
+}
+
 // Add a chosen size to the cart (shared by the detail sheet)
 function addSizeToCart(pid, size, price, el){
   if(!currentUser){ openLogin(); return; }
@@ -1889,6 +1911,7 @@ function openProductDetail(pid){
   if(side){ box.style.opacity = '0'; box.style.transform = 'scale(.92)'; }
   else { box.style.transform = 'translateY(100%)'; }
   m.classList.add('open');
+  updatePdCartSummary();
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }
     else { box.style.transform = 'translateY(0)'; }
@@ -1962,8 +1985,15 @@ function updateCartBadge(){
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const count = cart.reduce((s,i)=>s+i.qty,0);
   const badge = document.getElementById('cart-badge');
-  if(cart.length){ badge.classList.add('show'); badge.innerHTML='<i class="ti ti-shopping-cart" style="font-size:16px"></i> '+count+' item'+(count>1?'s':'')+' &nbsp;·&nbsp; $'+total.toFixed(2); }
-  else { badge.classList.remove('show'); }
+  if(cart.length){
+    badge.classList.add('show');
+    document.body.classList.add('has-cart');
+    badge.innerHTML = '<span><i class="ti ti-shopping-cart" style="font-size:16px;vertical-align:-2px"></i> '+count+' item'+(count>1?'s':'')+' &nbsp;·&nbsp; $'+total.toFixed(2)+'</span><span class="cart-badge-cta">View Cart <i class="ti ti-chevron-right" style="font-size:16px"></i></span>';
+  } else {
+    badge.classList.remove('show');
+    document.body.classList.remove('has-cart');
+  }
+  updatePdCartSummary();
 }
 
 function openCart(){ renderCartItems(); loadUserCredit(); document.getElementById('cart-sheet').classList.add('open'); }
@@ -2937,6 +2967,10 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (Optional)</label>
       <textarea id="pd-note" class="pd-note" rows="2" placeholder=""></textarea>
+    </div>
+    <div id="pd-cart-summary" class="pd-cart-summary" onclick="closeProductDetail();openCart();">
+      <span id="pd-cart-summary-text"></span>
+      <span class="pd-cs-cta">View Cart <i class="ti ti-chevron-right" style="font-size:16px"></i></span>
     </div>
   </div>
 </div>

@@ -303,6 +303,16 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-head-text{flex:1;min-width:0}
 .pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15}
 .pd-note-wrap{padding:4px 18px 2px;display:flex;flex-direction:column}
+.pd-drizzles-wrap{padding:8px 18px 2px}
+.pd-drizzles-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.pd-drizzles{display:flex;flex-direction:column;gap:8px}
+.pd-drizzle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;font-family:var(--body);transition:border-color .15s,background .15s}
+.pd-drizzle .pd-drizzle-name{font-size:14px;font-weight:600;color:var(--text);text-align:left}
+.pd-drizzle .pd-drizzle-price{font-size:14px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:10px}
+.pd-drizzle .pd-drizzle-tick{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:transparent;font-size:13px}
+.pd-drizzle.selected{border-color:var(--green);background:var(--green-light)}
+.pd-drizzle.selected .pd-drizzle-price{color:var(--green-dark)}
+.pd-drizzle.selected .pd-drizzle-tick{background:var(--green);border-color:var(--green);color:#fff}
 .pd-note-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
 .pd-note{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:var(--body);resize:none;outline:none;background:#fafafa;color:var(--text)}
 .pd-note:focus{border-color:var(--green);background:#fff}
@@ -1019,7 +1029,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: mobile tap-flip image (bowls + shakes) (rev P)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: bowl add-on drizzles (rev Q)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1654,6 +1664,17 @@ const PREMIUM_CATS = new Set(['Superfood Bowls','Shakes & Smoothies','Immunity P
 const NO_HOVER_SWAP = new Set(['ss13','ss14','ss15','ss16','ss17']);
 // Categories where the card hover-swaps main->info and the pop-up shows the MAIN image with zoom
 const HOVER_SWAP_CATS = new Set(['Shakes & Smoothies','Superfood Bowls']);
+// Optional add-on drizzles shown in the Superfood Bowls pop-up
+const DRIZZLES = [
+  {name:'Cookie Butter', price:1.00},
+  {name:'Peanut Butter', price:1.00},
+  {name:"Hershey's Chocolate", price:1.00},
+  {name:'Nutella', price:1.00},
+  {name:'Caramel', price:1.00},
+  {name:'Oreo Crushies', price:0.80},
+  {name:'Honey', price:0.80},
+  {name:'Rainbow Millions', price:0.80}
+];
 
 function initMenu(){
   if(!currentCat){ currentCat = CATS[0]; renderCatPills(); }
@@ -1769,6 +1790,12 @@ function renderProducts(){
   });
 }
 
+// Toggle add-on drizzle selection (multi-select) in the product detail sheet
+document.addEventListener('click', function(e){
+  const d = e.target.closest && e.target.closest('#pd-drizzles .pd-drizzle');
+  if(d){ e.stopPropagation(); d.classList.toggle('selected'); }
+});
+
 // Add a chosen size to the cart (shared by the detail sheet)
 function addSizeToCart(pid, size, price, el){
   if(!currentUser){ openLogin(); return; }
@@ -1777,9 +1804,19 @@ function addSizeToCart(pid, size, price, el){
   const noteEl = document.getElementById('pd-note');
   const noteWrap = document.getElementById('pd-note-wrap');
   const note = (noteEl && noteWrap && noteWrap.style.display !== 'none') ? noteEl.value.trim() : '';
-  const label = prod.name + (size ? ' ('+size+')' : '');
-  const exist = cart.find(i=>i.id===pid && i.size===size && (i.note||'')===note);
-  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size, label, price, qty:1, note}); }
+  // Add-on drizzles (Superfood Bowls)
+  const drizzWrap = document.getElementById('pd-drizzles-wrap');
+  let addons = [];
+  if(drizzWrap && drizzWrap.style.display !== 'none'){
+    addons = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')].map(a=>({name:a.dataset.name, price:parseFloat(a.dataset.price)}));
+  }
+  const addonTotal = addons.reduce((s,a)=>s + (a.price||0), 0);
+  const finalPrice = Math.round((price + addonTotal) * 100) / 100;
+  const addonSig = addons.map(a=>a.name).sort().join('|');
+  let label = prod.name + (size ? ' ('+size+')' : '');
+  if(addons.length) label += ' + ' + addons.map(a=>a.name).join(', ');
+  const exist = cart.find(i=>i.id===pid && i.size===size && (i.note||'')===note && (i.addonSig||'')===addonSig);
+  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size, label, price:finalPrice, qty:1, note, addons, addonSig}); }
   updateCartBadge();
   if(noteEl) noteEl.value = '';
   if(el){ el.classList.add('added'); setTimeout(()=>el.classList.remove('added'), 450); }
@@ -1805,6 +1842,23 @@ function openProductDetail(pid){
   const showNote = (p.id||'').indexOf('sb') === 0;
   if(noteEl) noteEl.value = '';
   if(noteWrap) noteWrap.style.display = showNote ? 'flex' : 'none';
+  // Add-on drizzles — shown for Superfood Bowls, reset each open
+  const drizzWrap = document.getElementById('pd-drizzles-wrap');
+  const drizzEl = document.getElementById('pd-drizzles');
+  if(drizzWrap && drizzEl){
+    if(showNote){
+      drizzEl.innerHTML = DRIZZLES.map(d =>
+        '<button type="button" class="pd-drizzle" data-name="'+d.name.replace(/"/g,'&quot;')+'" data-price="'+d.price.toFixed(2)+'">'
+        + '<span class="pd-drizzle-name">'+d.name+'</span>'
+        + '<span class="pd-drizzle-price">+$'+d.price.toFixed(2)+'<span class="pd-drizzle-tick"><i class="ti ti-check"></i></span></span>'
+        + '</button>'
+      ).join('');
+      drizzWrap.style.display = 'block';
+    } else {
+      drizzEl.innerHTML = '';
+      drizzWrap.style.display = 'none';
+    }
+  }
   const wrap = document.getElementById('pd-imgwrap');
   const zbtn = document.getElementById('pd-zoombtn');
   if(zbtn) zbtn.style.display = imgId ? '' : 'none';
@@ -2876,6 +2930,10 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="pd-preorder" class="pd-preorder" style="display:none">Pre-order item &mdash; made available on collection day</div>
     <div id="pd-choose" class="pd-choose">Choose an option</div>
     <div id="pd-options" class="pd-options"></div>
+    <div id="pd-drizzles-wrap" class="pd-drizzles-wrap" style="display:none">
+      <div class="pd-drizzles-label">Add-on Drizzles</div>
+      <div id="pd-drizzles" class="pd-drizzles"></div>
+    </div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (Optional)</label>
       <textarea id="pd-note" class="pd-note" rows="2" placeholder=""></textarea>

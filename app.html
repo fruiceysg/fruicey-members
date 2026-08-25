@@ -323,6 +323,20 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-drizzle.selected{border-color:var(--green);background:var(--green-light)}
 .pd-drizzle.selected .pd-drizzle-price{color:var(--green-dark)}
 .pd-drizzle.selected .pd-drizzle-tick{background:var(--green);border-color:var(--green);color:#fff}
+/* Bowl single-select size rows (1 of N) */
+.pd-size{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;transition:border-color .15s,background .15s;font-family:var(--body);text-align:left}
+.pd-size .pd-size-label{flex:1;padding-right:10px;font-size:15px;font-weight:600;color:var(--text)}
+.pd-size .pd-size-price{font-size:16px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:10px}
+.pd-size .pd-size-tick{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:transparent;font-size:13px}
+.pd-size.selected{border-color:var(--green);background:var(--green-light)}
+.pd-size.selected .pd-size-price{color:var(--green-dark)}
+.pd-size.selected .pd-size-tick{background:var(--green);border-color:var(--green);color:#fff}
+/* Bowl "Add to Cart" bar (single configured item) */
+.pd-bowl-add{padding:14px 18px 2px}
+.pd-bowl-add-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:none;border-radius:14px;padding:14px 18px;background:var(--green);color:#fff;font-family:var(--font);font-weight:700;font-size:15px;cursor:pointer;transition:opacity .15s}
+.pd-bowl-add-btn:disabled{opacity:.45;cursor:default}
+.pd-bowl-add-label{display:flex;align-items:center;gap:8px}
+.pd-bowl-add-price{font-weight:800}
 .pd-note-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
 .pd-note{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:var(--body);resize:none;outline:none;background:#fafafa;color:var(--text)}
 .pd-note:focus{border-color:var(--green);background:#fff}
@@ -1047,7 +1061,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: drizzles above sizes (add-ons apply on add) (rev V)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: bowls = single-select size + add-ons below, live Add to Cart (rev W)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1808,10 +1822,13 @@ function renderProducts(){
   });
 }
 
+// Tracks the single size chosen for the bowl currently being built ({pid, size, base})
+let pdSelectedSize = null;
+
 // Toggle add-on drizzle selection (multi-select) in the product detail sheet
 document.addEventListener('click', function(e){
   const d = e.target.closest && e.target.closest('#pd-drizzles .pd-drizzle');
-  if(d){ e.stopPropagation(); d.classList.toggle('selected'); refreshPdOptions(); }
+  if(d){ e.stopPropagation(); d.classList.toggle('selected'); refreshPdOptions(); refreshBowlAdd(); }
 });
 
 // Live cart total shown inside the product detail sheet (so the total is visible while selecting)
@@ -1888,6 +1905,74 @@ function refreshPdOptions(){
   });
 }
 
+// --- Superfood Bowls: single-select size (1 of N) + multi-select add-ons + one "Add to Cart" ---
+
+// Pick exactly one size; deselect the others
+function selectBowlSize(pid, size, base, el){
+  pdSelectedSize = {pid:pid, size:size, base:base};
+  document.querySelectorAll('#pd-options .pd-size').forEach(b=>b.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  refreshBowlAdd();
+}
+
+// Recompute the live Add-to-Cart price (selected size + all selected add-ons)
+function refreshBowlAdd(){
+  const btn = document.getElementById('pd-bowl-add-btn');
+  if(!btn) return;
+  const labelEl = btn.querySelector('.pd-bowl-add-label');
+  const priceEl = btn.querySelector('.pd-bowl-add-price');
+  const drizzWrap = document.getElementById('pd-drizzles-wrap');
+  let addonTotal = 0;
+  if(drizzWrap && drizzWrap.style.display !== 'none'){
+    addonTotal = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')]
+      .reduce((s,a)=>s + (parseFloat(a.dataset.price)||0), 0);
+  }
+  if(pdSelectedSize){
+    const total = Math.round((pdSelectedSize.base + addonTotal) * 100) / 100;
+    btn.disabled = false;
+    labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Add to Cart';
+    priceEl.textContent = '$'+total.toFixed(2);
+  } else {
+    btn.disabled = true;
+    labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Select a size';
+    priceEl.textContent = '';
+  }
+}
+
+// Commit exactly one configured bowl, then reset so the next one is built from scratch
+function addBowlToCart(){
+  if(!currentUser){ openLogin(); return; }
+  if(!pdSelectedSize){ return; }
+  const pid = pdSelectedSize.pid;
+  if(stockStatus[pid] === false){ showToast('Sorry, this item is out of stock'); return; }
+  const prod = PRODUCT_MAP[pid];
+  const noteEl = document.getElementById('pd-note');
+  const noteWrap = document.getElementById('pd-note-wrap');
+  const note = (noteEl && noteWrap && noteWrap.style.display !== 'none') ? noteEl.value.trim() : '';
+  const drizzWrap = document.getElementById('pd-drizzles-wrap');
+  let addons = [];
+  if(drizzWrap && drizzWrap.style.display !== 'none'){
+    addons = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')].map(a=>({name:a.dataset.name, price:parseFloat(a.dataset.price)}));
+  }
+  const addonTotal = addons.reduce((s,a)=>s + (a.price||0), 0);
+  const size = pdSelectedSize.size;
+  const finalPrice = Math.round((pdSelectedSize.base + addonTotal) * 100) / 100;
+  const addonSig = addons.map(a=>a.name).sort().join('|');
+  let label = prod.name + (size ? ' ('+size+')' : '');
+  if(addons.length) label += ' + ' + addons.map(a=>a.name).join(', ');
+  const exist = cart.find(i=>i.id===pid && i.size===size && (i.note||'')===note && (i.addonSig||'')===addonSig);
+  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size:size, label:label, price:finalPrice, qty:1, note:note, addons:addons, addonSig:addonSig}); }
+  updateCartBadge();
+  updatePdCartSummary();
+  showToast(label+' added!');
+  // Reset the pop-out so the customer re-builds the next bowl from scratch
+  pdSelectedSize = null;
+  document.querySelectorAll('#pd-options .pd-size').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('#pd-drizzles .pd-drizzle.selected').forEach(d=>d.classList.remove('selected'));
+  if(noteEl) noteEl.value = '';
+  refreshBowlAdd();
+}
+
 // Open the kiosk-style product detail sheet
 function openProductDetail(pid){
   const p = PRODUCT_MAP[pid];
@@ -1935,11 +2020,29 @@ function openProductDetail(pid){
   document.getElementById('pd-preorder').style.display = PREORDER_IDS.has(p.id) ? 'block' : 'none';
   const opts = document.getElementById('pd-options');
   const choose = document.getElementById('pd-choose');
+  const bowlAdd = document.getElementById('pd-bowl-add');
+  const isBowl = showNote; // Superfood Bowls: single-select size + add-ons + one Add to Cart
+  pdSelectedSize = null;   // reset any previous bowl selection
   if(stockStatus[p.id] === false){
     choose.style.display = 'none';
     opts.innerHTML = '<div class="pd-oos">Sorry, this item is currently sold out.</div>';
+    if(bowlAdd) bowlAdd.style.display = 'none';
+  } else if(isBowl){
+    // Single-select size (1 out of N). Add-ons are multi-select below; price is live on the Add button.
+    choose.style.display = '';
+    choose.textContent = 'Choose your size';
+    opts.innerHTML = p.sizes.map(s => {
+      const size = (s.l||'').replace(/"/g,'&quot;');
+      return '<button type="button" class="pd-size" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'" onclick="selectBowlSize(\''+p.id+'\',\''+size+'\','+s.p+',this)">'
+        + '<span class="pd-size-label">'+(s.l||'Regular')+'</span>'
+        + '<span class="pd-size-price">$'+s.p.toFixed(2)+'<span class="pd-size-tick"><i class="ti ti-check"></i></span></span>'
+        + '</button>';
+    }).join('');
+    if(bowlAdd) bowlAdd.style.display = 'block';
+    refreshBowlAdd();
   } else {
     choose.style.display = '';
+    choose.textContent = 'Choose an option';
     opts.innerHTML = p.sizes.map(s => {
       const size = (s.l||'').replace(/"/g,'&quot;');
       return '<div class="pd-opt" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'">'
@@ -1951,6 +2054,7 @@ function openProductDetail(pid){
         +   '<button type="button" class="pd-opt-plus" onclick="addSizeToCart(\''+p.id+'\',\''+size+'\','+s.p+',this)" aria-label="Add one"><i class="ti ti-plus"></i></button>'
         + '</span></span></div>';
     }).join('');
+    if(bowlAdd) bowlAdd.style.display = 'none';
     refreshPdOptions();
   }
   var m = document.getElementById('product-detail-modal');
@@ -3007,15 +3111,21 @@ document.addEventListener('DOMContentLoaded', function(){
       <button id="pd-enlarge" class="pd-enlarge" type="button" aria-label="Enlarge image"><i class="ti ti-zoom-in"></i></button>
     </div>
     <div id="pd-preorder" class="pd-preorder" style="display:none">Pre-order item &mdash; made available on collection day</div>
-    <div id="pd-drizzles-wrap" class="pd-drizzles-wrap" style="display:none">
-      <div class="pd-drizzles-label">Add-on Drizzles <span class="pd-drizzles-hint">— pick before adding your bowl</span></div>
-      <div id="pd-drizzles" class="pd-drizzles"></div>
-    </div>
     <div id="pd-choose" class="pd-choose">Choose an option</div>
     <div id="pd-options" class="pd-options"></div>
+    <div id="pd-drizzles-wrap" class="pd-drizzles-wrap" style="display:none">
+      <div class="pd-drizzles-label">Add-on Drizzles <span class="pd-drizzles-hint">— optional, add as many as you like</span></div>
+      <div id="pd-drizzles" class="pd-drizzles"></div>
+    </div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (Optional)</label>
       <textarea id="pd-note" class="pd-note" rows="2" placeholder=""></textarea>
+    </div>
+    <div id="pd-bowl-add" class="pd-bowl-add" style="display:none">
+      <button type="button" id="pd-bowl-add-btn" class="pd-bowl-add-btn" onclick="addBowlToCart()" disabled>
+        <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Select a size</span>
+        <span class="pd-bowl-add-price"></span>
+      </button>
     </div>
     <div id="pd-cart-summary" class="pd-cart-summary">
       <div class="pd-cs-total" id="pd-cart-summary-text"></div>

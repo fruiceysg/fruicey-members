@@ -294,10 +294,11 @@ body:has(.modal-bg.open) #fullscreen-btn,
 body:has(.modal-bg.open) #fullscreen-label,
 body:has(.cart-sheet.open) #fullscreen-btn,
 body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
-#product-detail-modal .modal-box{transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.68,0,1),opacity .28s ease;padding:0 0 24px;overscroll-behavior:contain}
+#product-detail-modal .modal-box{transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.68,0,1),opacity .28s ease;padding:0;display:flex;flex-direction:column;overflow:hidden}
+.pd-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 @media (min-width:900px){
   #product-detail-modal{align-items:center;justify-content:center}
-  #product-detail-modal .modal-box{width:440px;max-width:440px;height:auto;max-height:88vh;border-radius:20px;padding-bottom:24px}
+  #product-detail-modal .modal-box{width:440px;max-width:440px;height:auto;max-height:88vh;border-radius:20px;padding-bottom:0}
   #product-detail-modal .pd-handle{display:none}
 }
 .pd-handle{width:42px;height:4px;border-radius:2px;background:#ddd;margin:10px auto 2px;flex-shrink:0}
@@ -305,7 +306,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-head-text{flex:1;min-width:0}
 .pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15}
 .pd-note-wrap{padding:4px 18px 2px;display:flex;flex-direction:column}
-.pd-cart-summary{position:sticky;bottom:0;margin:14px 0 -24px;padding:14px 18px calc(14px + 24px);background:var(--green);color:#fff;display:none;flex-direction:column;gap:10px;z-index:3}
+.pd-cart-summary{position:sticky;bottom:0;margin:14px 0 0;padding:14px 18px;background:var(--green);color:#fff;display:none;flex-direction:column;gap:10px;z-index:3}
 .pd-cart-summary.show{display:flex}
 .pd-cs-total{display:flex;align-items:center;gap:6px;font-weight:700;font-family:var(--font);font-size:14px}
 .pd-cs-actions{display:flex;gap:10px}
@@ -333,7 +334,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-size.selected .pd-size-tick{background:var(--green);border-color:var(--green);color:#fff}
 /* Bowl "Add to Cart" bar (single configured item) */
 /* Bowl footer — everything (total, Add to Cart, Back to Menu, View Cart) in one block locked at the bottom */
-.pd-bowl-add{position:sticky;bottom:0;z-index:6;background:#fff;border-top:1px solid var(--border);padding:12px 18px calc(12px + 24px);margin-bottom:-24px;display:flex;flex-direction:column;gap:10px}
+.pd-bowl-add{flex:0 0 auto;background:#fff;border-top:1px solid var(--border);padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
 .pd-bowl-total{display:flex;align-items:center;gap:6px;font-family:var(--font);font-weight:700;font-size:13px;color:var(--green-dark)}
 .pd-bowl-add-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:none;border-radius:14px;padding:14px 18px;background:var(--green);color:#fff;font-family:var(--font);font-weight:700;font-size:15px;cursor:pointer;transition:opacity .15s}
 .pd-bowl-add-btn:disabled{opacity:.45;cursor:default}
@@ -405,6 +406,10 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .cart-sheet.open{display:block}
 .cart-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
 .cart-panel{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:85vh;overflow-y:auto;padding:16px;overscroll-behavior:contain}
+@keyframes cartSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes cartFadeIn{from{opacity:0}to{opacity:1}}
+.cart-sheet.open .cart-panel{animation:cartSlideUp .34s cubic-bezier(.22,.68,0,1)}
+.cart-sheet.open .cart-backdrop{animation:cartFadeIn .3s ease}
 .cart-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px}
 .cart-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
 .cart-info{flex:1;min-width:0}
@@ -1075,7 +1080,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: footer clearance for note, cart badge pop-in, cart swipe-to-close, no remarks placeholder (rev AA)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: detail sheet flex layout (footer flush, no gap); cart opens with slide-up (rev AB)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -2081,8 +2086,7 @@ function openProductDetail(pid){
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }
     else { box.style.transform = 'translateY(0)'; }
-    // Reserve space below the last field so the locked footer never covers "Note to Wilson"
-    if(noteWrap){ noteWrap.style.marginBottom = (isBowl && bowlAdd) ? (bowlAdd.offsetHeight + 8) + 'px' : ''; }
+    if(noteWrap) noteWrap.style.marginBottom = '';
   }); });
 }
 function closeProductDetail(){
@@ -2153,9 +2157,10 @@ function initProductDetailSwipe(){
   const m = document.getElementById('product-detail-modal');
   if(!m) return;
   const box = m.querySelector('.modal-box');
+  const scroller = box.querySelector('.pd-scroll') || box;
   let startY=0, curY=0, dragging=false;
   box.addEventListener('touchstart', function(e){
-    if(box.scrollTop > 0) return;      // let inner content scroll first
+    if(scroller.scrollTop > 0) return;      // let inner content scroll first
     startY = curY = e.touches[0].clientY; dragging = true;
     box.style.transition = 'none';
   }, {passive:true});
@@ -3167,6 +3172,7 @@ document.addEventListener('DOMContentLoaded', function(){
 <!-- PRODUCT DETAIL SHEET (kiosk) -->
 <div class="modal-bg" id="product-detail-modal" onclick="if(event.target===this)closeProductDetail()">
   <div class="modal-box">
+    <div class="pd-scroll">
     <div class="pd-handle"></div>
     <div class="pd-head">
       <div class="pd-head-text">
@@ -3199,6 +3205,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <button type="button" class="pd-cs-continue" onclick="closeProductDetail()">Continue Shopping</button>
         <button type="button" class="pd-cs-view" onclick="closeProductDetail();openCart();">View Cart</button>
       </div>
+    </div>
     </div>
     <div id="pd-bowl-add" class="pd-bowl-add" style="display:none">
       <div id="pd-bowl-total" class="pd-bowl-total" style="display:none"></div>

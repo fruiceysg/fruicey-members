@@ -339,12 +339,16 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-bowl-add-btn:disabled{opacity:.45;cursor:default}
 .pd-bowl-add-label{display:flex;align-items:center;gap:8px}
 .pd-bowl-add-price{font-weight:800}
-.pd-bowl-actions{display:flex;gap:10px}
+.pd-bowl-actions{display:flex;gap:10px;margin-top:8px}
 .pd-bowl-actions button{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .15s}
 .pd-bowl-back{background:#f0f0f0;color:#555}
-.pd-bowl-view{background:var(--green-light);color:var(--green-dark)}
 /* In bowl mode the green running-total bar is replaced by the consolidated footer above */
 #product-detail-modal .modal-box.pd-bowl-mode .pd-cart-summary{display:none}
+/* Bounce the sheet down into the cart bar after adding (McDonald's-style) */
+@keyframes pdBounceDown{0%{transform:translateY(0) scale(1);opacity:1}18%{transform:translateY(-16px) scale(1.015)}100%{transform:translateY(112%) scale(.9);opacity:.3}}
+.modal-box.pd-bounce-down{animation:pdBounceDown .5s cubic-bezier(.4,0,.6,1) forwards}
+@keyframes cartBadgePulse{0%{transform:translateY(0)}35%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+.cart-badge.pulse{animation:cartBadgePulse .45s ease}
 .pd-note-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.2px;margin-bottom:6px}
 .pd-note{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:var(--body);resize:none;outline:none;background:#fafafa;color:var(--text)}
 .pd-note:focus{border-color:var(--green);background:#fff}
@@ -1069,7 +1073,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: bowl footer consolidated (total + Add to Cart + Back to Menu + View Cart), one locked block (rev Y)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: add-to-cart bounces sheet down to cart bar; footer = Add + Back to Menu (rev Z)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1973,12 +1977,8 @@ function addBowlToCart(){
   updateCartBadge();
   updatePdCartSummary();
   showToast(label+' added!');
-  // Reset the pop-out so the customer re-builds the next bowl from scratch
-  pdSelectedSize = null;
-  document.querySelectorAll('#pd-options .pd-size').forEach(b=>b.classList.remove('selected'));
-  document.querySelectorAll('#pd-drizzles .pd-drizzle.selected').forEach(d=>d.classList.remove('selected'));
-  if(noteEl) noteEl.value = '';
-  refreshBowlAdd();
+  // McDonald's-style: bounce the sheet down into the cart bar; customer keeps shopping on the same tab
+  closeProductDetailAfterAdd();
 }
 
 // Open the kiosk-style product detail sheet
@@ -2087,6 +2087,31 @@ function closeProductDetail(){
   if(window.matchMedia('(min-width:900px)').matches){ box.style.opacity='0'; box.style.transform='scale(.92)'; }
   else { box.style.transform='translateY(100%)'; }
   setTimeout(()=>{ m.classList.remove('open'); box.style.transform=''; box.style.opacity=''; document.getElementById('pd-img').src=''; }, 350);
+}
+// Close after adding: the sheet bounces down toward the bottom cart bar, then the bar gives a little pop
+function closeProductDetailAfterAdd(){
+  const m = document.getElementById('product-detail-modal');
+  const box = m.querySelector('.modal-box');
+  if(window.__pdResetZoom) window.__pdResetZoom();
+  box.style.transition = 'none';
+  box.classList.add('pd-bounce-down');
+  let closed = false;
+  const done = function(){
+    if(closed) return; closed = true;
+    box.removeEventListener('animationend', done);
+    box.classList.remove('pd-bounce-down');
+    m.classList.remove('open');
+    box.style.transition = ''; box.style.transform = ''; box.style.opacity = '';
+    const img = document.getElementById('pd-img'); if(img) img.src = '';
+    // Little pop on the bottom cart bar so the added item visibly "lands" there
+    const badge = document.getElementById('cart-badge');
+    if(badge && badge.classList.contains('show')){
+      badge.classList.remove('pulse'); void badge.offsetWidth; badge.classList.add('pulse');
+      setTimeout(()=>badge.classList.remove('pulse'), 500);
+    }
+  };
+  box.addEventListener('animationend', done);
+  setTimeout(done, 620); // fallback if animationend doesn't fire
 }
 // Swipe down to dismiss the product detail sheet
 function initProductDetailSwipe(){
@@ -3146,7 +3171,6 @@ document.addEventListener('DOMContentLoaded', function(){
       </button>
       <div class="pd-bowl-actions">
         <button type="button" class="pd-bowl-back" onclick="closeProductDetail()"><i class="ti ti-arrow-left" style="font-size:16px;vertical-align:-3px"></i> Back to Menu</button>
-        <button type="button" class="pd-bowl-view" onclick="closeProductDetail();openCart();">View Cart</button>
       </div>
     </div>
   </div>

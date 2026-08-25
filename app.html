@@ -313,7 +313,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-cs-continue{background:rgba(255,255,255,.22);color:#fff}
 .pd-cs-view{background:#fff;color:var(--green-dark)}
 .pd-drizzles-wrap{padding:8px 18px 2px}
-.pd-drizzles-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.pd-drizzles-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.2px;margin-bottom:8px}
 .pd-drizzles-hint{font-weight:600;text-transform:none;letter-spacing:0;color:var(--text3);opacity:.85}
 .pd-drizzles{display:flex;flex-direction:column;gap:8px}
 .pd-drizzle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;font-family:var(--body);transition:border-color .15s,background .15s}
@@ -332,12 +332,18 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-size.selected .pd-size-price{color:var(--green-dark)}
 .pd-size.selected .pd-size-tick{background:var(--green);border-color:var(--green);color:#fff}
 /* Bowl "Add to Cart" bar (single configured item) */
-.pd-bowl-add{padding:14px 18px 2px}
+/* Bowl "Add to Cart" bar (single configured item) — pinned to the sheet bottom */
+.pd-bowl-add{position:sticky;bottom:0;z-index:6;background:#fff;border-top:1px solid var(--border);padding:12px 18px calc(12px + 24px);margin-bottom:-24px}
 .pd-bowl-add-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:none;border-radius:14px;padding:14px 18px;background:var(--green);color:#fff;font-family:var(--font);font-weight:700;font-size:15px;cursor:pointer;transition:opacity .15s}
 .pd-bowl-add-btn:disabled{opacity:.45;cursor:default}
 .pd-bowl-add-label{display:flex;align-items:center;gap:8px}
 .pd-bowl-add-price{font-weight:800}
-.pd-note-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+/* In bowl mode the running-total bar scrolls with the content so it never overlaps the pinned Add button */
+#product-detail-modal .modal-box.pd-bowl-mode .pd-cart-summary{position:static;margin:14px 0 0;padding:14px 18px}
+/* Back button in the sheet header */
+.pd-back{display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--green-dark);font-family:var(--body);font-size:14px;font-weight:600;cursor:pointer;padding:2px 6px 2px 0;flex-shrink:0;line-height:1}
+.pd-back i{font-size:20px}
+.pd-note-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.2px;margin-bottom:6px}
 .pd-note{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:var(--body);resize:none;outline:none;background:#fafafa;color:var(--text)}
 .pd-note:focus{border-color:var(--green);background:#fff}
 .cart-note{font-size:11px;color:var(--text2);font-style:italic;margin-top:2px}
@@ -362,7 +368,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   .pd-imgwrap.pd-zoomed{cursor:grab}
 }
 .pd-preorder{margin:12px 18px 0;background:#fff3e0;color:#e67e22;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;text-align:center}
-.pd-choose{font-family:var(--body);font-size:12px;color:var(--text3);padding:16px 18px 8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.pd-choose{font-family:var(--body);font-size:12px;color:var(--text3);padding:16px 18px 8px;font-weight:700;letter-spacing:.2px}
 .pd-options{display:flex;flex-direction:column;gap:10px;padding:0 18px}
 .pd-opt{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;transition:border-color .15s,background .15s;font-family:var(--body)}
 .pd-opt.added{border-color:var(--green);background:var(--green-light)}
@@ -876,7 +882,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div id="time-slots-container" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
       <div class="field">
-        <label>Special requests (optional)</label>
+        <label>Other remarks (optional)</label>
         <textarea id="order-notes" rows="2" placeholder="e.g. Less ice, no sugar..." style="width:100%;padding:8px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;resize:none"></textarea>
       </div>
       <div class="total-row"><span>Total</span><span id="cart-total-val">$0.00</span></div>
@@ -1061,7 +1067,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: bowls = single-select size + add-ons below, live Add to Cart (rev W)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: bowl UX polish — back btn, pinned Add to Cart, label casing (rev X)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -2022,6 +2028,8 @@ function openProductDetail(pid){
   const choose = document.getElementById('pd-choose');
   const bowlAdd = document.getElementById('pd-bowl-add');
   const isBowl = showNote; // Superfood Bowls: single-select size + add-ons + one Add to Cart
+  const pdBox = document.querySelector('#product-detail-modal .modal-box');
+  if(pdBox) pdBox.classList.toggle('pd-bowl-mode', isBowl);
   pdSelectedSize = null;   // reset any previous bowl selection
   if(stockStatus[p.id] === false){
     choose.style.display = 'none';
@@ -2030,7 +2038,7 @@ function openProductDetail(pid){
   } else if(isBowl){
     // Single-select size (1 out of N). Add-ons are multi-select below; price is live on the Add button.
     choose.style.display = '';
-    choose.textContent = 'Choose your size';
+    choose.textContent = 'Choose your acai bowl';
     opts.innerHTML = p.sizes.map(s => {
       const size = (s.l||'').replace(/"/g,'&quot;');
       return '<button type="button" class="pd-size" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'" onclick="selectBowlSize(\''+p.id+'\',\''+size+'\','+s.p+',this)">'
@@ -3097,6 +3105,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="modal-box">
     <div class="pd-handle"></div>
     <div class="pd-head">
+      <button type="button" class="pd-back" onclick="closeProductDetail()" aria-label="Back to menu"><i class="ti ti-arrow-left"></i><span>Back</span></button>
       <div class="pd-head-text">
         <div id="pd-name" class="pd-name"></div>
       </div>
@@ -3118,14 +3127,8 @@ document.addEventListener('DOMContentLoaded', function(){
       <div id="pd-drizzles" class="pd-drizzles"></div>
     </div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
-      <label class="pd-note-label" for="pd-note">Note to Wilson (Optional)</label>
+      <label class="pd-note-label" for="pd-note">Note to Wilson (optional)</label>
       <textarea id="pd-note" class="pd-note" rows="2" placeholder=""></textarea>
-    </div>
-    <div id="pd-bowl-add" class="pd-bowl-add" style="display:none">
-      <button type="button" id="pd-bowl-add-btn" class="pd-bowl-add-btn" onclick="addBowlToCart()" disabled>
-        <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Select a size</span>
-        <span class="pd-bowl-add-price"></span>
-      </button>
     </div>
     <div id="pd-cart-summary" class="pd-cart-summary">
       <div class="pd-cs-total" id="pd-cart-summary-text"></div>
@@ -3133,6 +3136,12 @@ document.addEventListener('DOMContentLoaded', function(){
         <button type="button" class="pd-cs-continue" onclick="closeProductDetail()">Continue Shopping</button>
         <button type="button" class="pd-cs-view" onclick="closeProductDetail();openCart();">View Cart</button>
       </div>
+    </div>
+    <div id="pd-bowl-add" class="pd-bowl-add" style="display:none">
+      <button type="button" id="pd-bowl-add-btn" class="pd-bowl-add-btn" onclick="addBowlToCart()" disabled>
+        <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Select a size</span>
+        <span class="pd-bowl-add-price"></span>
+      </button>
     </div>
   </div>
 </div>

@@ -1082,7 +1082,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: staggered product fade-in on category switch (rev AC)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: dedicated hover images added for Immunity Press + Longevity Press (rev AF)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1393,6 +1393,29 @@ const IMG_INFO = {
   'wp03': '1awGIHJ46jF5spISzg_V0eXIgySbI9m0A',
   'wp04': '1ZRY0qr0G-NfPAQEhFZipaBUg_DcxA2sl',
   'wp05': '1Avavx81n3zfYTjNy8p_gvhc9FfTQL6Ic',
+};
+// Dedicated card-hover images (shown when hovering/tapping a card), SEPARATE from the info image.
+// Keyed with a "_hover" suffix so they never clash with your main ids (lp01) or info ids (lp01_info).
+// To add one: upload the image to Google Drive, set sharing to "Anyone with the link",
+// copy the FILE ID from the share link (the part between /d/ and /view), and paste it below.
+// Leave a line blank ('') and that product simply won't image-swap until you add it.
+const IMG_HOVER = {
+  // Immunity Press:
+  'ip01_hover': '1ZleW-lDkdqbegomg3mwqR-eRylIsAg46',
+  'ip02_hover': '11DdHZgwoAOh9Kq-7o7Vahvzm4F1f3qdi',
+  'ip03_hover': '1EQI7FH58g1N8XHng5eUbkbPj-DvUxC4-',
+  'ip04_hover': '1CWTrdg_o_ClZAP556b7MgwDQ5TIPRIpz',
+  'ip05_hover': '1kJ9fH4eVgF8KIE9pbDF7puZ1FqDn-qXu',
+  'ip06_hover': '1SGF_d9c36vIdKbLwC7hlCxnIiHWY66hv',
+  'ip07_hover': '1ep-EdlmiC-CkqLzoVJPkirmYt10bSl-D',
+  'ip08_hover': '10kPyO3_U11t4tD6tVXRCgtKtwWGvX79o',
+  // Longevity Press:
+  'lp01_hover': '1zaEacAUacLbXhKi0pmffDOQuDRJ5wcn7',  // Neuro
+  'lp02_hover': '1--5ZM1jNGCXIsbhu81HAxkUEH9XeglO5',  // Derma
+  'lp03_hover': '1f8D1RqAKzJLl2JsvyETFHFQbSOhQfyVM',  // Zen
+  'lp04_hover': '1qPaSDBL5xTMotiB-THR1oMmLhayihWxV',  // Oral
+  'lp05_hover': '16xncXvY_KKMsj2JabrYJe0qr85KnaeqR',  // Cardio
+  'lp06_hover': '1efpcJbWNm3ZwHIesn4RSVKkonryCusl7',  // Vision
 };
 // ── CONFIG ────────────────────────────────────────────────────
 const API = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
@@ -1717,7 +1740,9 @@ const PREMIUM_CATS = new Set(['Superfood Bowls','Shakes & Smoothies','Immunity P
 // Shakes that keep the info image + zoom in the pop-up (no card image-swap; cup scales on hover instead)
 const NO_HOVER_SWAP = new Set(['ss13','ss14','ss15','ss16','ss17']);
 // Categories where the card hover-swaps main->info and the pop-up shows the MAIN image with zoom
-const HOVER_SWAP_CATS = new Set(['Shakes & Smoothies','Superfood Bowls']);
+const HOVER_SWAP_CATS = new Set(['Shakes & Smoothies','Superfood Bowls','Wellness Press','Longevity Press','Immunity Press']);
+// Cats that hover-swap to a DEDICATED image (IMG_HOVER) instead of the info image; their pop-up keeps the info image
+const DEDICATED_HOVER_CATS = new Set(['Longevity Press','Immunity Press']);
 // Optional add-on drizzles shown in the Superfood Bowls pop-up
 const DRIZZLES = [
   {name:'Cookie Butter', price:1.00},
@@ -1766,8 +1791,10 @@ function renderProducts(){
     const isAvail = stockStatus[p.id] !== false;
     const isShake = currentCat === 'Shakes & Smoothies';
     const desktopHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-    const isSwapProduct = HOVER_SWAP_CATS.has(currentCat) && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id);
-    const hoverId = isSwapProduct ? IMG_INFO[p.id] : null;
+    let hoverId = null;
+    if(HOVER_SWAP_CATS.has(currentCat) && !NO_HOVER_SWAP.has(p.id)){
+      hoverId = DEDICATED_HOVER_CATS.has(currentCat) ? (IMG_HOVER[p.id + '_hover'] || null) : (IMG_INFO[p.id] || null);
+    }
     if(fileId && hoverId){
       // Swap products: main image + info image overlay.
       // Desktop = hover fade (CSS); Mobile = 1st tap flips to info image, 2nd tap opens (see onclick below).
@@ -2002,8 +2029,10 @@ function openProductDetail(pid){
   let imgId  = infoId || fileId;
   // Desktop: for Shakes & Smoothies the image is shown via card hover, so the pop-up is just options
   const desktopHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-  // Swap products (shakes ss01-12, all bowls): pop-up shows the MAIN image (info image is seen via card hover/flip)
-  if(HOVER_SWAP_CATS.has(currentCat) && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = fileId; }
+  // Swap products that use the INFO image as their card hover (shakes, bowls, Wellness Press):
+  // the pop-up shows the MAIN image (the info image is already seen via card hover/flip).
+  // Longevity Press uses a dedicated hover image, so its pop-up keeps the info image.
+  if(HOVER_SWAP_CATS.has(currentCat) && !DEDICATED_HOVER_CATS.has(currentCat) && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = fileId; }
   document.getElementById('pd-name').textContent = p.name;
   // "Note to Wilson" field — shown for Superfood Bowls
   const noteWrap = document.getElementById('pd-note-wrap');

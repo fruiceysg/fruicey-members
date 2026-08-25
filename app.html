@@ -1082,7 +1082,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: dedicated hover images added for Immunity Press + Longevity Press (rev AF)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: FIX products not rendering (stale isSwapProduct ref) (rev AG)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1857,7 +1857,7 @@ function renderProducts(){
     body.appendChild(price);
     card.appendChild(body);
     if(isAvail){
-      if(isSwapProduct && !desktopHover){
+      if(hoverId && !desktopHover){
         // Mobile: 1st tap flips to the 2nd image, 2nd tap opens the pop-up
         card.onclick = function(){
           if(card.classList.contains('flipped')){ openProductDetail(p.id); return; }

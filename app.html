@@ -1092,7 +1092,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: cart rows structured (name/size/add-ons) + scrollable item list (rev AN)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: all products use single-select + locked Add-to-Cart footer (rev AO)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1884,8 +1884,10 @@ function renderProducts(){
   });
 }
 
-// Tracks the single size chosen for the bowl currently being built ({pid, size, base})
+// Tracks the single size chosen for the item currently being built ({pid, size, base})
 let pdSelectedSize = null;
+// Label shown on the Add-to-Cart button before an option is picked (varies bowl vs other)
+let pdAddPrompt = 'Choose your option';
 
 // Toggle add-on drizzle selection (multi-select) in the product detail sheet
 document.addEventListener('click', function(e){
@@ -1996,7 +1998,7 @@ function refreshBowlAdd(){
     priceEl.textContent = '$'+total.toFixed(2);
   } else {
     btn.disabled = true;
-    labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your bowl';
+    labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> '+pdAddPrompt;
     priceEl.textContent = '';
   }
 }
@@ -2086,18 +2088,19 @@ function openProductDetail(pid){
   const opts = document.getElementById('pd-options');
   const choose = document.getElementById('pd-choose');
   const bowlAdd = document.getElementById('pd-bowl-add');
-  const isBowl = showNote; // Superfood Bowls: single-select size + add-ons + one Add to Cart
+  const isBowl = showNote; // Superfood Bowls also get add-ons + note
   const pdBox = document.querySelector('#product-detail-modal .modal-box');
-  if(pdBox) pdBox.classList.toggle('pd-bowl-mode', isBowl);
-  pdSelectedSize = null;   // reset any previous bowl selection
+  if(pdBox) pdBox.classList.add('pd-bowl-mode'); // all products use the locked Add-to-Cart footer
+  pdSelectedSize = null;   // reset any previous selection
   if(stockStatus[p.id] === false){
     choose.style.display = 'none';
     opts.innerHTML = '<div class="pd-oos">Sorry, this item is currently sold out.</div>';
     if(bowlAdd) bowlAdd.style.display = 'none';
-  } else if(isBowl){
-    // Single-select size (1 out of N). Add-ons are multi-select below; price is live on the Add button.
+  } else {
+    // Single-select option (1 out of N); one locked "Add to Cart" that bounces down after adding.
     choose.style.display = '';
-    choose.textContent = 'Choose your acai bowl';
+    choose.textContent = isBowl ? 'Choose your acai bowl' : 'Choose your option';
+    pdAddPrompt = isBowl ? 'Choose your bowl' : 'Choose your option';
     opts.innerHTML = p.sizes.map(s => {
       const size = (s.l||'').replace(/"/g,'&quot;');
       const parts = (s.l||'Regular').split(' - ');
@@ -2110,22 +2113,8 @@ function openProductDetail(pid){
     }).join('');
     if(bowlAdd) bowlAdd.style.display = 'block';
     refreshBowlAdd();
-  } else {
-    choose.style.display = '';
-    choose.textContent = 'Choose an option';
-    opts.innerHTML = p.sizes.map(s => {
-      const size = (s.l||'').replace(/"/g,'&quot;');
-      return '<div class="pd-opt" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'">'
-        + '<span class="pd-opt-label">'+(s.l||'Regular')+'</span>'
-        + '<span class="pd-opt-right"><span class="pd-opt-price">$'+s.p.toFixed(2)+'</span>'
-        + '<span class="pd-opt-step">'
-        +   '<button type="button" class="pd-opt-minus" onclick="removeSizeFromCart(\''+p.id+'\',\''+size+'\')" aria-label="Remove one"><i class="ti ti-minus"></i></button>'
-        +   '<span class="pd-opt-qty">0</span>'
-        +   '<button type="button" class="pd-opt-plus" onclick="addSizeToCart(\''+p.id+'\',\''+size+'\','+s.p+',this)" aria-label="Add one"><i class="ti ti-plus"></i></button>'
-        + '</span></span></div>';
-    }).join('');
-    if(bowlAdd) bowlAdd.style.display = 'none';
-    refreshPdOptions();
+    // If there's only one option, pre-select it so the customer can add in one tap
+    if(p.sizes.length === 1){ const only = opts.querySelector('.pd-size'); if(only) only.click(); }
   }
   var m = document.getElementById('product-detail-modal');
   var box = m.querySelector('.modal-box');

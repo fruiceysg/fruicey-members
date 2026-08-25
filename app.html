@@ -316,8 +316,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-cs-continue{background:rgba(255,255,255,.22);color:#fff}
 .pd-cs-view{background:#fff;color:var(--green-dark)}
 .pd-drizzles-wrap{padding:8px 18px 2px}
-.pd-drizzles-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.2px;margin-bottom:8px}
-.pd-drizzles-hint{font-weight:600;text-transform:none;letter-spacing:0;color:var(--text3);opacity:.85}
+.pd-drizzles-label{font-family:var(--font);font-size:20px;font-weight:600;color:var(--green-dark);margin-bottom:8px}
+.pd-drizzles-hint{font-family:var(--body);font-size:12px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--text3);opacity:.85}
 .pd-drizzles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .pd-drizzle{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 5px 9px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;font-family:var(--body);transition:border-color .15s,background .15s}
 .pd-drizzle .pd-drizzle-img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;background:#f4f4f4;display:block}
@@ -356,7 +356,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .modal-box.pd-bounce-down{animation:pdBounceDown .5s cubic-bezier(.4,0,.6,1) forwards}
 @keyframes cartBadgePulse{0%{transform:translateY(0)}35%{transform:translateY(-4px)}100%{transform:translateY(0)}}
 .cart-badge.pulse{animation:cartBadgePulse .45s ease}
-.pd-note-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.2px;margin-bottom:6px}
+.pd-note-label{font-family:var(--font);font-size:20px;font-weight:600;color:var(--green-dark);margin-bottom:6px}
 .pd-note{width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:var(--body);resize:none;outline:none;background:#fafafa;color:var(--text)}
 .pd-note:focus{border-color:var(--green);background:#fff}
 .cart-note{font-size:11px;color:var(--text2);font-style:italic;margin-top:2px}
@@ -381,7 +381,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   .pd-imgwrap.pd-zoomed{cursor:grab}
 }
 .pd-preorder{margin:12px 18px 0;background:#fff3e0;color:#e67e22;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;text-align:center}
-.pd-choose{font-family:var(--body);font-size:12px;color:var(--text3);padding:16px 18px 8px;font-weight:700;letter-spacing:.2px}
+.pd-choose{font-family:var(--font);font-size:20px;color:var(--green-dark);padding:16px 18px 8px;font-weight:600}
 .pd-options{display:flex;flex-direction:column;gap:10px;padding:0 18px}
 .pd-opt{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;transition:border-color .15s,background .15s;font-family:var(--body)}
 .pd-opt.added{border-color:var(--green);background:var(--green-light)}
@@ -1086,7 +1086,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: bowl size labels on two lines (size + description) (rev AK)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: smoothie labels + section headings in BabyDoll font (rev AL)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1158,10 +1158,10 @@ function closeOrderReceipt(){
 
 const CATALOGUE = {
   'Superfood Bowls': [
-    {id:'sb01',name:'Rainbowl Acai',        cal:319, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb02',name:'Dreamy Acai',          cal:376, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:6.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:9.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:7.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:10.40}]},
-    {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert Size - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb01',name:'Rainbowl Acai',        cal:319, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb02',name:'Dreamy Acai',          cal:376, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:6.90},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:9.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:7.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:10.40}]},
+    {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
+    {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
     {id:'sb05',name:'Double Rainbowl Acai', cal:445, sizes:[{l:'Unsweetened Smoothie Pulps',p:10.90},{l:'Tasty Sorbet Swirls',p:11.90}]},
     {id:'sb06',name:'Galaxy Dream Acai',    cal:610, sizes:[{l:'Unsweetened Smoothie Pulps',p:9.90},{l:'Tasty Sorbet Swirls',p:10.90}]}
   ],

@@ -418,6 +418,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .cart-sheet.open .cart-backdrop{animation:cartFadeIn .3s ease}
 .cart-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px}
 .cart-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.cart-thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#f4f4f4}
+.cart-thumb-ph{background:#f0f0f0}
 .cart-info{flex:1;min-width:0}
 .cart-name{font-size:13px;font-weight:500}
 .cart-price{font-size:12px;color:var(--text3)}
@@ -1086,7 +1088,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: smoothie labels + section headings in BabyDoll font (rev AL)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: product thumbnail added to each cart row (rev AM)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -2278,9 +2280,15 @@ function closeCart(){ document.getElementById('cart-sheet').classList.remove('op
 function renderCartItems(){
   const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
   document.getElementById('cart-items').innerHTML = cart.length ?
-    cart.map((item,i)=>'<div class="cart-row"><div class="cart-info"><div class="cart-name">'+item.label+'</div>'+(item.note?'<div class="cart-note">“'+item.note.replace(/</g,'&lt;')+'”</div>':'')+'<div class="cart-price">$'+item.price.toFixed(2)+' each</div></div>'
+    cart.map((item,i)=>{
+      const timg = IMG[item.id];
+      const thumb = timg
+        ? '<img class="cart-thumb" src="https://lh3.googleusercontent.com/d/'+timg+'=w120" alt="" loading="lazy">'
+        : '<div class="cart-thumb cart-thumb-ph"></div>';
+      return '<div class="cart-row">'+thumb+'<div class="cart-info"><div class="cart-name">'+item.label+'</div>'+(item.note?'<div class="cart-note">“'+item.note.replace(/</g,'&lt;')+'”</div>':'')+'<div class="cart-price">$'+item.price.toFixed(2)+' each</div></div>'
       +'<div class="qty-ctrl"><button class="qty-btn" data-i="'+i+'" data-d="-1">−</button><span class="qty-num">'+item.qty+'</span><button class="qty-btn" data-i="'+i+'" data-d="1">+</button></div>'
-      +'<div class="cart-item-total">$'+(item.price*item.qty).toFixed(2)+'</div></div>').join('')
+      +'<div class="cart-item-total">$'+(item.price*item.qty).toFixed(2)+'</div></div>';
+    }).join('')
     : '<div style="text-align:center;padding:2rem;color:#bbb">No items in cart</div>';
   document.getElementById('cart-total-val').textContent = '$'+sub.toFixed(2);
   renderTimeSlots();

@@ -318,11 +318,13 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-drizzles-wrap{padding:8px 18px 2px}
 .pd-drizzles-label{font-family:var(--body);font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.2px;margin-bottom:8px}
 .pd-drizzles-hint{font-weight:600;text-transform:none;letter-spacing:0;color:var(--text3);opacity:.85}
-.pd-drizzles{display:flex;flex-direction:column;gap:8px}
-.pd-drizzle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;font-family:var(--body);transition:border-color .15s,background .15s}
-.pd-drizzle .pd-drizzle-name{font-size:14px;font-weight:600;color:var(--text);text-align:left}
-.pd-drizzle .pd-drizzle-price{font-size:14px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:10px}
-.pd-drizzle .pd-drizzle-tick{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:transparent;font-size:13px}
+.pd-drizzles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pd-drizzle{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 5px 9px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;font-family:var(--body);transition:border-color .15s,background .15s}
+.pd-drizzle .pd-drizzle-img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;background:#f4f4f4;display:block}
+.pd-drizzle .pd-drizzle-img-ph{background:#f0f0f0}
+.pd-drizzle .pd-drizzle-name{font-size:11px;font-weight:600;color:var(--text);text-align:center;line-height:1.15}
+.pd-drizzle .pd-drizzle-price{font-size:11px;font-weight:700;color:var(--text2)}
+.pd-drizzle .pd-drizzle-tick{position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:transparent;font-size:11px}
 .pd-drizzle.selected{border-color:var(--green);background:var(--green-light)}
 .pd-drizzle.selected .pd-drizzle-price{color:var(--green-dark)}
 .pd-drizzle.selected .pd-drizzle-tick{background:var(--green);border-color:var(--green);color:#fff}
@@ -1082,7 +1084,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: FIX products not rendering (stale isSwapProduct ref) (rev AG)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: drizzle images filled in (8 tiles) (rev AI)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1743,16 +1745,18 @@ const NO_HOVER_SWAP = new Set(['ss13','ss14','ss15','ss16','ss17']);
 const HOVER_SWAP_CATS = new Set(['Shakes & Smoothies','Superfood Bowls','Wellness Press','Longevity Press','Immunity Press']);
 // Cats that hover-swap to a DEDICATED image (IMG_HOVER) instead of the info image; their pop-up keeps the info image
 const DEDICATED_HOVER_CATS = new Set(['Longevity Press','Immunity Press']);
-// Optional add-on drizzles shown in the Superfood Bowls pop-up
+// Optional add-on drizzles shown in the Superfood Bowls pop-up.
+// img = Google Drive FILE ID for that drizzle's photo (Share > "Anyone with the link" >
+// copy the part between /d/ and /view). Leave '' and it shows a blank placeholder tile.
 const DRIZZLES = [
-  {name:'Cookie Butter', price:1.00},
-  {name:'Peanut Butter', price:1.00},
-  {name:"Hershey's Chocolate", price:1.00},
-  {name:'Nutella', price:1.00},
-  {name:'Caramel', price:1.00},
-  {name:'Oreo Crushies', price:0.80},
-  {name:'Honey', price:0.80},
-  {name:'Rainbow Millions', price:0.80}
+  {name:'Cookie Butter', price:1.00, img:'114Cs51XiudHLU_fdIJ8TioK-jd9-tyOh'},
+  {name:'Peanut Butter', price:1.00, img:'15mMqteC7AFVwmgzLqRMuJVqfos2Qq6NJ'},
+  {name:"Hershey's Chocolate", price:1.00, img:'1QTU8WqJ5pkz2uneg-dHU0YsddXmuKAs7'},
+  {name:'Nutella', price:1.00, img:'1f1Q6OXfDnoayYf6LopU8HC4D24uk0Zrc'},
+  {name:'Caramel', price:1.00, img:'1al6r918JlBcScoVVKyRc6J-KQR1Q8w1U'},
+  {name:'Oreo Crushies', price:0.80, img:'1dl-PLmraRkAb8XqmcmtgjU6nvYk3i0hw'},
+  {name:'Honey', price:0.80, img:'1HOeLAvIgHLbACFuqlQjX5On9Jv3IvAlq'},
+  {name:'Rainbow Millions', price:0.80, img:'1TWjjtuHyu8GjIlMf6HiUyWgQzrYLc5mY'}
 ];
 
 function initMenu(){
@@ -2045,12 +2049,17 @@ function openProductDetail(pid){
   const drizzEl = document.getElementById('pd-drizzles');
   if(drizzWrap && drizzEl){
     if(showNote){
-      drizzEl.innerHTML = DRIZZLES.map(d =>
-        '<button type="button" class="pd-drizzle" data-name="'+d.name.replace(/"/g,'&quot;')+'" data-price="'+d.price.toFixed(2)+'">'
+      drizzEl.innerHTML = DRIZZLES.map(d => {
+        const imgTag = d.img
+          ? '<img class="pd-drizzle-img" src="https://lh3.googleusercontent.com/d/'+d.img+'=w200" alt="" loading="lazy">'
+          : '<div class="pd-drizzle-img pd-drizzle-img-ph"></div>';
+        return '<button type="button" class="pd-drizzle" data-name="'+d.name.replace(/"/g,'&quot;')+'" data-price="'+d.price.toFixed(2)+'">'
+        + imgTag
+        + '<span class="pd-drizzle-tick"><i class="ti ti-check"></i></span>'
         + '<span class="pd-drizzle-name">'+d.name+'</span>'
-        + '<span class="pd-drizzle-price">+$'+d.price.toFixed(2)+'<span class="pd-drizzle-tick"><i class="ti ti-check"></i></span></span>'
-        + '</button>'
-      ).join('');
+        + '<span class="pd-drizzle-price">+$'+d.price.toFixed(2)+'</span>'
+        + '</button>';
+      }).join('');
       drizzWrap.style.display = 'block';
     } else {
       drizzEl.innerHTML = '';

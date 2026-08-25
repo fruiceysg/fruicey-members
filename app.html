@@ -397,12 +397,14 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .cart-badge{position:fixed;left:0;right:0;bottom:var(--nav);background:var(--green);color:#fff;padding:13px 18px;font-size:14px;font-weight:600;box-shadow:0 -3px 14px rgba(0,0,0,.14);cursor:pointer;display:none;align-items:center;justify-content:space-between;gap:8px;z-index:140;font-family:var(--font)}
 .cart-badge.show{display:flex}
 .cart-badge .cart-badge-cta{display:flex;align-items:center;gap:4px;opacity:.95;white-space:nowrap}
+@keyframes cartBadgeIn{0%{transform:translateY(120%);opacity:0}70%{transform:translateY(-6px);opacity:1}100%{transform:translateY(0);opacity:1}}
+.cart-badge.pop-in{animation:cartBadgeIn .42s cubic-bezier(.34,1.56,.64,1)}
 
 /* CART SHEET */
 .cart-sheet{position:fixed;inset:0;z-index:200;display:none}
 .cart-sheet.open{display:block}
 .cart-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
-.cart-panel{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:85vh;overflow-y:auto;padding:16px}
+.cart-panel{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:85vh;overflow-y:auto;padding:16px;overscroll-behavior:contain}
 .cart-handle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px}
 .cart-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
 .cart-info{flex:1;min-width:0}
@@ -889,7 +891,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       </div>
       <div class="field">
         <label>Other remarks (optional)</label>
-        <textarea id="order-notes" rows="2" placeholder="e.g. Less ice, no sugar..." style="width:100%;padding:8px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;resize:none"></textarea>
+        <textarea id="order-notes" rows="2" placeholder="" style="width:100%;padding:8px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;resize:none"></textarea>
       </div>
       <div class="total-row"><span>Total</span><span id="cart-total-val">$0.00</span></div>
       <div id="credit-checkout-row" style="display:none;background:#f0faf3;border-radius:10px;padding:12px;margin-bottom:10px">
@@ -1073,7 +1075,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: add-to-cart bounces sheet down to cart bar; footer = Add + Back to Menu (rev Z)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: footer clearance for note, cart badge pop-in, cart swipe-to-close, no remarks placeholder (rev AA)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1645,6 +1647,7 @@ document.addEventListener('DOMContentLoaded', function(){
   initReveal();
   initFeatureButtons();
   initProductDetailSwipe();
+  initCartSwipe();
   // Hide loader
   const loader = document.getElementById('app-loader');
   if(loader){ loader.classList.add('hide'); setTimeout(()=>loader.remove(), 500); }
@@ -2078,6 +2081,8 @@ function openProductDetail(pid){
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }
     else { box.style.transform = 'translateY(0)'; }
+    // Reserve space below the last field so the locked footer never covers "Note to Wilson"
+    if(noteWrap){ noteWrap.style.marginBottom = (isBowl && bowlAdd) ? (bowlAdd.offsetHeight + 8) + 'px' : ''; }
   }); });
 }
 function closeProductDetail(){
@@ -2112,6 +2117,36 @@ function closeProductDetailAfterAdd(){
   };
   box.addEventListener('animationend', done);
   setTimeout(done, 620); // fallback if animationend doesn't fire
+}
+// Swipe down to dismiss the order cart (so it doesn't trigger a page refresh)
+function initCartSwipe(){
+  const panel = document.querySelector('#cart-sheet .cart-panel');
+  if(!panel) return;
+  let startY=0, curY=0, dragging=false;
+  panel.addEventListener('touchstart', function(e){
+    if(panel.scrollTop > 0) return;     // let inner content scroll first
+    startY = curY = e.touches[0].clientY; dragging = true;
+    panel.style.transition = 'none';
+  }, {passive:true});
+  panel.addEventListener('touchmove', function(e){
+    if(!dragging) return;
+    curY = e.touches[0].clientY;
+    const dy = curY - startY;
+    if(dy > 0){ e.preventDefault(); panel.style.transform = 'translateY('+dy+'px)'; }
+    else { panel.style.transform = 'translateY(0)'; }
+  }, {passive:false});
+  panel.addEventListener('touchend', function(){
+    if(!dragging) return;
+    dragging = false;
+    if(curY - startY > 90){
+      panel.style.transition = 'transform .3s ease';
+      panel.style.transform = 'translateY(100%)';
+      setTimeout(function(){ closeCart(); panel.style.transition=''; panel.style.transform=''; }, 300);
+    } else {
+      panel.style.transition = 'transform .2s ease';
+      panel.style.transform = 'translateY(0)';
+    }
+  });
 }
 // Swipe down to dismiss the product detail sheet
 function initProductDetailSwipe(){
@@ -2174,9 +2209,11 @@ function updateCartBadge(){
   const count = cart.reduce((s,i)=>s+i.qty,0);
   const badge = document.getElementById('cart-badge');
   if(cart.length){
+    const wasShown = badge.classList.contains('show');
     badge.classList.add('show');
     document.body.classList.add('has-cart');
     badge.innerHTML = '<span><i class="ti ti-shopping-cart" style="font-size:16px;vertical-align:-2px"></i> '+count+' item'+(count>1?'s':'')+' &nbsp;·&nbsp; $'+total.toFixed(2)+'</span><span class="cart-badge-cta">View Cart <i class="ti ti-chevron-right" style="font-size:16px"></i></span>';
+    if(!wasShown){ badge.classList.remove('pop-in'); void badge.offsetWidth; badge.classList.add('pop-in'); setTimeout(()=>badge.classList.remove('pop-in'), 460); }
   } else {
     badge.classList.remove('show');
     document.body.classList.remove('has-cart');

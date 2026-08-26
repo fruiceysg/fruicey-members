@@ -1317,6 +1317,9 @@ function renderAppOrders(orders){
     let items = [];
     try{ items = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
     const itemsStr = items.map(function(i){ return (i.qty||1)+'x '+(i.label||i.name||''); }).join(', ');
+    const ctype = o.collectType || 'Self pick-up';
+    const isDel = /delivery/i.test(ctype);
+    const dfee = parseFloat(o.deliveryFee||0);
     const status = o.status || 'Pending';
     const statusColor = STATUS_COLORS[status] || '#aaa';
     const buttons = ORDER_STATUSES.filter(function(s){ return s !== status; }).map(function(s){
@@ -1328,7 +1331,12 @@ function renderAppOrders(orders){
       +'<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+statusColor+'22;color:'+statusColor+'">'+status+'</span>'
       +'</div>'
       +'<div style="font-size:12px;color:#555;margin-bottom:2px"><b>'+(o.name||'')+'</b> · '+(o.phone||'')+'</div>'
-      +'<div style="font-size:11px;color:#888">'+(o.createdAt?formatDateTime(o.createdAt):'')+' · Collect: '+(o.collectTime||'ASAP')+'</div>'
+      +'<div style="font-size:11px;color:#888">'+(o.createdAt?formatDateTime(o.createdAt):'')+' · '+(isDel?'🛵 Delivery':'🏪 Self pick-up')+' · '+(isDel?'Preferred: ':'Collect: ')+(o.collectTime||'')+'</div>'
+      +(isDel?('<div style="font-size:11px;color:#234;background:#eef6ff;border:1px solid #d6e6f5;border-radius:6px;padding:6px 8px;margin:4px 0;line-height:1.5">'
+        +'<div><b>Deliver to:</b> '+(o.deliveryAddress||'—')+(o.deliveryUnit?', '+o.deliveryUnit:'')+'</div>'
+        +'<div>Postal '+(o.deliveryPostal||'—')+(o.deliveryDistanceKm?' · '+o.deliveryDistanceKm+' km':'')+' · ☎ '+(o.deliveryPhone||o.phone||'')+'</div>'
+        +'<div>Delivery fee: '+(dfee>0?'$'+dfee.toFixed(2):'Free')+'</div>'
+        +'</div>'):'')
       +'<div style="font-size:11px;color:#aaa;margin:4px 0">'+itemsStr+'</div>'
       +(o.notes?'<div style="font-size:11px;color:#e67e22;font-style:italic;margin-bottom:4px">Note: '+o.notes+'</div>':'')
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'

@@ -762,25 +762,10 @@ function startStampScan(){
 const redeemCardBtn = document.getElementById('wheel-redeem-btn');
 if(redeemCardBtn) redeemCardBtn.addEventListener('click', saveCardPrize);
 
-async function saveCardPrize(){
-  if(!curMember) return;
-  showScreenLoader('stamp-grid');
-  try{
-    // saveSpinResult now also resets stamps to 0 and increments cardsCompleted
-    const segment = WHEEL_SEGMENTS.find(s=>s.name===document.getElementById('wheel-result-name').textContent);
-    if(!segment){ showToast('Error saving prize'); return; }
-    const res = await apiPost({action:'saveSpinResult', phone:np(curMember.phone), spinResult:segment.name});
-    if(res.success){
-      showToast('Prize saved! You can redeem it anytime within 30 days.');
-      document.getElementById('wheel-section').classList.remove('show');
-      document.getElementById('complete-banner').classList.remove('show');
-      document.getElementById('wheel-result').style.display='none';
-      hasSpun = false;
-      // Refresh card — will show saved prize box and reset stamps
-      const updated = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
-      if(updated.member){ curMember=updated.member; renderCard(updated.member); }
-    }
-  } catch(e){ showToast('Connection error. Please try again.'); }
+// Retry-save the currently displayed prize (same segment — the prize can never change)
+function saveCardPrize(){
+  const seg = WHEEL_SEGMENTS.find(s=>s.name===document.getElementById('wheel-result-name').textContent);
+  if(seg) autoSavePrize(seg);
 }
 
 async function redeemSavedPrize(){
@@ -965,14 +950,40 @@ function showWheelResult(segment) {
   const descEl = document.getElementById('wheel-result-desc');
   if(descEl) descEl.textContent = segment.desc||'';
 
-  // Show redeem button
-  const redeemEl = document.getElementById('wheel-redeem-btn');
-  if(redeemEl) redeemEl.style.display = 'block';
-
-  // Lock spin — one spin only
+  // Lock spin permanently — one spin only, the prize cannot be changed
   hasSpun = true;
   const btn = document.getElementById('spin-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Already spun!'; btn.style.background = '#ccc'; }
+
+  // Auto-save the prize immediately (no manual save step). This persists the prize
+  // server-side and resets the stamps to 0 so new stamps can be collected right away.
+  autoSavePrize(segment);
+}
+
+let prizeSaving = false;
+async function autoSavePrize(segment){
+  if(prizeSaving || !curMember || !segment) return;
+  prizeSaving = true;
+  const redeemEl = document.getElementById('wheel-redeem-btn');
+  if(redeemEl){ redeemEl.style.display='block'; redeemEl.disabled=true; redeemEl.textContent='Saving your prize…'; }
+  try{
+    const res = await apiPost({action:'saveSpinResult', phone:np(curMember.phone), spinResult:segment.name});
+    if(res && res.success){
+      showToast('Prize saved! Redeem anytime within 30 days.');
+      document.getElementById('wheel-section').classList.remove('show');
+      document.getElementById('complete-banner').classList.remove('show');
+      document.getElementById('wheel-result').style.display='none';
+      const updated = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
+      if(updated.member){ curMember=updated.member; renderCard(updated.member); }
+    } else {
+      // Server didn't confirm — keep the SAME prize and let them retry saving (never a re-spin)
+      if(redeemEl){ redeemEl.disabled=false; redeemEl.textContent='Tap to save your prize'; }
+      showToast((res&&res.error)||'Couldn\u2019t save your prize — tap to retry.');
+    }
+  }catch(e){
+    if(redeemEl){ redeemEl.disabled=false; redeemEl.textContent='Tap to save your prize'; }
+    showToast('Connection issue — tap to save your prize.');
+  }finally{ prizeSaving = false; }
 }
 
 

@@ -1093,7 +1093,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: title moved below image; Shakes descriptions added (rev AQ)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: product title coloured to match its category tab (rev AR)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -2067,7 +2067,9 @@ function openProductDetail(pid){
   // the pop-up shows the MAIN image (the info image is already seen via card hover/flip).
   // Longevity Press uses a dedicated hover image, so its pop-up keeps the info image.
   if(HOVER_SWAP_CATS.has(currentCat) && !DEDICATED_HOVER_CATS.has(currentCat) && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = fileId; }
-  document.getElementById('pd-name').textContent = p.name;
+  const nameEl = document.getElementById('pd-name');
+  nameEl.textContent = p.name;
+  nameEl.style.color = CAT_COLORS[currentCat] || 'var(--green-dark)';
   // "Note to Wilson" field — shown for Superfood Bowls
   const noteWrap = document.getElementById('pd-note-wrap');
   const noteEl = document.getElementById('pd-note');

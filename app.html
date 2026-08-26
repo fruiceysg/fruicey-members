@@ -454,6 +454,14 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .date-card.selected .date-card-top,.date-card.selected .date-card-num{color:var(--green-dark)}
 .time-pill{flex:0 0 auto;padding:9px 14px;border:1.5px solid var(--border);border-radius:20px;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap;font-family:var(--body)}
 .time-pill.selected{border-color:var(--green);border-width:2px;color:var(--green-dark)}
+.del-input{width:100%;padding:9px 10px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;margin-bottom:8px}
+.del-input:focus{outline:none;border-color:var(--green)}
+.del-fee{font-size:13px;margin:2px 0 8px;min-height:18px;line-height:1.4}
+.del-hint{color:var(--text3)}
+.del-warn{color:#c0392b;font-weight:600}
+.del-ok{color:var(--green-dark);font-weight:700}
+.del-note{font-size:12px;color:var(--text3);margin-top:8px}
+.del-tnc{font-size:11px;line-height:1.45;color:var(--text3);background:#f7f7f7;border-radius:8px;padding:10px;margin-top:2px}
 
 /* PAYNOW */
 .paynow-box{text-align:center;padding:16px 0}
@@ -920,15 +928,26 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         </div>
       </div>
       <div id="time-slots-row" style="margin-bottom:12px">
-        <div class="collect-sub">Pick-up date</div>
+        <div class="collect-sub" id="collect-date-label">Pick-up date</div>
         <div id="date-slots-container" class="date-scroll"></div>
-        <div class="collect-sub">Pick-up time <span class="collect-sub-note">· Mon–Sat, 11am–8pm</span></div>
+        <div class="collect-sub" id="collect-time-label">Pick-up time <span class="collect-sub-note">· Mon–Sat, 11am–8pm</span></div>
         <div id="time-slots-container" class="time-scroll"></div>
+        <div id="delivery-time-note" class="del-note" style="display:none">Your <b>preferred</b> date &amp; time — we'll confirm availability with you via WhatsApp.</div>
+      </div>
+      <div id="delivery-fields" style="display:none;margin-bottom:12px">
+        <div class="collect-sub">Delivery address</div>
+        <input id="delivery-postal" class="del-input" inputmode="numeric" maxlength="6" placeholder="Postal code (6 digits)" oninput="onDeliveryPostalInput()">
+        <input id="delivery-address" class="del-input" placeholder="Address (auto-filled — edit if needed)">
+        <input id="delivery-unit" class="del-input" placeholder="Unit no. (e.g. #12-34)">
+        <input id="delivery-phone" class="del-input" placeholder="Contact number">
+        <div id="delivery-fee-info" class="del-fee"><span class="del-hint">Enter your postal code to calculate the delivery fee.</span></div>
+        <div class="del-tnc">Free delivery within 3&nbsp;km for orders above $30. Otherwise from $5 by order value; fulfilment up to ~1.5&nbsp;hrs depending on items ordered. +$10 surcharge for Sentosa. We deliver across Singapore incl. Sentosa, excluding other offshore islands &amp; restricted zones. Unsuccessful deliveries incur a $15 re-delivery fee per trip — please ensure your address is entered correctly.</div>
       </div>
       <div class="field">
         <label>Other remarks (optional)</label>
         <textarea id="order-notes" rows="2" placeholder="" style="width:100%;padding:8px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;resize:none"></textarea>
       </div>
+      <div id="delivery-fee-row" class="total-row" style="display:none;font-weight:500;font-size:13px"><span>Delivery</span><span id="delivery-fee-val">$0.00</span></div>
       <div class="total-row"><span>Total</span><span id="cart-total-val">$0.00</span></div>
       <div id="credit-checkout-row" style="display:none;background:#f0faf3;border-radius:10px;padding:12px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -1111,7 +1130,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: white-bg selected tiles; sleeker pick-up date/time picker (rev AT)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: Delivery flow — address + OneMap fee (3km-free/tiers/Sentosa) (rev AU)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -2337,6 +2356,7 @@ function renderCartItems(){
     }).join('')
     : '<div style="text-align:center;padding:2rem;color:#bbb">No items in cart</div>';
   document.getElementById('cart-total-val').textContent = '$'+sub.toFixed(2);
+  updateCartTotals();
   renderTimeSlots();
 }
 
@@ -2380,7 +2400,96 @@ function renderTimeSlots(){
     '<button type="button" class="time-pill'+(collectTime===t?' selected':'')+'" data-time="'+t+'">'+fmt(t)+'</button>'
   ).join('');
 }
-  
+
+// ── DELIVERY (fee by distance + order value; free within 3km over $30) ──
+const SHOP_POSTAL = '596180', FREE_RADIUS_KM = 3, SENTOSA_SURCHARGE = 10;
+let shopLatLng = null, deliveryFee = 0, deliveryInfo = null, deliveryPostalTimer = null;
+
+async function geocodePostal(postal){
+  const url = 'https://www.onemap.gov.sg/api/common/elastic/search?searchVal='+encodeURIComponent(postal)+'&returnGeom=Y&getAddrDetails=Y&pageNum=1';
+  const res = await fetch(url);
+  const data = await res.json();
+  if(data && data.results && data.results.length){
+    const r = data.results[0];
+    return { lat:parseFloat(r.LATITUDE), lng:parseFloat(r.LONGITUDE), address:(r.ADDRESS||r.SEARCHVAL||''), building:(r.BUILDING||'') };
+  }
+  return null;
+}
+function kmBetween(a,b){
+  const R=6371, tr=x=>x*Math.PI/180;
+  const dLat=tr(b.lat-a.lat), dLng=tr(b.lng-a.lng);
+  const s=Math.sin(dLat/2)**2 + Math.cos(tr(a.lat))*Math.cos(tr(b.lat))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+function tierFee(sub){ if(sub>80) return 0; if(sub>50) return 5; if(sub>30) return 10; return 15; }
+
+function onDeliveryPostalInput(){
+  const el = document.getElementById('delivery-postal');
+  el.value = (el.value||'').replace(/\D/g,'').slice(0,6);
+  clearTimeout(deliveryPostalTimer);
+  deliveryPostalTimer = setTimeout(computeDelivery, 500);
+}
+
+async function computeDelivery(){
+  const feeEl = document.getElementById('delivery-fee-info');
+  if(!feeEl) return;
+  const postal = (document.getElementById('delivery-postal').value||'').trim();
+  const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  if(!/^\d{6}$/.test(postal)){
+    deliveryFee = 0; deliveryInfo = null;
+    feeEl.innerHTML = '<span class="del-hint">Enter your postal code to calculate the delivery fee.</span>';
+    updateCartTotals(); return;
+  }
+  feeEl.innerHTML = '<span class="del-hint">Checking address…</span>';
+  try{
+    if(!shopLatLng){ shopLatLng = (await geocodePostal(SHOP_POSTAL)) || {lat:1.3411,lng:103.7757}; }
+    const cust = await geocodePostal(postal);
+    if(!cust){
+      deliveryFee = tierFee(sub);
+      deliveryInfo = {postal, address:'', distanceKm:null, isSentosa:false, fee:deliveryFee, unverified:true};
+      feeEl.innerHTML = '<span class="del-warn">Postal code not found.</span> <span class="del-hint">Estimated fee $'+deliveryFee.toFixed(2)+' — we\u2019ll confirm via WhatsApp.</span>';
+      updateCartTotals(); return;
+    }
+    const addrEl = document.getElementById('delivery-address');
+    if(addrEl && !addrEl.value.trim()) addrEl.value = cust.address;
+    const dist = kmBetween(shopLatLng, cust);
+    const isSentosa = /SENTOSA/i.test((cust.address||'')+' '+(cust.building||''));
+    let fee = (dist<=FREE_RADIUS_KM && sub>30) ? 0 : tierFee(sub);
+    if(isSentosa) fee += SENTOSA_SURCHARGE;
+    deliveryFee = fee;
+    deliveryInfo = {postal, address:(addrEl?addrEl.value:cust.address), distanceKm:dist, isSentosa, fee};
+    let msg;
+    if(fee===0){
+      msg = '<span class="del-ok">Free delivery</span> <span class="del-hint">('+dist.toFixed(1)+' km away)</span>';
+    } else {
+      msg = '<span class="del-ok">Delivery fee: $'+fee.toFixed(2)+'</span> <span class="del-hint">('+dist.toFixed(1)+' km'+(isSentosa?', incl. $'+SENTOSA_SURCHARGE+' Sentosa surcharge':'')+')</span>';
+      if(sub<=30 && dist<=FREE_RADIUS_KM){ msg += '<div class="del-hint" style="margin-top:2px">Spend over $30 to get free delivery (within 3 km).</div>'; }
+    }
+    feeEl.innerHTML = msg;
+    updateCartTotals();
+  }catch(e){
+    deliveryFee = tierFee(sub);
+    deliveryInfo = {postal, address:((document.getElementById('delivery-address')||{}).value)||'', distanceKm:null, isSentosa:false, fee:deliveryFee, unverified:true};
+    feeEl.innerHTML = '<span class="del-warn">Couldn\u2019t verify address automatically.</span> <span class="del-hint">Estimated fee $'+deliveryFee.toFixed(2)+' — confirmed via WhatsApp.</span>';
+    updateCartTotals();
+  }
+}
+
+// Update the total (and delivery line) whenever the cart or mode changes
+function updateCartTotals(){
+  const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const isDelivery = collectMode==='delivery';
+  const fee = isDelivery ? deliveryFee : 0;
+  const feeRow = document.getElementById('delivery-fee-row');
+  if(feeRow){
+    feeRow.style.display = isDelivery ? 'flex' : 'none';
+    const fv = document.getElementById('delivery-fee-val');
+    if(fv) fv.textContent = isDelivery ? (fee>0 ? '$'+fee.toFixed(2) : 'Free') : '$0.00';
+  }
+  const tv = document.getElementById('cart-total-val');
+  if(tv) tv.textContent = '$'+(sub+fee).toFixed(2);
+}
+
 document.addEventListener('click', function(e){
   const collectOpt = e.target.closest('.collect-opt');
   if(collectOpt){
@@ -2388,6 +2497,17 @@ document.addEventListener('click', function(e){
     document.querySelectorAll('.collect-opt').forEach(o=>o.classList.remove('selected'));
     collectOpt.classList.add('selected');
     document.getElementById('time-slots-row').style.display = 'block';
+    const isDelivery = collectMode==='delivery';
+    document.getElementById('delivery-fields').style.display = isDelivery ? 'block' : 'none';
+    document.getElementById('delivery-time-note').style.display = isDelivery ? 'block' : 'none';
+    document.getElementById('collect-date-label').textContent = isDelivery ? 'Preferred delivery date' : 'Pick-up date';
+    document.getElementById('collect-time-label').innerHTML = isDelivery ? 'Preferred delivery time' : 'Pick-up time <span class="collect-sub-note">· Mon–Sat, 11am–8pm</span>';
+    if(isDelivery){
+      const ph = document.getElementById('delivery-phone');
+      if(ph && !ph.value && currentUser) ph.value = currentUser.phone||'';
+      computeDelivery();
+    }
+    updateCartTotals();
     return;
   }
   const dateSlot = e.target.closest('[data-date]');
@@ -2404,19 +2524,33 @@ document.addEventListener('click', function(e){
 // ── CHECKOUT ──────────────────────────────────────────────────
 async function checkout(){
   if(!cart.length){ showToast('Cart is empty'); return; }
-  if(!collectTime){ showToast('Please select a collection time'); return; }
-  if(!collectDate){ showToast('Please select a collection date'); return; }
+  if(!collectTime){ showToast('Please select a '+(collectMode==='delivery'?'preferred delivery':'collection')+' time'); return; }
+  if(!collectDate){ showToast('Please select a '+(collectMode==='delivery'?'preferred delivery':'collection')+' date'); return; }
+
+  const isDelivery = collectMode==='delivery';
+  let deliveryPostal='', deliveryAddress='', deliveryUnit='', deliveryPhone='';
+  if(isDelivery){
+    deliveryPostal  = (document.getElementById('delivery-postal').value||'').trim();
+    deliveryAddress = (document.getElementById('delivery-address').value||'').trim();
+    deliveryUnit    = (document.getElementById('delivery-unit').value||'').trim();
+    deliveryPhone   = (document.getElementById('delivery-phone').value||'').trim();
+    if(!/^\d{6}$/.test(deliveryPostal)){ showToast('Please enter a valid 6-digit delivery postal code'); return; }
+    if(!deliveryAddress){ showToast('Please enter your delivery address'); return; }
+    if(!deliveryPhone){ showToast('Please enter a delivery contact number'); return; }
+  }
 
   const notes = document.getElementById('order-notes').value.trim();
   const sub   = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const fee   = isDelivery ? deliveryFee : 0;
+  const grand = +(sub + fee).toFixed(2);
   const btn   = document.getElementById('checkout-btn');
   btn.textContent='Placing order...'; btn.disabled=true;
 
   // Determine payment method
   const useCreditCb = document.getElementById('use-credit-cb');
   const useCredit = useCreditCb && useCreditCb.checked && userCreditBalance > 0;
-  const creditUse = useCredit ? Math.min(userCreditBalance, sub) : 0;
-  const remaining = +(sub - creditUse).toFixed(2);
+  const creditUse = useCredit ? Math.min(userCreditBalance, grand) : 0;
+  const remaining = +(grand - creditUse).toFixed(2);
   let payLabel = 'App PayNow';
   if(useCredit && remaining <= 0) payLabel = 'App Credit';
   else if(useCredit && remaining > 0) payLabel = 'App Credit+PayNow';
@@ -2428,9 +2562,12 @@ async function checkout(){
       name:   currentUser.first+' '+currentUser.last,
       phone:  currentUser.phone,
       items:  cart,
-      total:  sub.toFixed(2),
+      total:  grand.toFixed(2),
       collectTime: collectDate+' '+collectTime,
-      collectType: collectMode==='delivery'?'Delivery':'Self pick-up',
+      collectType: isDelivery?'Delivery':'Self pick-up',
+      deliveryFee: fee.toFixed(2),
+      deliveryPostal, deliveryAddress, deliveryUnit, deliveryPhone,
+      deliveryDistanceKm: (deliveryInfo && deliveryInfo.distanceKm!=null) ? deliveryInfo.distanceKm.toFixed(2) : '',
       notes,
       payment: payLabel
     });

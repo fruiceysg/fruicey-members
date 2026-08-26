@@ -304,9 +304,9 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   #product-detail-modal .pd-handle{display:none}
 }
 .pd-handle{width:42px;height:4px;border-radius:2px;background:#ddd;margin:10px auto 2px;flex-shrink:0}
-.pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 18px 6px}
+.pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 12px 0}
 .pd-head-text{flex:1;min-width:0}
-.pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15}
+.pd-name{font-family:var(--font);font-size:23px;color:var(--green-dark);font-weight:600;line-height:1.15;padding:12px 18px 0}
 .pd-note-wrap{padding:4px 18px 2px;display:flex;flex-direction:column}
 .pd-cart-summary{position:sticky;bottom:0;margin:14px 0 0;padding:14px 18px;background:var(--green);color:#fff;display:none;flex-direction:column;gap:10px;z-index:3}
 .pd-cart-summary.show{display:flex}
@@ -1093,7 +1093,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: Superfood Bowl descriptions added to detail card (rev AP)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: title moved below image; Shakes descriptions added (rev AQ)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1761,7 +1761,17 @@ const PRODUCT_DESC = {
   'sb03': 'Acai with Mango, Blueberry, Strawberry, Raw Cacao with Sprinkles of Coconut flakes and Drizzles of Chocolate.',
   'sb04': 'Acai with Blueberry, Strawberry, Raw Cacao with Sprinkles of Coconut flakes and Drizzles of Chocolate.',
   'sb05': 'Acai with Mango, Kiwi, Banana, Blueberry, Strawberry, Granola, Sprinkles of Black Sesame and Coconut flakes.',
-  'sb06': 'Acai with Banana, Strawberry, Blueberry, Chia seeds, Granola, Cookie Butter with Sprinkle of Coconut flakes.'
+  'sb06': 'Acai with Banana, Strawberry, Blueberry, Chia seeds, Granola, Cookie Butter with Sprinkle of Coconut flakes.',
+  'ss01': 'Coconut, Taro, Sago pearls',
+  'ss02': 'Strawberry, Mango, Pineapple, Soda',
+  'ss03': 'Coconut, Wintermelon, Cucumber, Mint',
+  'ss04': 'Coconut, Pineapple, Lime',
+  'ss05': 'Pineapple, Pomegranate, Passionfruit, Lime',
+  'ss08': 'Coconut, Blue Coral, Vanilla',
+  'ss09': 'Just thick Creamy Avocado',
+  'ss10': 'Mango, Pineapple, Coconut, Banana, Yogurt',
+  'ss11': 'Coconut, Orange, Banana, Vanilla',
+  'ss12': 'Strawberry, Banana, Yogurt'
 };
 // Optional add-on drizzles shown in the Superfood Bowls pop-up.
 // img = Google Drive FILE ID for that drizzle's photo (Share > "Anyone with the link" >
@@ -3244,9 +3254,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <div class="pd-scroll">
     <div class="pd-handle"></div>
     <div class="pd-head">
-      <div class="pd-head-text">
-        <div id="pd-name" class="pd-name"></div>
-      </div>
+      <div class="pd-head-text"></div>
       <div class="pd-actions">
         <button id="pd-zoombtn" class="pd-zoombtn" type="button" aria-label="Zoom in"><i class="ti ti-zoom-in"></i></button>
         <button class="pd-close" onclick="closeProductDetail()" aria-label="Close">&times;</button>
@@ -3257,6 +3265,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <div class="pd-hint"><i class="ti ti-zoom-in"></i> Hover to zoom</div>
       <button id="pd-enlarge" class="pd-enlarge" type="button" aria-label="Enlarge image"><i class="ti ti-zoom-in"></i></button>
     </div>
+    <div id="pd-name" class="pd-name"></div>
     <div id="pd-preorder" class="pd-preorder" style="display:none">Pre-order item &mdash; made available on collection day</div>
     <div id="pd-desc" class="pd-desc" style="display:none"></div>
     <div id="pd-choose" class="pd-choose">Choose an option</div>

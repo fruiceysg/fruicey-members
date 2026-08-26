@@ -373,7 +373,8 @@ input:focus{border-color:#8fcea1}
       <div class="wheel-result-drink" id="wheel-result-name"></div>
       <div class="wheel-result-desc" id="wheel-result-reward"></div>
       <div id="wheel-result-desc" style="font-size:12px;opacity:.85;margin-top:6px"></div>
-    <button id="wheel-redeem-btn" style="display:none;margin-top:16px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:10px 24px;font-size:14px;font-family:'BabyDoll',cursive;cursor:pointer;width:100%">Click to Save your prize</button>
+      <div id="wheel-result-note" style="font-size:12px;margin-top:12px;opacity:.95;border-top:1px solid rgba(255,255,255,.3);padding-top:10px;line-height:1.5"></div>
+    <button id="wheel-redeem-btn" style="display:none;margin-top:14px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:10px 24px;font-size:14px;font-family:'BabyDoll',cursive;cursor:pointer;width:100%">Done — back to my card</button>
     </div>
   </div>
     <div class="stamp-grid" id="stamp-grid"></div>
@@ -384,6 +385,7 @@ input:focus{border-color:#8fcea1}
       </div>
       <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
     </div>
+    <div id="stamp-status-msg" style="display:none;text-align:center;font-size:13px;font-weight:600;border-radius:10px;padding:10px 12px;margin-bottom:12px"></div>
 
     <button class="scan-qr-btn" id="scan-qr-btn" onclick="startStampScan()">Scan QR to Get Stamp</button>
 
@@ -571,6 +573,24 @@ function renderCard(member){
   const banner=document.getElementById('complete-banner');
   if(stamps>=TOTAL_STAMPS){banner.classList.add('show');}else{banner.classList.remove('show');}
 
+  // Status message: "1 stamp away" and/or carried-over stamps waiting for the next card
+  const msgEl=document.getElementById('stamp-status-msg');
+  if(msgEl){
+    const pending=parseInt(member.pendingStamps||0);
+    let msg='', bg='';
+    if(stamps===TOTAL_STAMPS-1){
+      msg='🎯 Just <b>1 more stamp</b> to unlock your wheel spin!'; bg='#fff4e0'; msgEl.style.color='#e67e22';
+    } else if(stamps<TOTAL_STAMPS && (TOTAL_STAMPS-stamps)<=2){
+      msg='✨ <b>'+(TOTAL_STAMPS-stamps)+' more stamps</b> to unlock your wheel spin!'; bg='#eef7f0'; msgEl.style.color='#5aab74';
+    }
+    if(pending>0){
+      msg += (msg?'<br>':'')+'🎁 <b>'+pending+' stamp'+(pending>1?'s':'')+'</b> will carry over to your next card.';
+      if(!bg){ bg='#eef7f0'; msgEl.style.color='#5aab74'; }
+    }
+    if(msg){ msgEl.innerHTML=msg; msgEl.style.background=bg; msgEl.style.display='block'; }
+    else { msgEl.style.display='none'; }
+  }
+
   checkWheelVisibility(stamps);
 
   // Show saved prize if exists (card may have reset to 0 but prize is saved)
@@ -627,25 +647,12 @@ function renderCard(member){
     prizeBox.style.display = 'none';
   }
 
-  // Restore saved spin result if stamps are full (prevents re-spin on page reload)
+  // If a prize is already saved while the card is still complete (e.g. reloaded before reset),
+  // just lock the spin so it can't be re-spun. The saved-prize box above shows the prize.
   if(parseInt(stamps)>=TOTAL_STAMPS && member.spinResult && member.spinResult!==''){
     hasSpun = true;
     const spinBtn = document.getElementById('spin-btn');
     if(spinBtn){ spinBtn.disabled=true; spinBtn.textContent='Already spun!'; spinBtn.style.background='#ccc'; }
-    // Find the segment that matches saved result
-    const savedSeg2 = WHEEL_SEGMENTS.find(s=>s.name===member.spinResult);
-    if(savedSeg2){
-      const el=document.getElementById('wheel-result');
-      if(el){
-        el.style.display='block'; el.style.background=savedSeg2.color;
-        document.getElementById('wheel-result-name').textContent=savedSeg2.name;
-        document.getElementById('wheel-result-reward').textContent=savedSeg2.reward;
-        const descEl=document.getElementById('wheel-result-desc');
-        if(descEl) descEl.textContent=savedSeg2.desc||'';
-        const redeemEl=document.getElementById('wheel-redeem-btn');
-        if(redeemEl) redeemEl.style.display='block';
-      }
-    }
   }
   const hist=document.getElementById('stamp-history');
   const log=member.stampLog?member.stampLog.split('|').filter(l=>l&&!l.startsWith('\n[')):[];
@@ -760,13 +767,7 @@ function startStampScan(){
   });
 }document.getElementById('spin-btn').addEventListener('click', spinWheel);
 const redeemCardBtn = document.getElementById('wheel-redeem-btn');
-if(redeemCardBtn) redeemCardBtn.addEventListener('click', saveCardPrize);
-
-// Retry-save the currently displayed prize (same segment — the prize can never change)
-function saveCardPrize(){
-  const seg = WHEEL_SEGMENTS.find(s=>s.name===document.getElementById('wheel-result-name').textContent);
-  if(seg) autoSavePrize(seg);
-}
+if(redeemCardBtn) redeemCardBtn.addEventListener('click', onWheelDone);
 
 async function redeemSavedPrize(){
   if(!curMember) return;
@@ -955,35 +956,50 @@ function showWheelResult(segment) {
   const btn = document.getElementById('spin-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Already spun!'; btn.style.background = '#ccc'; }
 
-  // Auto-save the prize immediately (no manual save step). This persists the prize
-  // server-side and resets the stamps to 0 so new stamps can be collected right away.
-  autoSavePrize(segment);
+  // Show the "saved to your rewards" note + a single clear Done button (no manual save/redeem)
+  const noteEl = document.getElementById('wheel-result-note');
+  if(noteEl) noteEl.innerHTML = '🎁 <b>Saved to your rewards!</b><br>Show this in store to redeem within 30 days — no need to save or redeem now.';
+  const doneEl = document.getElementById('wheel-redeem-btn');
+  if(doneEl){ doneEl.style.display='block'; doneEl.disabled=false; doneEl.textContent='Done — back to my card'; }
+
+  // Auto-save the prize in the background: locks the prize and resets the stamps to 0 server-side.
+  pendingSpin = { segment: segment, saved:false, saving:false };
+  autoSavePrize();
 }
 
-let prizeSaving = false;
-async function autoSavePrize(segment){
-  if(prizeSaving || !curMember || !segment) return;
-  prizeSaving = true;
-  const redeemEl = document.getElementById('wheel-redeem-btn');
-  if(redeemEl){ redeemEl.style.display='block'; redeemEl.disabled=true; redeemEl.textContent='Saving your prize…'; }
+let pendingSpin = null;
+async function autoSavePrize(){
+  if(!pendingSpin || pendingSpin.saved || pendingSpin.saving || !curMember) return;
+  pendingSpin.saving = true;
   try{
-    const res = await apiPost({action:'saveSpinResult', phone:np(curMember.phone), spinResult:segment.name});
+    const res = await apiPost({action:'saveSpinResult', phone:np(curMember.phone), spinResult:pendingSpin.segment.name});
     if(res && res.success){
-      showToast('Prize saved! Redeem anytime within 30 days.');
-      document.getElementById('wheel-section').classList.remove('show');
-      document.getElementById('complete-banner').classList.remove('show');
-      document.getElementById('wheel-result').style.display='none';
+      pendingSpin.saved = true;
       const updated = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
-      if(updated.member){ curMember=updated.member; renderCard(updated.member); }
-    } else {
-      // Server didn't confirm — keep the SAME prize and let them retry saving (never a re-spin)
-      if(redeemEl){ redeemEl.disabled=false; redeemEl.textContent='Tap to save your prize'; }
-      showToast((res&&res.error)||'Couldn\u2019t save your prize — tap to retry.');
+      if(updated && updated.member) curMember = updated.member;   // stamps now 0, prize stored
     }
-  }catch(e){
-    if(redeemEl){ redeemEl.disabled=false; redeemEl.textContent='Tap to save your prize'; }
-    showToast('Connection issue — tap to save your prize.');
-  }finally{ prizeSaving = false; }
+  }catch(e){ /* stays unsaved — retried when they tap Done */ }
+  finally{ if(pendingSpin) pendingSpin.saving = false; }
+}
+
+// "Done": make sure the prize is saved, then leave the wheel and reveal the saved prize on the card
+async function onWheelDone(){
+  const doneEl = document.getElementById('wheel-redeem-btn');
+  if(pendingSpin && !pendingSpin.saved){
+    if(doneEl){ doneEl.disabled=true; doneEl.textContent='Saving…'; }
+    await autoSavePrize();
+    if(pendingSpin && !pendingSpin.saved){
+      if(doneEl){ doneEl.disabled=false; doneEl.textContent='Retry — save my prize'; }
+      showToast('Couldn\u2019t save your prize. Please try again.');
+      return;
+    }
+  }
+  document.getElementById('wheel-section').classList.remove('show');
+  document.getElementById('complete-banner').classList.remove('show');
+  document.getElementById('wheel-result').style.display='none';
+  showToast('Prize saved! Redeem in store anytime within 30 days.');
+  if(curMember) renderCard(curMember);   // reveals the saved-prize box (trackable until redeemed)
+  pendingSpin = null;
 }
 
 

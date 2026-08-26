@@ -382,6 +382,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 }
 .pd-preorder{margin:12px 18px 0;background:#fff3e0;color:#e67e22;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;text-align:center}
 .pd-choose{font-family:var(--font);font-size:20px;color:var(--green-dark);padding:16px 18px 8px;font-weight:600}
+.pd-desc{padding:12px 18px 2px;font-family:var(--body);font-size:13px;line-height:1.45;color:var(--text2)}
 .pd-options{display:flex;flex-direction:column;gap:10px;padding:0 18px}
 .pd-opt{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;transition:border-color .15s,background .15s;font-family:var(--body)}
 .pd-opt.added{border-color:var(--green);background:var(--green-light)}
@@ -1092,7 +1093,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: all products use single-select + locked Add-to-Cart footer (rev AO)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: Superfood Bowl descriptions added to detail card (rev AP)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -1753,6 +1754,15 @@ const NO_HOVER_SWAP = new Set(['ss13','ss14','ss15','ss16','ss17']);
 const HOVER_SWAP_CATS = new Set(['Shakes & Smoothies','Superfood Bowls','Wellness Press','Longevity Press','Immunity Press']);
 // Cats that hover-swap to a DEDICATED image (IMG_HOVER) instead of the info image; their pop-up keeps the info image
 const DEDICATED_HOVER_CATS = new Set(['Longevity Press','Immunity Press']);
+// Product descriptions shown in the detail pop-up (keyed by product id). Add more as needed.
+const PRODUCT_DESC = {
+  'sb01': 'Acai with Mango, Kiwi, Banana, Blueberry, Strawberry, Granola, Sprinkles of Black Sesame and Coconut flakes.',
+  'sb02': 'Acai with Blueberry, Raspberry/Strawberry, Granola, Cookie Butter and Sprinkles of Coconut flakes.',
+  'sb03': 'Acai with Mango, Blueberry, Strawberry, Raw Cacao with Sprinkles of Coconut flakes and Drizzles of Chocolate.',
+  'sb04': 'Acai with Blueberry, Strawberry, Raw Cacao with Sprinkles of Coconut flakes and Drizzles of Chocolate.',
+  'sb05': 'Acai with Mango, Kiwi, Banana, Blueberry, Strawberry, Granola, Sprinkles of Black Sesame and Coconut flakes.',
+  'sb06': 'Acai with Banana, Strawberry, Blueberry, Chia seeds, Granola, Cookie Butter with Sprinkle of Coconut flakes.'
+};
 // Optional add-on drizzles shown in the Superfood Bowls pop-up.
 // img = Google Drive FILE ID for that drizzle's photo (Share > "Anyone with the link" >
 // copy the part between /d/ and /view). Leave '' and it shows a blank placeholder tile.
@@ -2085,6 +2095,8 @@ function openProductDetail(pid){
   } else { wrap.style.display = 'none'; }
   if(window.__pdResetZoom) window.__pdResetZoom();
   document.getElementById('pd-preorder').style.display = PREORDER_IDS.has(p.id) ? 'block' : 'none';
+  const descEl = document.getElementById('pd-desc');
+  if(descEl){ const d = PRODUCT_DESC[p.id]; descEl.textContent = d || ''; descEl.style.display = d ? 'block' : 'none'; }
   const opts = document.getElementById('pd-options');
   const choose = document.getElementById('pd-choose');
   const bowlAdd = document.getElementById('pd-bowl-add');
@@ -3246,6 +3258,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <button id="pd-enlarge" class="pd-enlarge" type="button" aria-label="Enlarge image"><i class="ti ti-zoom-in"></i></button>
     </div>
     <div id="pd-preorder" class="pd-preorder" style="display:none">Pre-order item &mdash; made available on collection day</div>
+    <div id="pd-desc" class="pd-desc" style="display:none"></div>
     <div id="pd-choose" class="pd-choose">Choose an option</div>
     <div id="pd-options" class="pd-options"></div>
     <div id="pd-drizzles-wrap" class="pd-drizzles-wrap" style="display:none">

@@ -412,9 +412,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .cart-sheet{position:fixed;inset:0;z-index:200;display:none}
 .cart-sheet.open{display:block}
 .cart-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
-.cart-panel{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;padding:16px;overscroll-behavior:contain}
-.cart-panel .cart-handle,.cart-panel .cart-title,.cart-panel .checkout-section{flex:0 0 auto}
-#cart-items{flex:1 1 auto;min-height:64px;overflow-y:auto;overscroll-behavior:contain}
+.cart-panel{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;overscroll-behavior:contain}
 @keyframes cartSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes cartFadeIn{from{opacity:0}to{opacity:1}}
 .cart-sheet.open .cart-panel{animation:cartSlideUp .34s cubic-bezier(.22,.68,0,1)}
@@ -1130,7 +1128,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: Delivery flow — address + OneMap fee (3km-free/tiers/Sentosa) (rev AU)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: today time slots from live time; cart scroll + swipe fix (rev AV)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -2229,10 +2227,11 @@ function closeProductDetailAfterAdd(){
 function initCartSwipe(){
   const panel = document.querySelector('#cart-sheet .cart-panel');
   if(!panel) return;
-  const scroller = panel.querySelector('#cart-items') || panel;
+  const scroller = panel;                 // the panel itself is the scroll container
   let startY=0, curY=0, dragging=false;
   panel.addEventListener('touchstart', function(e){
-    if(scroller.scrollTop > 0) return;     // let the item list scroll first
+    dragging = false;
+    if(scroller.scrollTop > 0) return;     // scrolled down — let native scroll handle it
     startY = curY = e.touches[0].clientY; dragging = true;
     panel.style.transition = 'none';
   }, {passive:true});
@@ -2240,8 +2239,8 @@ function initCartSwipe(){
     if(!dragging) return;
     curY = e.touches[0].clientY;
     const dy = curY - startY;
-    if(dy > 0){ e.preventDefault(); panel.style.transform = 'translateY('+dy+'px)'; }
-    else { panel.style.transform = 'translateY(0)'; }
+    if(dy > 0){ e.preventDefault(); panel.style.transform = 'translateY('+dy+'px)'; }  // pulling down at top → dismiss preview (and blocks page refresh)
+    else { dragging = false; panel.style.transform = 'translateY(0)'; }                // pushing up → hand back to native scroll
   }, {passive:false});
   panel.addEventListener('touchend', function(){
     if(!dragging) return;
@@ -2361,6 +2360,8 @@ function renderCartItems(){
 }
 
 // ── COLLECTION TIME ───────────────────────────────────────────
+function ymdLocal(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+
 function renderTimeSlots(){
   const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
@@ -2371,7 +2372,7 @@ function renderTimeSlots(){
     const dt = new Date();
     dt.setDate(dt.getDate() + d);
     if(dt.getDay() === 0) continue; // skip Sunday
-    const val = dt.toISOString().slice(0,10);
+    const val = ymdLocal(dt);       // local date (avoids UTC off-by-one)
     const top = d===0 ? 'Today' : d===1 ? 'Tomorrow' : dayNames[dt.getDay()];
     dates.push({val, top, num: dt.getDate()});
   }
@@ -2385,17 +2386,33 @@ function renderTimeSlots(){
     + '</button>'
   ).join('');
 
-  // 30-min slots from 11:00 to 20:00, shown in friendly 12-hour form
+  renderTimePills();
+}
+
+// Render the time pills for the selected date; for "today" only future times are shown
+function renderTimePills(){
+  const slotContainer = document.getElementById('time-slots-container');
+  if(!slotContainer) return;
+  const now = new Date();
+  const isToday = collectDate === ymdLocal(now);
+  const nowMins = now.getHours()*60 + now.getMinutes();
+
   const slots = [];
   for(let h=11;h<=20;h++){
     for(let m=0;m<60;m+=30){
       if(h===20&&m>0) continue;
+      if(isToday && (h*60+m) <= nowMins) continue; // skip times already passed today
       slots.push(String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'));
     }
   }
   const fmt = t => { const p=t.split(':'); const H=+p[0]; const h12=((H+11)%12)+1; return h12+':'+p[1]+' '+(H<12?'AM':'PM'); };
 
-  const slotContainer = document.getElementById('time-slots-container');
+  if(!slots.length){
+    collectTime = '';
+    slotContainer.innerHTML = '<div class="del-hint" style="padding:4px 0">No more slots today — please choose another date.</div>';
+    return;
+  }
+  if(collectTime && slots.indexOf(collectTime)===-1) collectTime = ''; // clear a now-invalid selection
   slotContainer.innerHTML = slots.map(t =>
     '<button type="button" class="time-pill'+(collectTime===t?' selected':'')+'" data-time="'+t+'">'+fmt(t)+'</button>'
   ).join('');
@@ -2515,6 +2532,7 @@ document.addEventListener('click', function(e){
     collectDate = dateSlot.dataset.date;
     document.querySelectorAll('[data-date]').forEach(t=>t.classList.remove('selected'));
     dateSlot.classList.add('selected');
+    renderTimePills();   // today shows only future times; other days show all
     return;
   }
   const timeSlot = e.target.closest('[data-time]');

@@ -1230,8 +1230,8 @@ function viewSaleReceipt(idx){
 
 
 // ── APP ORDERS (admin status management) ──────────────────────
-const ORDER_STATUSES = ['Pending','Processing','Ready','Completed','Cancelled'];
-const STATUS_COLORS = {Pending:'#f0c040',Processing:'#1565c0',Ready:'#5aab74',Completed:'#8fcea1',Cancelled:'#e74c3c'};
+const ORDER_STATUSES = ['Pending','Preparing','Ready','Completed','Cancelled'];
+const STATUS_COLORS = {Pending:'#f0c040',Preparing:'#1565c0',Ready:'#5aab74',Completed:'#8fcea1',Cancelled:'#e74c3c',Processing:'#1565c0'};
 
 async function loadAppOrders(){
   const el = document.getElementById('app-orders-list');

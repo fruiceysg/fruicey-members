@@ -459,7 +459,15 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .del-warn{color:#c0392b;font-weight:600}
 .del-ok{color:var(--green-dark);font-weight:700}
 .del-note{font-size:12px;color:var(--text3);margin-top:8px}
-.del-tnc{font-size:11px;line-height:1.45;color:var(--text3);background:#f7f7f7;border-radius:8px;padding:10px;margin-top:2px}
+.del-tnc{font-size:11px;line-height:1.45;color:var(--text3);background:#f7f7f7;border-radius:8px;padding:10px 12px;margin-top:2px}
+.del-tnc-title{font-weight:700;color:var(--text2);margin-bottom:4px;font-size:11.5px}
+.del-tnc ul{margin:0;padding-left:16px}
+.del-tnc li{margin-bottom:4px}
+.status-Preparing{background:#e3f2fd;color:#1565c0}
+.status-Completed{background:#e8f5e9;color:#2e7d32}
+.status-Cancelled{background:#ffebee;color:#c62828}
+.ack-note{background:var(--green-light);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--green-dark);line-height:1.6;margin-bottom:14px}
+.ack-note-title{font-weight:700;font-family:var(--font);font-size:15px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
 
 /* PAYNOW */
 .paynow-box{text-align:center;padding:16px 0}
@@ -930,7 +938,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div id="date-slots-container" class="date-scroll"></div>
         <div class="collect-sub" id="collect-time-label">Pick-up time <span class="collect-sub-note">· Mon–Sat, 11am–8pm</span></div>
         <div id="time-slots-container" class="time-scroll"></div>
-        <div id="delivery-time-note" class="del-note" style="display:none">Your <b>preferred</b> date &amp; time — we'll confirm availability with you via WhatsApp.</div>
+        <div id="delivery-time-note" class="del-note" style="display:none">Your <b>preferred</b> date &amp; time — we'll confirm availability with you via WhatsApp.<br>For bulk / corporate orders, please send a direct enquiry to Wilson.</div>
       </div>
       <div id="delivery-fields" style="display:none;margin-bottom:12px">
         <div class="collect-sub">Delivery address</div>
@@ -939,7 +947,17 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <input id="delivery-unit" class="del-input" placeholder="Unit no. (e.g. #12-34)">
         <input id="delivery-phone" class="del-input" placeholder="Contact number">
         <div id="delivery-fee-info" class="del-fee"><span class="del-hint">Enter your postal code to calculate the delivery fee.</span></div>
-        <div class="del-tnc">Free delivery within 3&nbsp;km for orders above $30. Otherwise from $5 by order value; fulfilment up to ~1.5&nbsp;hrs depending on items ordered. +$10 surcharge for Sentosa. We deliver across Singapore incl. Sentosa, excluding other offshore islands &amp; restricted zones. Unsuccessful deliveries incur a $15 re-delivery fee per trip — please ensure your address is entered correctly.</div>
+        <div class="del-tnc">
+          <div class="del-tnc-title">Delivery notes</div>
+          <ul>
+            <li>Free delivery within 3&nbsp;km for orders above $30.</li>
+            <li>Otherwise delivery from $5, based on order value.</li>
+            <li>Fulfilment up to ~1.5&nbsp;hrs, subject to items / quantity ordered.</li>
+            <li>+$10 surcharge for Sentosa.</li>
+            <li>We deliver across Singapore incl. Sentosa, excluding other offshore islands &amp; restricted zones.</li>
+            <li>Unsuccessful deliveries incur a $15 re-delivery fee per trip — please ensure your address is entered correctly.</li>
+          </ul>
+        </div>
       </div>
       <div class="field">
         <label>Other remarks (optional)</label>
@@ -1118,6 +1136,10 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div><b>Items:</b> <span id="paynow-items"></span></div>
       <div><b>Collection:</b> <span id="paynow-collect"></span></div>
     </div>
+    <div class="ack-note">
+      <div class="ack-note-title"><i class="ti ti-chef-hat"></i> What happens next?</div>
+      Wilson will review your order shortly. Once he <b>acknowledges</b> it, your order status changes to <b>Preparing</b> — that's when he starts making it. We'll keep you posted via WhatsApp.
+    </div>
     <button class="btn btn-primary" onclick="sendWhatsApp()" style="background:linear-gradient(135deg,#25D366,#128C7E)">
       <i class="ti ti-brand-whatsapp"></i> I've paid — Send order via WhatsApp
     </button>
@@ -1125,10 +1147,22 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<div class="modal-bg" id="ack-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Order received! 🎉</div>
+    <div class="ack-note" style="margin-bottom:16px">
+      <div class="ack-note-title"><i class="ti ti-chef-hat"></i> What happens next?</div>
+      Wilson will review your order shortly. Once he <b>acknowledges</b> it, your order status changes to <b>Preparing</b> — that's when he starts making it. We'll keep you posted via WhatsApp.
+    </div>
+    <button class="btn btn-primary" onclick="document.getElementById('ack-modal').classList.remove('open')">Got it</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-console.log('%c✅ Fruicey build: today time slots from live time; cart scroll + swipe fix (rev AV)','color:#5aab74;font-weight:bold;font-size:14px');
+console.log('%c✅ Fruicey build: prep buffers (pickup 30m/delivery 1.5h), ack note, delivery T&Cs list (rev AW)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
 function openOrderReceipt(data){
@@ -2395,13 +2429,14 @@ function renderTimePills(){
   if(!slotContainer) return;
   const now = new Date();
   const isToday = collectDate === ymdLocal(now);
-  const nowMins = now.getHours()*60 + now.getMinutes();
+  const prep = collectMode==='delivery' ? 90 : 30;   // delivery starts 1.5h out; pick-up needs 30-min prep
+  const minMins = now.getHours()*60 + now.getMinutes() + prep;
 
   const slots = [];
   for(let h=11;h<=20;h++){
     for(let m=0;m<60;m+=30){
       if(h===20&&m>0) continue;
-      if(isToday && (h*60+m) <= nowMins) continue; // skip times already passed today
+      if(isToday && (h*60+m) < minMins) continue; // respect prep/lead time for today
       slots.push(String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'));
     }
   }
@@ -2524,6 +2559,7 @@ document.addEventListener('click', function(e){
       if(ph && !ph.value && currentUser) ph.value = currentUser.phone||'';
       computeDelivery();
     }
+    renderTimePills();   // pick-up 30-min vs delivery 1.5h lead time
     updateCartTotals();
     return;
   }
@@ -2605,6 +2641,7 @@ async function checkout(){
       // Skip PayNow screen if fully paid by credit
       if(payLabel === 'App Credit'){
         showToast('Order placed! Paid with Fruicey Credit.');
+        document.getElementById('ack-modal').classList.add('open');
         goTab('orders');
       } else {
         showPayNow(res.order);

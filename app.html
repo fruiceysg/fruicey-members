@@ -632,6 +632,16 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   .product-grid{grid-template-columns:repeat(5,1fr);gap:18px;padding:18px 28px}
   .product-img{height:200px}
 }
+.reward-popup{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px}
+.reward-popup.open{display:flex}
+.reward-popup-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.reward-popup-card{position:relative;background:#fff;border-radius:20px;max-width:340px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,.25);animation:rp-pop .25s ease}
+@keyframes rp-pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.reward-popup-icon{width:64px;height:64px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.reward-popup-icon svg{width:30px;height:30px;stroke:var(--green-dark);fill:none;stroke-width:2}
+.reward-popup-title{font-family:var(--font);font-size:22px;color:var(--green-dark);margin-bottom:8px}
+.reward-popup-msg{font-size:14px;color:#555;line-height:1.6;margin-bottom:18px}
+.reward-popup-btn{width:100%;padding:12px;border:none;border-radius:25px;font-family:var(--font);font-size:16px;color:#fff;background:linear-gradient(135deg,var(--green),var(--green-dark));cursor:pointer;box-shadow:0 4px 12px rgba(143,206,161,.35)}
 </style>
 </head>
 <body>
@@ -1019,7 +1029,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div id="stamp-grid-mini" class="stamp-grid-mini"></div>
       <div class="prog-bar"><div class="prog-fill" id="stamp-prog" style="width:0%"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>Progress</span><span id="stamp-prog-label">0 / 9</span></div>
-      <button class="scan-qr-btn" onclick="startStampScanApp()" style="margin-top:14px;margin-bottom:0">📷 Scan QR to Get Stamp</button>
+      <button class="scan-qr-btn" onclick="startStampScanApp()" style="margin-top:14px;margin-bottom:0">Scan QR to Get Stamp</button>
     </div>
 
     <!-- Spin wheel section -->
@@ -1037,7 +1047,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
           <div style="font-size:13px;opacity:.9" id="mini-result-reward"></div>
           <div style="font-size:11px;opacity:.75;margin-top:6px" id="mini-result-desc"></div>
           <div style="font-size:11px;opacity:.7;margin-top:10px;border-top:1px solid rgba(255,255,255,.3);padding-top:8px">Show this screen to our crew to redeem. Screenshots not accepted.</div>
-          <div style="font-size:11px;opacity:.7;margin-top:6px">🎁 <b>Saved to your rewards!</b> Redeem in store within 30 days — no need to redeem now.</div>
+          <div style="font-size:11px;opacity:.7;margin-top:6px"><b>Saved to your rewards!</b> Redeem in store within 30 days — no need to redeem now.</div>
           <button id="mini-redeem-btn" onclick="onMiniWheelDone()" style="display:none;margin-top:10px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:8px 20px;font-size:13px;font-family:var(--font);cursor:pointer;width:100%">Click to Redeem</button>
         </div>
       </div>
@@ -1159,6 +1169,16 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<!-- Reward pop-up notification (themed) -->
+<div class="reward-popup" id="reward-popup">
+  <div class="reward-popup-backdrop" onclick="closeRewardPopup()"></div>
+  <div class="reward-popup-card">
+    <div class="reward-popup-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14" opacity=".35"/><circle cx="12" cy="12" r="2.6"/></svg></div>
+    <div class="reward-popup-title" id="reward-popup-title"></div>
+    <div class="reward-popup-msg" id="reward-popup-msg"></div>
+    <button class="reward-popup-btn" onclick="closeRewardPopup()">Got it</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -2852,6 +2872,15 @@ async function loadRewards(){
   }catch(e){ document.getElementById('rewards-loader').style.display='none'; showToast('Could not load rewards.'); }
 }
 
+let lastCarryPopupKey='';
+function showRewardPopup(title,msg){
+  const p=document.getElementById('reward-popup'); if(!p) return;
+  document.getElementById('reward-popup-title').textContent=title;
+  document.getElementById('reward-popup-msg').innerHTML=msg;
+  p.classList.add('open');
+}
+function closeRewardPopup(){ const p=document.getElementById('reward-popup'); if(p) p.classList.remove('open'); }
+
 function renderStampCard(m){
   const stamps = parseInt(m.stamps)||0;
   const completed = parseInt(m.cardsCompleted)||0;
@@ -2883,11 +2912,15 @@ function renderStampCard(m){
   }
   if(statusEl){
     let smsg='';
-    if(stamps===TOTAL_STAMPS-1) smsg='🎯 Just <b>1 more stamp</b> to unlock your wheel spin!';
-    else if(stamps<TOTAL_STAMPS && (TOTAL_STAMPS-stamps)<=2) smsg='✨ <b>'+(TOTAL_STAMPS-stamps)+' more stamps</b> to unlock your wheel spin!';
-    if(pending>0) smsg += (smsg?'<br>':'')+'🎁 <b>'+pending+' stamp'+(pending>1?'s':'')+'</b> will carry over to your next card.';
+    if(stamps===TOTAL_STAMPS-1) smsg='Just <b>1 more stamp</b> to unlock your wheel spin!';
+    else if(stamps<TOTAL_STAMPS && (TOTAL_STAMPS-stamps)<=2) smsg='<b>'+(TOTAL_STAMPS-stamps)+' more stamps</b> to unlock your wheel spin!';
     if(smsg){ statusEl.innerHTML=smsg; statusEl.style.background='#eef7f0'; statusEl.style.color='#5aab74'; statusEl.style.display='block'; }
     else statusEl.style.display='none';
+  }
+  // Carry-over stamps → themed pop-up notification (shown once per new carry-over amount)
+  if(pending>0){
+    const _k = np(m.phone)+':'+pending;
+    if(lastCarryPopupKey!==_k){ lastCarryPopupKey=_k; showRewardPopup('Stamps carried over','<b>'+pending+' stamp'+(pending>1?'s':'')+'</b> will carry over to your next stamp card after you spin the wheel.'); }
   }
 
   // ── Persistent saved-prize box (mirrors stamp.html) ──
@@ -2940,8 +2973,13 @@ function renderStampCard(m){
 
   // Show spin wheel only when the card is complete AND no prize is waiting to be redeemed
   const wheelSection = document.getElementById('rewards-wheel');
+  const rewardsCardEl = document.getElementById('rewards-card');
   if(stamps>=TOTAL_STAMPS && !(m.spinResult && m.spinResult!=='')){
     wheelSection.style.display='block';
+    // Lift the wheel to the top of the rewards card whenever a spin is available
+    if(rewardsCardEl && wheelSection && rewardsCardEl.firstElementChild!==wheelSection){
+      rewardsCardEl.insertBefore(wheelSection, rewardsCardEl.firstElementChild);
+    }
     hasSpun=false;
     document.getElementById('mini-wheel-result').style.display='none';
     const sb=document.getElementById('mini-spin-btn');

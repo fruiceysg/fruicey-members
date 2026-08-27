@@ -204,6 +204,16 @@ input:focus{border-color:#8fcea1}
 .loader-spinner{width:32px;height:32px;border:3px solid #e0e0e0;border-top-color:#8fcea1;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .screen-loader{display:flex;align-items:center;justify-content:center;min-height:50vh;grid-column:1/-1}
+.reward-popup{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px}
+.reward-popup.open{display:flex}
+.reward-popup-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.reward-popup-card{position:relative;background:#fff;border-radius:20px;max-width:340px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,.25);animation:rp-pop .25s ease}
+@keyframes rp-pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.reward-popup-icon{width:64px;height:64px;border-radius:50%;background:var(--green-light,#f0faf4);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.reward-popup-icon svg{width:30px;height:30px;stroke:var(--green-dark,#5aab74);fill:none;stroke-width:2}
+.reward-popup-title{font-family:var(--font);font-size:22px;color:var(--green-dark,#5aab74);margin-bottom:8px}
+.reward-popup-msg{font-size:14px;color:#555;line-height:1.6;margin-bottom:18px}
+.reward-popup-btn{width:100%;padding:12px;border:none;border-radius:25px;font-family:var(--font);font-size:16px;color:#fff;background:linear-gradient(135deg,#8fcea1,#5aab74);cursor:pointer}
 </style>
 </head>
 <body>
@@ -434,6 +444,16 @@ input:focus{border-color:#8fcea1}
 </div>
 
 </div>
+<!-- Reward pop-up notification (themed) -->
+<div class="reward-popup" id="reward-popup">
+  <div class="reward-popup-backdrop" onclick="closeRewardPopup()"></div>
+  <div class="reward-popup-card">
+    <div class="reward-popup-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14" opacity=".35"/><circle cx="12" cy="12" r="2.6"/></svg></div>
+    <div class="reward-popup-title" id="reward-popup-title"></div>
+    <div class="reward-popup-msg" id="reward-popup-msg"></div>
+    <button class="reward-popup-btn" onclick="closeRewardPopup()">Got it</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -543,6 +563,15 @@ document.getElementById('su-btn').addEventListener('click',async function(){
   this.textContent='Create my rewards pass';this.disabled=false;
 });
 
+let lastCarryPopupKey='';
+function showRewardPopup(title,msg){
+  const p=document.getElementById('reward-popup'); if(!p) return;
+  document.getElementById('reward-popup-title').textContent=title;
+  document.getElementById('reward-popup-msg').innerHTML=msg;
+  p.classList.add('open');
+}
+function closeRewardPopup(){ const p=document.getElementById('reward-popup'); if(p) p.classList.remove('open'); }
+
 function renderCard(member){
   const stamps=parseInt(member.stamps)||0;
   const completed=parseInt(member.cardsCompleted)||0;
@@ -576,19 +605,20 @@ function renderCard(member){
   // Status message: "1 stamp away" and/or carried-over stamps waiting for the next card
   const msgEl=document.getElementById('stamp-status-msg');
   if(msgEl){
-    const pending=parseInt(member.pendingStamps||0);
     let msg='', bg='';
     if(stamps===TOTAL_STAMPS-1){
-      msg='🎯 Just <b>1 more stamp</b> to unlock your wheel spin!'; bg='#fff4e0'; msgEl.style.color='#e67e22';
+      msg='Just <b>1 more stamp</b> to unlock your wheel spin!'; bg='#fff4e0'; msgEl.style.color='#e67e22';
     } else if(stamps<TOTAL_STAMPS && (TOTAL_STAMPS-stamps)<=2){
-      msg='✨ <b>'+(TOTAL_STAMPS-stamps)+' more stamps</b> to unlock your wheel spin!'; bg='#eef7f0'; msgEl.style.color='#5aab74';
-    }
-    if(pending>0){
-      msg += (msg?'<br>':'')+'🎁 <b>'+pending+' stamp'+(pending>1?'s':'')+'</b> will carry over to your next card.';
-      if(!bg){ bg='#eef7f0'; msgEl.style.color='#5aab74'; }
+      msg='<b>'+(TOTAL_STAMPS-stamps)+' more stamps</b> to unlock your wheel spin!'; bg='#eef7f0'; msgEl.style.color='#5aab74';
     }
     if(msg){ msgEl.innerHTML=msg; msgEl.style.background=bg; msgEl.style.display='block'; }
     else { msgEl.style.display='none'; }
+  }
+  // Carry-over stamps → themed pop-up notification (shown once per new carry-over amount)
+  const _pend=parseInt(member.pendingStamps||0);
+  if(_pend>0){
+    const _k=np(member.phone)+':'+_pend;
+    if(lastCarryPopupKey!==_k){ lastCarryPopupKey=_k; showRewardPopup('Stamps carried over','<b>'+_pend+' stamp'+(_pend>1?'s':'')+'</b> will carry over to your next stamp card after you spin the wheel.'); }
   }
 
   checkWheelVisibility(stamps);
@@ -958,7 +988,7 @@ function showWheelResult(segment) {
 
   // Show the "saved to your rewards" note + a single clear Done button (no manual save/redeem)
   const noteEl = document.getElementById('wheel-result-note');
-  if(noteEl) noteEl.innerHTML = '🎁 <b>Saved to your rewards!</b><br>Show this in store to redeem within 30 days — no need to save or redeem now.';
+  if(noteEl) noteEl.innerHTML = '<b>Saved to your rewards!</b><br>Show this in store to redeem within 30 days — no need to save or redeem now.';
   const doneEl = document.getElementById('wheel-redeem-btn');
   if(doneEl){ doneEl.style.display='block'; doneEl.disabled=false; doneEl.textContent='Done — back to my card'; }
 

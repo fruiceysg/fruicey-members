@@ -145,14 +145,6 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div id="product-grid" class="product-grid"></div>
       </div>
       <div id="pos-view-member" style="display:none;flex:1;overflow-y:auto;padding:12px">
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input type="text" id="member-name-input" placeholder="Search by name..." autocomplete="off"
-            style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px"
-            onkeydown="if(event.key==='Enter')lookupMemberByName()">
-          <button class="mbtn" id="name-search-btn" style="background:#8fcea1;color:#fff;border-color:#8fcea1" onclick="lookupMemberByName()">Search</button>
-        </div>
-        <div id="member-name-results" style="display:none;margin-bottom:10px"></div>
-        <div style="font-size:11px;color:#bbb;text-align:center;margin-bottom:10px">— or enter phone number —</div>
         <div style="margin-bottom:12px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
             <i class="ti ti-user-circle" style="color:#ccc;font-size:20px;flex-shrink:0"></i>
@@ -177,8 +169,16 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           </div>
           <input type="hidden" id="member-phone" value="">
         </div>
-      
-      
+
+        <div style="font-size:11px;color:#bbb;text-align:center;margin:2px 0 8px">— or search by name —</div>
+        <div style="display:flex;flex-wrap:nowrap;gap:8px;margin-bottom:8px">
+          <input type="text" id="member-name-input" placeholder="Search by name..." autocomplete="off"
+            style="flex:1 1 auto;min-width:0;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px"
+            onkeydown="if(event.key==='Enter')lookupMemberByName()">
+          <button class="mbtn" id="name-search-btn" style="flex:0 0 auto;background:#8fcea1;color:#fff;border-color:#8fcea1" onclick="lookupMemberByName()">Search</button>
+        </div>
+        <div id="member-name-results" style="display:none;margin-bottom:10px"></div>
+
         <div id="member-result" class="member-result" style="display:none"></div>
         <div id="member-history" style="display:none">
           <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:8px">Purchase history</div>

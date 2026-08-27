@@ -145,6 +145,14 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div id="product-grid" class="product-grid"></div>
       </div>
       <div id="pos-view-member" style="display:none;flex:1;overflow-y:auto;padding:12px">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="member-name-input" placeholder="Search by name..." autocomplete="off"
+            style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px"
+            onkeydown="if(event.key==='Enter')lookupMemberByName()">
+          <button class="mbtn" id="name-search-btn" style="background:#8fcea1;color:#fff;border-color:#8fcea1" onclick="lookupMemberByName()">Search</button>
+        </div>
+        <div id="member-name-results" style="display:none;margin-bottom:10px"></div>
+        <div style="font-size:11px;color:#bbb;text-align:center;margin-bottom:10px">— or enter phone number —</div>
         <div style="margin-bottom:12px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
             <i class="ti ti-user-circle" style="color:#ccc;font-size:20px;flex-shrink:0"></i>
@@ -1554,15 +1562,56 @@ async function lookupMember(){
   try{
     const res=await apiGet({action:'getStampCard',phone:np(phone)});
     if(res.error==='not_found'){showToast('Rewards member not found');clearMemberDisplay();}
-    else if(res.member){
-      currentMember=res.member;
-      memberDiscount=0; // no tier discount from rewards pass
-      showMemberDisplay(res.member);
-      showToast(res.member.first+' '+res.member.last+' — '+( parseInt(res.member.stamps)||0)+'/9 stamps');
-    }
+    else if(res.member){ selectFoundMember(res.member); }
   }catch(e){showToast('Connection error');}
-  btn.textContent='Look up';btn.disabled=false;
+  btn.textContent='Search';btn.disabled=false;
+}
+
+// Shared: load a found member into the sale (used by phone lookup AND name search)
+function selectFoundMember(member){
+  currentMember=member;
+  memberDiscount=0; // no tier discount from rewards pass
+  memberPhoneVal = np(member.phone||'');
+  var pv=document.getElementById('member-phone-val'); if(pv) pv.textContent=memberPhoneVal;
+  var mp=document.getElementById('member-phone'); if(mp) mp.value=memberPhoneVal;
+  var nr=document.getElementById('member-name-results'); if(nr){ nr.style.display='none'; nr.innerHTML=''; }
+  showMemberDisplay(member);
+  showToast(member.first+' '+member.last+' — '+((parseInt(member.stamps)||0))+'/9 stamps');
   updateTotals();
+}
+
+// Search members by name (client-side filter over getAllStampCards)
+async function lookupMemberByName(){
+  const q=(document.getElementById('member-name-input').value||'').trim().toLowerCase();
+  if(!q){ showToast('Enter a name'); return; }
+  const btn=document.getElementById('name-search-btn'); const old=btn.textContent; btn.textContent='...'; btn.disabled=true;
+  try{
+    const res=await apiGet({action:'getAllStampCards'});
+    const all=(res&&res.members)?res.members:[];
+    const matches=all.filter(function(m){
+      const full=((m.first||'')+' '+(m.last||'')).toLowerCase();
+      return full.indexOf(q)!==-1 || (m.first||'').toLowerCase().indexOf(q)!==-1 || (m.last||'').toLowerCase().indexOf(q)!==-1;
+    });
+    const box=document.getElementById('member-name-results');
+    if(matches.length===0){ if(box){box.style.display='none';box.innerHTML='';} showToast('No member found'); }
+    else if(matches.length===1){ selectFoundMember(matches[0]); }
+    else {
+      box.style.display='block';
+      box.innerHTML=matches.slice(0,25).map(function(m){
+        return '<div class="member-pick" data-phone="'+(m.phone||'')+'" style="padding:9px 12px;border:1px solid #e8e8e8;border-radius:8px;margin-bottom:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'
+          +'<span style="font-size:14px;font-weight:600">'+((m.first||'')+' '+(m.last||'')).trim()+'</span>'
+          +'<span style="font-size:12px;color:#888">'+(m.phone||'')+'</span></div>';
+      }).join('')+(matches.length>25?'<div style="font-size:11px;color:#aaa;text-align:center;padding:2px">Showing first 25 — refine your search</div>':'');
+      box.querySelectorAll('.member-pick').forEach(function(row){
+        row.addEventListener('click', function(){
+          const ph=this.getAttribute('data-phone');
+          const mm=matches.find(function(x){return String(x.phone)===String(ph);});
+          if(mm) selectFoundMember(mm);
+        });
+      });
+    }
+  }catch(e){ showToast('Connection error'); }
+  btn.textContent=old; btn.disabled=false;
 }
 
 function computeTier(member,txns){
@@ -1639,6 +1688,8 @@ function clearMember(){
   var m=document.getElementById('member-phone'); if(m) m.value='';
   currentMember=null; memberDiscount=0; clearMemberDisplay();
   var h=document.getElementById('member-history'); if(h) h.style.display='none';
+  var ni=document.getElementById('member-name-input'); if(ni) ni.value='';
+  var nr=document.getElementById('member-name-results'); if(nr){ nr.style.display='none'; nr.innerHTML=''; }
   updateTotals(); showToast('Member cleared');
 }
 

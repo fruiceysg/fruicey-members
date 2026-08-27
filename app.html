@@ -2191,6 +2191,10 @@ function openProductDetail(pid){
   // Longevity Press uses a dedicated hover image, so its pop-up keeps the info image.
   if(HOVER_SWAP_CATS.has(currentCat) && !DEDICATED_HOVER_CATS.has(currentCat) && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = fileId; }
   if((p.id||'').indexOf('sb') === 0){ imgId = fileId; } // Superfood Bowls: pop-up shows the bowl photo
+  // Immunity / Nutritional / Longevity Press: pop-up shows the MAIN image (not the info image), moved above "Choose your option"
+  const MOVE_IMG_CATS = new Set(['Immunity Press','Nutritional Press','Longevity Press']);
+  const moveImgAboveChoose = MOVE_IMG_CATS.has(currentCat);
+  if(moveImgAboveChoose){ imgId = fileId; }
   const nameEl = document.getElementById('pd-name');
   nameEl.textContent = p.name;
   nameEl.style.color = CAT_COLORS[currentCat] || 'var(--green-dark)';
@@ -2224,6 +2228,14 @@ function openProductDetail(pid){
   }
   const wrap = document.getElementById('pd-imgwrap');
   const zbtn = document.getElementById('pd-zoombtn');
+  // Move the image just above "Choose your option" for the three Press categories; otherwise keep it at the top.
+  const chooseAnchor = document.getElementById('pd-choose');
+  const nameAnchor = document.getElementById('pd-name');
+  if(moveImgAboveChoose){
+    if(wrap && chooseAnchor && wrap.nextElementSibling !== chooseAnchor){ chooseAnchor.parentNode.insertBefore(wrap, chooseAnchor); }
+  } else {
+    if(wrap && nameAnchor && wrap.nextElementSibling !== nameAnchor){ nameAnchor.parentNode.insertBefore(wrap, nameAnchor); }
+  }
   if(zbtn) zbtn.style.display = imgId ? '' : 'none';
   if(imgId){
     wrap.style.display = 'flex';

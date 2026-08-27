@@ -623,67 +623,20 @@ function renderCard(member){
 
   checkWheelVisibility(stamps);
 
-  // Show saved prize if exists (card may have reset to 0 but prize is saved)
-  var prizeBox = document.getElementById('saved-prize-box');
-  if(!prizeBox){
-    // Create saved prize box if it doesn't exist — placed directly under the Scan QR button
+  // ── Saved-prize LIST (prizes stack; each redeemed on its own) ──
+  var prizeList = document.getElementById('saved-prize-list');
+  if(!prizeList){
     var anchorEl = document.getElementById('scan-qr-btn') || document.getElementById('stamp-grid');
     if(anchorEl){
-      var div = document.createElement('div');
-      div.id = 'saved-prize-box';
-      div.style.cssText = 'display:none;margin:16px 0;border-radius:14px;padding:16px;text-align:center';
-      div.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:4px" id="saved-prize-name"></div>'
-        +'<div style="font-size:18px;font-weight:800;margin-bottom:4px" id="saved-prize-reward"></div>'
-        +'<div style="font-size:12px;margin-bottom:8px" id="saved-prize-desc"></div>'
-        +'<div style="font-size:11px;margin-bottom:10px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.5)" id="saved-prize-expiry"></div>'
-        +'<button id="saved-prize-redeem-btn" onclick="redeemSavedPrize()" style="padding:10px 24px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)">Redeem Now</button>';
-      anchorEl.parentNode.insertBefore(div, anchorEl.nextSibling);
-      prizeBox = div;
+      prizeList = document.createElement('div');
+      prizeList.id = 'saved-prize-list';
+      prizeList.style.cssText = 'margin:12px 0 0';
+      anchorEl.parentNode.insertBefore(prizeList, anchorEl.nextSibling);
     }
   }
-  if(prizeBox && member.spinResult && member.spinResult !== ''){
-    var savedSeg = WHEEL_SEGMENTS.find(s=>s.name===member.spinResult);
-    if(savedSeg){
-      prizeBox.style.display = 'block';
-      prizeBox.style.background = savedSeg.color;
-      prizeBox.style.color = '#fff';
-      document.getElementById('saved-prize-name').textContent = savedSeg.name;
-      document.getElementById('saved-prize-reward').textContent = savedSeg.reward;
-      document.getElementById('saved-prize-desc').textContent = savedSeg.desc||'';
-      // Calculate expiry
-      var awardDate = member.spinResultDate ? new Date(member.spinResultDate) : new Date();
-      var expiryDate = new Date(awardDate);
-      expiryDate.setDate(expiryDate.getDate() + 30);
-      var now = new Date();
-      var daysLeft = Math.ceil((expiryDate - now) / (1000*60*60*24));
-      var fmt = function(d){ return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear(); };
-      var wonOnStr = fmt(awardDate);
-      var redeemBtn = document.getElementById('saved-prize-redeem-btn');
-      if(daysLeft <= 0){
-        document.getElementById('saved-prize-expiry').innerHTML = 'This prize has <b>expired</b>';
-        document.getElementById('saved-prize-expiry').style.background = 'rgba(231,76,60,0.3)';
-        if(redeemBtn){ redeemBtn.textContent = 'Expired'; redeemBtn.disabled = true; redeemBtn.style.opacity = '0.6'; redeemBtn.style.cursor = 'not-allowed'; }
-      } else if(daysLeft <= 7){
-        document.getElementById('saved-prize-expiry').innerHTML = 'Expires in <b>'+daysLeft+' day'+(daysLeft!==1?'s':'')+'</b> · Won on '+wonOnStr;
-        document.getElementById('saved-prize-expiry').style.background = 'rgba(255,200,0,0.3)';
-        if(redeemBtn){ redeemBtn.textContent = 'Redeem Now · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'; redeemBtn.disabled = false; redeemBtn.style.opacity = '1'; redeemBtn.style.cursor = 'pointer'; }
-      } else {
-        document.getElementById('saved-prize-expiry').innerHTML = 'Valid until '+fmt(expiryDate)+' · Won on '+wonOnStr;
-        document.getElementById('saved-prize-expiry').style.background = 'rgba(255,255,255,0.5)';
-        if(redeemBtn){ redeemBtn.textContent = 'Redeem Now · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'; redeemBtn.disabled = false; redeemBtn.style.opacity = '1'; redeemBtn.style.cursor = 'pointer'; }
-      }
-    }
-  } else if(prizeBox){
-    prizeBox.style.display = 'none';
-  }
+  loadSavedPrizesStamp(member.phone);
 
-  // If a prize is already saved while the card is still complete (e.g. reloaded before reset),
-  // just lock the spin so it can't be re-spun. The saved-prize box above shows the prize.
-  if(parseInt(stamps)>=TOTAL_STAMPS && member.spinResult && member.spinResult!==''){
-    hasSpun = true;
-    const spinBtn = document.getElementById('spin-btn');
-    if(spinBtn){ spinBtn.disabled=true; spinBtn.textContent='Already spun!'; spinBtn.style.background='#ccc'; }
-  }
+  // (Prizes now stack in a ledger; the wheel is available on every completed card.)
   const hist=document.getElementById('stamp-history');
   const log=member.stampLog?member.stampLog.split('|').filter(l=>l&&!l.startsWith('\n[')):[];
   if(log.length){
@@ -799,14 +752,39 @@ function startStampScan(){
 const redeemCardBtn = document.getElementById('wheel-redeem-btn');
 if(redeemCardBtn) redeemCardBtn.addEventListener('click', onWheelDone);
 
-async function redeemSavedPrize(){
+// ── Saved-prize LIST: fetch + render (prizes stack, each redeemable on its own) ──
+async function loadSavedPrizesStamp(phone){
+  const host=document.getElementById('saved-prize-list');
+  if(!host) return;
+  try{
+    const res=await apiGet({action:'getSavedPrizes', phone:np(phone)});
+    const prizes=(res&&res.prizes)?res.prizes:[];
+    host.innerHTML='';
+    prizes.forEach(function(pz){
+      const seg=WHEEL_SEGMENTS.find(s=>s.name===pz.prize)||{name:pz.prize,reward:'',desc:'',color:'#8fcea1'};
+      const dl=pz.daysLeft;
+      const box=document.createElement('div');
+      box.style.cssText='margin:0 0 12px;border-radius:14px;padding:16px;text-align:center;background:'+seg.color+';color:#fff';
+      let expTxt, expBg;
+      if(dl<=7){ expTxt='Expires in <b>'+dl+' day'+(dl!==1?'s':'')+'</b>'; expBg='rgba(255,200,0,0.3)'; }
+      else { expTxt='<b>'+dl+' days</b> left to redeem'; expBg='rgba(255,255,255,0.5)'; }
+      box.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+seg.name+'</div>'
+        +'<div style="font-size:18px;font-weight:800;margin-bottom:4px">'+(seg.reward||'')+'</div>'
+        +(seg.desc?'<div style="font-size:12px;margin-bottom:8px">'+seg.desc+'</div>':'')
+        +'<div style="font-size:11px;margin-bottom:10px;padding:6px 10px;border-radius:8px;background:'+expBg+'">'+expTxt+'</div>'
+        +'<button onclick="redeemSavedPrizeStamp(\''+pz.id+'\')" style="padding:10px 24px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)">Redeem Now'+(dl?' · '+dl+' day'+(dl!==1?'s':'')+' left':'')+'</button>';
+      host.appendChild(box);
+    });
+  }catch(e){ /* leave list as-is on error */ }
+}
+
+async function redeemSavedPrizeStamp(prizeId){
   if(!curMember) return;
   showScreenLoader('stamp-grid');
   try{
-    var res = await apiPost({action:'redeemStampCard', phone:np(curMember.phone)});
+    var res = await apiPost({action:'redeemPrize', phone:np(curMember.phone), prizeId:prizeId});
     if(res.success){
       showToast('Prize redeemed! Enjoy!');
-      // Refresh card
       var updated = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
       if(updated.member){ curMember=updated.member; renderCard(updated.member); }
     } else if(res.error === 'prize_expired'){
@@ -815,6 +793,8 @@ async function redeemSavedPrize(){
       if(updated2.member){ curMember=updated2.member; renderCard(updated2.member); }
     } else {
       showToast(res.error || 'Error redeeming prize');
+      var updated3 = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
+      if(updated3.member){ curMember=updated3.member; renderCard(updated3.member); }
     }
   }catch(e){ showToast('Connection error'); }
 }
@@ -1000,9 +980,10 @@ function showWheelResult(segment) {
 let pendingSpin = null;
 async function autoSavePrize(){
   if(!pendingSpin || pendingSpin.saved || pendingSpin.saving || !curMember) return;
+  if(!pendingSpin.spinId) pendingSpin.spinId='sp_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
   pendingSpin.saving = true;
   try{
-    const res = await apiPost({action:'saveSpinResult', phone:np(curMember.phone), spinResult:pendingSpin.segment.name});
+    const res = await apiPost({action:'saveSpinResult', phone:np(curMember.phone), spinResult:pendingSpin.segment.name, spinId:pendingSpin.spinId});
     if(res && res.success){
       pendingSpin.saved = true;
       const updated = await apiGet({action:'getStampCard', phone:np(curMember.phone)});
@@ -1038,6 +1019,10 @@ function checkWheelVisibility(stamps){
   const ws=document.getElementById('wheel-section');
   if(!ws)return;
   if(parseInt(stamps)>=TOTAL_STAMPS){
+    hasSpun=false;
+    const sbtn=document.getElementById('spin-btn');
+    if(sbtn){ sbtn.disabled=false; sbtn.textContent='Spin the Wheel!'; sbtn.style.background=''; }
+    const wr=document.getElementById('wheel-result'); if(wr) wr.style.display='none';
     showWheel();
   } else {
     ws.classList.remove('show');

@@ -386,6 +386,13 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-choose{font-family:var(--font);font-size:20px;color:var(--green-dark);padding:16px 18px 8px;font-weight:600}
 .pd-desc{padding:12px 18px 2px;font-family:var(--body);font-size:13px;line-height:1.45;color:var(--text2)}
 .pd-options{display:flex;flex-direction:column;gap:10px;padding:0 18px}
+.pd-options.pd-bowl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pd-size.pd-bowl-opt{flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;padding:14px 10px 12px;gap:6px}
+.pd-size.pd-bowl-opt .pd-bowl-ico{height:32px;display:flex;align-items:center;justify-content:center;color:var(--green-dark)}
+.pd-size.pd-bowl-opt .pd-size-label{flex:none;padding-right:0;align-items:center;text-align:center}
+.pd-size.pd-bowl-opt .pd-size-main{font-size:14px}
+.pd-size.pd-bowl-opt .pd-size-sub{text-align:center}
+.pd-size.pd-bowl-opt .pd-size-price{justify-content:center;font-size:15px}
 .pd-opt{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border:1.5px solid var(--border);border-radius:14px;background:#fff;transition:border-color .15s,background .15s;font-family:var(--body)}
 .pd-opt.added{border-color:var(--green);background:var(--green-light)}
 .pd-opt.has-qty{border-color:var(--green)}
@@ -1069,7 +1076,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
           <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:20px solid var(--green);z-index:10"></div>
           <canvas id="mini-wheel" width="520" height="520" style="width:260px;height:260px;border-radius:50%;box-shadow:0 4px 20px rgba(0,0,0,.15)"></canvas>
         </div>
-        <button class="btn btn-primary" id="mini-spin-btn" onclick="spinMiniWheel()">Spin the Wheel!</button>
+        <button class="btn btn-primary" id="mini-spin-btn" onclick="spinMiniWheel()" style="display:block;width:fit-content;max-width:100%;margin:6px auto;padding:10px 22px;border-radius:22px;font-size:18px">Spin the Wheel!</button>
         <div id="mini-wheel-result" style="display:none;margin-top:14px;border-radius:12px;padding:14px;color:#fff;text-align:center">
           <div class="babydoll" style="font-size:20px;margin-bottom:4px" id="mini-result-name"></div>
           <div style="font-size:13px;opacity:.9" id="mini-result-reward"></div>
@@ -1083,9 +1090,10 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 
     <div class="card" style="font-size:12px;color:var(--text2);line-height:1.7">
       <div class="card-title" style="font-size:15px;margin-bottom:8px">Terms & Conditions</div>
-      <b>How to earn a stamp:</b> Purchase any regular-priced product in store. One stamp per transaction, issued by staff via unique QR scan. Not valid with promotions or discounts. In-store only.<br><br>
+      <b>How to earn a stamp:</b> Purchase any regular-priced product in store. One stamp per menu product, issued by staff via unique QR scan. Not valid with promotions or discounts. In-store only.<br><br>
       <b>Reward:</b> Complete 9 stamps to earn 1 sure-win wheel spin.<br>
       <b>Prizes:</b> Must be redeemed in store. Not transferable or exchangeable for cash.<br>
+      <b>Redemption:</b> Redemption of free products will be applied to the item(s) of the lowest value in the transaction.<br>
       <b>Non-transferable:</b> Stamps are strictly personal and non-transferable.<br>
       <b>Screenshots:</b> Not accepted for redemption.
     </div>
@@ -1134,7 +1142,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 
     <div id="lpanel-login">
       <div class="modal-title">Welcome back</div>
-      <div class="field"><label>Phone number</label><input type="tel" id="l-phone" placeholder="91234567"></div>
+      <div class="field"><label>Phone number</label><input type="tel" id="l-phone" placeholder=""></div>
       <div class="field"><label>Password</label><input type="password" id="l-pass" placeholder="Your password"></div>
       <div class="err" id="l-err"></div>
       <button class="btn btn-primary" id="login-btn" style="margin-top:8px">Log in</button>
@@ -1144,11 +1152,11 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div id="lpanel-register" style="display:none">
       <div class="modal-title">Create account</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="field"><label>First name</label><input type="text" id="r-first" placeholder="Jane"></div>
-        <div class="field"><label>Last name</label><input type="text" id="r-last" placeholder="Smith"></div>
+        <div class="field"><label>First name</label><input type="text" id="r-first" placeholder=""></div>
+        <div class="field"><label>Last name</label><input type="text" id="r-last" placeholder=""></div>
       </div>
-      <div class="field"><label>Phone number</label><input type="tel" id="r-phone" placeholder="91234567"><div class="field-hint">No country code needed</div></div>
-      <div class="field"><label>Email</label><input type="email" id="r-email" placeholder="jane@email.com"></div>
+      <div class="field"><label>Phone number</label><input type="tel" id="r-phone" placeholder=""><div class="field-hint">No country code needed</div></div>
+      <div class="field"><label>Email</label><input type="email" id="r-email" placeholder=""></div>
       <div class="field"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 characters"></div>
       <div class="field"><label>Confirm password</label><input type="password" id="r-pass2" placeholder="Repeat password"></div>
       <div class="err" id="r-err"></div>
@@ -2269,11 +2277,22 @@ function openProductDetail(pid){
     choose.style.display = '';
     choose.textContent = isBowl ? 'Choose your acai bowl' : 'Choose your option';
     pdAddPrompt = isBowl ? 'Choose your bowl' : 'Choose your option';
+    opts.classList.toggle('pd-bowl-grid', isBowl);
     opts.innerHTML = p.sizes.map(s => {
       const size = (s.l||'').replace(/"/g,'&quot;');
       const parts = (s.l||'Regular').split(' - ');
       const mainL = parts[0];
       const subL = parts.slice(1).join(' - ');
+      if(isBowl){
+        const isMeal = /meal/i.test(mainL);
+        const icoPx = isMeal ? 30 : 20;   // small bowl = dessert, larger bowl = meal
+        const bowlSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:'+icoPx+'px;height:'+icoPx+'px"><path d="M3.8 8 L5 14.5 H19 L20.2 8"/></svg>';
+        return '<button type="button" class="pd-size pd-bowl-opt" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'" onclick="selectBowlSize(\''+p.id+'\',\''+size+'\','+s.p+',this)">'
+          + '<span class="pd-bowl-ico">'+bowlSvg+'</span>'
+          + '<span class="pd-size-label"><span class="pd-size-main">'+mainL+'</span>'+(subL?'<span class="pd-size-sub">'+subL+'</span>':'')+'</span>'
+          + '<span class="pd-size-price">$'+s.p.toFixed(2)+'<span class="pd-size-tick"><i class="ti ti-check"></i></span></span>'
+          + '</button>';
+      }
       return '<button type="button" class="pd-size" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'" onclick="selectBowlSize(\''+p.id+'\',\''+size+'\','+s.p+',this)">'
         + '<span class="pd-size-label"><span class="pd-size-main">'+mainL+'</span>'+(subL?'<span class="pd-size-sub">'+subL+'</span>':'')+'</span>'
         + '<span class="pd-size-price">$'+s.p.toFixed(2)+'<span class="pd-size-tick"><i class="ti ti-check"></i></span></span>'

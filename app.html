@@ -642,6 +642,25 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .reward-popup-title{font-family:var(--font);font-size:22px;color:var(--green-dark);margin-bottom:8px}
 .reward-popup-msg{font-size:14px;color:#555;line-height:1.6;margin-bottom:18px}
 .reward-popup-btn{width:100%;padding:12px;border:none;border-radius:25px;font-family:var(--font);font-size:16px;color:#fff;background:linear-gradient(135deg,var(--green),var(--green-dark));cursor:pointer;box-shadow:0 4px 12px rgba(143,206,161,.35)}
+.pog-open-btn{width:100%;margin:0 0 14px;padding:13px;border:none;border-radius:25px;font-family:var(--font);font-size:16px;color:#5a3d00;background:linear-gradient(135deg,#ffe08a,#f2c14e);cursor:pointer;box-shadow:0 4px 12px rgba(242,193,78,.4);display:flex;align-items:center;justify-content:center;gap:8px}
+.pog-badge{background:#fff;color:#c8860a;font-size:12px;font-weight:800;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+.pog-modal{position:fixed;inset:0;z-index:1100;display:none}
+.pog-modal.open{display:block}
+.pog-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.pog-panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,420px);max-height:82vh;background:#fff;border-radius:20px;box-shadow:0 16px 50px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;animation:rp-pop .25s ease}
+.pog-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff}
+.pog-title{font-family:var(--font);font-size:22px}
+.pog-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
+.pog-body{padding:14px 18px 20px;overflow-y:auto}
+.pog-section-title{font-family:var(--font);font-size:16px;color:var(--green-dark);margin:14px 0 8px}
+.pog-section-title:first-child{margin-top:0}
+.pog-empty{font-size:13px;color:#aaa;text-align:center;padding:8px 0 6px}
+.pog-prize{color:#fff;border-radius:14px;padding:14px;text-align:center;margin-bottom:10px}
+.pog-redeem{padding:9px 22px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.pog-hist-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f1f1f1;font-size:13px}
+.pog-hist-label{color:#444;flex:1}
+.pog-hist-date{color:#aaa;font-size:11px;white-space:nowrap}
+.pog-badge2{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1169,6 +1188,14 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<!-- Pot of Gold pop-out -->
+<div class="pog-modal" id="pog-modal">
+  <div class="pog-backdrop" onclick="closePotOfGold()"></div>
+  <div class="pog-panel">
+    <div class="pog-head"><div class="pog-title">Pot of Gold</div><button class="pog-close" onclick="closePotOfGold()">✕</button></div>
+    <div class="pog-body" id="pog-body"></div>
+  </div>
+</div>
 <!-- Reward pop-up notification (themed) -->
 <div class="reward-popup" id="reward-popup">
   <div class="reward-popup-backdrop" onclick="closeRewardPopup()"></div>
@@ -2879,7 +2906,7 @@ function showRewardPopup(title,msg){
   document.getElementById('reward-popup-msg').innerHTML=msg;
   p.classList.add('open');
 }
-function closeRewardPopup(){ const p=document.getElementById('reward-popup'); if(p) p.classList.remove('open'); }
+function closeRewardPopup(){ const p=document.getElementById('reward-popup'); if(p) p.classList.remove('open'); lastCarryPopupKey=''; }
 
 function renderStampCard(m){
   const stamps = parseInt(m.stamps)||0;
@@ -2923,18 +2950,20 @@ function renderStampCard(m){
     if(lastCarryPopupKey!==_k){ lastCarryPopupKey=_k; showRewardPopup('Stamps carried over','<b>'+pending+' stamp'+(pending>1?'s':'')+'</b> will carry over to your next stamp card after you spin the wheel.'); }
   }
 
-  // ── Saved-prize LIST (prizes stack; each redeemed on its own) ──
-  let prizeList = document.getElementById('saved-prize-list');
-  if(!prizeList){
+  // ── Pot of Gold button (opens a pop-out with all prizes + full history) ──
+  let potBtn = document.getElementById('pog-open-btn');
+  if(!potBtn){
     const ba = document.getElementById('rewards-wheel');
     if(ba){
-      prizeList = document.createElement('div');
-      prizeList.id = 'saved-prize-list';
-      prizeList.style.cssText = 'margin:0';
-      ba.parentNode.insertBefore(prizeList, ba);
+      potBtn = document.createElement('button');
+      potBtn.id = 'pog-open-btn';
+      potBtn.className = 'pog-open-btn';
+      potBtn.setAttribute('onclick','openPotOfGold()');
+      potBtn.innerHTML = '<span>Pot of Gold</span><span class="pog-badge" id="pog-badge" style="display:none">0</span>';
+      ba.parentNode.insertBefore(potBtn, ba);
     }
   }
-  loadSavedPrizesApp(m.phone);
+  updatePotBadgeApp(m.phone);
 
   // Show spin wheel only when the card is complete AND no prize is waiting to be redeemed
   const wheelSection = document.getElementById('rewards-wheel');
@@ -2958,10 +2987,10 @@ function renderStampCard(m){
 // ── MINI WHEEL ────────────────────────────────────────────────
 const WHEEL_SEGMENTS = [
   {name:'$2 Off',color:'#FF6B6B',reward:'$2 off your next purchase',desc:'Present this screen before payment.'},
-  {name:'Free Upsize on Shakes/Juices',color:'#FFA94D',reward:'Free upsize on your Shake or Juice',desc:'Valid for one cup. Present before ordering.'},
+  {name:'Free Upsize on Shakes/Juices',color:'#FFA94D',reward:'Free Upsize on your cup of beverage',desc:'Valid for one cup. Present before ordering.'},
   {name:'$5 Off',color:'#FFD43B',reward:'$5 off your next purchase',desc:'Present this screen before payment.'},
   {name:'3 Bonus Stamps',color:'#8fcea1',reward:'3 bonus stamps added to your card',desc:'Stamps will be added by our crew in store.'},
-  {name:'Free Juice/Shake',color:'#4DABF7',reward:'Redeem a free Juice or Shake (M)',desc:'Any regular-priced juice or shake. Medium size.'},
+  {name:'Free Juice/Shake',color:'#4DABF7',reward:'Redeem a free Juice or Shake (M)',desc:'Any regular-priced juice or shake (M). Not valid for signature beverages.'},
   {name:'Free Acai Dessert Bowl',color:'#9775FA',reward:'Redeem a free Dessert Sized Acai Bowl',desc:'Any acai bowl from our dessert menu.'},
   {name:'Free Cold Press',color:'#F783AC',reward:'Redeem a free Pressed Juice',desc:'Any immunity or nutritional press.'},
 ];
@@ -3029,7 +3058,7 @@ function showMiniResult(seg){
   document.getElementById('mini-result-desc').textContent=seg.desc||'';
   // Prize auto-saves in the background — this button just leaves the wheel (no forced redeem)
   const doneBtn=document.getElementById('mini-redeem-btn');
-  if(doneBtn){ doneBtn.style.display='block'; doneBtn.disabled=false; doneBtn.textContent='Done — back to my card'; doneBtn.onclick=onMiniWheelDone; }
+  if(doneBtn){ doneBtn.style.display='block'; doneBtn.disabled=false; doneBtn.textContent='Save your prize and get a new card'; doneBtn.onclick=onMiniWheelDone; }
 }
 
 async function redeemMiniCard(){
@@ -3082,45 +3111,77 @@ async function onMiniWheelDone(){
   loadRewards();   // re-render reveals the saved-prize box (trackable until redeemed)
 }
 
-// ── Saved-prize LIST: fetch + render (prizes stack, each redeemable on its own) ──
-async function loadSavedPrizesApp(phone){
-  const host=document.getElementById('saved-prize-list');
-  if(!host) return;
+// ── POT OF GOLD: all prizes + full history in one themed pop-out ──
+function fmtD(x){ if(!x) return ''; const d=new Date(String(x).replace(' ','T')); return isNaN(d)?String(x):(d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear()); }
+function parseStampHistory(stampLog){
+  const out=[];
+  (stampLog?stampLog.split('|'):[]).forEach(l=>{
+    if(!l || l.indexOf('[')===0 || l.indexOf('\n[')===0) return;
+    const date=(l.split(',')[0]||'').replace('\n','').trim();
+    const mm=l.match(/\(x(\d+)\)/); const qty=mm?parseInt(mm[1]):1;
+    if(date) out.push({date:date, qty:qty});
+  });
+  return out.reverse();
+}
+async function updatePotBadgeApp(phone){
+  const badge=document.getElementById('pog-badge'); if(!badge) return;
   try{
     const res=await apiGet({action:'getSavedPrizes',phone:np(phone)});
-    const prizes=(res&&res.prizes)?res.prizes:[];
-    host.innerHTML='';
-    prizes.forEach(pz=>{
-      const seg=WHEEL_SEGMENTS.find(s=>s.name===pz.prize)||{name:pz.prize,reward:'',desc:'',color:'#8fcea1'};
-      const dl=pz.daysLeft;
-      const box=document.createElement('div');
-      box.style.cssText='margin:0 0 12px;border-radius:14px;padding:16px;text-align:center;background:'+seg.color+';color:#fff';
-      let expTxt, expBg, btnTxt='Redeem Now'+(dl?' · '+dl+' day'+(dl!==1?'s':'')+' left':'');
-      if(dl<=7){ expTxt='Expires in <b>'+dl+' day'+(dl!==1?'s':'')+'</b>'; expBg='rgba(255,200,0,0.3)'; }
-      else { expTxt='<b>'+dl+' days</b> left to redeem'; expBg='rgba(255,255,255,0.5)'; }
-      box.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+seg.name+'</div>'
-        +'<div style="font-size:18px;font-weight:800;margin-bottom:4px">'+(seg.reward||'')+'</div>'
-        +(seg.desc?'<div style="font-size:12px;margin-bottom:8px">'+seg.desc+'</div>':'')
-        +'<div style="font-size:11px;margin-bottom:10px;padding:6px 10px;border-radius:8px;background:'+expBg+'">'+expTxt+'</div>'
-        +'<button onclick="redeemSavedPrizeApp(\''+pz.id+'\')" style="padding:10px 24px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)">'+btnTxt+'</button>';
-      host.appendChild(box);
-    });
-  }catch(e){ /* leave list as-is on error */ }
+    const n=(res&&res.prizes)?res.prizes.length:0;
+    if(n>0){ badge.textContent=n; badge.style.display='inline-flex'; } else badge.style.display='none';
+  }catch(e){}
 }
-
-// Redeem one specific saved prize (the in-store step) — keeps carried-over stamps
-async function redeemSavedPrizeApp(prizeId){
+function openPotOfGold(){ const m=document.getElementById('pog-modal'); if(!m) return; m.classList.add('open'); if(currentUser) renderPotOfGold(currentUser.phone); }
+function closePotOfGold(){ const m=document.getElementById('pog-modal'); if(m) m.classList.remove('open'); }
+async function renderPotOfGold(phone){
+  const body=document.getElementById('pog-body'); if(!body) return;
+  body.innerHTML='<div class="pog-empty">Loading…</div>';
+  let saved=[], hist=[];
+  try{ const r=await apiGet({action:'getSavedPrizes',phone:np(phone)}); saved=(r&&r.prizes)?r.prizes:[]; }catch(e){}
+  try{ const r=await apiGet({action:'getPrizeLog',phone:np(phone)}); hist=(r&&r.prizes)?r.prizes:[]; }catch(e){}
+  const stamps=parseStampHistory(stampMember?stampMember.stampLog:'');
+  let html='<div class="pog-section-title">My Prizes</div>';
+  if(saved.length===0) html+='<div class="pog-empty">No prizes to redeem right now.</div>';
+  else saved.forEach(pz=>{
+    const seg=WHEEL_SEGMENTS.find(s=>s.name===pz.prize)||{name:pz.prize,reward:'',desc:'',color:'#8fcea1'};
+    const dl=pz.daysLeft;
+    html+='<div class="pog-prize" style="background:'+seg.color+'">'
+      +'<div style="font-size:13px;font-weight:700">'+seg.name+'</div>'
+      +'<div style="font-size:17px;font-weight:800;margin:2px 0 4px">'+(seg.reward||'')+'</div>'
+      +(seg.desc?'<div style="font-size:11px;opacity:.95;margin-bottom:6px">'+seg.desc+'</div>':'')
+      +'<div style="font-size:11px;margin-bottom:8px">'+dl+' day'+(dl!==1?'s':'')+' left to redeem</div>'
+      +'<button class="pog-redeem" onclick="redeemPotPrize(\''+pz.id+'\')">Redeem Now</button></div>';
+  });
+  html+='<div class="pog-section-title">Rewards History</div>';
+  if(hist.length===0) html+='<div class="pog-empty">No rewards yet.</div>';
+  else hist.forEach(pr=>{
+    const redeemed=(pr.status==='redeemed')||(pr.redeemedAt&&pr.redeemedAt!=='');
+    const badge=redeemed?'<span class="pog-badge2" style="background:#e8f5ec;color:#5aab74">Redeemed</span>'
+                        :'<span class="pog-badge2" style="background:#fff4e0;color:#e67e22">Saved</span>';
+    html+='<div class="pog-hist-row"><span class="pog-hist-label">'+(pr.prize||'')+'</span>'+badge
+      +'<span class="pog-hist-date">'+fmtD(redeemed?pr.redeemedAt:pr.wonDate)+'</span></div>';
+  });
+  html+='<div class="pog-section-title">Stamps Earned</div>';
+  if(stamps.length===0) html+='<div class="pog-empty">No stamps yet.</div>';
+  else stamps.forEach(st=>{
+    html+='<div class="pog-hist-row"><span class="pog-hist-label">'+st.qty+' stamp'+(st.qty!==1?'s':'')+' earned</span>'
+      +'<span class="pog-hist-date">'+fmtD(st.date)+'</span></div>';
+  });
+  body.innerHTML=html;
+}
+async function redeemPotPrize(prizeId){
   if(!currentUser) return;
   if(!confirm('Redeem this prize now? Only tap once our crew has given you your prize in store.')) return;
-  document.getElementById('rewards-card').style.display='none';
-  document.getElementById('rewards-loader').style.display='block';
   try{
     const res=await apiPost({action:'redeemPrize',phone:np(currentUser.phone),prizeId:prizeId});
-    document.getElementById('rewards-loader').style.display='none';
-    if(res.success){ showToast('Prize redeemed!'); loadRewards(); }
-    else if(res.error==='prize_expired'){ showToast('This prize has expired.'); loadRewards(); }
-    else { showToast('Could not redeem. Please try again.'); loadRewards(); }
-  }catch(e){ document.getElementById('rewards-loader').style.display='none'; showToast('Connection error.'); }
+    if(res.success) showToast('Prize redeemed!');
+    else if(res.error==='prize_expired') showToast('This prize has expired.');
+    else showToast('Could not redeem. Please try again.');
+  }catch(e){ showToast('Connection error.'); }
+  const updated=await apiGet({action:'getStampCard',phone:np(currentUser.phone)}).catch(()=>null);
+  if(updated&&updated.member) stampMember=updated.member;
+  renderPotOfGold(currentUser.phone);
+  updatePotBadgeApp(currentUser.phone);
 }
 
 // ── REWARDS SIGNUP ────────────────────────────────────────────

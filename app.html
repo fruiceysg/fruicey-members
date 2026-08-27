@@ -1037,8 +1037,8 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
           <div style="font-size:13px;opacity:.9" id="mini-result-reward"></div>
           <div style="font-size:11px;opacity:.75;margin-top:6px" id="mini-result-desc"></div>
           <div style="font-size:11px;opacity:.7;margin-top:10px;border-top:1px solid rgba(255,255,255,.3);padding-top:8px">Show this screen to our crew to redeem. Screenshots not accepted.</div>
-          <div style="font-size:11px;opacity:.7;margin-top:6px">Tap Back to save your prize for next use.</div>
-          <button id="mini-redeem-btn" onclick="redeemMiniCard()" style="display:none;margin-top:10px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:8px 20px;font-size:13px;font-family:var(--font);cursor:pointer;width:100%">Click to Redeem</button>
+          <div style="font-size:11px;opacity:.7;margin-top:6px">🎁 <b>Saved to your rewards!</b> Redeem in store within 30 days — no need to redeem now.</div>
+          <button id="mini-redeem-btn" onclick="onMiniWheelDone()" style="display:none;margin-top:10px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:8px 20px;font-size:13px;font-family:var(--font);cursor:pointer;width:100%">Click to Redeem</button>
         </div>
       </div>
     </div>
@@ -2869,20 +2869,83 @@ function renderStampCard(m){
     if(i<=stamps){ const img=document.createElement('img'); img.src=MASCOT; img.alt='stamp'; slot.appendChild(img); }
     grid.appendChild(slot);
   }
-  // Show spin wheel if complete
-  const wheelSection = document.getElementById('rewards-wheel');
-  if(stamps>=TOTAL_STAMPS){
-    wheelSection.style.display='block';
-    hasSpun = false;
-    // Restore saved spin
-    if(m.spinResult&&m.spinResult!==''){
-      hasSpun=true;
-      const spinBtn=document.getElementById('mini-spin-btn');
-      if(spinBtn){spinBtn.disabled=true;spinBtn.textContent='Already spun!';}
-      showMiniResult(WHEEL_SEGMENTS.find(s=>s.name===m.spinResult)||WHEEL_SEGMENTS[0]);
-    } else {
-      document.getElementById('mini-wheel-result').style.display='none';
+  // ── Carry-over status line (mirrors stamp.html) ──
+  const pending = parseInt(m.pendingStamps||0);
+  let statusEl = document.getElementById('stamp-status-msg-app');
+  if(!statusEl){
+    const wa = document.getElementById('rewards-wheel');
+    if(wa){
+      statusEl = document.createElement('div');
+      statusEl.id = 'stamp-status-msg-app';
+      statusEl.style.cssText = 'display:none;margin:0 0 14px;border-radius:12px;padding:10px 12px;font-size:13px;text-align:center;line-height:1.5';
+      wa.parentNode.insertBefore(statusEl, wa);
     }
+  }
+  if(statusEl){
+    let smsg='';
+    if(stamps===TOTAL_STAMPS-1) smsg='🎯 Just <b>1 more stamp</b> to unlock your wheel spin!';
+    else if(stamps<TOTAL_STAMPS && (TOTAL_STAMPS-stamps)<=2) smsg='✨ <b>'+(TOTAL_STAMPS-stamps)+' more stamps</b> to unlock your wheel spin!';
+    if(pending>0) smsg += (smsg?'<br>':'')+'🎁 <b>'+pending+' stamp'+(pending>1?'s':'')+'</b> will carry over to your next card.';
+    if(smsg){ statusEl.innerHTML=smsg; statusEl.style.background='#eef7f0'; statusEl.style.color='#5aab74'; statusEl.style.display='block'; }
+    else statusEl.style.display='none';
+  }
+
+  // ── Persistent saved-prize box (mirrors stamp.html) ──
+  let prizeBox = document.getElementById('saved-prize-box');
+  if(!prizeBox){
+    const ba = document.getElementById('rewards-wheel');
+    if(ba){
+      const div = document.createElement('div');
+      div.id = 'saved-prize-box';
+      div.style.cssText = 'display:none;margin:0 0 14px;border-radius:14px;padding:16px;text-align:center';
+      div.innerHTML = '<div style="font-size:13px;font-weight:700;margin-bottom:4px" id="saved-prize-name"></div>'
+        +'<div style="font-size:18px;font-weight:800;margin-bottom:4px" id="saved-prize-reward"></div>'
+        +'<div style="font-size:12px;margin-bottom:8px" id="saved-prize-desc"></div>'
+        +'<div style="font-size:11px;margin-bottom:10px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.5)" id="saved-prize-expiry"></div>'
+        +'<button id="saved-prize-redeem-btn" onclick="redeemSavedPrize()" style="padding:10px 24px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)">Redeem Now</button>';
+      ba.parentNode.insertBefore(div, ba);
+      prizeBox = div;
+    }
+  }
+  if(prizeBox && m.spinResult && m.spinResult!==''){
+    const savedSeg = WHEEL_SEGMENTS.find(s=>s.name===m.spinResult);
+    if(savedSeg){
+      prizeBox.style.display='block';
+      prizeBox.style.background=savedSeg.color;
+      prizeBox.style.color='#fff';
+      document.getElementById('saved-prize-name').textContent=savedSeg.name;
+      document.getElementById('saved-prize-reward').textContent=savedSeg.reward;
+      document.getElementById('saved-prize-desc').textContent=savedSeg.desc||'';
+      const awardDate = m.spinResultDate ? new Date(m.spinResultDate) : new Date();
+      const expiryDate = new Date(awardDate); expiryDate.setDate(expiryDate.getDate()+30);
+      const daysLeft = Math.ceil((expiryDate-new Date())/(1000*60*60*24));
+      const fmt = d=>d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+      const wonOnStr = fmt(awardDate);
+      const rb = document.getElementById('saved-prize-redeem-btn');
+      const exp = document.getElementById('saved-prize-expiry');
+      if(daysLeft<=0){
+        exp.innerHTML='This prize has <b>expired</b>'; exp.style.background='rgba(231,76,60,0.3)';
+        if(rb){ rb.textContent='Expired'; rb.disabled=true; rb.style.opacity='0.6'; rb.style.cursor='not-allowed'; }
+      } else if(daysLeft<=7){
+        exp.innerHTML='Expires in <b>'+daysLeft+' day'+(daysLeft!==1?'s':'')+'</b> · Won on '+wonOnStr; exp.style.background='rgba(255,200,0,0.3)';
+        if(rb){ rb.textContent='Redeem Now · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'; rb.disabled=false; rb.style.opacity='1'; rb.style.cursor='pointer'; }
+      } else {
+        exp.innerHTML='Valid until '+fmt(expiryDate)+' · Won on '+wonOnStr; exp.style.background='rgba(255,255,255,0.5)';
+        if(rb){ rb.textContent='Redeem Now · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'; rb.disabled=false; rb.style.opacity='1'; rb.style.cursor='pointer'; }
+      }
+    }
+  } else if(prizeBox){
+    prizeBox.style.display='none';
+  }
+
+  // Show spin wheel only when the card is complete AND no prize is waiting to be redeemed
+  const wheelSection = document.getElementById('rewards-wheel');
+  if(stamps>=TOTAL_STAMPS && !(m.spinResult && m.spinResult!=='')){
+    wheelSection.style.display='block';
+    hasSpun=false;
+    document.getElementById('mini-wheel-result').style.display='none';
+    const sb=document.getElementById('mini-spin-btn');
+    if(sb){ sb.disabled=false; sb.textContent='Spin the Wheel!'; }
     setTimeout(()=>{ buildMiniWheel(); },200);
   } else {
     wheelSection.style.display='none';
@@ -2949,7 +3012,7 @@ function spinMiniWheel(){
       hasSpun=true;
       if(btn){btn.disabled=true;btn.textContent='Already spun!';}
       showMiniResult(seg);
-      if(currentUser) apiPost({action:'saveSpinResult',phone:np(currentUser.phone),spinResult:seg.name}).catch(()=>{});
+      autoSaveMiniPrize(seg);
     }
   }
   requestAnimationFrame(animate);
@@ -2961,7 +3024,9 @@ function showMiniResult(seg){
   document.getElementById('mini-result-name').textContent=seg.name;
   document.getElementById('mini-result-reward').textContent=seg.reward;
   document.getElementById('mini-result-desc').textContent=seg.desc||'';
-  document.getElementById('mini-redeem-btn').style.display='block';
+  // Prize auto-saves in the background — this button just leaves the wheel (no forced redeem)
+  const doneBtn=document.getElementById('mini-redeem-btn');
+  if(doneBtn){ doneBtn.style.display='block'; doneBtn.disabled=false; doneBtn.textContent='Done — back to my card'; doneBtn.onclick=onMiniWheelDone; }
 }
 
 async function redeemMiniCard(){
@@ -2978,6 +3043,55 @@ async function redeemMiniCard(){
       loadRewards();
     }
   }catch(e){document.getElementById('rewards-loader').style.display='none'; showToast('Connection error.');}
+}
+
+// ── Auto-save prize (mirrors stamp.html): saves prize server-side + reloads card ──
+let pendingMiniSpin=null;
+async function autoSaveMiniPrize(seg){
+  if(!currentUser) return;
+  pendingMiniSpin={segment:seg, saved:false};
+  try{
+    const res=await apiPost({action:'saveSpinResult',phone:np(currentUser.phone),spinResult:seg.name});
+    if(res&&res.success){
+      pendingMiniSpin.saved=true;
+      const updated=await apiGet({action:'getStampCard',phone:np(currentUser.phone)});
+      if(updated&&updated.member) stampMember=updated.member;   // stamps now carried over, prize stored
+    }
+  }catch(e){ /* stays unsaved — retried when they tap Done */ }
+}
+
+// "Done": ensure the prize is saved, then leave the wheel and reveal the saved-prize box
+async function onMiniWheelDone(){
+  const doneBtn=document.getElementById('mini-redeem-btn');
+  if(pendingMiniSpin && !pendingMiniSpin.saved){
+    if(doneBtn){ doneBtn.disabled=true; doneBtn.textContent='Saving…'; }
+    await autoSaveMiniPrize(pendingMiniSpin.segment);
+    if(pendingMiniSpin && !pendingMiniSpin.saved){
+      if(doneBtn){ doneBtn.disabled=false; doneBtn.textContent='Retry — save my prize'; }
+      showToast('Couldn\u2019t save your prize. Please try again.');
+      return;
+    }
+  }
+  document.getElementById('rewards-wheel').style.display='none';
+  document.getElementById('mini-wheel-result').style.display='none';
+  pendingMiniSpin=null;
+  showToast('Prize saved! Redeem in store anytime within 30 days.');
+  loadRewards();   // re-render reveals the saved-prize box (trackable until redeemed)
+}
+
+// Redeem the saved prize (the in-store step) — clears the prize, keeps carried-over stamps
+async function redeemSavedPrize(){
+  if(!currentUser) return;
+  if(!confirm('Redeem this prize now? Only tap once our crew has given you your prize in store.')) return;
+  document.getElementById('rewards-card').style.display='none';
+  document.getElementById('rewards-loader').style.display='block';
+  try{
+    const res=await apiPost({action:'redeemStampCard',phone:np(currentUser.phone)});
+    document.getElementById('rewards-loader').style.display='none';
+    if(res.success){ showToast('Prize redeemed!'); loadRewards(); }
+    else if(res.error==='prize_expired'){ showToast('This prize has expired.'); loadRewards(); }
+    else { showToast('Could not redeem. Please try again.'); loadRewards(); }
+  }catch(e){ document.getElementById('rewards-loader').style.display='none'; showToast('Connection error.'); }
 }
 
 // ── REWARDS SIGNUP ────────────────────────────────────────────

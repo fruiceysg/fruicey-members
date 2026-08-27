@@ -2228,19 +2228,19 @@ function openProductDetail(pid){
   }
   const wrap = document.getElementById('pd-imgwrap');
   const zbtn = document.getElementById('pd-zoombtn');
-  // Move the image just above "Choose your option" for the three Press categories; otherwise keep it at the top.
-  const chooseAnchor = document.getElementById('pd-choose');
-  const nameAnchor = document.getElementById('pd-name');
-  if(moveImgAboveChoose){
-    if(wrap && chooseAnchor && wrap.nextElementSibling !== chooseAnchor){ chooseAnchor.parentNode.insertBefore(wrap, chooseAnchor); }
-  } else {
-    if(wrap && nameAnchor && wrap.nextElementSibling !== nameAnchor){ nameAnchor.parentNode.insertBefore(wrap, nameAnchor); }
-  }
   if(zbtn) zbtn.style.display = imgId ? '' : 'none';
   if(imgId){
     wrap.style.display = 'flex';
     document.getElementById('pd-img').src = 'https://lh3.googleusercontent.com/d/'+imgId+'=w1200';
   } else { wrap.style.display = 'none'; }
+  // Info image, shown just above "Choose your option" for Immunity/Nutritional/Longevity Press (main image stays at top)
+  const infoWrap = document.getElementById('pd-imgwrap-info');
+  if(infoWrap){
+    if(moveImgAboveChoose && infoId){
+      document.getElementById('pd-img-info').src = 'https://lh3.googleusercontent.com/d/'+infoId+'=w1200';
+      infoWrap.style.display = 'flex';
+    } else { infoWrap.style.display = 'none'; }
+  }
   if(window.__pdResetZoom) window.__pdResetZoom();
   document.getElementById('pd-preorder').style.display = PREORDER_IDS.has(p.id) ? 'block' : 'none';
   const descEl = document.getElementById('pd-desc');
@@ -3715,6 +3715,9 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="pd-name" class="pd-name"></div>
     <div id="pd-preorder" class="pd-preorder" style="display:none">Pre-order item &mdash; made available on collection day</div>
     <div id="pd-desc" class="pd-desc" style="display:none"></div>
+    <div id="pd-imgwrap-info" class="pd-imgwrap pd-imgwrap-info" style="display:none">
+      <img id="pd-img-info" alt="">
+    </div>
     <div id="pd-choose" class="pd-choose">Choose an option</div>
     <div id="pd-options" class="pd-options"></div>
     <div id="pd-drizzles-wrap" class="pd-drizzles-wrap" style="display:none">

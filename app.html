@@ -2195,6 +2195,12 @@ function openProductDetail(pid){
   const MOVE_IMG_CATS = new Set(['Immunity Press','Nutritional Press','Longevity Press']);
   const moveImgAboveChoose = MOVE_IMG_CATS.has(currentCat);
   if(moveImgAboveChoose){ imgId = fileId; }
+  // Hero (top) image = the product's hover image for Immunity / Longevity / Wellness Press
+  const HERO_HOVER_CATS = new Set(['Immunity Press','Longevity Press','Wellness Press']);
+  if(HERO_HOVER_CATS.has(currentCat)){
+    const heroHoverId = DEDICATED_HOVER_CATS.has(currentCat) ? (IMG_HOVER[p.id + '_hover'] || null) : (IMG_INFO[p.id] || null);
+    if(heroHoverId) imgId = heroHoverId;
+  }
   const nameEl = document.getElementById('pd-name');
   nameEl.textContent = p.name;
   nameEl.style.color = CAT_COLORS[currentCat] || 'var(--green-dark)';

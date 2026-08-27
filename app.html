@@ -642,8 +642,15 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .reward-popup-title{font-family:var(--font);font-size:22px;color:var(--green-dark);margin-bottom:8px}
 .reward-popup-msg{font-size:14px;color:#555;line-height:1.6;margin-bottom:18px}
 .reward-popup-btn{width:100%;padding:12px;border:none;border-radius:25px;font-family:var(--font);font-size:16px;color:#fff;background:linear-gradient(135deg,var(--green),var(--green-dark));cursor:pointer;box-shadow:0 4px 12px rgba(143,206,161,.35)}
-.pog-open-btn{width:100%;margin:0 0 14px;padding:13px;border:none;border-radius:25px;font-family:var(--font);font-size:16px;color:#5a3d00;background:linear-gradient(135deg,#ffe08a,#f2c14e);cursor:pointer;box-shadow:0 4px 12px rgba(242,193,78,.4);display:flex;align-items:center;justify-content:center;gap:8px}
-.pog-badge{background:#fff;color:#c8860a;font-size:12px;font-weight:800;min-width:20px;height:20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+.pog-open-btn{position:relative;overflow:hidden;width:100%;margin:6px 0 16px;padding:12px 14px;border:2px solid #f2c14e;border-radius:20px;background:linear-gradient(135deg,#eaf4ff,#fff7df);cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(242,193,78,.45);animation:pog-glow 2.4s ease-in-out infinite}
+.pog-art{width:60px;height:60px;flex:0 0 auto;position:relative;z-index:2;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
+.pog-label{position:relative;z-index:2;flex:1;text-align:left;font-family:var(--font);font-size:19px;color:#7a5200;text-shadow:0 1px 0 rgba(255,255,255,.6)}
+.pog-shine{position:absolute;top:0;left:0;width:55%;height:100%;background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,.85) 50%,transparent 100%);transform:translateX(-160%) skewX(-18deg);z-index:3;pointer-events:none;animation:pog-shine 2.8s ease-in-out infinite}
+.pog-spark{position:absolute;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle,#fff 0%,rgba(255,255,255,.9) 30%,rgba(255,255,255,0) 70%);z-index:4;pointer-events:none;opacity:0;animation:pog-twinkle 1.9s ease-in-out infinite}
+.pog-badge{position:relative;z-index:4;background:#fff;color:#c8860a;font-size:12px;font-weight:800;min-width:22px;height:22px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+@keyframes pog-shine{0%{transform:translateX(-160%) skewX(-18deg)}55%{transform:translateX(240%) skewX(-18deg)}100%{transform:translateX(240%) skewX(-18deg)}}
+@keyframes pog-twinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+@keyframes pog-glow{0%,100%{box-shadow:0 4px 14px rgba(242,193,78,.45)}50%{box-shadow:0 7px 22px rgba(242,193,78,.85)}}
 .pog-modal{position:fixed;inset:0;z-index:1100;display:none}
 .pog-modal.open{display:block}
 .pog-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5)}
@@ -2959,7 +2966,23 @@ function renderStampCard(m){
       potBtn.id = 'pog-open-btn';
       potBtn.className = 'pog-open-btn';
       potBtn.setAttribute('onclick','openPotOfGold()');
-      potBtn.innerHTML = '<span>Pot of Gold</span><span class="pog-badge" id="pog-badge" style="display:none">0</span>';
+      potBtn.innerHTML = '<span class="pog-shine"></span>'
+        +'<span class="pog-spark" style="top:9px;left:14%"></span><span class="pog-spark" style="top:42px;left:30%;animation-delay:.5s"></span><span class="pog-spark" style="top:12px;right:24%;animation-delay:.9s"></span><span class="pog-spark" style="top:40px;right:11%;animation-delay:1.3s"></span>'
+        +'<svg class="pog-art" viewBox="0 0 64 64" aria-hidden="true">'
+        +'<path d="M6 42 A26 26 0 0 1 58 42" fill="none" stroke="#ff5b5b" stroke-width="3.1" stroke-linecap="round"/>'
+        +'<path d="M9.2 42 A22.8 22.8 0 0 1 54.8 42" fill="none" stroke="#ffa63d" stroke-width="3.1" stroke-linecap="round"/>'
+        +'<path d="M12.4 42 A19.6 19.6 0 0 1 51.6 42" fill="none" stroke="#ffd93b" stroke-width="3.1" stroke-linecap="round"/>'
+        +'<path d="M15.6 42 A16.4 16.4 0 0 1 48.4 42" fill="none" stroke="#57c777" stroke-width="3.1" stroke-linecap="round"/>'
+        +'<path d="M18.8 42 A13.2 13.2 0 0 1 45.2 42" fill="none" stroke="#4d96ff" stroke-width="3.1" stroke-linecap="round"/>'
+        +'<path d="M22 42 A10 10 0 0 1 42 42" fill="none" stroke="#9b5de5" stroke-width="3.1" stroke-linecap="round"/>'
+        +'<ellipse cx="32" cy="44" rx="12" ry="3.2" fill="#4a4642"/>'
+        +'<path d="M21 44 L43 44 L40 57 Q32 60 24 57 Z" fill="#33302e"/>'
+        +'<ellipse cx="32" cy="44" rx="9.5" ry="2.2" fill="#221d1b"/>'
+        +'<circle cx="28" cy="43" r="2.4" fill="#ffd93b"/><circle cx="34" cy="42.4" r="2.2" fill="#ffcf2e"/><circle cx="31" cy="44" r="1.8" fill="#ffe27a"/>'
+        +'<path d="M24 47 Q26 52 27 56" stroke="rgba(255,255,255,.16)" stroke-width="2" fill="none" stroke-linecap="round"/>'
+        +'</svg>'
+        +'<span class="pog-label">My Pot of Gold</span>'
+        +'<span class="pog-badge" id="pog-badge" style="display:none">0</span>';
       ba.parentNode.insertBefore(potBtn, ba);
     }
   }

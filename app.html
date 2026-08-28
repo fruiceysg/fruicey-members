@@ -3313,27 +3313,54 @@ function openAddCredit(){
   document.getElementById('credit-err').textContent = '';
   document.getElementById('add-credit-modal').classList.add('open');
 }
-function _enableSwipeDismiss(boxEl, onDismiss){
+function _enableSwipeDismiss(boxEl, onDismiss, centered){
   if(!boxEl || boxEl._swipeBound) return; boxEl._swipeBound = true;
   var startY=0, curY=0, dragging=false;
+  function drag(dy){ boxEl.style.transform = centered ? ('translate(-50%, calc(-50% + '+dy+'px))') : ('translateY('+dy+'px)'); }
   boxEl.addEventListener('touchstart', function(e){
     if(e.touches.length!==1) return;
-    if(e.target.closest('input,textarea,select')) return; // don't hijack form fields
+    if(e.target.closest('input,textarea,select,button,a')) return; // don't hijack fields/controls
+    // only start the drag when scrollable content is at the very top (so we don't block scrolling)
+    var n=e.target;
+    while(n && n!==boxEl.parentNode){ if(n.scrollHeight>n.clientHeight+1 && n.scrollTop>0) return; n=n.parentNode; }
     startY=e.touches[0].clientY; curY=startY; dragging=true; boxEl.style.transition='none';
   }, {passive:true});
   boxEl.addEventListener('touchmove', function(e){
     if(!dragging) return;
     curY=e.touches[0].clientY; var dy=curY-startY;
-    if(dy>0) boxEl.style.transform='translateY('+dy+'px)';
+    if(dy>0) drag(dy);
   }, {passive:true});
   boxEl.addEventListener('touchend', function(){
     if(!dragging) return; dragging=false;
     var dy=curY-startY;
-    boxEl.style.transition='transform .3s cubic-bezier(.22,.68,0,1)';
-    if(dy>90){ boxEl.style.transform='translateY(100%)'; setTimeout(function(){ boxEl.style.transform=''; boxEl.style.transition=''; if(onDismiss) onDismiss(); }, 260); }
-    else { boxEl.style.transform=''; }
+    boxEl.style.transition='transform .28s cubic-bezier(.22,.68,0,1)';
+    if(dy>90){
+      boxEl.style.transform = centered ? 'translate(-50%, 120vh)' : 'translateY(100%)';
+      setTimeout(function(){ if(onDismiss) onDismiss(); boxEl.style.transform=''; boxEl.style.transition=''; }, 240);
+    } else {
+      boxEl.style.transform='';
+    }
   });
 }
+
+// Enable slide-down-to-dismiss on every exitable overlay in the app
+window.addEventListener('load', function(){
+  function bind(sel, overlayId, centered, extra){
+    var el=document.querySelector(sel); if(!el) return;
+    _enableSwipeDismiss(el, function(){ var o=document.getElementById(overlayId); if(o) o.classList.remove('open'); if(extra) extra(); }, centered);
+  }
+  bind('#login-modal .modal-box','login-modal',false);
+  bind('#paynow-modal .modal-box','paynow-modal',false);
+  bind('#ack-modal .modal-box','ack-modal',false);
+  bind('#order-receipt-modal .modal-box','order-receipt-modal',false);
+  bind('#credit-history-modal .modal-box','credit-history-modal',false);
+  bind('#product-info-modal .modal-box','product-info-modal',false);
+  bind('#product-detail-modal .modal-box','product-detail-modal',false,function(){ var i=document.getElementById('pd-img'); if(i) i.src=''; });
+  bind('#cart-sheet .cart-panel','cart-sheet',false);
+  bind('#add-credit-modal .modal-box','add-credit-modal',false);
+  bind('#pog-modal .pog-panel','pog-modal',true);
+  bind('#soon-sheet .soon-card','soon-sheet',true);
+});
 function closeAddCredit(){
   document.getElementById('add-credit-modal').classList.remove('open');
   // Reset to step 1

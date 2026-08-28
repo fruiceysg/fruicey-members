@@ -3318,32 +3318,25 @@ function closeAddCredit(){
   document.getElementById('credit-step-paynow').style.display = 'none';
 }
 
-async function submitCreditDeposit(){
+function submitCreditDeposit(){
   const amount = parseFloat(document.getElementById('credit-amount-input').value||0);
   if(amount < 20){ document.getElementById('credit-err').textContent = 'Minimum deposit is $20'; return; }
-  const btn = document.getElementById('credit-submit-btn');
-  btn.textContent = 'Submitting...'; btn.disabled = true;
-  try{
-    const res = await apiPost({action:'requestDeposit', phone:currentUser.phone, amount});
-    if(res.success){
-      // Show PayNow step
-      document.getElementById('credit-step-amount').style.display = 'none';
-      document.getElementById('credit-step-paynow').style.display = 'block';
-      document.getElementById('credit-paynow-amount').textContent = '$'+amount.toFixed(2);
-      // Copy QR image from original PayNow modal
-      var origQR = document.querySelector('#paynow-modal .paynow-box img');
-      if(origQR) document.getElementById('credit-paynow-qr').src = origQR.src;
-      window._pendingCreditAmount = amount;
-    } else {
-      document.getElementById('credit-err').textContent = res.message || res.error || 'Error submitting deposit';
-    }
-  }catch(e){ document.getElementById('credit-err').textContent = 'Connection error'; }
-  btn.textContent = 'Continue to PayNow'; btn.disabled = false;
+  document.getElementById('credit-err').textContent = '';
+  // NOTE: no pending transaction is created here anymore — only after the customer confirms
+  // payment on the next step (submitCreditPayment). This keeps abandoned top-ups out of the POS.
+  document.getElementById('credit-step-amount').style.display = 'none';
+  document.getElementById('credit-step-paynow').style.display = 'block';
+  document.getElementById('credit-paynow-amount').textContent = '$'+amount.toFixed(2);
+  window._pendingCreditAmount = amount;
 }
 
-function sendCreditWhatsApp(){
+async function sendCreditWhatsApp(){
   var amountText = document.getElementById('credit-paynow-amount').textContent || '$0.00';
-  var amount = parseFloat(amountText.replace('$','')) || 0;
+  var amount = window._pendingCreditAmount || parseFloat(amountText.replace('$','')) || 0;
+  // Confirmation before we register anything in the POS
+  if(!confirm('Confirm you\'ve completed the PayNow payment of $'+amount.toFixed(2)+'?\n\nThis notifies our crew to approve your top-up. Tap Cancel if you haven\'t paid yet.')) return;
+  // Create the pending top-up now (only reaches the POS once the customer confirms payment)
+  try{ await apiPost({action:'requestDeposit', phone:currentUser.phone, amount}); }catch(e){}
   var msg = encodeURIComponent(
     'Hi Fruicey! I\'ve made a PayNow payment to top up my Fruicey Credit.\n'+
     'Here\'s my payment screenshot below.\n\n'+
@@ -3689,7 +3682,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <button class="btn btn-primary" onclick="sendCreditWhatsApp()" style="background:linear-gradient(135deg,#25D366,#128C7E)">
         <i class="ti ti-brand-whatsapp"></i> I've paid — Send screenshot via WhatsApp
       </button>
-      <button class="btn btn-secondary" style="margin-top:8px" onclick="closeAddCredit()">Close</button>
+      <button class="btn btn-secondary" style="margin-top:8px" onclick="closeAddCredit()">Cancel — I haven't paid</button>
     </div>
   </div>
 </div>
@@ -3770,9 +3763,6 @@ document.addEventListener('DOMContentLoaded', function(){
         <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your bowl</span>
         <span class="pd-bowl-add-price"></span>
       </button>
-      <div class="pd-bowl-actions">
-        <button type="button" class="pd-bowl-back" onclick="closeProductDetail()"><i class="ti ti-arrow-left" style="font-size:16px;vertical-align:-3px"></i> Back to Menu</button>
-      </div>
     </div>
   </div>
 </div>

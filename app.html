@@ -657,7 +657,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .reward-popup-msg{font-size:14px;color:#555;line-height:1.6;margin-bottom:18px}
 .reward-popup-btn{width:100%;padding:12px;border:none;border-radius:25px;font-family:var(--font);font-size:16px;color:#fff;background:linear-gradient(135deg,var(--green),var(--green-dark));cursor:pointer;box-shadow:0 4px 12px rgba(143,206,161,.35)}
 .pog-open-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:9px;width:fit-content;max-width:100%;margin:6px auto 16px;padding:10px 22px;border:none;border-radius:22px;background:linear-gradient(135deg,#f6c945,#e0a91e);cursor:pointer;box-shadow:0 4px 14px rgba(224,169,30,.5);animation:pog-glow 2.4s ease-in-out infinite}
-.pog-float{position:fixed!important;top:11px;right:54px;z-index:998;margin:0!important;padding:5px 11px;border-radius:16px;gap:6px}
+.pog-float{position:fixed!important;top:20px;right:54px;z-index:998;margin:0!important;padding:5px 11px;border-radius:16px;gap:6px}
 .pog-float .pog-label{font-size:13px}
 .pog-float .pog-art{width:22px;height:22px}
 .pog-float .pog-badge{min-width:16px;height:16px;font-size:10px}
@@ -3068,7 +3068,7 @@ const TOTAL_SEGS = WHEEL_SEGMENTS.length;
 function buildMiniWheel(){
   const canvas = document.getElementById('mini-wheel');
   if(!canvas) return;
-  const ctx=canvas.getContext('2d'), size=canvas.width, cx=size/2, cy=size/2, r=size/2-size*0.06;
+  const ctx=canvas.getContext('2d'), size=canvas.width, cx=size/2, cy=size/2, r=size/2-size*0.04;
   const SEG=2*Math.PI/TOTAL_SEGS;
   ctx.clearRect(0,0,size,size);
   WHEEL_SEGMENTS.forEach((seg,i)=>{
@@ -3103,7 +3103,6 @@ function buildMiniWheel(){
   ctx.beginPath(); ctx.arc(cx,cy,size*0.095,0,2*Math.PI); ctx.fillStyle='#d7322d'; ctx.fill();
   ctx.beginPath(); ctx.arc(cx,cy,size*0.07,0,2*Math.PI); ctx.fillStyle='#fff'; ctx.fill();
   ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.lineWidth=size*0.005; ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx,cy,size*0.028,0,2*Math.PI); ctx.fillStyle='#8fcea1'; ctx.fill();
 }
 
 function spinMiniWheel(){

@@ -2244,14 +2244,20 @@ function openProductDetail(pid){
   }
   const wrap = document.getElementById('pd-imgwrap');
   const zbtn = document.getElementById('pd-zoombtn');
-  if(zbtn) zbtn.style.display = imgId ? '' : 'none';
-  if(imgId){
+  const showHero = imgId && !moveImgAboveChoose;   // Immunity/Nutritional/Longevity Press show the info image only (no top image)
+  if(zbtn) zbtn.style.display = showHero ? '' : 'none';
+  if(showHero){
     wrap.style.display = 'flex';
     document.getElementById('pd-img').src = 'https://lh3.googleusercontent.com/d/'+imgId+'=w1200';
   } else { wrap.style.display = 'none'; }
   // Info image, shown just above "Choose your option" for Immunity/Nutritional/Longevity Press (main image stays at top)
   const infoWrap = document.getElementById('pd-imgwrap-info');
-  if(infoWrap){ infoWrap.style.display = 'none'; }   // info image removed from all Press categories
+  if(infoWrap){
+    if(moveImgAboveChoose && infoId){
+      document.getElementById('pd-img-info').src = 'https://lh3.googleusercontent.com/d/'+infoId+'=w1200';
+      infoWrap.style.display = 'flex';
+    } else { infoWrap.style.display = 'none'; }
+  }
   if(window.__pdResetZoom) window.__pdResetZoom();
   document.getElementById('pd-preorder').style.display = PREORDER_IDS.has(p.id) ? 'block' : 'none';
   const descEl = document.getElementById('pd-desc');

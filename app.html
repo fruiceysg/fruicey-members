@@ -22,7 +22,8 @@
   --body:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --r:12px;--nav:60px;--header-h:67px;
 }
-body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100vh;padding-bottom:var(--nav)}
+html{overscroll-behavior-y:none}
+body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100vh;padding-bottom:var(--nav);overscroll-behavior-y:none}
 #app-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f7;z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease}
 #app-loader.hide{opacity:0;pointer-events:none}
 .loader-spinner{width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
@@ -3306,10 +3307,32 @@ async function loadUserCredit(){
 }
 
 function openAddCredit(){
+  var _cm=document.querySelector('#add-credit-modal .modal-box'); if(_cm) _enableSwipeDismiss(_cm, closeAddCredit);
   if(!currentUser){ showToast('Please log in first'); return; }
   document.getElementById('credit-amount-input').value = '';
   document.getElementById('credit-err').textContent = '';
   document.getElementById('add-credit-modal').classList.add('open');
+}
+function _enableSwipeDismiss(boxEl, onDismiss){
+  if(!boxEl || boxEl._swipeBound) return; boxEl._swipeBound = true;
+  var startY=0, curY=0, dragging=false;
+  boxEl.addEventListener('touchstart', function(e){
+    if(e.touches.length!==1) return;
+    if(e.target.closest('input,textarea,select')) return; // don't hijack form fields
+    startY=e.touches[0].clientY; curY=startY; dragging=true; boxEl.style.transition='none';
+  }, {passive:true});
+  boxEl.addEventListener('touchmove', function(e){
+    if(!dragging) return;
+    curY=e.touches[0].clientY; var dy=curY-startY;
+    if(dy>0) boxEl.style.transform='translateY('+dy+'px)';
+  }, {passive:true});
+  boxEl.addEventListener('touchend', function(){
+    if(!dragging) return; dragging=false;
+    var dy=curY-startY;
+    boxEl.style.transition='transform .3s cubic-bezier(.22,.68,0,1)';
+    if(dy>90){ boxEl.style.transform='translateY(100%)'; setTimeout(function(){ boxEl.style.transform=''; boxEl.style.transition=''; if(onDismiss) onDismiss(); }, 260); }
+    else { boxEl.style.transform=''; }
+  });
 }
 function closeAddCredit(){
   document.getElementById('add-credit-modal').classList.remove('open');

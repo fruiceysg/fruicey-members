@@ -18,11 +18,13 @@
   --font:'BabyDoll','Comic Sans MS',cursive;
   --body-font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
+html{overscroll-behavior-y:none}
 body{
   font-family:var(--body-font);
   min-height:100vh;
   background:#fff;
   padding:20px 16px 40px;
+  overscroll-behavior-y:none;
 }
 h1,h2,.card-title,.member-name,.reward-text strong,.btn{
   font-family:var(--font);
@@ -184,7 +186,7 @@ input:focus{border-color:#8fcea1}
 .wheel-wrap{position:relative;width:280px;height:280px;margin:0 auto 16px}
 #wheel-canvas{width:280px;height:280px;border-radius:50%;box-shadow:0 4px 20px rgba(0,0,0,.15)}
 .wheel-pointer{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:24px solid #8fcea1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));z-index:10}
-#spin-btn{background:linear-gradient(135deg,#8fcea1,#5aab74);color:#fff;border:none;border-radius:25px;padding:13px 40px;font-size:18px;font-family:'BabyDoll',cursive;cursor:pointer;box-shadow:0 4px 12px rgba(143,206,161,.4);transition:all .2s}
+#spin-btn{background:linear-gradient(135deg,#8fcea1,#5aab74);color:#fff;border:none;border-radius:22px;padding:10px 22px;font-size:18px;font-family:'BabyDoll',cursive;cursor:pointer;box-shadow:0 4px 12px rgba(143,206,161,.4);transition:all .2s}
 #spin-btn:disabled{background:#ddd;cursor:not-allowed;box-shadow:none}
 #spin-btn:active:not(:disabled){transform:scale(.96)}
 .wheel-result{display:none;margin-top:16px;border-radius:12px;padding:16px;color:#fff;text-align:center}
@@ -277,7 +279,7 @@ input:focus{border-color:#8fcea1}
     <h3> Terms & Conditions</h3>
     <div class="tc-box">
         <h4>How to earn a stamp</h4>
-        Purchase any regular-priced product in store. One stamp is issued per transaction by Fruicey staff via unique QR scan. Not valid with promotions, discounts, or online orders. In-store purchases only.
+        Purchase any regular-priced product in store. One stamp is issued per menu product by Fruicey staff via unique QR scan. Not valid with promotions, discounts, or online orders. In-store purchases only.
         <h4>1. Rewards Pass</h4>
         Each stamp is earned from a regular-priced product purchased in store. Not valid with promotions or discounts.
         <h4>2. No Minimum Spend</h4>
@@ -289,7 +291,7 @@ input:focus{border-color:#8fcea1}
         <h4>5. Reward</h4>
         Upon completing 9 stamps, you are entitled to 1 wheel spin prize.
         <h4>6. Redemption</h4>
-        Prize must be redeemed in store. Not transferable or exchangeable for cash.
+        Prize must be redeemed in store. Not transferable or exchangeable for cash. Redemption of free products will be applied to the item(s) of the lowest value in the transaction.
         <h4>7. Card Reset</h4>
         After redemption, your rewards pass resets to 0 and a new card begins.
         <h4>8. Non-Transferability</h4>
@@ -334,7 +336,7 @@ input:focus{border-color:#8fcea1}
       <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px">Terms & Conditions</div>
       <div class="tc-box" style="background:#fafafa;border-radius:8px;padding:10px;border:1px solid #eee;max-height:140px">
         <h4>How to earn a stamp</h4>
-        Purchase any regular-priced product in store. One stamp is issued per transaction by Fruicey staff via unique QR scan. Not valid with promotions, discounts, or online orders. In-store purchases only.
+        Purchase any regular-priced product in store. One stamp is issued per menu product by Fruicey staff via unique QR scan. Not valid with promotions, discounts, or online orders. In-store purchases only.
         <h4>1. Rewards Pass</h4>
         Each stamp is earned from a regular-priced product purchased in store. Not valid with promotions or discounts.
         <h4>2. No Minimum Spend</h4>
@@ -346,7 +348,7 @@ input:focus{border-color:#8fcea1}
         <h4>5. Reward</h4>
         Upon completing 9 stamps, you are entitled to 1 wheel spin prize.
         <h4>6. Redemption</h4>
-        Prize must be redeemed in store. Not transferable or exchangeable for cash.
+        Prize must be redeemed in store. Not transferable or exchangeable for cash. Redemption of free products will be applied to the item(s) of the lowest value in the transaction.
         <h4>7. Card Reset</h4>
         After redemption, your rewards pass resets to 0 and a new card begins.
         <h4>8. Non-Transferability</h4>
@@ -431,7 +433,7 @@ input:focus{border-color:#8fcea1}
     <h3> Terms & Conditions</h3>
     <div class="tc-box">
         <h4>How to earn a stamp</h4>
-        Purchase any regular-priced product in store. One stamp is issued per transaction by Fruicey staff via unique QR scan. Not valid with promotions, discounts, or online orders. In-store purchases only.
+        Purchase any regular-priced product in store. One stamp is issued per menu product by Fruicey staff via unique QR scan. Not valid with promotions, discounts, or online orders. In-store purchases only.
         <h4>1. Rewards Pass</h4>
         Each stamp is earned from a regular-priced product purchased in store. Not valid with promotions or discounts.
         <h4>2. No Minimum Spend</h4>
@@ -443,7 +445,7 @@ input:focus{border-color:#8fcea1}
         <h4>5. Reward</h4>
         Upon completing 9 stamps, you are entitled to 1 wheel spin prize.
         <h4>6. Redemption</h4>
-        Prize must be redeemed in store. Not transferable or exchangeable for cash.
+        Prize must be redeemed in store. Not transferable or exchangeable for cash. Redemption of free products will be applied to the item(s) of the lowest value in the transaction.
         <h4>7. Card Reset</h4>
         After redemption, your rewards pass resets to 0 and a new card begins.
         <h4>8. Non-Transferability</h4>

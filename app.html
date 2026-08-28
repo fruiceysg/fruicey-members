@@ -2202,7 +2202,7 @@ function openProductDetail(pid){
   if(HOVER_SWAP_CATS.has(currentCat) && !DEDICATED_HOVER_CATS.has(currentCat) && IMG_INFO[p.id] && !NO_HOVER_SWAP.has(p.id)){ imgId = fileId; }
   if((p.id||'').indexOf('sb') === 0){ imgId = fileId; } // Superfood Bowls: pop-up shows the bowl photo
   // Immunity / Nutritional / Longevity Press: pop-up shows the MAIN image (not the info image), moved above "Choose your option"
-  const MOVE_IMG_CATS = new Set(['Immunity Press','Nutritional Press','Longevity Press']);
+  const MOVE_IMG_CATS = new Set(['Immunity Press','Nutritional Press','Longevity Press','Wellness Press']);
   const moveImgAboveChoose = MOVE_IMG_CATS.has(currentCat);
   if(moveImgAboveChoose){ imgId = fileId; }
   // Hero (top) image = the product's hover image for Immunity / Longevity / Wellness Press

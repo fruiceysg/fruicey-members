@@ -184,8 +184,8 @@ input:focus{border-color:#8fcea1}
 .wheel-title{font-family:'BabyDoll',cursive;font-size:22px;color:#8fcea1;margin-bottom:6px}
 .wheel-subtitle{font-size:12px;color:#aaa;margin-bottom:16px}
 .wheel-wrap{position:relative;width:280px;height:280px;margin:0 auto 16px}
-#wheel-canvas{width:280px;height:280px;border-radius:50%;box-shadow:0 4px 20px rgba(0,0,0,.15)}
-.wheel-pointer{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:24px solid #8fcea1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));z-index:10}
+#wheel-canvas{width:280px;height:280px;border-radius:50%;box-shadow:0 10px 26px rgba(0,0,0,.28),0 2px 6px rgba(0,0,0,.2)}
+.wheel-pointer{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:28px solid #e6ab1f;border-left:14px solid transparent;border-right:14px solid transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));z-index:10}
 #spin-btn{background:linear-gradient(135deg,#8fcea1,#5aab74);color:#fff;border:none;border-radius:22px;padding:10px 22px;font-size:18px;font-family:'BabyDoll',cursive;cursor:pointer;box-shadow:0 4px 12px rgba(143,206,161,.4);transition:all .2s}
 #spin-btn:disabled{background:#ddd;cursor:not-allowed;box-shadow:none}
 #spin-btn:active:not(:disabled){transform:scale(.96)}
@@ -242,6 +242,9 @@ input:focus{border-color:#8fcea1}
 .pog-hist-label{color:#444;flex:1}
 .pog-hist-date{color:#aaa;font-size:11px;white-space:nowrap}
 .pog-badge2{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.sparkle-burst{position:absolute;inset:0;pointer-events:none;z-index:20;overflow:visible}
+.sparkle-star{position:absolute;left:50%;top:42%;width:16px;height:16px;background:linear-gradient(135deg,#fff,#ffd83a);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);transform:translate(-50%,-50%) scale(0);animation:sparkle-fly 1.25s ease-out forwards;filter:drop-shadow(0 0 3px rgba(255,216,58,.85))}
+@keyframes sparkle-fly{0%{transform:translate(-50%,-50%) scale(0) rotate(0deg);opacity:0}18%{opacity:1;transform:translate(calc(-50% + var(--tx)*.35),calc(-50% + var(--ty)*.35)) scale(1.15) rotate(60deg)}100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.25) rotate(160deg)}}
 </style>
 </head>
 <body>
@@ -484,7 +487,6 @@ input:focus{border-color:#8fcea1}
 <div class="reward-popup" id="reward-popup">
   <div class="reward-popup-backdrop" onclick="closeRewardPopup()"></div>
   <div class="reward-popup-card">
-    <div class="reward-popup-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14" opacity=".35"/><circle cx="12" cy="12" r="2.6"/></svg></div>
     <div class="reward-popup-title" id="reward-popup-title"></div>
     <div class="reward-popup-msg" id="reward-popup-msg"></div>
     <button class="reward-popup-btn" onclick="closeRewardPopup()">Got it</button>
@@ -898,7 +900,7 @@ function buildWheel() {
   const size = canvas.width;
   const cx   = size / 2;
   const cy   = size / 2;
-  const r    = size / 2 - 4;
+  const r    = size / 2 - size * 0.06;
 
   ctx.clearRect(0, 0, size, size);
 
@@ -954,20 +956,24 @@ function buildWheel() {
     ctx.restore();
   });
 
-  // Center circle
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.08, 0, 2 * Math.PI);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Center dot
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.025, 0, 2 * Math.PI);
-  ctx.fillStyle = '#8fcea1';
-  ctx.fill();
+  // ── Red & white striped frame (like the canopy) + pegs ──
+  var _fr=(r+size/2)/2, _fw=(size/2-r), _NS=28, _sw=2*Math.PI/_NS;
+  for(var _si=0;_si<_NS;_si++){
+    var _sa=currentAngle+_si*_sw-Math.PI/2;
+    ctx.beginPath(); ctx.arc(cx,cy,_fr,_sa,_sa+_sw);
+    ctx.strokeStyle=(_si%2===0)?'#d7322d':'#ffffff'; ctx.lineWidth=_fw*1.15; ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.lineWidth=size*0.004; ctx.stroke();
+  for(var _pi=0;_pi<WHEEL_SEGMENTS.length;_pi++){
+    var _pa=currentAngle+_pi*SEG_ANGLE-Math.PI/2;
+    var _px=cx+Math.cos(_pa)*_fr, _py=cy+Math.sin(_pa)*_fr;
+    ctx.beginPath(); ctx.arc(_px,_py,size*0.016,0,2*Math.PI);
+    ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#c0392b'; ctx.lineWidth=size*0.004; ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(cx,cy,size*0.095,0,2*Math.PI); ctx.fillStyle='#d7322d'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy,size*0.07,0,2*Math.PI); ctx.fillStyle='#fff'; ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.lineWidth=size*0.005; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,size*0.028,0,2*Math.PI); ctx.fillStyle='#8fcea1'; ctx.fill();
 }
 
 function spinWheel() {
@@ -1024,7 +1030,27 @@ function spinWheel() {
   requestAnimationFrame(animate);
 }
 
+function sparkleBurst(host){
+  if(!host) return;
+  try{ if(getComputedStyle(host).position==='static') host.style.position='relative'; }catch(e){}
+  var wrap=document.createElement('div'); wrap.className='sparkle-burst';
+  var N=16;
+  for(var i=0;i<N;i++){
+    var st=document.createElement('span'); st.className='sparkle-star';
+    var ang=(Math.PI*2)*(i/N)+(Math.random()*0.5-0.25);
+    var dist=55+Math.random()*85;
+    st.style.setProperty('--tx',(Math.cos(ang)*dist).toFixed(1)+'px');
+    st.style.setProperty('--ty',(Math.sin(ang)*dist).toFixed(1)+'px');
+    st.style.width=st.style.height=(10+Math.random()*10).toFixed(0)+'px';
+    st.style.animationDelay=(Math.random()*0.3).toFixed(2)+'s';
+    wrap.appendChild(st);
+  }
+  host.appendChild(wrap);
+  setTimeout(function(){ if(wrap.parentNode) wrap.remove(); }, 1700);
+}
+
 function showWheelResult(segment) {
+  sparkleBurst(document.getElementById('wheel-section'));
   const el = document.getElementById('wheel-result');
   if (!el) return;
   el.style.display = 'block';

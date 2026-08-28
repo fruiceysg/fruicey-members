@@ -660,7 +660,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pog-float{position:fixed!important;top:20px;right:54px;z-index:998;margin:0!important;padding:5px 11px;border-radius:16px;gap:6px}
 .pog-float .pog-label{font-size:13px}
 .pog-float .pog-art{width:22px;height:22px}
-.pog-float .pog-badge{min-width:16px;height:16px;font-size:10px}
+.pog-float .pog-badge{position:absolute;top:2px;right:4px;min-width:14px;height:14px;font-size:9px;padding:0 3px;border-radius:7px;z-index:6}
 .pog-art{width:38px;height:38px;flex:0 0 auto;position:relative;z-index:2}
 .pog-label{position:relative;z-index:2;font-family:var(--font);font-size:18px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.28);white-space:nowrap}
 .pog-shine{position:absolute;top:0;left:0;width:55%;height:100%;background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,.7) 50%,transparent 100%);transform:translateX(-170%) skewX(-18deg);z-index:3;pointer-events:none;animation:pog-shine 2.8s ease-in-out infinite}
@@ -687,8 +687,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pog-hist-date{color:#aaa;font-size:11px;white-space:nowrap}
 .pog-badge2{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
 .sparkle-burst{position:absolute;inset:0;pointer-events:none;z-index:20;overflow:visible}
-.sparkle-star{position:absolute;left:50%;top:42%;width:16px;height:16px;background:linear-gradient(135deg,#fff,#ffd83a);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);transform:translate(-50%,-50%) scale(0);animation:sparkle-fly 1.25s ease-out forwards;filter:drop-shadow(0 0 3px rgba(255,216,58,.85))}
-@keyframes sparkle-fly{0%{transform:translate(-50%,-50%) scale(0) rotate(0deg);opacity:0}18%{opacity:1;transform:translate(calc(-50% + var(--tx)*.35),calc(-50% + var(--ty)*.35)) scale(1.15) rotate(60deg)}100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.25) rotate(160deg)}}
+.sparkle-star{position:absolute;left:50%;top:44%;width:26px;height:26px;background:linear-gradient(135deg,#fff,#ffd42a);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);transform:translate(-50%,-50%) scale(0);animation:sparkle-fly 1.5s ease-out forwards;filter:drop-shadow(0 0 6px rgba(255,205,20,1))}
+@keyframes sparkle-fly{0%{transform:translate(-50%,-50%) scale(0) rotate(0deg);opacity:0}15%{opacity:1;transform:translate(calc(-50% + var(--tx)*.3),calc(-50% + var(--ty)*.3)) scale(1.6) rotate(60deg)}70%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.4) rotate(200deg)}}
 </style>
 </head>
 <body>
@@ -1072,7 +1072,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div><div class="babydoll" style="font-size:18px;color:var(--green)" id="stamp-name"></div><div style="font-size:12px;color:var(--text3)" id="stamp-count"></div></div>
         <div style="font-size:11px;color:var(--text3)" id="stamp-completed"></div>
       </div>
-      <div class="babydoll" style="font-size:15px;color:var(--text2);margin-bottom:8px;text-align:center">Fruicey Rewards Pass</div>
+      <div class="babydoll" style="font-size:15px;color:var(--text2);margin-bottom:8px;text-align:center">Fruicey Stamp Card</div>
       <div id="stamp-grid-mini" class="stamp-grid-mini"></div>
       <div class="prog-bar"><div class="prog-fill" id="stamp-prog" style="width:0%"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>Progress</span><span id="stamp-prog-label">0 / 9</span></div>
@@ -3114,7 +3114,7 @@ function spinMiniWheel(){
   const total=extra*2*Math.PI+stop, dur=10000+Math.random()*3000;
   const start=performance.now(), startA=currentAngle;
   const SEG=2*Math.PI/TOTAL_SEGS;
-  function ease(t){ if(t<.2)return t*t*5; else if(t<.6){const u=(t-.2)/.4;return .2+.5*u;}else{const u=(t-.6)/.4;return .7+.3*(1-Math.pow(1-u,10));} }
+  function ease(t){ if(t<.2)return t*t*5; const u=(t-.2)/.8; return .2+.8*(1-Math.pow(1-u,2)); }
   function animate(now){
     const p=Math.min((now-start)/dur,1);
     currentAngle=startA+total*ease(p);
@@ -3138,19 +3138,19 @@ function sparkleBurst(host){
   if(!host) return;
   try{ if(getComputedStyle(host).position==='static') host.style.position='relative'; }catch(e){}
   var wrap=document.createElement('div'); wrap.className='sparkle-burst';
-  var N=16;
+  var N=26;
   for(var i=0;i<N;i++){
     var st=document.createElement('span'); st.className='sparkle-star';
     var ang=(Math.PI*2)*(i/N)+(Math.random()*0.5-0.25);
-    var dist=55+Math.random()*85;
+    var dist=70+Math.random()*120;
     st.style.setProperty('--tx',(Math.cos(ang)*dist).toFixed(1)+'px');
     st.style.setProperty('--ty',(Math.sin(ang)*dist).toFixed(1)+'px');
-    st.style.width=st.style.height=(10+Math.random()*10).toFixed(0)+'px';
+    st.style.width=st.style.height=(16+Math.random()*16).toFixed(0)+'px';
     st.style.animationDelay=(Math.random()*0.3).toFixed(2)+'s';
     wrap.appendChild(st);
   }
   host.appendChild(wrap);
-  setTimeout(function(){ if(wrap.parentNode) wrap.remove(); }, 1700);
+  setTimeout(function(){ if(wrap.parentNode) wrap.remove(); }, 2000);
 }
 
 function showMiniResult(seg){

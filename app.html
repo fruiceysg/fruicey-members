@@ -672,20 +672,21 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pog-modal{position:fixed;inset:0;z-index:1100;display:none}
 .pog-modal.open{display:block}
 .pog-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5)}
-.pog-panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,420px);max-height:82vh;background:#fff;border-radius:20px;box-shadow:0 16px 50px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;animation:rp-pop .25s ease}
+.pog-panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,420px);max-height:82vh;background:#fff;border-radius:20px;box-shadow:0 16px 50px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden;animation:pog-emerge .34s cubic-bezier(.2,.75,.25,1)}
+@keyframes pog-emerge{0%{transform:translate(calc(-50% + 20vw),calc(-50% - 47vh)) scale(.08);opacity:0}55%{opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .pog-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff}
 .pog-title{font-family:var(--font);font-size:22px}
 .pog-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
-.pog-body{padding:14px 18px 20px;overflow-y:auto}
+.pog-body{padding:14px 18px 20px;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain}
 .pog-section-title{font-family:var(--font);font-size:16px;color:var(--green-dark);margin:14px 0 8px}
 .pog-section-title:first-child{margin-top:0}
 .pog-empty{font-size:13px;color:#aaa;text-align:center;padding:8px 0 6px}
 .pog-prize{color:#fff;border-radius:14px;padding:14px;text-align:center;margin-bottom:10px}
 .pog-redeem{padding:9px 22px;background:#fff;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-.pog-hist-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f1f1f1;font-size:13px}
-.pog-hist-label{color:#444;flex:1}
-.pog-hist-date{color:#aaa;font-size:11px;white-space:nowrap}
-.pog-badge2{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.pog-hist-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f1f1;font-size:13px}
+.pog-hist-label{color:#444;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pog-hist-date{color:#aaa;font-size:11px;white-space:nowrap;text-align:right;min-width:60px;flex-shrink:0}
+.pog-badge2{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
 .sparkle-burst{position:absolute;inset:0;pointer-events:none;z-index:20;overflow:visible}
 .sparkle-star{position:absolute;left:50%;top:44%;width:26px;height:26px;background:linear-gradient(135deg,#fff,#ffd42a);clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);transform:translate(-50%,-50%) scale(0);animation:sparkle-fly 1.5s ease-out forwards;filter:drop-shadow(0 0 6px rgba(255,205,20,1))}
 @keyframes sparkle-fly{0%{transform:translate(-50%,-50%) scale(0) rotate(0deg);opacity:0}15%{opacity:1;transform:translate(calc(-50% + var(--tx)*.3),calc(-50% + var(--ty)*.3)) scale(1.6) rotate(60deg)}70%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.4) rotate(200deg)}}
@@ -1090,9 +1091,9 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         </div>
         <button class="btn btn-primary" id="mini-spin-btn" onclick="spinMiniWheel()" style="display:block;width:fit-content;max-width:100%;margin:6px auto;padding:10px 22px;border-radius:22px;font-size:18px">Spin the Wheel!</button>
         <div id="mini-wheel-result" style="display:none;margin-top:14px;border-radius:12px;padding:14px;color:#fff;text-align:center">
-          <div class="babydoll" style="font-size:20px;margin-bottom:4px" id="mini-result-name"></div>
-          <div style="font-size:13px;opacity:.9" id="mini-result-reward"></div>
-          <div style="font-size:11px;opacity:.75;margin-top:6px" id="mini-result-desc"></div>
+          <div class="babydoll" style="font-size:22px;margin-bottom:6px" id="mini-result-name"></div>
+          <div style="font-size:15px;font-weight:600;opacity:.95;margin-bottom:7px" id="mini-result-reward"></div>
+          <div style="font-size:12px;opacity:.8;line-height:1.5" id="mini-result-desc"></div>
           <div style="font-size:11px;opacity:.7;margin-top:10px;border-top:1px solid rgba(255,255,255,.3);padding-top:8px">Show this screen to our crew to redeem. Screenshots not accepted.</div>
           <div style="font-size:11px;opacity:.7;margin-top:6px"><b>Saved to your rewards!</b> Redeem in store within 30 days — no need to redeem now.</div>
           <button id="mini-redeem-btn" onclick="onMiniWheelDone()" style="display:none;margin-top:10px;background:rgba(255,255,255,.25);color:#fff;border:2px solid rgba(255,255,255,.6);border-radius:20px;padding:8px 20px;font-size:13px;font-family:var(--font);cursor:pointer;width:100%">Click to Redeem</button>
@@ -1100,14 +1101,14 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       </div>
     </div>
 
-    <div class="card" style="font-size:12px;color:var(--text2);line-height:1.7">
-      <div class="card-title" style="font-size:15px;margin-bottom:8px">Terms & Conditions</div>
-      <b>How to earn a stamp:</b> Purchase any regular-priced product in store. One stamp per menu product, issued by staff via unique QR scan. Not valid with promotions or discounts. In-store only.<br><br>
-      <b>Reward:</b> Complete 9 stamps to earn 1 sure-win wheel spin.<br>
-      <b>Prizes:</b> Must be redeemed in store. Not transferable or exchangeable for cash.<br>
-      <b>Redemption:</b> Redemption of free products will be applied to the item(s) of the lowest value in the transaction.<br>
-      <b>Non-transferable:</b> Stamps are strictly personal and non-transferable.<br>
-      <b>Screenshots:</b> Not accepted for redemption.
+    <div class="card" style="font-size:12.5px;color:var(--text2);line-height:1.5">
+      <div class="card-title" style="font-size:15px;margin-bottom:12px">Terms & Conditions</div>
+      <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">How to earn a stamp</div>Purchase any regular-priced product in store. One stamp per menu product, issued by our staff via a unique QR scan. Not valid with promotions or discounts. In-store only.</div>
+      <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Reward</div>Complete 9 stamps to earn 1 sure-win wheel spin.</div>
+      <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Prizes</div>Must be redeemed in store. Not transferable or exchangeable for cash.</div>
+      <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Redemption</div>Free products are applied to the item(s) of the lowest value in the transaction.</div>
+      <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Non-transferable</div>Stamps are strictly personal and non-transferable.</div>
+      <div><div style="font-weight:700;color:var(--text);margin-bottom:2px">Screenshots</div>Not accepted for redemption.</div>
     </div>
   </div>
 </div>

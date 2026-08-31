@@ -386,7 +386,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   .pd-enlarge{display:flex}
   .pd-imgwrap.pd-zoomed{cursor:grab}
 }
-.pd-preorder{margin:12px 18px 0;background:#fff3e0;color:#e67e22;font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;text-align:center}
+.pd-preorder{margin:12px 18px 0;background:var(--green-light);color:var(--green-dark);font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;text-align:center}
 .pd-choose{font-family:var(--font);font-size:20px;color:var(--green-dark);padding:16px 18px 8px;font-weight:600}
 .pd-desc{padding:4px 18px 2px;font-family:var(--body);font-size:13px;line-height:1.45;color:var(--text2)}
 .pd-options{display:flex;flex-direction:column;gap:22px;padding:0 18px 12px}
@@ -1640,6 +1640,10 @@ const TOTAL_STAMPS = 9;
 let currentUser   = null;
 let stockStatus   = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg
+// Fan Favourite badge — ribbon uses each product's category colour
+const FANFAV_IDS = new Set(['sb01','sb05','sb06','ss04','ss05','ss07','ss10','ss15','ss21','ip01','ip06','np03','np04','lp01','wp03']);
+// Readable ribbon text: dark on light pastel category colours (e.g. yellow/mint), white otherwise
+function ribbonTextColor(hex){ const m=/^#?([0-9a-f]{6})$/i.exec(hex||''); if(!m) return '#fff'; const n=parseInt(m[1],16); const yiq=(((n>>16)&255)*299+((n>>8)&255)*587+(n&255)*114)/1000; return yiq>=180?'#3a3a3a':'#fff'; }
 let stampMember   = null;
 let cart          = [];
 function saveCart(){ try{ sessionStorage.setItem('fruicey_cart', JSON.stringify(cart)); }catch(e){} }
@@ -2064,8 +2068,16 @@ function renderProducts(){
     }
     if(PREORDER_IDS.has(p.id)){
       const ribbon = document.createElement('div');
-      ribbon.style.cssText = 'position:absolute;top:10px;right:-20px;background:#e67e22;color:#fff;font-size:9px;font-weight:700;padding:3px 26px;transform:rotate(45deg);letter-spacing:.5px;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
+      ribbon.style.cssText = 'position:absolute;top:10px;right:-20px;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:3px 26px;transform:rotate(45deg);letter-spacing:.5px;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
       ribbon.textContent = 'PRE-ORDER';
+      card.appendChild(ribbon);
+    }
+    if(FANFAV_IDS.has(p.id)){
+      const favColor = CAT_COLORS[currentCat] || 'var(--green)';
+      const favText = ribbonTextColor(favColor);
+      const ribbon = document.createElement('div');
+      ribbon.style.cssText = 'position:absolute;top:10px;right:-20px;background:'+favColor+';color:'+favText+';font-size:8px;font-weight:700;padding:3px 26px;transform:rotate(45deg);letter-spacing:.2px;white-space:nowrap;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
+      ribbon.textContent = 'FAN FAVOURITE';
       card.appendChild(ribbon);
     }
     if(!isAvail){

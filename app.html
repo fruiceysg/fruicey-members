@@ -352,7 +352,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-bowl-add-price{font-weight:800}
 .pd-bowl-actions{display:flex;gap:10px;margin-top:8px}
 .pd-bowl-actions button{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .15s}
-.pd-bowl-back{background:#f0f0f0;color:#555}
+.pd-bowl-back{width:100%;border:none;border-radius:14px;padding:12px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;background:#f0f0f0;color:#555;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s}
+.pd-bowl-back:active{background:#e6e6e6}
 /* In bowl mode the green running-total bar is replaced by the consolidated footer above */
 #product-detail-modal .modal-box.pd-bowl-mode .pd-cart-summary{display:none}
 /* Bounce the sheet down into the cart bar after adding (McDonald's-style) */
@@ -1952,6 +1953,41 @@ function drawerSoon(name){
 }
 function closeSoon(){ document.getElementById('soon-sheet').classList.remove('open'); }
 
+// ── Lock the back button: keep the customer inside the app. Back closes an open overlay; otherwise it stays put. ──
+(function(){
+  function backClose(){
+    var ov = [
+      ['product-detail-modal', closeProductDetail],
+      ['login-modal', closeLogin],
+      ['cart-sheet', closeCart],
+      ['pog-modal', closePotOfGold],
+      ['reward-popup', closeRewardPopup],
+      ['soon-sheet', closeSoon],
+      ['rewards-desktop-sheet', closeRewardsDesktopNote],
+      ['order-receipt-modal', closeOrderReceipt],
+      ['add-credit-modal', null],
+      ['credit-history-modal', null],
+      ['ack-modal', null],
+      ['paynow-modal', null],
+      ['site-drawer', null]
+    ];
+    for(var i=0;i<ov.length;i++){
+      var el = document.getElementById(ov[i][0]);
+      if(el && el.classList.contains('open')){
+        if(typeof ov[i][1] === 'function'){ try{ ov[i][1](); }catch(e){ el.classList.remove('open'); } }
+        else el.classList.remove('open');
+        return true;
+      }
+    }
+    return false;
+  }
+  try{ history.pushState(null, '', location.href); }catch(e){}
+  window.addEventListener('popstate', function(){
+    try{ history.pushState(null, '', location.href); }catch(e){}
+    backClose();
+  });
+})();
+
 // ── MENU ──────────────────────────────────────────────────────
 const CATS = Object.keys(CATALOGUE);
 const PRODUCT_MAP = {};
@@ -3187,7 +3223,7 @@ const WHEEL_SEGMENTS = [
   {name:'$2 Off',color:'#FF6B6B',reward:'$2 off your next purchase',desc:'Present this screen before payment.'},
   {name:'Free Upsize on Shakes/Juices',color:'#FFA94D',reward:'Free Upsize on your cup of beverage',desc:'Valid for one cup. Present before ordering.'},
   {name:'$5 Off',color:'#FFD43B',reward:'$5 off your next purchase',desc:'Present this screen before payment.'},
-  {name:'3 Bonus Stamps',color:'#1c4d3a',reward:'3 bonus stamps added to your card',desc:'Stamps will be added by our crew in store.'},
+  {name:'3 Bonus Stamps',color:'#8fcea1',reward:'3 bonus stamps added to your card',desc:'Stamps will be added by our crew in store.'},
   {name:'Free Juice/Shake',color:'#4DABF7',reward:'Redeem a free Juice or Shake (M)',desc:'Any regular-priced juice or shake (M). Not valid for signature beverages.'},
   {name:'Free Acai Dessert Bowl',color:'#9775FA',reward:'Redeem a free Dessert Sized Acai Bowl',desc:'Any acai bowl from our dessert menu.'},
   {name:'Free Cold Press',color:'#F783AC',reward:'Redeem a free Pressed Juice',desc:'Any immunity or nutritional press.'},
@@ -3377,7 +3413,7 @@ async function renderPotOfGold(phone){
   let html='<div class="pog-section-title">My Prizes</div>';
   if(saved.length===0) html+='<div class="pog-empty">No prizes to redeem right now.</div>';
   else saved.forEach(pz=>{
-    const seg=WHEEL_SEGMENTS.find(s=>s.name===pz.prize)||{name:pz.prize,reward:'',desc:'',color:'#1c4d3a'};
+    const seg=WHEEL_SEGMENTS.find(s=>s.name===pz.prize)||{name:pz.prize,reward:'',desc:'',color:'#8fcea1'};
     const dl=pz.daysLeft;
     html+='<div class="pog-prize" style="background:'+seg.color+'">'
       +'<div style="font-size:13px;font-weight:700">'+seg.name+'</div>'
@@ -3992,6 +4028,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your bowl</span>
         <span class="pd-bowl-add-price"></span>
       </button>
+      <button type="button" class="pd-bowl-back" onclick="closeProductDetail()"><i class="ti ti-arrow-left" style="font-size:16px"></i> Back</button>
     </div>
   </div>
 </div>

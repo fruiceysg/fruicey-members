@@ -989,7 +989,10 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <div class="cart-backdrop" onclick="closeCart()"></div>
   <div class="cart-panel">
     <div class="cart-handle"></div>
-    <div class="cart-title babydoll" style="font-size:20px;color:var(--green);margin-bottom:12px">Your Order</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="cart-title babydoll" style="font-size:20px;color:var(--green)">Your Order</div>
+      <button type="button" onclick="clearCart()" style="background:none;border:none;color:#c0554e;font-size:13px;font-weight:600;font-family:var(--body);cursor:pointer;padding:4px 2px;display:flex;align-items:center;gap:4px"><i class="ti ti-trash" style="font-size:15px"></i>Clear cart</button>
+    </div>
     <div id="cart-items"></div>
     <div class="checkout-section">
       <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">How would you like your order?</div>
@@ -1023,7 +1026,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
             <li>Free delivery within 3&nbsp;km for orders above $30.</li>
             <li>Otherwise delivery from $5, based on order value.</li>
             <li>Fulfilment up to ~1.5&nbsp;hrs, subject to items / quantity ordered.</li>
-            <li>+$10 surcharge for Sentosa.</li>
+            <li>+$15 surcharge for Sentosa.</li>
             <li>We deliver across Singapore incl. Sentosa, excluding other offshore islands &amp; restricted zones.</li>
             <li>Unsuccessful deliveries incur a $15 re-delivery fee per trip — please ensure your address is entered correctly.</li>
           </ul>
@@ -2622,6 +2625,13 @@ function updateCartBadge(){
 
 function openCart(){ renderCartItems(); loadUserCredit(); document.getElementById('cart-sheet').classList.add('open'); }
 function closeCart(){ document.getElementById('cart-sheet').classList.remove('open'); }
+function clearCart(){
+  if(!cart.length) return;
+  if(!confirm('Clear all items from your cart?')) return;
+  cart = [];
+  renderCartItems();
+  updateCartBadge();
+}
 
 function renderCartItems(){
   const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
@@ -2712,7 +2722,7 @@ function renderTimePills(){
 }
 
 // ── DELIVERY (fee by distance + order value; free within 3km over $30) ──
-const SHOP_POSTAL = '596180', FREE_RADIUS_KM = 3, SENTOSA_SURCHARGE = 10;
+const SHOP_POSTAL = '596180', FREE_RADIUS_KM = 3, SENTOSA_SURCHARGE = 15;
 let shopLatLng = null, deliveryFee = 0, deliveryInfo = null, deliveryPostalTimer = null;
 
 async function geocodePostal(postal){

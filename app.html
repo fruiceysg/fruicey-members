@@ -352,7 +352,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-bowl-add-price{font-weight:800}
 .pd-bowl-actions{display:flex;gap:10px;margin-top:8px}
 .pd-bowl-actions button{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .15s}
-.pd-bowl-back{width:100%;border:none;border-radius:14px;padding:12px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;background:#f0f0f0;color:#555;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s}
+.pd-bowl-back{width:100%;margin-top:8px;border:none;border-radius:14px;padding:12px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;background:#f0f0f0;color:#555;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s}
 .pd-bowl-back:active{background:#e6e6e6}
 /* In bowl mode the green running-total bar is replaced by the consolidated footer above */
 #product-detail-modal .modal-box.pd-bowl-mode .pd-cart-summary{display:none}
@@ -2112,7 +2112,7 @@ function renderProducts(){
       const favColor = CAT_COLORS[currentCat] || 'var(--green)';
       const favText = ribbonTextColor(favColor);
       const ribbon = document.createElement('div');
-      ribbon.style.cssText = 'position:absolute;top:10px;right:-20px;background:'+favColor+';color:'+favText+';font-size:8px;font-weight:700;padding:5px 26px 1px 26px;transform:rotate(45deg);letter-spacing:.2px;white-space:nowrap;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
+      ribbon.style.cssText = 'position:absolute;top:10px;right:-20px;background:'+favColor+';color:'+favText+';font-size:8px;font-weight:700;padding:8px 26px 1px 26px;transform:rotate(45deg);letter-spacing:.2px;white-space:nowrap;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
       ribbon.textContent = 'FAN FAVOURITE';
       card.appendChild(ribbon);
     }
@@ -4028,7 +4028,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your bowl</span>
         <span class="pd-bowl-add-price"></span>
       </button>
-      <button type="button" class="pd-bowl-back" onclick="closeProductDetail()"><i class="ti ti-arrow-left" style="font-size:16px"></i> Back</button>
+      <button type="button" class="pd-bowl-back" onclick="closeProductDetail()">Back or Slide down to exit</button>
     </div>
   </div>
 </div>

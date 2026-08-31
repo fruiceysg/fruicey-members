@@ -970,6 +970,20 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<!-- Clear cart confirmation -->
+<div class="soon-sheet" id="clearcart-sheet">
+  <div class="soon-backdrop" onclick="closeClearCart()"></div>
+  <div class="soon-card">
+    <i class="ti ti-trash"></i>
+    <h3>Clear cart?</h3>
+    <p>This removes all items from your order.</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn" style="flex:1;background:#f0f0f0;color:#555" onclick="closeClearCart()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="confirmClearCart()">Clear cart</button>
+    </div>
+  </div>
+</div>
+
 <!-- Rewards Pass: in-store only, so desktop gets a note pointing to mobile -->
 <div class="soon-sheet" id="rewards-desktop-sheet">
   <div class="soon-backdrop" onclick="closeRewardsDesktopNote()"></div>
@@ -1957,6 +1971,7 @@ function closeSoon(){ document.getElementById('soon-sheet').classList.remove('op
   function backClose(){
     var ov = [
       ['product-detail-modal', closeProductDetail],
+      ['clearcart-sheet', closeClearCart],
       ['login-modal', closeLogin],
       ['cart-sheet', closeCart],
       ['pog-modal', closePotOfGold],
@@ -2627,10 +2642,14 @@ function openCart(){ renderCartItems(); loadUserCredit(); document.getElementByI
 function closeCart(){ document.getElementById('cart-sheet').classList.remove('open'); }
 function clearCart(){
   if(!cart.length) return;
-  if(!confirm('Clear all items from your cart?')) return;
+  document.getElementById('clearcart-sheet').classList.add('open');
+}
+function closeClearCart(){ document.getElementById('clearcart-sheet').classList.remove('open'); }
+function confirmClearCart(){
   cart = [];
   renderCartItems();
   updateCartBadge();
+  closeClearCart();
 }
 
 function renderCartItems(){

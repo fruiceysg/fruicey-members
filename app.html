@@ -1180,7 +1180,8 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Prizes</div>Must be redeemed in store. Not transferable or exchangeable for cash.</div>
       <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Redemption</div>Free products are applied to the item(s) of the lowest value in the transaction.</div>
       <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Non-transferable</div>Stamps are strictly personal and non-transferable.</div>
-      <div><div style="font-weight:700;color:var(--text);margin-bottom:2px">Screenshots</div>Not accepted for redemption.</div>
+      <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Screenshots</div>Not accepted for redemption.</div>
+      <div><div style="font-weight:700;color:var(--text);margin-bottom:2px">Amendments</div>Fruicey reserves the right to amend, suspend, or withdraw the rewards programme, its prizes, and these terms at any time without prior notice. In case of any dispute, Fruicey's decision is final.</div>
     </div>
   </div>
 </div>
@@ -2720,7 +2721,8 @@ function renderTimePills(){
   const minMins = now.getHours()*60 + now.getMinutes() + prep;
 
   const slots = [];
-  for(let h=11;h<=20;h++){
+  const startHour = collectMode==='delivery' ? 12 : 11;   // delivery slots start at 12pm; pick-up from 11am
+  for(let h=startHour;h<=20;h++){
     for(let m=0;m<60;m+=30){
       if(h===20&&m>0) continue;
       if(isToday && (h*60+m) < minMins) continue; // respect prep/lead time for today
@@ -3239,11 +3241,11 @@ function renderStampCard(m){
 const WHEEL_SEGMENTS = [
   {name:'$2 Off',color:'#FF6B6B',reward:'$2 off your next purchase',desc:'Present this screen before payment.'},
   {name:'Free Upsize on Shakes/Juices',color:'#FFA94D',reward:'Free Upsize on your cup of beverage',desc:'Valid for one cup. Present before ordering.'},
-  {name:'$5 Off',color:'#FFD43B',reward:'$5 off your next purchase',desc:'Present this screen before payment.'},
+  {name:'$3 Off',color:'#FFD43B',reward:'$3 off your next purchase',desc:'Present this screen before payment.'},
   {name:'3 Bonus Stamps',color:'#8fcea1',reward:'3 bonus stamps added to your card',desc:'Stamps will be added by our crew in store.'},
   {name:'Free Juice/Shake',color:'#4DABF7',reward:'Redeem a free Juice or Shake (M)',desc:'Any regular-priced juice or shake (M). Not valid for signature beverages.'},
-  {name:'Free Acai Dessert Bowl',color:'#9775FA',reward:'Redeem a free Dessert Sized Acai Bowl',desc:'Any acai bowl from our dessert menu.'},
-  {name:'Free Cold Press',color:'#F783AC',reward:'Redeem a free Pressed Juice',desc:'Any immunity or nutritional press.'},
+  {name:'$2 Off Acai Bowl',color:'#9775FA',reward:'$2 off any Acai Bowl',desc:'Valid on any acai bowl. Present before payment.'},
+  {name:'Free Cold Press',color:'#F783AC',reward:'Redeem a free Pressed Juice',desc:'Any Immunity Press.'},
 ];
 const TOTAL_SEGS = WHEEL_SEGMENTS.length;
 

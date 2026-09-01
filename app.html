@@ -984,6 +984,17 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<!-- Back pressed with items in cart: themed reminder (the native "Leave site?" dialog can't be styled) -->
+<div class="soon-sheet" id="leave-sheet">
+  <div class="soon-backdrop" onclick="closeLeaveWarn()"></div>
+  <div class="soon-card">
+    <i class="ti ti-shopping-cart"></i>
+    <h3>Your order is safe</h3>
+    <p>You still have items in your cart &mdash; nothing's lost. Tap below to keep going.</p>
+    <button class="btn btn-primary" onclick="closeLeaveWarn()">Keep shopping</button>
+  </div>
+</div>
+
 <!-- Rewards Pass: in-store only, so desktop gets a note pointing to mobile -->
 <div class="soon-sheet" id="rewards-desktop-sheet">
   <div class="soon-backdrop" onclick="closeRewardsDesktopNote()"></div>
@@ -1967,10 +1978,14 @@ function drawerSoon(name){
 }
 function closeSoon(){ document.getElementById('soon-sheet').classList.remove('open'); }
 
+function showLeaveWarn(){ var m=document.getElementById('leave-sheet'); if(m) m.classList.add('open'); }
+function closeLeaveWarn(){ var m=document.getElementById('leave-sheet'); if(m) m.classList.remove('open'); }
+
 // ── Lock the back button: keep the customer inside the app. Back closes an open overlay; otherwise it stays put. ──
 (function(){
   function backClose(){
     var ov = [
+      ['leave-sheet', closeLeaveWarn],
       ['product-detail-modal', closeProductDetail],
       ['clearcart-sheet', closeClearCart],
       ['login-modal', closeLogin],
@@ -2002,7 +2017,8 @@ function closeSoon(){ document.getElementById('soon-sheet').classList.remove('op
   window.addEventListener('pageshow', trap);  // re-arm when the page is restored from bfcache
   window.addEventListener('popstate', function(){
     trap();          // push the customer straight back into the app
-    backClose();     // and close the top-most open overlay, if one is open
+    // close the top-most open overlay; if none was open and an order is in progress, show a themed reminder
+    if(!backClose() && typeof cart !== 'undefined' && cart && cart.length){ showLeaveWarn(); }
   });
   // Safety net: a website can't fully block the phone back button, so if a back press (or tab close)
   // would actually leave the page while an order is in progress, warn the customer first.

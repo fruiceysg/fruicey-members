@@ -1996,10 +1996,18 @@ function closeSoon(){ document.getElementById('soon-sheet').classList.remove('op
     }
     return false;
   }
-  try{ history.pushState(null, '', location.href); }catch(e){}
+  function trap(){ try{ history.pushState(null, '', location.href); }catch(e){} }
+  trap();
+  window.addEventListener('load', trap);      // re-arm once fully loaded (some browsers ignore the early push)
+  window.addEventListener('pageshow', trap);  // re-arm when the page is restored from bfcache
   window.addEventListener('popstate', function(){
-    try{ history.pushState(null, '', location.href); }catch(e){}
-    backClose();
+    trap();          // push the customer straight back into the app
+    backClose();     // and close the top-most open overlay, if one is open
+  });
+  // Safety net: a website can't fully block the phone back button, so if a back press (or tab close)
+  // would actually leave the page while an order is in progress, warn the customer first.
+  window.addEventListener('beforeunload', function(e){
+    if(typeof cart !== 'undefined' && cart && cart.length){ e.preventDefault(); e.returnValue = ''; return ''; }
   });
 })();
 

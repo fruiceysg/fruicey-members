@@ -20,7 +20,7 @@
   --border:#eee;--card:#fff;
   --font:'BabyDoll','Comic Sans MS',cursive;
   --body:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --r:12px;--nav:60px;--header-h:67px;
+  --r:12px;--nav:72px;--header-h:67px;
 }
 html{overscroll-behavior-y:none}
 body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100vh;padding-bottom:var(--nav);overscroll-behavior-y:none}
@@ -36,8 +36,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav);background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.06)}
 .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);transition:color .15s;border:none;background:none;font-family:var(--body)}
 .nav-tab.active{color:var(--green)}
-.nav-tab i{font-size:27px}
-.nav-tab span{font-size:10px;font-weight:500}
+.nav-tab i{font-size:30px}
+.nav-tab span{font-size:11px;font-weight:500}
 
 /* SCREENS */
 .screen{display:none;min-height:calc(100vh - var(--nav));position:relative;z-index:1}
@@ -623,7 +623,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   .home-footer{font-size:17px;padding:34px 16px 40px}
 }
 @media (min-width:900px){
-  :root{--nav:68px;--header-h:91px}
+  :root{--nav:80px;--header-h:91px}
   /* Cart bar as a compact pill on the right (desktop only) */
   .cart-badge{left:auto;right:24px;bottom:calc(var(--nav) + 12px);width:auto;border-radius:26px;padding:12px 22px;gap:16px;box-shadow:0 6px 20px rgba(28,77,58,.45)}
   .product-grid{grid-template-columns:repeat(4,1fr);gap:16px;padding:16px 24px}
@@ -632,8 +632,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   .card{margin:18px 24px;padding:22px}
   .card-title{font-size:20px}
   .order-card{margin:16px 24px}
-  .nav-tab i{font-size:31px}
-  .nav-tab span{font-size:12px}
+  .nav-tab i{font-size:34px}
+  .nav-tab span{font-size:13px}
   .site-header{padding:14px 24px}
   .site-header img.site-logo{height:62px}
   .app-header img{height:62px}

@@ -143,7 +143,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* Full-width scrolling marquee */
 .marquee{width:100%;overflow:hidden;background:var(--green);padding:14px 0;margin:8px 0}
 .marquee-track{display:inline-flex;align-items:center;white-space:nowrap;will-change:transform;animation:marqueeScroll 26s linear infinite}
-.marquee-item{font-family:var(--body);font-weight:700;font-size:16px;color:#fff;padding:0 22px;letter-spacing:.3px}
+.marquee-item{font-family:var(--font);font-weight:700;font-size:16px;color:#fff;padding:0 22px;letter-spacing:.3px}
 .marquee-sep{color:rgba(255,255,255,.7);font-size:14px}
 @keyframes marqueeScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (min-width:900px){.marquee-item{font-size:19px;padding:0 30px}.marquee{padding:18px 0}}
@@ -2194,6 +2194,22 @@ function updateBlendVisibility(){
   }
 }
 
+// "Choose your press" for Immunity Press products — Clarity is a +$2 fine strain option.
+const PRESS_IDS = new Set(['ip01','ip02','ip03','ip04','ip05','ip06','ip07','ip08']);
+const PRESS_OPTIONS = [
+  {name:'Fresh Press',   desc:'Unstrained and fibrous juice', add:0},
+  {name:'Clarity Press', desc:'Fine strain and smooth juice', add:2}
+];
+let pdSelectedPress = null;
+function pressNeeded(){ return !!(pdSelectedSize && PRESS_IDS.has(pdSelectedSize.pid)); }
+function pressAddAmt(){ return (pressNeeded() && pdSelectedPress) ? (pdSelectedPress.add||0) : 0; }
+function selectPdPress(idx, el){
+  pdSelectedPress = PRESS_OPTIONS[idx] || null;
+  document.querySelectorAll('#pd-press .pd-size').forEach(b=>b.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  refreshBowlAdd();
+}
+
 // Toggle add-on drizzle selection (multi-select) in the product detail sheet
 document.addEventListener('click', function(e){
   const d = e.target.closest && e.target.closest('#pd-drizzles .pd-drizzle');
@@ -2303,8 +2319,14 @@ function refreshBowlAdd(){
     priceEl.textContent = '';
     return;
   }
+  if(pdSelectedSize && pressNeeded() && !pdSelectedPress){
+    btn.disabled = true;
+    labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your press';
+    priceEl.textContent = '';
+    return;
+  }
   if(pdSelectedSize){
-    const total = Math.round((pdSelectedSize.base + addonTotal) * 100) / 100;
+    const total = Math.round((pdSelectedSize.base + addonTotal + pressAddAmt()) * 100) / 100;
     btn.disabled = false;
     labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Add to Cart';
     priceEl.textContent = '$'+total.toFixed(2);
@@ -2320,6 +2342,7 @@ function addBowlToCart(){
   if(!currentUser){ openLogin(); return; }
   if(!pdSelectedSize){ return; }
   if(blendNeeded() && !pdSelectedBlend){ return; }
+  if(pressNeeded() && !pdSelectedPress){ return; }
   const pid = pdSelectedSize.pid;
   if(stockStatus[pid] === false){ showToast('Sorry, this item is out of stock'); return; }
   const prod = PRODUCT_MAP[pid];
@@ -2334,13 +2357,16 @@ function addBowlToCart(){
   const addonTotal = addons.reduce((s,a)=>s + (a.price||0), 0);
   const size = pdSelectedSize.size;
   const blend = blendNeeded() ? (pdSelectedBlend || '') : '';
-  const finalPrice = Math.round((pdSelectedSize.base + addonTotal) * 100) / 100;
+  const press = (pressNeeded() && pdSelectedPress) ? pdSelectedPress.name : '';
+  const pressAdd = (pressNeeded() && pdSelectedPress) ? (pdSelectedPress.add||0) : 0;
+  const finalPrice = Math.round((pdSelectedSize.base + addonTotal + pressAdd) * 100) / 100;
   const addonSig = addons.map(a=>a.name).sort().join('|');
   let label = prod.name + (size ? ' ('+size+')' : '');
+  if(press) label += ' · ' + press;
   if(blend) label += ' · ' + blend;
   if(addons.length) label += ' + ' + addons.map(a=>a.name).join(', ');
-  const exist = cart.find(i=>i.id===pid && i.size===size && (i.blend||'')===blend && (i.note||'')===note && (i.addonSig||'')===addonSig);
-  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size:size, blend:blend, label:label, price:finalPrice, qty:1, note:note, addons:addons, addonSig:addonSig}); }
+  const exist = cart.find(i=>i.id===pid && i.size===size && (i.blend||'')===blend && (i.press||'')===press && (i.note||'')===note && (i.addonSig||'')===addonSig);
+  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size:size, blend:blend, press:press, label:label, price:finalPrice, qty:1, note:note, addons:addons, addonSig:addonSig}); }
   updateCartBadge();
   updatePdCartSummary();
   showToast(label+' added!');
@@ -2484,6 +2510,24 @@ function openProductDetail(pid){
     } else {
       blendEl.innerHTML = '';
       blendWrap.style.display = 'none';
+    }
+  }
+  // Choose your press (Fresh / Clarity +$2) for Immunity Press products
+  pdSelectedPress = null;
+  const pressWrap = document.getElementById('pd-press-wrap');
+  const pressEl = document.getElementById('pd-press');
+  if(pressWrap && pressEl){
+    if(PRESS_IDS.has(p.id) && stockStatus[p.id] !== false){
+      pressEl.innerHTML = PRESS_OPTIONS.map(function(o,idx){
+        return '<button type="button" class="pd-size" onclick="selectPdPress('+idx+',this)">'
+          + '<span class="pd-size-label"><span class="pd-size-main">'+o.name+'</span><span class="pd-size-sub">'+o.desc+'</span></span>'
+          + '<span class="pd-size-price">'+(o.add?'+$'+o.add.toFixed(2):'')+'<span class="pd-size-tick"><i class="ti ti-check"></i></span></span>'
+          + '</button>';
+      }).join('');
+      pressWrap.style.display = 'block';
+    } else {
+      pressEl.innerHTML = '';
+      pressWrap.style.display = 'none';
     }
   }
   var m = document.getElementById('product-detail-modal');
@@ -2662,7 +2706,11 @@ function renderCartItems(){
         ? '<img class="cart-thumb" src="https://lh3.googleusercontent.com/d/'+timg+'=w120" alt="" loading="lazy">'
         : '<div class="cart-thumb cart-thumb-ph"></div>';
       const nm = item.name || item.label;
-      const vtxt = (item.size ? '('+String(item.size).split(' - ')[0]+')' : '') + (item.blend ? (item.size?' · ':'')+item.blend : '');
+      const vparts = [];
+      if(item.size) vparts.push('('+String(item.size).split(' - ')[0]+')');
+      if(item.press) vparts.push(item.press);
+      if(item.blend) vparts.push(item.blend);
+      const vtxt = vparts.join(' · ');
       const variant = vtxt ? '<div class="cart-variant">'+vtxt+'</div>' : '';
       const adds = (item.addons && item.addons.length) ? '<div class="cart-addons">'+item.addons.map(a=>a.name).join(', ')+'</div>' : '';
       return '<div class="cart-row">'+thumb
@@ -4018,6 +4066,10 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="pd-desc" class="pd-desc" style="display:none"></div>
     <div id="pd-imgwrap-info" class="pd-imgwrap pd-imgwrap-info" style="display:none">
       <img id="pd-img-info" alt="">
+    </div>
+    <div id="pd-press-wrap" style="display:none">
+      <div class="pd-choose">Choose your press</div>
+      <div id="pd-press" class="pd-options"></div>
     </div>
     <div id="pd-choose" class="pd-choose">Choose an option</div>
     <div id="pd-options" class="pd-options"></div>

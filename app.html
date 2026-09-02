@@ -1668,6 +1668,7 @@ const TOTAL_STAMPS = 9;
 
 // ── STATE ─────────────────────────────────────────────────────
 let currentUser   = null;
+let authToken     = '';   // session token from login; sent on requests (backend enforces later)
 let stockStatus   = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg
 let stampMember   = null;
@@ -1697,12 +1698,13 @@ let wheelSpinning = false;
 try {
   const saved = sessionStorage.getItem('fruicey_user');
   if (saved) currentUser = JSON.parse(saved);
+  authToken = sessionStorage.getItem('fruicey_token') || '';
 } catch(e){}
 
 // ── API HELPERS ───────────────────────────────────────────────
 function np(p){ let d=(p||'').replace(/\D/g,''); if(d.startsWith('65')&&d.length>8)d=d.slice(2); return d; }
-async function apiGet(params){ const p=new URLSearchParams({...params, _:Date.now()}); const r=await fetch(API+'?'+p, {cache:'no-store'}); return r.json(); }
-async function apiPost(body){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)}); return r.json(); }
+async function apiGet(params){ const p=new URLSearchParams({...params, ...(authToken?{token:authToken}:{}), _:Date.now()}); const r=await fetch(API+'?'+p, {cache:'no-store'}); return r.json(); }
+async function apiPost(body){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body, ...(authToken?{token:authToken}:{})})}); return r.json(); }
 
 // ── NAVIGATION ────────────────────────────────────────────────
 // ── HOME SLIDER (seamless one-way loop) ────────────────────────
@@ -1876,6 +1878,8 @@ document.addEventListener('DOMContentLoaded', function(){
       if(res.success){
         currentUser = res.user;
         sessionStorage.setItem('fruicey_user', JSON.stringify(currentUser));
+        authToken = res.token || '';
+        if(authToken) sessionStorage.setItem('fruicey_token', authToken);
         closeLogin();
         showToast('Welcome back, '+currentUser.first+'!');
         goTab(currentScreen!=='home'?currentScreen:'home');
@@ -1904,6 +1908,8 @@ document.addEventListener('DOMContentLoaded', function(){
       if(res.success){
         currentUser = res.user;
         sessionStorage.setItem('fruicey_user', JSON.stringify(currentUser));
+        authToken = res.token || '';
+        if(authToken) sessionStorage.setItem('fruicey_token', authToken);
         closeLogin();
         showToast('Welcome to Fruicey, '+currentUser.first+'!');
         goTab('home');
@@ -3570,6 +3576,7 @@ function logout(){
   if(!confirm('Log out?')) return;
   currentUser=null; cart=[];
   sessionStorage.removeItem('fruicey_user');
+  authToken=''; sessionStorage.removeItem('fruicey_token');
   updateCartBadge();
   goTab('home');
   showToast('Logged out.');

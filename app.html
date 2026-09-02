@@ -1700,6 +1700,9 @@ try {
   if (saved) currentUser = JSON.parse(saved);
   authToken = sessionStorage.getItem('fruicey_token') || '';
 } catch(e){}
+// A restored login with no token is a stale pre-token session — require a fresh login so the
+// token exists before the backend starts enforcing it.
+if (currentUser && !authToken) { currentUser = null; try{ sessionStorage.removeItem('fruicey_user'); }catch(e){} }
 
 // ── API HELPERS ───────────────────────────────────────────────
 function np(p){ let d=(p||'').replace(/\D/g,''); if(d.startsWith('65')&&d.length>8)d=d.slice(2); return d; }
@@ -3013,7 +3016,8 @@ async function checkout(){
       } else {
         showPayNow(res.order);
       }
-    } else { showToast('Error placing order. Please try again.'); }
+    } else if(res.error==='unauthorized'){ currentUser=null; authToken=''; try{sessionStorage.removeItem('fruicey_user');sessionStorage.removeItem('fruicey_token');}catch(e){} showToast('Your session expired — please log in again.'); openLogin(); }
+    else { showToast('Error placing order. Please try again.'); }
   }catch(e){ showToast('Connection error.'); }
   btn.textContent='Place Order & Pay via PayNow'; btn.disabled=false;
 }

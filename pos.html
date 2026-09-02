@@ -526,28 +526,30 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 <div class="toast" id="toast"></div>
 <script>// ── STAFF ACCOUNTS ───────────────────────────────────────────
-const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'fruicey2025', name:'Admin'},
-  {username:'staff1', password:'staff1pass',  name:'Staff 1'},
-  {username:'staff2', password:'staff2pass',  name:'Staff 2'},
-];
+// Staff accounts + passwords now live server-side (Code.gs → posLogin). Nothing sensitive here.
 let loggedInStaff = null;
+let staffToken = '';
 
 function checkLogin(){
   const saved = sessionStorage.getItem('fruicey_staff');
-  if(saved){ loggedInStaff = JSON.parse(saved); return true; }
+  const tok = sessionStorage.getItem('fruicey_staff_token');
+  if(saved && tok){ loggedInStaff = JSON.parse(saved); staffToken = tok; return true; }
   return false;
 }
 
-function doLogin(){
+async function doLogin(){
   const user = document.getElementById('login-username').value.trim().toLowerCase();
   const pass = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-err');
   errEl.style.display = 'none';
-  const account = STAFF_ACCOUNTS.find(a => a.username === user && a.password === pass);
-  if(!account){ errEl.textContent = 'Incorrect username or password.'; errEl.style.display='block'; return; }
-  loggedInStaff = account;
-  sessionStorage.setItem('fruicey_staff', JSON.stringify(account));
+  let res;
+  try { res = await apiPost({action:'posLogin', username:user, password:pass}); }
+  catch(e){ errEl.textContent = 'Connection error. Please try again.'; errEl.style.display='block'; return; }
+  if(!res || !res.success){ errEl.textContent = (res&&res.error==='too_many_attempts') ? 'Too many attempts. Wait a few minutes.' : 'Incorrect username or password.'; errEl.style.display='block'; return; }
+  loggedInStaff = {username:res.username, name:res.name};
+  staffToken = res.token || '';
+  sessionStorage.setItem('fruicey_staff', JSON.stringify(loggedInStaff));
+  sessionStorage.setItem('fruicey_staff_token', staffToken);
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('pos-app').style.display = 'flex';
   document.getElementById('staff-name').textContent = account.name;
@@ -575,17 +577,20 @@ function requireStaffAuth(action){
   });
 }
 
-function confirmPwModal(){
+async function confirmPwModal(){
   const pass = document.getElementById('pw-modal-input').value;
   const errEl = document.getElementById('pw-modal-err');
   if(!pass){ errEl.style.display='block'; return; }
-  const account = STAFF_ACCOUNTS.find(a => a.username === loggedInStaff.username && a.password === pass);
-  if(!account){
+  let res;
+  try { res = await apiPost({action:'posLogin', username:loggedInStaff.username, password:pass}); }
+  catch(e){ errEl.style.display='block'; return; }
+  if(!res || !res.success){
     errEl.style.display='block';
     document.getElementById('pw-modal-input').value='';
     document.getElementById('pw-modal-input').focus();
     return;
   }
+  if(res.token){ staffToken = res.token; sessionStorage.setItem('fruicey_staff_token', staffToken); }
   // Resolve TRUE before closing so closePwModal doesn't resolve FALSE
   const resolve = _pwResolve;
   _pwResolve = null;
@@ -607,8 +612,9 @@ function closePwModal(){
 
 function doLogout(){
   if(!confirm('Log out of POS?')) return;
-  loggedInStaff = null;
+  loggedInStaff = null; staffToken = '';
   sessionStorage.removeItem('fruicey_staff');
+  sessionStorage.removeItem('fruicey_staff_token');
   cart = []; currentMember = null; memberDiscount = 0; paymentMethod = '';
   memberPhoneVal = '';
   if(_newOrderPollHandle){ clearInterval(_newOrderPollHandle); _newOrderPollHandle = null; }
@@ -865,8 +871,8 @@ let salesLog = []; // always loaded fresh from Sheets
 
 // ── API ──────────────────────────────────────────────────────────────
 function np(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
-async function apiGet(params){const r=await fetch(API+'?'+new URLSearchParams({...params, _:Date.now()}), {cache:'no-store'});return r.json();}
-async function apiPost(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});return r.json();}
+async function apiGet(params){const r=await fetch(API+'?'+new URLSearchParams({...params, ...(staffToken?{token:staffToken}:{}), _:Date.now()}), {cache:'no-store'});return r.json();}
+async function apiPost(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body, ...(staffToken?{token:staffToken}:{})})});return r.json();}
 
 // ── CLOCK ────────────────────────────────────────────────────────────
 
@@ -2738,7 +2744,7 @@ if(checkLogin()){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('pos-app').style.display='none';
 }
-}catch(err){console.error('Init error:',err);sessionStorage.removeItem('fruicey_staff');loggedInStaff=null;document.getElementById('login-screen').style.display='flex';document.getElementById('pos-app').style.display='none';}
+}catch(err){console.error('Init error:',err);sessionStorage.removeItem('fruicey_staff');sessionStorage.removeItem('fruicey_staff_token');loggedInStaff=null;staffToken='';document.getElementById('login-screen').style.display='flex';document.getElementById('pos-app').style.display='none';}
 
 
 // ── STOCK ────────────────────────────────────────────────────

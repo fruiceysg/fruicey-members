@@ -252,38 +252,41 @@ input:focus{border-color:var(--green)}
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 // ── STAFF ACCOUNTS ───────────────────────────────────────────
-const STAFF_ACCOUNTS = [
-  {username:'admin',  password:'fruicey2025', name:'Admin'},
-  {username:'staff1', password:'staff1pass',  name:'Staff 1'},
-  {username:'staff2', password:'staff2pass',  name:'Staff 2'},
-];
+// Staff accounts + passwords now live server-side (Code.gs → posLogin). Nothing sensitive here.
 let loggedInStaff = null;
+let staffToken = '';
 
 function checkLogin(){
   const saved = sessionStorage.getItem('fruicey_staff');
-  if(saved){ loggedInStaff = JSON.parse(saved); return true; }
+  const tok = sessionStorage.getItem('fruicey_staff_token');
+  if(saved && tok){ loggedInStaff = JSON.parse(saved); staffToken = tok; return true; }
   return false;
 }
 
-function doLogin(){
+async function doLogin(){
   const user = document.getElementById('login-username').value.trim().toLowerCase();
   const pass = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-err');
   errEl.style.display = 'none';
-  const account = STAFF_ACCOUNTS.find(a => a.username === user && a.password === pass);
-  if(!account){ errEl.textContent = 'Incorrect username or password.'; errEl.style.display='block'; return; }
-  loggedInStaff = account;
-  sessionStorage.setItem('fruicey_staff', JSON.stringify(account));
+  let res;
+  try { res = await apiPost({action:'posLogin', username:user, password:pass}); }
+  catch(e){ errEl.textContent = 'Connection error. Please try again.'; errEl.style.display='block'; return; }
+  if(!res || !res.success){ errEl.textContent = (res&&res.error==='too_many_attempts') ? 'Too many attempts. Wait a few minutes.' : 'Incorrect username or password.'; errEl.style.display='block'; return; }
+  loggedInStaff = {username:res.username, name:res.name};
+  staffToken = res.token || '';
+  sessionStorage.setItem('fruicey_staff', JSON.stringify(loggedInStaff));
+  sessionStorage.setItem('fruicey_staff_token', staffToken);
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('admin-app').style.display = 'block';
-  document.getElementById('staff-name-display').textContent = account.name;
+  document.getElementById('staff-name-display').textContent = loggedInStaff.name;
   loadData();
 }
 
 function doLogout(){
   if(!confirm('Log out?')) return;
-  loggedInStaff = null;
+  loggedInStaff = null; staffToken = '';
   sessionStorage.removeItem('fruicey_staff');
+  sessionStorage.removeItem('fruicey_staff_token');
   document.getElementById('admin-app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-username').value = '';
@@ -295,8 +298,8 @@ function doLogout(){
 const API      = 'https://script.google.com/macros/s/AKfycbyG-6knBwgYjKbOnw90-XUS8t-SpWj9aXBZ8hXJDmLbLHNFikG6d_Fe1vwtjgt-zM8AMg/exec';
 const STAMP_URL = 'https://app.fruicey.sg/stamp.html';
 
-async function apiGet(p){ const r=await fetch(API+'?'+new URLSearchParams(p)); return r.json(); }
-async function apiPost(b){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)}); return r.json(); }
+async function apiGet(p){ const r=await fetch(API+'?'+new URLSearchParams({...p, ...(staffToken?{token:staffToken}:{})})); return r.json(); }
+async function apiPost(b){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...b, ...(staffToken?{token:staffToken}:{})})}); return r.json(); }
 function np(p){ let d=(p||'').replace(/\D/g,''); if(d.startsWith('65')&&d.length>8)d=d.slice(2); return d; }
 function showToast(m){ const el=document.getElementById('toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2500); }
 function initials(f,l){ return (f[0]||'').toUpperCase()+(l[0]||'').toUpperCase(); }

@@ -1703,6 +1703,7 @@ try {
 // A restored login with no token is a stale pre-token session — require a fresh login so the
 // token exists before the backend starts enforcing it.
 if (currentUser && !authToken) { currentUser = null; try{ sessionStorage.removeItem('fruicey_user'); }catch(e){} }
+if (currentUser) { setTimeout(function(){ try{ startNotif(); }catch(e){} }, 200); }   // resume notifications for a restored session
 
 // ── API HELPERS ───────────────────────────────────────────────
 function np(p){ let d=(p||'').replace(/\D/g,''); if(d.startsWith('65')&&d.length>8)d=d.slice(2); return d; }
@@ -1885,6 +1886,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if(authToken) sessionStorage.setItem('fruicey_token', authToken);
         closeLogin();
         showToast('Welcome back, '+currentUser.first+'!');
+        startNotif();
         goTab(currentScreen!=='home'?currentScreen:'home');
       } else if(res.error==='not_found'){ err.textContent='Phone number not registered.'; err.style.display='block'; }
       else if(res.error==='wrong_password'){ err.textContent='Incorrect password.'; err.style.display='block'; }
@@ -1915,6 +1917,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if(authToken) sessionStorage.setItem('fruicey_token', authToken);
         closeLogin();
         showToast('Welcome to Fruicey, '+currentUser.first+'!');
+        startNotif();
         goTab('home');
       } else if(res.error==='phone_exists'){ err.textContent='Phone number already registered.'; err.style.display='block'; }
       else if(res.error==='email_exists'){ err.textContent='Email already registered.'; err.style.display='block'; }
@@ -3005,6 +3008,7 @@ async function checkout(){
         }catch(e){ console.log('Credit deduction error', e); }
       }
       const orderId = res.orderId;
+      cart = []; renderCartItems(); updateCartBadge();   // clear the cart now the order is placed
       closeCart();
       // Reset credit checkbox
       if(useCreditCb){ useCreditCb.checked = false; toggleCreditCheckout(); }
@@ -3231,6 +3235,37 @@ function showRewardPopup(title,msg){
   p.classList.add('open');
 }
 function closeRewardPopup(){ const p=document.getElementById('reward-popup'); if(p) p.classList.remove('open'); lastCarryPopupKey=''; }
+
+// ── Customer notifications: poll for order-status changes and credit approvals ──
+let _notifOrders = {}, _notifDeposits = {}, _notifSeeded = false, _notifTimer = null;
+async function notifPoll(){
+  if(!currentUser) return;
+  try{
+    const or = await apiGet({action:'getOrders', phone:np(currentUser.phone)});
+    ((or&&or.orders)||[]).forEach(function(o){
+      const prev=_notifOrders[o.id];
+      if(_notifSeeded && prev!==undefined && prev!==o.status){
+        showRewardPopup('Order Update', 'Your order <b>'+o.id+'</b> is now <b>'+o.status+'</b>.');
+      }
+      _notifOrders[o.id]=o.status;
+    });
+  }catch(e){}
+  try{
+    const cr = await apiGet({action:'getMemberCredit', phone:currentUser.phone});
+    ((cr&&cr.history)||[]).forEach(function(h){
+      if(h.type==='deposit'){
+        const prev=_notifDeposits[h.id];
+        if(_notifSeeded && prev==='pending' && h.status==='approved'){
+          showRewardPopup('Credit Approved!', 'Your credit top-up of <b>$'+parseFloat(h.amount||0).toFixed(2)+'</b> has been approved and added to your balance.');
+        }
+        _notifDeposits[h.id]=h.status;
+      }
+    });
+  }catch(e){}
+  _notifSeeded = true;
+}
+function startNotif(){ if(_notifTimer||!currentUser) return; notifPoll(); _notifTimer=setInterval(notifPoll, 45000); }
+function stopNotif(){ if(_notifTimer){ clearInterval(_notifTimer); _notifTimer=null; } _notifSeeded=false; _notifOrders={}; _notifDeposits={}; }
 
 function renderStampCard(m){
   const stamps = parseInt(m.stamps)||0;
@@ -3579,6 +3614,7 @@ async function loadAccount(){
 function logout(){
   if(!confirm('Log out?')) return;
   currentUser=null; cart=[];
+  stopNotif();
   sessionStorage.removeItem('fruicey_user');
   authToken=''; sessionStorage.removeItem('fruicey_token');
   updateCartBadge();

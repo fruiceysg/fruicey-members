@@ -20,7 +20,7 @@
   --border:#eee;--card:#fff;
   --font:'BabyDoll','Comic Sans MS',cursive;
   --body:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --r:12px;--nav:72px;--header-h:67px;--marq-h:46px;
+  --r:12px;--nav:72px;--header-h:67px;
 }
 html{overscroll-behavior-y:none}
 body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100vh;padding-bottom:var(--nav);overscroll-behavior-y:none}
@@ -141,14 +141,12 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 @media (prefers-reduced-motion:reduce){.canopy svg{animation:none}}
 
 /* Full-width scrolling marquee */
-.marquee{position:fixed;left:0;right:0;bottom:0;z-index:95;height:var(--marq-h);overflow:hidden;white-space:nowrap;background:var(--green)}
-#scr-home{padding-bottom:var(--marq-h)}   /* clear the fixed marquee band so the footer isn't hidden */
-body:has(#scr-home.active) .bottom-nav{bottom:var(--marq-h)}   /* Home only: nav tabs sit above the marquee */
-.marquee-track{display:inline-flex;align-items:center;height:100%;white-space:nowrap;will-change:transform;animation:marqueeScroll 26s linear infinite}
+.marquee{width:100%;overflow:hidden;background:var(--green);padding:14px 0;margin:8px 0}
+.marquee-track{display:inline-flex;align-items:center;white-space:nowrap;will-change:transform;animation:marqueeScroll 26s linear infinite}
 .marquee-item{font-family:var(--font);font-weight:700;font-size:16px;color:#fff;padding:0 22px;letter-spacing:.3px}
 .marquee-sep{color:rgba(255,255,255,.7);font-size:14px}
 @keyframes marqueeScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@media (min-width:900px){.marquee-item{font-size:19px;padding:0 30px}}
+@media (min-width:900px){.marquee-item{font-size:19px;padding:0 30px}.marquee{padding:18px 0}}
 @media (prefers-reduced-motion:reduce){.marquee-track{animation:none}}
 .top-banner-box img{width:100%;height:auto;display:block;border-radius:0}
 .feature-img{width:100%;height:auto;display:block;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.06);background:var(--green-light)}
@@ -625,7 +623,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   .home-footer{font-size:17px;padding:34px 16px 40px}
 }
 @media (min-width:900px){
-  :root{--nav:80px;--header-h:91px;--marq-h:60px}
+  :root{--nav:80px;--header-h:91px}
   /* Cart bar as a compact pill on the right (desktop only) */
   .cart-badge{left:auto;right:24px;bottom:calc(var(--nav) + 12px);width:auto;border-radius:26px;padding:12px 22px;gap:16px;box-shadow:0 6px 20px rgba(28,77,58,.45)}
   .product-grid{grid-template-columns:repeat(4,1fr);gap:16px;padding:16px 24px}
@@ -2957,6 +2955,8 @@ document.addEventListener('click', function(e){
 });
 
 // ── CHECKOUT ──────────────────────────────────────────────────
+// pendingOrder holds a built-but-not-yet-placed order while the PayNow QR is shown.
+let pendingOrder = null, _placingOrder = false;
 async function checkout(){
   if(!cart.length){ showToast('Cart is empty'); return; }
   if(!collectTime){ showToast('Please select a '+(collectMode==='delivery'?'preferred delivery':'collection')+' time'); return; }
@@ -2990,47 +2990,51 @@ async function checkout(){
   if(useCredit && remaining <= 0) payLabel = 'App Credit';
   else if(useCredit && remaining > 0) payLabel = 'App Credit+PayNow';
 
-  try{
-    const res = await apiPost({
-      action:'placeOrder',
-      userId: currentUser.id,
-      name:   currentUser.first+' '+currentUser.last,
-      phone:  currentUser.phone,
-      items:  cart,
-      total:  grand.toFixed(2),
-      collectTime: collectDate+' '+collectTime,
-      collectType: isDelivery?'Delivery':'Self pick-up',
-      deliveryFee: fee.toFixed(2),
-      deliveryPostal, deliveryAddress, deliveryUnit, deliveryPhone,
-      deliveryDistanceKm: (deliveryInfo && deliveryInfo.distanceKm!=null) ? deliveryInfo.distanceKm.toFixed(2) : '',
-      notes,
-      payment: payLabel
-    });
+  // Build the order payload once — placed now only if fully paid by credit,
+  // otherwise held until the customer taps "I've paid" on the PayNow screen.
+  const orderPayload = {
+    action:'placeOrder',
+    userId: currentUser.id,
+    name:   currentUser.first+' '+currentUser.last,
+    phone:  currentUser.phone,
+    items:  cart.map(i=>({...i})),
+    total:  grand.toFixed(2),
+    collectTime: collectDate+' '+collectTime,
+    collectType: isDelivery?'Delivery':'Self pick-up',
+    deliveryFee: fee.toFixed(2),
+    deliveryPostal, deliveryAddress, deliveryUnit, deliveryPhone,
+    deliveryDistanceKm: (deliveryInfo && deliveryInfo.distanceKm!=null) ? deliveryInfo.distanceKm.toFixed(2) : '',
+    notes,
+    payment: payLabel
+  };
 
-    if(res.success){
-      // Deduct credit if used
-      if(useCredit && creditUse > 0){
-        try{
-          await apiPost({action:'deductCredit', phone:currentUser.phone, amount:creditUse, desc:'Order '+res.orderId});
-          userCreditBalance = Math.max(0, userCreditBalance - creditUse);
-        }catch(e){ console.log('Credit deduction error', e); }
-      }
-      const orderId = res.orderId;
-      cart = []; renderCartItems(); updateCartBadge();   // clear the cart now the order is placed
-      closeCart();
-      // Reset credit checkbox
-      if(useCreditCb){ useCreditCb.checked = false; toggleCreditCheckout(); }
-      // Skip PayNow screen if fully paid by credit
-      if(payLabel === 'App Credit'){
+  // Fully paid by credit → no PayNow step to abandon, so place the order now.
+  if(payLabel === 'App Credit'){
+    try{
+      const res = await apiPost(orderPayload);
+      if(res.success){
+        if(creditUse > 0){
+          try{
+            await apiPost({action:'deductCredit', phone:currentUser.phone, amount:creditUse, desc:'Order '+res.orderId});
+            userCreditBalance = Math.max(0, userCreditBalance - creditUse);
+          }catch(e){ console.log('Credit deduction error', e); }
+        }
+        cart = []; renderCartItems(); updateCartBadge(); closeCart();
+        if(useCreditCb){ useCreditCb.checked = false; toggleCreditCheckout(); }
         showToast('Order placed! Paid with Fruicey Credit.');
         document.getElementById('ack-modal').classList.add('open');
         goTab('orders');
-      } else {
-        showPayNow(res.order);
-      }
-    } else if(res.error==='unauthorized'){ currentUser=null; authToken=''; try{sessionStorage.removeItem('fruicey_user');sessionStorage.removeItem('fruicey_token');}catch(e){} showToast('Your session expired — please log in again.'); openLogin(); }
-    else { showToast('Error placing order. Please try again.'); }
-  }catch(e){ showToast('Connection error.'); }
+      } else if(res.error==='unauthorized'){ currentUser=null; authToken=''; try{sessionStorage.removeItem('fruicey_user');sessionStorage.removeItem('fruicey_token');}catch(e){} showToast('Your session expired — please log in again.'); openLogin(); }
+      else { showToast('Error placing order. Please try again.'); }
+    }catch(e){ showToast('Connection error.'); }
+    btn.textContent='Place Order & Pay via PayNow'; btn.disabled=false;
+    return;
+  }
+
+  // PayNow (or Credit+PayNow): DON'T place the order yet. Show the QR and hold the order
+  // until the customer taps "I've paid". The cart is kept so they can still change their mind.
+  pendingOrder = { payload: orderPayload, useCredit: useCredit, creditUse: creditUse };
+  showPayNow(orderPayload);
   btn.textContent='Place Order & Pay via PayNow'; btn.disabled=false;
 }
 
@@ -3039,35 +3043,66 @@ function showPayNow(order){
   let items = order.items;
   try{ items = typeof items==='string' ? JSON.parse(items) : (items||[]); }catch(e){ items = []; }
   document.getElementById('paynow-amount').textContent = '$'+sub.toFixed(2);
-  document.getElementById('paynow-orderid').textContent = order.id;
+  document.getElementById('paynow-orderid').textContent = order.id || 'assigned once you tap "I\'ve paid"';
   document.getElementById('paynow-items').textContent = items.map(i=>i.qty+'x '+i.label).join(', ');
   document.getElementById('paynow-collect').textContent = (order.collectType?order.collectType+' · ':'')+(order.collectTime||'');
   document.getElementById('paynow-modal').classList.add('open');
 }
 
-function sendWhatsApp(){
-  const orderId  = document.getElementById('paynow-orderid').textContent;
-  const items    = document.getElementById('paynow-items').textContent;
-  const amount   = document.getElementById('paynow-amount').textContent;
-  const collect  = document.getElementById('paynow-collect').textContent;
-  const msg = encodeURIComponent(
-    `Hi Fruicey! I've made a PayNow payment for my order.\n`+
-    `Here's my payment screenshot below.\n\n`+
-    `Order ID: ${orderId}\n`+
-    `Name: ${currentUser.first} ${currentUser.last}\n`+
-    `Phone: ${currentUser.phone}\n`+
-    `Items: ${items}\n`+
-    `Total: ${amount}\n`+
-    `Collection: ${collect}\n\n`+
-    `Please confirm my order. Thank you!`
-  );
-  window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
-  // Clear cart and close
-  cart=[];
-  document.getElementById('paynow-modal').classList.remove('open');
-  updateCartBadge();
-  showToast('Order sent! Please wait for confirmation.');
-  goTab('orders');
+async function sendWhatsApp(){
+  if(_placingOrder) return;                                   // guard against double-taps
+  if(!pendingOrder){ document.getElementById('paynow-modal').classList.remove('open'); return; }
+  _placingOrder = true;
+  // Open a tab synchronously (inside the click) so the browser won't block it after the await.
+  const waTab = window.open('', '_blank');
+  try{
+    const res = await apiPost(pendingOrder.payload);          // NOW the order is actually created
+    if(!res || !res.success){
+      if(waTab) waTab.close();
+      if(res && res.error==='unauthorized'){ currentUser=null; authToken=''; try{sessionStorage.removeItem('fruicey_user');sessionStorage.removeItem('fruicey_token');}catch(e){} showToast('Your session expired — please log in again.'); openLogin(); }
+      else showToast('Could not place your order. Please try again.');
+      _placingOrder = false;
+      return;
+    }
+    const orderId = res.orderId;
+    // Deduct credit only now that the order exists
+    if(pendingOrder.useCredit && pendingOrder.creditUse > 0){
+      try{
+        await apiPost({action:'deductCredit', phone:currentUser.phone, amount:pendingOrder.creditUse, desc:'Order '+orderId});
+        userCreditBalance = Math.max(0, userCreditBalance - pendingOrder.creditUse);
+      }catch(e){ console.log('Credit deduction error', e); }
+    }
+    const p       = pendingOrder.payload;
+    const items   = (p.items||[]).map(i=>i.qty+'x '+i.label).join(', ');
+    const amount  = '$'+parseFloat(p.total).toFixed(2);
+    const collect = (p.collectType?p.collectType+' · ':'')+(p.collectTime||'');
+    const msg = encodeURIComponent(
+      `Hi Fruicey! I've made a PayNow payment for my order.\n`+
+      `Here's my payment screenshot below.\n\n`+
+      `Order ID: ${orderId}\n`+
+      `Name: ${currentUser.first} ${currentUser.last}\n`+
+      `Phone: ${currentUser.phone}\n`+
+      `Items: ${items}\n`+
+      `Total: ${amount}\n`+
+      `Collection: ${collect}\n\n`+
+      `Please confirm my order. Thank you!`
+    );
+    const waUrl = 'https://wa.me/'+WA+'?text='+msg;
+    if(waTab){ waTab.location.href = waUrl; } else { window.location.href = waUrl; }
+    // Order is placed — clear everything now
+    pendingOrder = null;
+    cart = []; renderCartItems(); updateCartBadge();
+    const useCreditCb = document.getElementById('use-credit-cb');
+    if(useCreditCb){ useCreditCb.checked = false; toggleCreditCheckout(); }
+    closeCart();
+    document.getElementById('paynow-modal').classList.remove('open');
+    showToast('Order sent! Please wait for confirmation.');
+    goTab('orders');
+  }catch(e){
+    if(waTab) waTab.close();
+    showToast('Connection error. Please try again.');
+  }
+  _placingOrder = false;
 }
 
 // ── ORDERS ────────────────────────────────────────────────────

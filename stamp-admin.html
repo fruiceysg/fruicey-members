@@ -269,7 +269,7 @@ async function doLogin(){
   const errEl = document.getElementById('login-err');
   errEl.style.display = 'none';
   let res;
-  try { res = await apiPost({action:'posLogin', username:user, password:pass}); }
+  try { res = await apiPost({action:'posLogin', username:user, password:pass, source:'STAMP'}); }
   catch(e){ errEl.textContent = 'Connection error. Please try again.'; errEl.style.display='block'; return; }
   if(!res || !res.success){ errEl.textContent = (res&&res.error==='too_many_attempts') ? 'Too many attempts. Wait a few minutes.' : 'Incorrect username or password.'; errEl.style.display='block'; return; }
   loggedInStaff = {username:res.username, name:res.name};

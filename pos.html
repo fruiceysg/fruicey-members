@@ -543,7 +543,7 @@ async function doLogin(){
   const errEl = document.getElementById('login-err');
   errEl.style.display = 'none';
   let res;
-  try { res = await apiPost({action:'posLogin', username:user, password:pass}); }
+  try { res = await apiPost({action:'posLogin', username:user, password:pass, source:'POS'}); }
   catch(e){ errEl.textContent = 'Connection error. Please try again.'; errEl.style.display='block'; return; }
   if(!res || !res.success){ errEl.textContent = (res&&res.error==='too_many_attempts') ? 'Too many attempts. Wait a few minutes.' : 'Incorrect username or password.'; errEl.style.display='block'; return; }
   loggedInStaff = {username:res.username, name:res.name};
@@ -582,7 +582,7 @@ async function confirmPwModal(){
   const errEl = document.getElementById('pw-modal-err');
   if(!pass){ errEl.style.display='block'; return; }
   let res;
-  try { res = await apiPost({action:'posLogin', username:loggedInStaff.username, password:pass}); }
+  try { res = await apiPost({action:'posLogin', username:loggedInStaff.username, password:pass, source:'POS'}); }
   catch(e){ errEl.style.display='block'; return; }
   if(!res || !res.success){
     errEl.style.display='block';
@@ -2154,9 +2154,9 @@ async function checkout(){
   const disc=memberDiscount>0?+(sub*memberDiscount/100).toFixed(2):0;
   const isOnline = ONLINE_PLATFORMS.includes(paymentMethod);
   const total = isOnline ? 0 : +(sub-disc).toFixed(2);
-  const now=new Date();
-  const dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-  const timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const now=new Date(); const _sgt=new Date(now.getTime()+8*3600*1000);   // fixed SGT — independent of device timezone
+  const dateStr=_sgt.toISOString().slice(0,10);
+  const timeStr=_sgt.toISOString().slice(11,16);
   const btn=document.getElementById('checkout-btn');
   btn.textContent='Processing...';btn.disabled=true;
   try{
@@ -2561,7 +2561,7 @@ function renderSalesReport(){
   const el=document.getElementById('sales-list');
   if(!salesLog.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:#bbb">No sales yet</div>';return;}
 
-  const today2=new Date().toISOString().split('T')[0];
+  const today2=new Date(new Date().getTime()+8*3600*1000).toISOString().split('T')[0];
   const todaySales2=salesLog.filter(s=>s.date===today2);
   const month2=today2.slice(0,7);
   const monthSales2=salesLog.filter(s=>s.date&&s.date.startsWith(month2));
@@ -2632,7 +2632,7 @@ function exportSalesCSV(){
 }
 
 function exportMonthlyCSV(){
-  const month=new Date().toISOString().slice(0,7);
+  const month=new Date(new Date().getTime()+8*3600*1000).toISOString().slice(0,7);
   const monthly=salesLog.filter(s=>s.date&&s.date.startsWith(month));
   if(!monthly.length){showToast('No sales this month');return;}
   const rows=[['Date','Time','Items','Subtotal','Discount','Total','Payment','Member']];

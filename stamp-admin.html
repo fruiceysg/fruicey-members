@@ -498,7 +498,7 @@ async function generateStampQR(){
     const stampURL=STAMP_URL+'?stamp='+res.token+'&phone='+phone;
     const qrDisplay=document.getElementById('qr-display');
     qrDisplay.innerHTML='';
-    new QRCode(qrDisplay,{text:stampURL,width:200,height:200,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.L});
+    new QRCode(qrDisplay,{text:stampURL,width:200,height:200,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
     document.getElementById('qr-card').style.display='block';
     document.getElementById('qr-stamp-label').textContent=stampQty+' stamp'+(stampQty>1?'s':'')+' will be added';
     if(countdownInterval)clearInterval(countdownInterval);

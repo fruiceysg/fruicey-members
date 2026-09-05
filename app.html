@@ -25,14 +25,15 @@
 html{overscroll-behavior-y:none}
 body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100vh;padding-bottom:var(--nav);overscroll-behavior-y:none}
 #app-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f7;z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease}
+#app-loader .loader-spinner{transform:translateY(-60px)}
+.tab-loader .loader-spinner{transform:translateY(-40px)}
 #app-loader.hide{opacity:0;pointer-events:none}
-.loader-spinner{width:auto;height:auto;border:none;border-radius:0;animation:none;display:inline-block}
-.loader-spinner::after{content:"harvesting";font-family:var(--font);font-size:26px;color:var(--green);letter-spacing:.5px;display:inline-block;animation:harvestPulse 1.4s ease-in-out infinite}
+.loader-spinner{width:auto;height:auto;border:none;border-radius:0;animation:none;display:inline-block;font-family:var(--font);font-size:26px;color:var(--green);letter-spacing:.5px}
+.loader-spinner span{display:inline-block;opacity:0;animation:harvestLetter 2.2s infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes harvestPulse{0%,100%{opacity:.35;transform:translateY(0) scale(.98)}50%{opacity:1;transform:translateY(-3px) scale(1.03)}}
+@keyframes harvestLetter{0%{opacity:0}20%,70%{opacity:1}90%,100%{opacity:0}}
 .tab-loader{display:flex;align-items:center;justify-content:center;min-height:60vh;grid-column:1/-1}
-.tab-loader .loader-spinner{width:auto;height:auto;border:none;border-radius:0;animation:none}
-.tab-loader .loader-spinner::after{font-size:22px}
+.tab-loader .loader-spinner{width:auto;height:auto;border:none;border-radius:0;animation:none;font-size:22px}
 .babydoll{font-family:var(--font)}
 
 /* NAV */
@@ -183,7 +184,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat7-btn:hover{box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .feat7-btn:active{transform:scale(.96)}
 /* feature5: single Inquire button (bottom-right) */
-.feat5-inquire{background:#fff;color:var(--green-dark);border:none;left:auto;right:6%;top:6%;bottom:auto;transform:none}
+.feat5-inquire{background:#fff;color:var(--green-dark);border:none;left:auto;right:6%;top:2%;bottom:auto;transform:none}
 .feat5-inquire:active{transform:scale(.96)}
 @media (min-width:900px){
   .feat7-btn{font-size:16px;padding:14px 26px}
@@ -705,7 +706,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 <body>
 <!-- LOADING SPINNER -->
 <div id="app-loader">
-  <div class="loader-spinner"></div>
+  <div class="loader-spinner" data-filled="1"><span style="animation-delay:0s">h</span><span style="animation-delay:.12s">a</span><span style="animation-delay:.24s">r</span><span style="animation-delay:.36s">v</span><span style="animation-delay:.48s">e</span><span style="animation-delay:.6s">s</span><span style="animation-delay:.72s">t</span><span style="animation-delay:.84s">i</span><span style="animation-delay:.96s">n</span><span style="animation-delay:1.08s">g</span><span style="animation-delay:1.2s">.</span><span style="animation-delay:1.32s">.</span><span style="animation-delay:1.44s">.</span></div>
 </div>
 
 <!-- STAR BACKGROUND -->
@@ -1861,9 +1862,27 @@ function replayReveal(){
   els.forEach(function(el){ revealIO.observe(el); });
 }
 
+// Fill any .loader-spinner with staggered letter spans: h a r v e s t i n g . . .
+function fillHarvest(root){
+  var scope = root || document;
+  var word = 'harvesting...';
+  scope.querySelectorAll('.loader-spinner').forEach(function(sp){
+    if(sp.dataset.filled) return;
+    sp.dataset.filled = '1';
+    sp.innerHTML = '';
+    for(var i=0;i<word.length;i++){
+      var s = document.createElement('span');
+      s.textContent = word[i]===' ' ? '\u00A0' : word[i];
+      s.style.animationDelay = (i*0.12)+'s';
+      sp.appendChild(s);
+    }
+  });
+}
+document.addEventListener('DOMContentLoaded', function(){ fillHarvest(); });
+
 function showTabLoader(containerId){
   const el = document.getElementById(containerId);
-  if(el) el.innerHTML = '<div class="tab-loader"><div class="loader-spinner"></div></div>';
+  if(el){ el.innerHTML = '<div class="tab-loader"><div class="loader-spinner"></div></div>'; fillHarvest(el); }
 }
 
 function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2500); }

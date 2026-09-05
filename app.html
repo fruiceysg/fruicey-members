@@ -3555,6 +3555,15 @@ async function autoSaveMiniPrize(seg){
   if(!pendingMiniSpin || pendingMiniSpin.segment!==seg) pendingMiniSpin={segment:seg, saved:false, spinId:'sp_'+Date.now()+'_'+Math.floor(Math.random()*1e6)};
   try{
     const res=await apiPost({action:'saveSpinResult',phone:np(currentUser.phone),spinResult:seg.name,spinId:pendingMiniSpin.spinId});
+    if(res&&res.error==='no_spin_available'){
+      // Card was already spun (e.g. after a reload) — no prize to award. Refresh to the real state.
+      pendingMiniSpin=null;
+      document.getElementById('rewards-wheel').style.display='none';
+      document.getElementById('mini-wheel-result').style.display='none';
+      showToast('This card has already been spun.');
+      loadRewards();
+      return;
+    }
     if(res&&res.success){
       pendingMiniSpin.saved=true;
       const updated=await apiGet({action:'getStampCard',phone:np(currentUser.phone)});

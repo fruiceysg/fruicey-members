@@ -131,6 +131,9 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* TOP BANNER (full-width, vertical space only) */
 .top-banner-box{margin:16px 0;padding:0}
 .top-banner-box.tb-top{margin:0}
+/* Join feat7 + feat6 into one seamless card */
+.top-banner-box.feat7{margin-bottom:0}
+.top-banner-box.feat6{margin-top:0}
 
 /* Sticky top bar: keeps header + canopy pinned while the page scrolls */
 .home-topbar{position:sticky;top:0;z-index:60;background:#fff}
@@ -170,7 +173,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* feature7: two buttons side by side on the right */
 .feat7-btns{position:absolute;right:6%;bottom:9%;top:auto;transform:none;display:flex;flex-direction:row;gap:8px;align-items:center;z-index:6}
-.feat7-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border:1.5px solid #7f88b3;border-radius:999px;background:#fff;color:#7f88b3;font-family:var(--body);font-weight:700;font-size:11px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22);white-space:nowrap;transition:transform .12s,box-shadow .12s}
+.feat7-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border:1.5px solid #6796ce;border-radius:999px;background:#fff;color:#6796ce;font-family:var(--body);font-weight:700;font-size:11px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22);white-space:nowrap;transition:transform .12s,box-shadow .12s}
 .feat7-btn:hover{box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .feat7-btn:active{transform:scale(.96)}
 /* feature5: single Inquire button (bottom-right) */
@@ -791,10 +794,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
     </div>
   </div>
 
-  <div class="home-features">
-    <div class="feature-wrap feat6">
-      <img class="feature-img" src="feature6.jpg" alt="Superfood Bowls — tap to view menu" loading="eager" style="cursor:pointer" onclick="goMenuCat('Superfood Bowls')">
-    </div>
+  <div class="top-banner-box feature-wrap feat6">
+    <img src="feature6.jpg" alt="Superfood Bowls — tap to view menu" loading="eager" style="cursor:pointer" onclick="goMenuCat('Superfood Bowls')">
   </div>
 
   <div class="top-banner-box feature-wrap feat5">

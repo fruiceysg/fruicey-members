@@ -174,7 +174,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat7-btn:hover{box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .feat7-btn:active{transform:scale(.96)}
 /* feature5: single Inquire button (bottom-right) */
-.feat5-inquire{background:#fff;color:#6796ce;border:none;left:55%;right:auto;transform:translateX(-50%)}
+.feat5-inquire{background:#fff;color:var(--green-dark);border:none;left:55%;right:auto;transform:translateX(-50%)}
 .feat5-inquire:active{transform:translateX(-50%) scale(.96)}
 @media (min-width:900px){
   .feat7-btn{font-size:16px;padding:14px 26px}
@@ -783,10 +783,11 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
     <img src="feature4.jpg" alt="Fruicey feature 4" loading="eager">
   </div>
 
-  <div class="home-features">
-    <div class="feature-wrap feat5">
-      <img class="feature-img" src="feature5.jpg" alt="Fruicey feature 5" loading="eager">
-      <button class="feat-cta feat5-inquire" onclick="window.location.href='mailto:wilson@fruicey.sg?subject=Enquiry'">Inquire</button>
+  <div class="top-banner-box feature-wrap feat7">
+    <img src="feature7.jpg" alt="Fruicey feature 7" loading="eager">
+    <div class="feat7-btns">
+      <button class="feat7-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/profilecalculator.html','_blank')">Explore your Nutri-Profile</button>
+      <button class="feat7-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/acaibowlcalculator.html','_blank')">Build Your Acai Bowl</button>
     </div>
   </div>
 
@@ -796,12 +797,9 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
     </div>
   </div>
 
-  <div class="top-banner-box feature-wrap feat7">
-    <img src="feature7.jpg" alt="Fruicey feature 7" loading="eager">
-    <div class="feat7-btns">
-      <button class="feat7-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/profilecalculator.html','_blank')">Explore your Nutri-Profile</button>
-      <button class="feat7-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/acaibowlcalculator.html','_blank')">Build Your Acai Bowl</button>
-    </div>
+  <div class="top-banner-box feature-wrap feat5">
+    <img src="feature5.jpg" alt="Fruicey feature 5" loading="eager">
+    <button class="feat-cta feat5-inquire" onclick="window.location.href='mailto:wilson@fruicey.sg?subject=Enquiry'">Inquire</button>
   </div>
 
   <!-- Scrolling marquee (replaces Why Choose Us) -->

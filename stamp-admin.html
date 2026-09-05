@@ -492,6 +492,9 @@ async function generateStampQR(){
     const res=await apiPost({action:'generateStampToken',phone,qty:stampQty});
     if(res.error==='not_found'){showToast('Customer not registered');btn.textContent='Generate Stamp QR';btn.disabled=false;return;}
     if(res.error==='already_complete'){showToast('Card complete — ask customer to redeem first');btn.textContent='Generate Stamp QR';btn.disabled=false;return;}
+    if(res.error==='unauthorized'){showToast('Session expired — please log out and log in again');btn.textContent='Generate Stamp QR';btn.disabled=false;return;}
+    if(res.error){showToast('Error: '+res.error);btn.textContent='Generate Stamp QR';btn.disabled=false;return;}
+    if(!res.token){showToast('Could not generate QR — please try again');btn.textContent='Generate Stamp QR';btn.disabled=false;return;}
     const stampURL=STAMP_URL+'?stamp='+res.token+'&phone='+phone;
     const qrDisplay=document.getElementById('qr-display');
     qrDisplay.innerHTML='';

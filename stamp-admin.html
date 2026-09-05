@@ -512,7 +512,7 @@ async function generateStampQR(){
     if(pollInterval) clearInterval(pollInterval);
     pollInterval = setInterval(async()=>{
       try{
-        const check = await apiGet({action:'checkTokenUsed', token:currentToken});
+        const check = await apiGet({action:'checkTokenUsed', stampToken:currentToken});
         if(check.used){
           clearInterval(pollInterval);
           clearInterval(countdownInterval);

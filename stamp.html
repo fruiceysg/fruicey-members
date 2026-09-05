@@ -712,7 +712,7 @@ async function checkQRToken(){
 async function redeemStampAndRefresh(token, phone){
   showScreenLoader('stamp-grid');
   try{
-    const res = await apiPost({action:'redeemStampToken', token, phone:np(phone)});
+    const res = await apiPost({action:'redeemStampToken', stampToken:token, phone:np(phone)});
 
     if(res.error === 'already_used'){ showToast('QR already used.'); return; }
     if(res.error === 'expired')     { showToast('QR expired. Ask for a new one.'); return; }

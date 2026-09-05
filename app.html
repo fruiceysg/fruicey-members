@@ -3268,7 +3268,7 @@ async function redeemStampScanApp(token, phone){
   document.getElementById('rewards-card').style.display='none';
   document.getElementById('rewards-loader').style.display='block';
   try{
-    const res = await apiPost({action:'redeemStampToken', token, phone:np(phone)});
+    const res = await apiPost({action:'redeemStampToken', stampToken:token, phone:np(phone)});
     document.getElementById('rewards-loader').style.display='none';
     if(res.error === 'already_used'){ showToast('QR already used.'); loadRewards(); return; }
     if(res.error === 'expired')     { showToast('QR expired. Ask for a new one.'); loadRewards(); return; }

@@ -716,6 +716,9 @@ async function redeemStampAndRefresh(token, phone){
 
     if(res.error === 'already_used'){ showToast('QR already used.'); return; }
     if(res.error === 'expired')     { showToast('QR expired. Ask for a new one.'); return; }
+    if(res.error === 'invalid_token'){ showToast('QR not recognised. Ask for a new one.'); return; }
+    if(res.error === 'invalid_phone'){ showToast('This QR was issued for a different account.'); return; }
+    if(res.error === 'member_not_found'){ showToast('No stamp card found for this number.'); return; }
     if(res.error)                   { showToast('Error: '+res.error); return; }
 
     if(res.success){

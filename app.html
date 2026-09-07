@@ -540,6 +540,46 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .account-hero h2{font-family:var(--font);font-size:24px}
 .account-hero p{font-size:13px;opacity:.85;margin-top:2px}
 .tier-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:8px}
+
+/* ── Account tab visual redesign ── */
+.acc-profile-card{position:relative;margin:14px 16px;padding:22px 18px;border-radius:20px;color:#fff;
+  background:linear-gradient(135deg,var(--green),var(--green-dark));box-shadow:0 10px 26px rgba(28,77,58,.28);overflow:hidden}
+.acc-profile-card::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08)}
+.acc-profile-card::before{content:"";position:absolute;left:-30px;bottom:-50px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06)}
+.acc-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:30px;font-weight:700;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.35)}
+.acc-profile-top{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+.acc-profile-name{font-family:var(--font);font-size:24px;line-height:1.1}
+.acc-profile-sub{font-size:12.5px;opacity:.9;margin-top:3px;display:flex;align-items:center;gap:5px}
+.acc-profile-sub i{font-size:14px}
+.acc-profile-contact{position:relative;z-index:1;margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.acc-contact-row{display:flex;align-items:center;gap:10px;font-size:13.5px;background:rgba(255,255,255,.12);padding:9px 12px;border-radius:12px}
+.acc-contact-row i{font-size:17px;opacity:.95}
+
+.acc-credit-card{margin:14px 16px;padding:20px 18px;border-radius:20px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.07);text-align:center;position:relative;overflow:hidden}
+.acc-credit-icon{width:52px;height:52px;border-radius:16px;background:var(--green-light);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 6px}
+.acc-credit-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.acc-credit-amount{font-family:var(--font);font-size:40px;font-weight:700;color:var(--green);line-height:1.1;margin:2px 0 14px}
+.acc-credit-actions{display:flex;gap:10px}
+.acc-credit-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:14px;border:none;font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.acc-credit-btn i{font-size:17px}
+.acc-credit-btn.primary{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(28,77,58,.25)}
+.acc-credit-btn.ghost{background:var(--green-light);color:var(--green-dark)}
+.acc-credit-btn:active{transform:scale(.97)}
+
+.acc-tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 16px 14px}
+.acc-tile{background:#fff;border-radius:18px;padding:18px 14px;text-align:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:transform .12s,box-shadow .12s;border:1px solid rgba(0,0,0,.03)}
+.acc-tile:active{transform:scale(.97)}
+.acc-tile-ico{width:50px;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:25px;margin:0 auto 9px}
+.acc-tile-ico.orders{background:#eaf3ff;color:#3b7dd8}
+.acc-tile-ico.rewards{background:#fff3e0;color:#e08a1e}
+.acc-tile-title{font-weight:700;font-size:14px;color:var(--text)}
+.acc-tile-sub{font-size:11.5px;color:var(--text3);margin-top:2px}
+
+.acc-logout-fixed{position:fixed;top:8px;z-index:999;width:42px;padding:0;background:none;border:none;cursor:pointer;color:#e74c3c;display:none;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:2px;text-shadow:0 1px 3px rgba(255,255,255,.9);right:54px}
+.acc-logout-fixed i{font-size:22px}
+.acc-logout-fixed span{font-size:9px;font-weight:600;white-space:nowrap}
+body:has(#scr-account.active) .acc-logout-fixed{display:flex}
+body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logout-fixed,body:has(#fq-embed.open) .acc-logout-fixed{display:none!important}
 .info-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:14px}
 .info-row:last-child{border:none}
 .info-label{color:var(--text2)}
@@ -632,6 +672,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
   .cart-panel{left:calc(50% - var(--app-w)/2);right:calc(50% - var(--app-w)/2)}
   .drawer-panel{left:calc(50% - var(--app-w)/2)}
   #fullscreen-btn{right:calc(50% - var(--app-w)/2 + 6px)!important}
+  .acc-logout-fixed{right:calc(50% - var(--app-w)/2 + 54px)!important}
   .pog-float{right:calc(50% - var(--app-w)/2 + 56px)!important}
   #fullscreen-label{right:calc(50% - var(--app-w)/2 + 6px)!important}
   /* Scale content up */
@@ -2068,33 +2109,188 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 
 <!-- ═══ ACCOUNT ═══ -->
 <div class="screen" id="scr-account">
-  <div class="account-hero">
-    <h2 id="acc-name">My Account</h2>
+  <div class="home-topbar">
+  <div class="app-header">
+    <img src="data:image/jpeg;base64,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" alt="Fruicey">
+    <span class="app-header-title">My Account</span>
   </div>
-  <div class="card">
-    <div class="card-title">Profile</div>
-    <div class="info-row"><span class="info-label">Email</span><span class="info-val" id="acc-email"></span></div>
-    <div class="info-row"><span class="info-label">Phone</span><span class="info-val" id="acc-phone2"></span></div>
+
+  <!-- Waving canopy -->
+  <div class="canopy" aria-hidden="true">
+    <svg width="100%" height="160" viewBox="0 0 1000 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="cscal5" width="120" height="160" patternUnits="userSpaceOnUse" patternTransform="translate(-30 0)">
+          <path d="M0,0 H60 V130 Q30,156 0,130 Z" fill="#d7322d"/>
+          <path d="M60,0 H120 V130 Q90,156 60,130 Z" fill="#f2efe6"/>
+        </pattern>
+        <clipPath id="clipcscal5_0"><rect x="-3" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_1"><rect x="47" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_2"><rect x="97" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_3"><rect x="147" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_4"><rect x="197" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_5"><rect x="247" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_6"><rect x="297" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_7"><rect x="347" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_8"><rect x="397" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_9"><rect x="447" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_10"><rect x="497" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_11"><rect x="547" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_12"><rect x="597" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_13"><rect x="647" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_14"><rect x="697" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_15"><rect x="747" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_16"><rect x="797" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_17"><rect x="847" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_18"><rect x="897" y="-20" width="56" height="200"/></clipPath>
+        <clipPath id="clipcscal5_19"><rect x="947" y="-20" width="56" height="200"/></clipPath>
+      </defs>
+      <g clip-path="url(#clipcscal5_0)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-0.000s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-0.000s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_1)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-0.200s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-0.200s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_2)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-0.400s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-0.400s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_3)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-0.600s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-0.600s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_4)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-0.800s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-0.800s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_5)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-1.000s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-1.000s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_6)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-1.200s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-1.200s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_7)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-1.400s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-1.400s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_8)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-1.600s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-1.600s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_9)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-1.800s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-1.800s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_10)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-2.000s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-2.000s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_11)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-2.200s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-2.200s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_12)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-2.400s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-2.400s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_13)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-2.600s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-2.600s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_14)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-2.800s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-2.800s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_15)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-3.000s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-3.000s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_16)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-3.200s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-3.200s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_17)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-3.400s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-3.400s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_18)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-3.600s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-3.600s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+      <g clip-path="url(#clipcscal5_19)">
+        <rect x="0" y="0" width="1000" height="160" fill="url(#cscal5)"/>
+        <animateTransform attributeName="transform" type="translate" additive="sum" dur="4.0s" begin="-3.800s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" values="0 0;0 7;0 0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+        <animateTransform attributeName="transform" type="skewX" additive="sum" dur="4.0s" begin="-3.800s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.25;0.5;0.75;1" values="0;3;0;-3;0" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1"/>
+      </g>
+    </svg>
   </div>
-  <div class="card">
-    <div class="card-title">Fruicey Credit</div>
-    <div style="text-align:center;padding:8px 0">
-      <div style="font-size:32px;font-weight:700;color:var(--green)" id="acc-credit-balance">$0.00</div>
-      <div style="font-size:12px;color:var(--text3)">Available balance</div>
+  </div>
+
+  <!-- Profile card -->
+  <div class="acc-profile-card">
+    <div class="acc-profile-top">
+      <div class="acc-avatar" id="acc-avatar">F</div>
+      <div>
+        <div class="acc-profile-name" id="acc-name">My Account</div>
+        <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span>Fruicey Member</span></div>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn btn-primary" style="flex:1;font-size:13px" onclick="openAddCredit()">Add Credit</button>
-      <button class="btn btn-secondary" style="flex:1;font-size:13px" onclick="openCreditHistory()">History</button>
+    <div class="acc-profile-contact">
+      <div class="acc-contact-row"><i class="ti ti-mail"></i><span id="acc-email"></span></div>
+      <div class="acc-contact-row"><i class="ti ti-phone"></i><span id="acc-phone2"></span></div>
     </div>
   </div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <div class="info-row" style="padding:14px 16px;cursor:pointer" onclick="goTab('orders')"><span>My Orders</span><i class="ti ti-chevron-right" style="color:var(--text3)"></i></div>
-    <div class="info-row" style="padding:14px 16px;cursor:pointer" onclick="goTab('rewards')"><span>Rewards Pass</span><i class="ti ti-chevron-right" style="color:var(--text3)"></i></div>
+
+  <!-- Credit card -->
+  <div class="acc-credit-card">
+    <div class="acc-credit-icon"><i class="ti ti-wallet"></i></div>
+    <div class="acc-credit-label">Fruicey Credit</div>
+    <div class="acc-credit-amount" id="acc-credit-balance">$0.00</div>
+    <div class="acc-credit-actions">
+      <button class="acc-credit-btn primary" onclick="openAddCredit()"><i class="ti ti-plus"></i>Add Credit</button>
+      <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
+    </div>
   </div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <div class="info-row" style="padding:14px 16px;cursor:pointer;color:#e74c3c" onclick="logout()"><span>Log out</span><i class="ti ti-logout" style="color:#e74c3c"></i></div>
+
+  <!-- Quick tiles -->
+  <div class="acc-tiles">
+    <div class="acc-tile" onclick="goTab('orders')">
+      <div class="acc-tile-ico orders"><i class="ti ti-receipt"></i></div>
+      <div class="acc-tile-title">My Orders</div>
+      <div class="acc-tile-sub">View order history</div>
+    </div>
+    <div class="acc-tile" onclick="goTab('rewards')">
+      <div class="acc-tile-ico rewards"><i class="ti ti-gift"></i></div>
+      <div class="acc-tile-title">Rewards Pass</div>
+      <div class="acc-tile-sub">Stamps &amp; prizes</div>
+    </div>
   </div>
 </div>
+
+<!-- Account log-out (fixed, left of fullscreen; only shows on Account tab) -->
+<button class="acc-logout-fixed" onclick="logout()" title="Log out"><i class="ti ti-logout"></i><span>Log out</span></button>
 
 <!-- ═══ LOGIN MODAL ═══ -->
 <div class="modal-bg" id="login-modal">
@@ -4692,7 +4888,16 @@ async function signupRewardsPass(){
 // ── ACCOUNT ──────────────────────────────────────────────────
 async function loadAccount(){
   if(!currentUser) return;
+  const first = currentUser.first || '';
+  const last  = currentUser.last || '';
+  const fullName = (first + ' ' + last).trim() || 'My Account';
+  const nameEl = document.getElementById('acc-name');
+  if(nameEl) nameEl.textContent = fullName;
+  const avEl = document.getElementById('acc-avatar');
+  if(avEl){ avEl.textContent = ((first[0]||'') + (last[0]||'')).toUpperCase() || 'F'; }
   document.getElementById('acc-email').textContent=currentUser.email;
+  const phEl = document.getElementById('acc-phone2');
+  if(phEl) phEl.textContent = currentUser.phone || '';
   loadUserCredit();
 }
 

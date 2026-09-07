@@ -357,6 +357,19 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-drizzle{display:flex;flex-direction:row;align-items:center;gap:10px;padding:8px 12px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;font-family:var(--body);text-align:left;transition:border-color .15s,background .15s}
 .pd-drizzle .pd-drizzle-img{width:44px;height:44px;flex-shrink:0;object-fit:cover;border-radius:50%;background:#f4f4f4;display:block}
 .pd-drizzle .pd-drizzle-img-ph{background:#f0f0f0}
+/* Suggested products (bowl page 3) */
+.pd-suggest-sub{font-size:12.5px;color:var(--text3);margin:0 18px 10px}
+.pd-suggest-list{display:flex;flex-direction:column;gap:10px;padding:0 16px}
+.pd-suggest-row{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:10px}
+.pd-suggest-img{width:56px;height:56px;border-radius:12px;object-fit:cover;background:#f4f4f4;flex-shrink:0}
+.pd-suggest-info{flex:1;min-width:0}
+.pd-suggest-name{font-weight:700;font-size:14px;color:var(--text)}
+.pd-suggest-desc{font-size:11.5px;color:var(--text3);line-height:1.35;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pd-suggest-price{font-size:13px;font-weight:700;color:var(--green);margin-top:3px}
+.pd-suggest-add{flex-shrink:0;display:flex;align-items:center;gap:5px;background:var(--green-light);color:var(--green-dark);border:none;border-radius:12px;padding:9px 14px;font-family:var(--body);font-weight:700;font-size:13px;cursor:pointer;transition:transform .12s,background .15s}
+.pd-suggest-add i{font-size:16px}
+.pd-suggest-add:active{transform:scale(.95)}
+.pd-suggest-add.added{background:var(--green);color:#fff}
 .pd-drizzle .pd-drizzle-name{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);text-align:left;line-height:1.2}
 .pd-drizzle .pd-drizzle-price{font-size:12px;font-weight:700;color:var(--text2);flex-shrink:0;white-space:nowrap}
 .pd-drizzle .pd-drizzle-tick{width:20px;height:20px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;color:transparent;font-size:12px}
@@ -3444,8 +3457,65 @@ function refreshPdOptions(){
 
 // --- Superfood Bowls: single-select size (1 of N) + multi-select add-ons + one "Add to Cart" ---
 
+// Build 4 random drink/complementary suggestions (from non-bowl categories, biased to drinks)
+const SUGGEST_CATS = ['Shakes & Smoothies','Juices','Immunity Press','Nutritional Press','Longevity Press','Wellness Press'];
+let __suggestBuiltFor = null;
+function renderBowlSuggestions(){
+  const list = document.getElementById('pd-suggest-list');
+  if(!list) return;
+  // Only rebuild once per bowl open (so returning to this page keeps the same picks)
+  if(__suggestBuiltFor === (pdSelectedSize && pdSelectedSize.pid) && list.children.length){ return; }
+  __suggestBuiltFor = pdSelectedSize && pdSelectedSize.pid;
+  // Gather candidate products from drink/other categories that have a price
+  let pool = [];
+  SUGGEST_CATS.forEach(function(cat){
+    (CATALOGUE[cat]||[]).forEach(function(p){
+      if(p.sizes && p.sizes.length && stockStatus[p.id] !== false){ pool.push({cat:cat, p:p}); }
+    });
+  });
+  // Shuffle and take 4
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  const picks = pool.slice(0,4);
+  list.innerHTML = picks.map(function(item){
+    const p = item.p;
+    const fileId = IMG[p.id];
+    const img = fileId
+      ? '<img class="pd-suggest-img" src="https://lh3.googleusercontent.com/d/'+fileId+'=w160" alt="" loading="lazy">'
+      : '<div class="pd-suggest-img"></div>';
+    const desc = (PRODUCT_DESC[p.id]||'').trim();
+    const price = p.sizes[0] ? '$'+Number(p.sizes[0].p).toFixed(2) : '';
+    return '<div class="pd-suggest-row">'
+      + img
+      + '<div class="pd-suggest-info">'
+        + '<div class="pd-suggest-name">'+p.name+'</div>'
+        + (desc ? '<div class="pd-suggest-desc">'+desc+'</div>' : '')
+        + (price ? '<div class="pd-suggest-price">'+price+'</div>' : '')
+      + '</div>'
+      + '<button type="button" class="pd-suggest-add" data-sug="'+p.id+'" onclick="addSuggestionToCart(\''+p.id+'\',this)"><i class="ti ti-plus"></i>Add</button>'
+      + '</div>';
+  }).join('');
+}
+
+// Add a suggested product to the cart (default/first size) without disturbing the in-progress bowl
+function addSuggestionToCart(pid, btn){
+  if(!currentUser){ openLogin(); return; }
+  const p = PRODUCT_MAP[pid];
+  if(!p || !p.sizes || !p.sizes.length) return;
+  const s = p.sizes[0];
+  const size = s.l || '';
+  const price = Number(s.p)||0;
+  const label = p.name + (size ? ' ('+size+')' : '');
+  const exist = cart.find(i=>i.id===pid && i.size===size && !i.blend && !i.press && !i.protein && !i.note && !i.addonSig);
+  if(exist){ exist.qty++; } else {
+    cart.push({id:pid, name:p.name, size:size, label:label, price:price, qty:1, note:'', addons:[]});
+  }
+  saveCart(); updateCartBadge();
+  if(btn){ btn.classList.add('added'); btn.innerHTML='<i class="ti ti-check"></i>Added'; setTimeout(function(){ btn.classList.remove('added'); btn.innerHTML='<i class="ti ti-plus"></i>Add'; }, 1400); }
+  showToast(p.name+' added to cart');
+}
+
 // Pick exactly one size; deselect the others
-// Two-page bowl flow: page 1 = choose bowl, page 2 = drizzles + note
+// Bowl flow pages: 1=choose bowl, 2=drizzles, 3=suggestions, 4=notes (protein/press use 1-2)
 function setBowlPage(n, fromOpen){
   window.pdBowlPage = n;
   const optsWrap  = document.getElementById('pd-options');
@@ -3469,6 +3539,8 @@ function setBowlPage(n, fromOpen){
     if(noteWrap) noteWrap.style.display = 'none';
     if(proteinWrap) proteinWrap.style.display = 'none';
     if(pressWrap) pressWrap.style.display = 'none';
+    const suggestWrap1 = document.getElementById('pd-suggest-wrap');
+    if(suggestWrap1) suggestWrap1.style.display = 'none';
     if(backPage) backPage.style.display = 'none';
     if(exitBtn) exitBtn.style.display = '';
     // Only restore images/description when returning from page 2 (back nav), NOT on a fresh open —
@@ -3482,13 +3554,29 @@ function setBowlPage(n, fromOpen){
   } else {
     if(chooseEl) chooseEl.style.display = 'none';
     if(optsWrap) optsWrap.style.display = 'none';
-    if(drizzWrap) drizzWrap.style.display = isBowl ? 'block' : 'none';
-    if(noteWrap) noteWrap.style.display = isBowl ? 'block' : 'none';
-    if(proteinWrap) proteinWrap.style.display = isProtein ? 'block' : 'none';
-    if(pressWrap) pressWrap.style.display = isPress ? 'block' : 'none';
-    if(backPage){ backPage.innerHTML = '&larr; Back to ' + (isBowl ? 'bowl selection' : (isPress ? 'option' : 'size selection')); backPage.style.display = ''; }
+    const suggestWrap = document.getElementById('pd-suggest-wrap');
+    if(isBowl){
+      // Bowl sub-pages: 2=drizzles, 3=suggestions, 4=notes
+      if(drizzWrap) drizzWrap.style.display = (n===2) ? 'block' : 'none';
+      if(suggestWrap) suggestWrap.style.display = (n===3) ? 'block' : 'none';
+      if(noteWrap) noteWrap.style.display = (n===4) ? 'block' : 'none';
+      if(proteinWrap) proteinWrap.style.display = 'none';
+      if(pressWrap) pressWrap.style.display = 'none';
+      if(n===3) renderBowlSuggestions();
+      let backLbl = 'bowl selection';
+      if(n===3) backLbl = 'drizzles';
+      else if(n===4) backLbl = 'suggestions';
+      if(backPage){ backPage.innerHTML = '&larr; Back to ' + backLbl; backPage.style.display = ''; }
+    } else {
+      if(drizzWrap) drizzWrap.style.display = 'none';
+      if(suggestWrap) suggestWrap.style.display = 'none';
+      if(noteWrap) noteWrap.style.display = 'none';
+      if(proteinWrap) proteinWrap.style.display = isProtein ? 'block' : 'none';
+      if(pressWrap) pressWrap.style.display = isPress ? 'block' : 'none';
+      if(backPage){ backPage.innerHTML = '&larr; Back to ' + (isPress ? 'option' : 'size selection'); backPage.style.display = ''; }
+    }
     if(exitBtn) exitBtn.style.display = 'none';
-    // Page 2: no image and no description, just the product name and the options
+    // Page 2+: no image and no description, just the product name and the options
     window.__pdHadHero = imgWrap ? (imgWrap.style.display !== 'none') : false;
     window.__pdHadInfo = imgInfo ? (imgInfo.style.display !== 'none') : false;
     window.__pdHadDesc = descEl ? (descEl.style.display !== 'none') : false;
@@ -3502,9 +3590,10 @@ function setBowlPage(n, fromOpen){
   refreshBowlAdd();
 }
 
-// Footer button router: page 1 advances to page 2; page 2 adds to cart
+// Footer button router: advance through pages, add to cart on the last page
 function bowlFooterAction(){
-  if(window.pdHasPage2 && window.pdBowlPage === 1){
+  const page = window.pdBowlPage || 1;
+  if(window.pdHasPage2 && page === 1){
     if(!pdSelectedSize) return;              // must pick a size first
     if(blendNeeded() && !pdSelectedBlend) return;
     // Press choice happens on page 2 for press items, so don't gate advancement on it
@@ -3512,6 +3601,9 @@ function bowlFooterAction(){
     setBowlPage(2);
     return;
   }
+  // Bowls have 4 pages: drizzles(2) -> suggestions(3) -> notes(4) -> add
+  if(window.pdIsBowl && page === 2){ setBowlPage(3); return; }
+  if(window.pdIsBowl && page === 3){ setBowlPage(4); return; }
   addBowlToCart();
 }
 
@@ -3529,24 +3621,38 @@ function refreshBowlAdd(){
   if(!btn) return;
   const labelEl = btn.querySelector('.pd-bowl-add-label');
   const priceEl = btn.querySelector('.pd-bowl-add-price');
-  const drizzWrap = document.getElementById('pd-drizzles-wrap');
+  const page = window.pdBowlPage || 1;
+  // Drizzle add-on total: for bowls, count selected drizzles on ALL pages (they persist past page 2)
   let addonTotal = 0;
-  if(drizzWrap && drizzWrap.style.display !== 'none'){
+  if(window.pdIsBowl){
     addonTotal = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')]
       .reduce((s,a)=>s + (parseFloat(a.dataset.price)||0), 0);
   }
-  // Page 1 of a two-page flow: advance button once a size is chosen (page-2 gates handled there)
-  if(pdSelectedSize && window.pdHasPage2 && window.pdBowlPage === 1){
+  // Page 1 of a multi-page flow: advance button once a size is chosen (page-2 gates handled there)
+  if(pdSelectedSize && window.pdHasPage2 && page === 1){
     // Bowls/protein have no page-1 sub-gate; press items choose press on page 2.
     // Blend (for juices) is still a page-1 requirement when applicable.
     if(!(blendNeeded() && !pdSelectedBlend)){
       btn.disabled = false;
       const nextLbl = window.pdIsProtein ? 'Next: protein serving'
-                    : (window.pdIsPressPage ? 'Next: press type' : 'Next: drizzles &amp; notes');
+                    : (window.pdIsPressPage ? 'Next: press type' : 'Next: Drizzles');
       labelEl.innerHTML = nextLbl + ' <i class="ti ti-arrow-right" style="font-size:18px"></i>';
       priceEl.textContent = '';
       return;
     }
+  }
+  // Bowl mid-flow: page 2 -> suggestions, page 3 -> notes
+  if(window.pdIsBowl && pdSelectedSize && page === 2){
+    btn.disabled = false;
+    labelEl.innerHTML = 'Next: Suggestions <i class="ti ti-arrow-right" style="font-size:18px"></i>';
+    priceEl.textContent = '';
+    return;
+  }
+  if(window.pdIsBowl && pdSelectedSize && page === 3){
+    btn.disabled = false;
+    labelEl.innerHTML = 'Next: Notes <i class="ti ti-arrow-right" style="font-size:18px"></i>';
+    priceEl.textContent = '';
+    return;
   }
   if(pdSelectedSize && blendNeeded() && !pdSelectedBlend){
     btn.disabled = true;
@@ -3593,7 +3699,9 @@ function addBowlToCart(){
   const note = (noteEl && noteWrap && noteWrap.style.display !== 'none') ? noteEl.value.trim() : '';
   const drizzWrap = document.getElementById('pd-drizzles-wrap');
   let addons = [];
-  if(drizzWrap && drizzWrap.style.display !== 'none'){
+  // For bowls the drizzle page may not be the current one when adding (notes is page 4),
+  // so read the selected drizzles regardless of the wrap's current visibility.
+  if(window.pdIsBowl || (drizzWrap && drizzWrap.style.display !== 'none')){
     addons = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')].map(a=>({name:a.dataset.name, price:parseFloat(a.dataset.price)}));
   }
   const addonTotal = addons.reduce((s,a)=>s + (a.price||0), 0);
@@ -3826,6 +3934,7 @@ function openProductDetail(pid){
   m.classList.add('open');
   updatePdCartSummary();
   refreshPdOptions();
+  __suggestBuiltFor = null;   // fresh suggestion picks each time the sheet opens
   setBowlPage(1, true);   // always reset page/wrap state on open, even for single-page products
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }
@@ -5470,6 +5579,11 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="pd-protein-wrap" style="display:none">
       <div class="pd-choose">Protein Serving</div>
       <div id="pd-protein" class="pd-options"></div>
+    </div>
+    <div id="pd-suggest-wrap" style="display:none">
+      <div class="pd-choose">Complete your order</div>
+      <div class="pd-suggest-sub">A drink pairs perfectly with your bowl — add any you like.</div>
+      <div id="pd-suggest-list" class="pd-suggest-list"></div>
     </div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (optional)</label>

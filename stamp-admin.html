@@ -383,7 +383,6 @@ function memberRowHTML(m){
     +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">'
     +(stamps>=9?'<span class="badge badge-complete">Ready!</span><button class="btn btn-green" style="font-size:11px;padding:3px 10px" data-redeem="'+m.phone+'" data-name="'+m.first+' '+m.last+'">Redeem</button>':'<span class="badge badge-active">Active</span>')
     +'<button class="btn btn-outline" style="font-size:11px;padding:3px 10px" data-edit-phone="'+m.phone+'" data-edit-name="'+m.first+' '+m.last+'" data-edit-stamps="'+stamps+'" data-edit-pending="'+pending+'" data-edit-completed="'+completed+'">Edit</button>'
-    +'<button class="btn btn-red" style="font-size:11px;padding:3px 10px" data-del-phone="'+m.phone+'" data-del-name="'+m.first+' '+m.last+'">Delete</button>'
     +'</div></div>';
 }
 
@@ -413,18 +412,6 @@ document.addEventListener('click', async function(e){
     try{
       const res=await apiPost({action:'redeemStampCard',phone:np(phone)});
       if(res.success){ showToast(name+' redeemed! Card reset.'); loadData(); }
-      else showToast('Error: '+(res.error||'unknown'));
-    }catch(e){ showToast('Connection error'); }
-    return;
-  }
-  // Delete button
-  const delBtn = e.target.closest('[data-del-phone]');
-  if(delBtn){
-    const phone=delBtn.dataset.delPhone, name=delBtn.dataset.delName;
-    if(!confirm('Delete stamp card for '+name+'? This cannot be undone.')) return;
-    try{
-      const res=await apiPost({action:'deleteStampCard',phone:np(phone)});
-      if(res.success){ showToast(name+' deleted'); loadData(); }
       else showToast('Error: '+(res.error||'unknown'));
     }catch(e){ showToast('Connection error'); }
     return;

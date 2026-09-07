@@ -550,7 +550,7 @@ function deleteMember(id){
   const m=members.find(x=>x.id===id);if(!m)return;
   if(!confirm('Delete '+m.first+' '+m.last+'?\n\nThis will permanently remove the member and ALL their transactions. This cannot be undone.'))return;
   closeModalDirect();
-  apiPost({action:'deleteMember',id}).then(res=>{
+  apiPost({action:'deleteMember',id,phone:(m.phone||'')}).then(res=>{
     if(res.success){loadFromSheets();showToast(m.first+' '+m.last+' deleted');}
     else showToast('Error deleting member');
   }).catch(e=>{console.error('Delete error:',e);showToast('Connection error: '+e.message);});

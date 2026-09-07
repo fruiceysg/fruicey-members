@@ -240,6 +240,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* HOME TAB: clean plain background (does not affect other tabs) */
 body.home-active{background:#f1f1f1}
 body.home-active .login-star{display:none}
+body:has(#scr-account.active) .login-star{display:none}
 #scr-home,#scr-menu,#scr-orders,#scr-rewards,#scr-account{background:#f1f1f1}
 
 /* HOME FOOTER */
@@ -2260,6 +2261,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="acc-profile-contact">
       <div class="acc-contact-row"><i class="ti ti-mail"></i><span id="acc-email"></span></div>
       <div class="acc-contact-row"><i class="ti ti-phone"></i><span id="acc-phone2"></span></div>
+      <div class="acc-contact-row" id="acc-bday-row" style="display:none"><i class="ti ti-cake"></i><span id="acc-bday"></span></div>
     </div>
   </div>
 
@@ -2271,20 +2273,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="acc-credit-actions">
       <button class="acc-credit-btn primary" onclick="openAddCredit()"><i class="ti ti-plus"></i>Add Credit</button>
       <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
-    </div>
-  </div>
-
-  <!-- Quick tiles -->
-  <div class="acc-tiles">
-    <div class="acc-tile" onclick="goTab('orders')">
-      <div class="acc-tile-ico orders"><i class="ti ti-receipt"></i></div>
-      <div class="acc-tile-title">My Orders</div>
-      <div class="acc-tile-sub">View order history</div>
-    </div>
-    <div class="acc-tile" onclick="goTab('rewards')">
-      <div class="acc-tile-ico rewards"><i class="ti ti-gift"></i></div>
-      <div class="acc-tile-title">Rewards Pass</div>
-      <div class="acc-tile-sub">Stamps &amp; prizes</div>
     </div>
   </div>
 </div>
@@ -2317,6 +2305,15 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div class="field"><label>Last name</label><input type="text" id="r-last" placeholder=""></div>
       </div>
       <div class="field"><label>Phone number</label><input type="tel" id="r-phone" placeholder=""><div class="field-hint">No country code needed</div></div>
+      <div class="field">
+        <label>Date of birth</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="r-bday-day" inputmode="numeric" min="1" max="31" placeholder="DD" style="width:70px;text-align:center" maxlength="2">
+          <span style="font-size:20px;color:var(--text3);font-weight:700">/</span>
+          <input type="number" id="r-bday-month" inputmode="numeric" min="1" max="12" placeholder="MM" style="width:70px;text-align:center" maxlength="2">
+        </div>
+        <div class="field-hint">Day and month only</div>
+      </div>
       <div class="field"><label>Email</label><input type="email" id="r-email" placeholder=""></div>
       <div class="field"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 characters"></div>
       <div class="field"><label>Confirm password</label><input type="password" id="r-pass2" placeholder="Repeat password"></div>
@@ -2991,14 +2988,19 @@ document.addEventListener('DOMContentLoaded', function(){
     const email = document.getElementById('r-email').value.trim().toLowerCase();
     const pass  = document.getElementById('r-pass').value.trim();
     const pass2 = document.getElementById('r-pass2').value.trim();
+    const bdayDay   = parseInt(document.getElementById('r-bday-day').value)||0;
+    const bdayMonth = parseInt(document.getElementById('r-bday-month').value)||0;
     const err   = document.getElementById('r-err');
     err.style.display='none';
     if(!first||!last||!phone||!email||!pass){ err.textContent='All fields are required.'; err.style.display='block'; return; }
+    if(!bdayDay||!bdayMonth){ err.textContent='Please enter your date of birth (DD and MM).'; err.style.display='block'; return; }
+    if(bdayDay<1||bdayDay>31||bdayMonth<1||bdayMonth>12){ err.textContent='Please enter a valid date of birth.'; err.style.display='block'; return; }
     if(pass !== pass2){ err.textContent='Passwords do not match.'; err.style.display='block'; return; }
     if(pass.length < 6){ err.textContent='Password must be at least 6 characters.'; err.style.display='block'; return; }
+    const bday = String(bdayDay).padStart(2,'0')+'/'+String(bdayMonth).padStart(2,'0');
     this.textContent='Creating...'; this.disabled=true;
     try{
-      const res = await apiPost({action:'registerApp', first, last, phone, email, password:pass});
+      const res = await apiPost({action:'registerApp', first, last, phone, email, password:pass, bday});
       if(res.success){
         currentUser = res.user;
         sessionStorage.setItem('fruicey_user', JSON.stringify(currentUser));
@@ -4898,6 +4900,12 @@ async function loadAccount(){
   document.getElementById('acc-email').textContent=currentUser.email;
   const phEl = document.getElementById('acc-phone2');
   if(phEl) phEl.textContent = currentUser.phone || '';
+  const bdayRow = document.getElementById('acc-bday-row');
+  const bdayEl = document.getElementById('acc-bday');
+  if(bdayRow && bdayEl){
+    if(currentUser.bday){ bdayEl.textContent = 'Birthday: '+currentUser.bday; bdayRow.style.display=''; }
+    else { bdayRow.style.display='none'; }
+  }
   loadUserCredit();
 }
 

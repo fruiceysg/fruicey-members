@@ -372,7 +372,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-suggest-add.added{background:var(--green);color:#fff}
 .pd-drizzle .pd-drizzle-name{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);text-align:left;line-height:1.2}
 .pd-drizzle .pd-drizzle-price{font-size:12px;font-weight:700;color:var(--text2);flex-shrink:0;white-space:nowrap}
-.pd-drizzle .pd-drizzle-tick{width:20px;height:20px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;color:transparent;font-size:12px}
+.pd-drizzle .pd-drizzle-tick{display:none}
 .pd-drizzle.selected{border-color:var(--green);background:var(--green-light)}
 .pd-drizzle.selected .pd-drizzle-price{color:var(--green-dark)}
 .pd-drizzle.selected .pd-drizzle-tick{background:var(--green);border-color:var(--green);color:#fff}
@@ -382,7 +382,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-size .pd-size-main{font-size:15px;font-weight:700;color:var(--text);line-height:1.2}
 .pd-size .pd-size-sub{font-size:12px;font-weight:500;color:var(--text3);line-height:1.25}
 .pd-size .pd-size-price{font-size:16px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;gap:10px}
-.pd-size .pd-size-tick{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:transparent;font-size:13px}
+.pd-size .pd-size-tick{display:none}
 .pd-size.selected{border-color:var(--green);background:var(--green-light)}
 .pd-size.selected .pd-size-price{color:var(--green-dark)}
 .pd-size.selected .pd-size-tick{background:var(--green);border-color:var(--green);color:#fff}
@@ -3458,7 +3458,8 @@ function refreshPdOptions(){
 // --- Superfood Bowls: single-select size (1 of N) + multi-select add-ons + one "Add to Cart" ---
 
 // Build 4 random drink/complementary suggestions (from non-bowl categories, biased to drinks)
-const SUGGEST_CATS = ['Shakes & Smoothies','Juices','Immunity Press','Nutritional Press','Longevity Press','Wellness Press'];
+const SUGGEST_CATS = ['Shakes & Smoothies','Immunity Press','Nutritional Press','Longevity Press','Wellness Press'];
+const SUGGEST_EXCLUDE_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg (pre-order items)
 let __suggestBuiltFor = null;
 function renderBowlSuggestions(){
   const list = document.getElementById('pd-suggest-list');
@@ -3470,6 +3471,7 @@ function renderBowlSuggestions(){
   let pool = [];
   SUGGEST_CATS.forEach(function(cat){
     (CATALOGUE[cat]||[]).forEach(function(p){
+      if(SUGGEST_EXCLUDE_IDS.has(p.id)) return;
       if(p.sizes && p.sizes.length && stockStatus[p.id] !== false){ pool.push({cat:cat, p:p}); }
     });
   });
@@ -3509,7 +3511,7 @@ function addSuggestionToCart(pid, btn){
   if(exist){ exist.qty++; } else {
     cart.push({id:pid, name:p.name, size:size, label:label, price:price, qty:1, note:'', addons:[]});
   }
-  saveCart(); updateCartBadge();
+  saveCart(); updateCartBadge(); updatePdCartSummary();
   if(btn){ btn.classList.add('added'); btn.innerHTML='<i class="ti ti-check"></i>Added'; setTimeout(function(){ btn.classList.remove('added'); btn.innerHTML='<i class="ti ti-plus"></i>Add'; }, 1400); }
   showToast(p.name+' added to cart');
 }
@@ -3532,6 +3534,8 @@ function setBowlPage(n, fromOpen){
   const preorderEl= document.getElementById('pd-preorder');
   const scroll    = document.querySelector('#product-detail-modal .pd-scroll');
   const isBowl = !!window.pdIsBowl, isProtein = !!window.pdIsProtein, isPress = !!window.pdIsPressPage;
+  const nameElReset = document.getElementById('pd-name');
+  if(nameElReset) nameElReset.style.display = '';   // default visible; suggestions page hides it below
   if(n === 1){
     if(chooseEl) chooseEl.style.display = '';
     if(optsWrap) optsWrap.style.display = '';
@@ -3563,6 +3567,9 @@ function setBowlPage(n, fromOpen){
       if(proteinWrap) proteinWrap.style.display = 'none';
       if(pressWrap) pressWrap.style.display = 'none';
       if(n===3) renderBowlSuggestions();
+      // Hide the bowl's product name specifically on the suggestions page
+      const nameEl = document.getElementById('pd-name');
+      if(nameEl) nameEl.style.display = (n===3) ? 'none' : '';
       let backLbl = 'bowl selection';
       if(n===3) backLbl = 'drizzles';
       else if(n===4) backLbl = 'suggestions';
@@ -3588,6 +3595,7 @@ function setBowlPage(n, fromOpen){
   }
   if(scroll) scroll.scrollTop = 0;
   refreshBowlAdd();
+  updatePdCartSummary();
 }
 
 // Footer button router: advance through pages, add to cart on the last page

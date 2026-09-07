@@ -287,6 +287,10 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .cat-tabs::-webkit-scrollbar{display:none}
 .cat-pill{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:rgba(255,255,255,0.75);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--text2);font-family:var(--body)}
 .cat-pill.active{background:var(--green);border-color:var(--green);color:#fff}
+@media (min-width:900px){
+  .cat-tabs{overflow-x:visible;flex-wrap:wrap;justify-content:stretch}
+  .cat-pill{flex:1 1 0;text-align:center;padding:10px 12px;font-size:13px}
+}
 .product-grid{padding:10px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .product-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06);cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;flex-direction:column}
 .product-card:active{transform:scale(.98)}
@@ -378,6 +382,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-bowl-actions button{flex:1;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .15s}
 .pd-bowl-back{width:100%;margin-top:8px;border:none;border-radius:14px;padding:12px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;background:#f0f0f0;color:#555;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s}
 .pd-bowl-back:active{background:#e6e6e6}
+@media (min-width:900px){ .pd-exit-extra{display:none} }
 /* In bowl mode the green running-total bar is replaced by the consolidated footer above */
 #product-detail-modal .modal-box.pd-bowl-mode .pd-cart-summary{display:none}
 /* Bounce the sheet down into the cart bar after adding (McDonald's-style) */
@@ -5482,7 +5487,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <span class="pd-bowl-add-price"></span>
       </button>
       <button type="button" id="pd-bowl-back-page" class="pd-bowl-back" onclick="setBowlPage(1)" style="display:none">&larr; Back to bowl selection</button>
-      <button type="button" id="pd-bowl-exit" class="pd-bowl-back" onclick="closeProductDetail()">Back or Slide down to exit</button>
+      <button type="button" id="pd-bowl-exit" class="pd-bowl-back" onclick="closeProductDetail()">Back<span class="pd-exit-extra"> or Slide down to exit</span></button>
     </div>
   </div>
 </div>

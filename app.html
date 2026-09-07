@@ -3636,6 +3636,12 @@ function refreshBowlAdd(){
     addonTotal = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')]
       .reduce((s,a)=>s + (parseFloat(a.dataset.price)||0), 0);
   }
+  // Live bowl price (base + drizzles + press + protein) — shown on the button's right on every page
+  // once a size/bowl is chosen, so the amount updates as add-ons are selected.
+  const liveTotal = pdSelectedSize
+    ? Math.round((pdSelectedSize.base + addonTotal + pressAddAmt() + proteinAddAmt()) * 100) / 100
+    : 0;
+  const livePriceStr = pdSelectedSize ? '$'+liveTotal.toFixed(2) : '';
   // Page 1 of a multi-page flow: advance button once a size is chosen (page-2 gates handled there)
   if(pdSelectedSize && window.pdHasPage2 && page === 1){
     // Bowls/protein have no page-1 sub-gate; press items choose press on page 2.
@@ -3645,7 +3651,7 @@ function refreshBowlAdd(){
       const nextLbl = window.pdIsProtein ? 'Next: protein serving'
                     : (window.pdIsPressPage ? 'Next: press type' : 'Next: Drizzles');
       labelEl.innerHTML = nextLbl + ' <i class="ti ti-arrow-right" style="font-size:18px"></i>';
-      priceEl.textContent = '';
+      priceEl.textContent = window.pdIsBowl ? livePriceStr : '';
       return;
     }
   }
@@ -3653,13 +3659,13 @@ function refreshBowlAdd(){
   if(window.pdIsBowl && pdSelectedSize && page === 2){
     btn.disabled = false;
     labelEl.innerHTML = 'Next: Suggestions <i class="ti ti-arrow-right" style="font-size:18px"></i>';
-    priceEl.textContent = '';
+    priceEl.textContent = livePriceStr;
     return;
   }
   if(window.pdIsBowl && pdSelectedSize && page === 3){
     btn.disabled = false;
     labelEl.innerHTML = 'Next: Notes <i class="ti ti-arrow-right" style="font-size:18px"></i>';
-    priceEl.textContent = '';
+    priceEl.textContent = livePriceStr;
     return;
   }
   if(pdSelectedSize && blendNeeded() && !pdSelectedBlend){
@@ -3682,10 +3688,9 @@ function refreshBowlAdd(){
       priceEl.textContent = '';
       return;
     }
-    const total = Math.round((pdSelectedSize.base + addonTotal + pressAddAmt() + proteinAddAmt()) * 100) / 100;
     btn.disabled = false;
     labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Add to Cart';
-    priceEl.textContent = '$'+total.toFixed(2);
+    priceEl.textContent = livePriceStr;
   } else {
     btn.disabled = true;
     labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> '+pdAddPrompt;

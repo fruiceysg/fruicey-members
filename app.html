@@ -3139,6 +3139,22 @@ function selectPdPress(idx, el){
   refreshBowlAdd();
 }
 
+// Protein serving (Recovery/Recharge/Refuel/Boost/Powerhouse) — single-select on page 2
+const PROTEIN_OPTIONS = [
+  {name:'30g', add:0},
+  {name:'40g', add:1},
+  {name:'50g', add:2}
+];
+let pdSelectedProtein = null;
+function proteinNeeded(){ return !!window.pdIsProtein; }
+function proteinAddAmt(){ return (proteinNeeded() && pdSelectedProtein) ? (pdSelectedProtein.add||0) : 0; }
+function selectPdProtein(idx, el){
+  pdSelectedProtein = PROTEIN_OPTIONS[idx] || null;
+  document.querySelectorAll('#pd-protein .pd-size').forEach(b=>b.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  refreshBowlAdd();
+}
+
 // Toggle add-on drizzle selection (multi-select) in the product detail sheet
 document.addEventListener('click', function(e){
   const d = e.target.closest && e.target.closest('#pd-drizzles .pd-drizzle');
@@ -3229,28 +3245,34 @@ function setBowlPage(n){
   const chooseEl  = document.getElementById('pd-choose');
   const drizzWrap = document.getElementById('pd-drizzles-wrap');
   const noteWrap  = document.getElementById('pd-note-wrap');
+  const proteinWrap = document.getElementById('pd-protein-wrap');
   const backPage  = document.getElementById('pd-bowl-back-page');
   const exitBtn   = document.getElementById('pd-bowl-exit');
   const imgWrap   = document.getElementById('pd-imgwrap');
   const imgInfo   = document.getElementById('pd-imgwrap-info');
   const scroll    = document.querySelector('#product-detail-modal .pd-scroll');
+  const isBowl = !!window.pdIsBowl, isProtein = !!window.pdIsProtein;
   if(n === 1){
     if(chooseEl) chooseEl.style.display = '';
     if(optsWrap) optsWrap.style.display = '';
     if(drizzWrap) drizzWrap.style.display = 'none';
     if(noteWrap) noteWrap.style.display = 'none';
+    if(proteinWrap) proteinWrap.style.display = 'none';
     if(backPage) backPage.style.display = 'none';
     if(exitBtn) exitBtn.style.display = '';
     if(imgWrap && window.__pdHadHero) imgWrap.style.display = 'flex';
+    if(imgInfo && window.__pdHadInfo) imgInfo.style.display = 'flex';
   } else {
     if(chooseEl) chooseEl.style.display = 'none';
     if(optsWrap) optsWrap.style.display = 'none';
-    if(drizzWrap) drizzWrap.style.display = 'block';
-    if(noteWrap) noteWrap.style.display = 'block';
+    if(drizzWrap) drizzWrap.style.display = isBowl ? 'block' : 'none';
+    if(noteWrap) noteWrap.style.display = isBowl ? 'block' : 'none';
+    if(proteinWrap) proteinWrap.style.display = isProtein ? 'block' : 'none';
     if(backPage) backPage.style.display = '';
     if(exitBtn) exitBtn.style.display = 'none';
-    // Page 2 (drizzles & notes): no image, just the options
+    // Page 2: no image, just the options
     window.__pdHadHero = imgWrap ? (imgWrap.style.display !== 'none') : false;
+    window.__pdHadInfo = imgInfo ? (imgInfo.style.display !== 'none') : false;
     if(imgWrap) imgWrap.style.display = 'none';
     if(imgInfo) imgInfo.style.display = 'none';
   }
@@ -3260,8 +3282,8 @@ function setBowlPage(n){
 
 // Footer button router: page 1 advances to page 2; page 2 adds to cart
 function bowlFooterAction(){
-  if(window.pdIsBowl && window.pdBowlPage === 1){
-    if(!pdSelectedSize) return;              // must pick a bowl first
+  if(window.pdHasPage2 && window.pdBowlPage === 1){
+    if(!pdSelectedSize) return;              // must pick a size first
     if(blendNeeded() && !pdSelectedBlend) return;
     if(pressNeeded() && !pdSelectedPress) return;
     setBowlPage(2);
@@ -3303,14 +3325,22 @@ function refreshBowlAdd(){
     return;
   }
   if(pdSelectedSize){
-    // Page 1 of the bowl flow: advance button, no add-on total yet
-    if(window.pdIsBowl && window.pdBowlPage === 1){
+    // Page 1 of a two-page flow: advance button, no add-on total yet
+    if(window.pdHasPage2 && window.pdBowlPage === 1){
       btn.disabled = false;
-      labelEl.innerHTML = 'Next: drizzles &amp; notes <i class="ti ti-arrow-right" style="font-size:18px"></i>';
+      const nextLbl = window.pdIsProtein ? 'Next: protein serving' : 'Next: drizzles &amp; notes';
+      labelEl.innerHTML = nextLbl + ' <i class="ti ti-arrow-right" style="font-size:18px"></i>';
       priceEl.textContent = '';
       return;
     }
-    const total = Math.round((pdSelectedSize.base + addonTotal + pressAddAmt()) * 100) / 100;
+    // Page 2 protein: require a protein serving before enabling Add
+    if(window.pdIsProtein && !pdSelectedProtein){
+      btn.disabled = true;
+      labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose protein serving';
+      priceEl.textContent = '';
+      return;
+    }
+    const total = Math.round((pdSelectedSize.base + addonTotal + pressAddAmt() + proteinAddAmt()) * 100) / 100;
     btn.disabled = false;
     labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Add to Cart';
     priceEl.textContent = '$'+total.toFixed(2);
@@ -3343,14 +3373,17 @@ function addBowlToCart(){
   const blend = blendNeeded() ? (pdSelectedBlend || '') : '';
   const press = (pressNeeded() && pdSelectedPress) ? pdSelectedPress.name : '';
   const pressAdd = (pressNeeded() && pdSelectedPress) ? (pdSelectedPress.add||0) : 0;
-  const finalPrice = Math.round((pdSelectedSize.base + addonTotal + pressAdd) * 100) / 100;
+  const protein = (window.pdIsProtein && pdSelectedProtein) ? pdSelectedProtein.name : '';
+  const proteinAdd = (window.pdIsProtein && pdSelectedProtein) ? (pdSelectedProtein.add||0) : 0;
+  const finalPrice = Math.round((pdSelectedSize.base + addonTotal + pressAdd + proteinAdd) * 100) / 100;
   const addonSig = addons.map(a=>a.name).sort().join('|');
   let label = prod.name + (size ? ' ('+size+')' : '');
   if(press) label += ' · ' + press;
   if(blend) label += ' · ' + blend;
+  if(protein) label += ' · ' + protein + ' protein';
   if(addons.length) label += ' + ' + addons.map(a=>a.name).join(', ');
-  const exist = cart.find(i=>i.id===pid && i.size===size && (i.blend||'')===blend && (i.press||'')===press && (i.note||'')===note && (i.addonSig||'')===addonSig);
-  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size:size, blend:blend, press:press, label:label, price:finalPrice, qty:1, note:note, addons:addons, addonSig:addonSig}); }
+  const exist = cart.find(i=>i.id===pid && i.size===size && (i.blend||'')===blend && (i.press||'')===press && (i.protein||'')===protein && (i.note||'')===note && (i.addonSig||'')===addonSig);
+  if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size:size, blend:blend, press:press, protein:protein, label:label, price:finalPrice, qty:1, note:note, addons:addons, addonSig:addonSig}); }
   updateCartBadge();
   updatePdCartSummary();
   showToast(label+' added!');
@@ -3440,8 +3473,31 @@ function openProductDetail(pid){
   const choose = document.getElementById('pd-choose');
   const bowlAdd = document.getElementById('pd-bowl-add');
   const isBowl = showNote; // Superfood Bowls also get add-ons + note
+  // Protein-serving items (Recovery/Recharge/Refuel/Boost/Powerhouse): 2nd page with protein choice
+  const PROTEIN_IDS = new Set(['ss13','ss14','ss15','ss16','ss17']);
+  const isProtein = PROTEIN_IDS.has(p.id);
   window.pdIsBowl = isBowl;
+  window.pdIsProtein = isProtein;
+  window.pdHasPage2 = isBowl || isProtein;
   window.pdBowlPage = 1;
+  pdSelectedProtein = null;
+  // Populate protein serving options (single-select)
+  const proteinWrap = document.getElementById('pd-protein-wrap');
+  const proteinEl = document.getElementById('pd-protein');
+  if(proteinWrap && proteinEl){
+    if(isProtein){
+      proteinEl.innerHTML = PROTEIN_OPTIONS.map(function(o,idx){
+        const addTxt = o.add>0 ? '+$'+o.add.toFixed(2) : '$0.00';
+        return '<button type="button" class="pd-size" onclick="selectPdProtein('+idx+',this)">'
+          + '<span class="pd-size-label"><span class="pd-size-main">'+o.name+'</span></span>'
+          + '<span class="pd-size-price">'+addTxt+'<span class="pd-size-tick"><i class="ti ti-check"></i></span></span>'
+          + '</button>';
+      }).join('');
+    } else {
+      proteinEl.innerHTML = '';
+    }
+    proteinWrap.style.display = 'none'; // shown on page 2 via setBowlPage
+  }
   const pdBox = document.querySelector('#product-detail-modal .modal-box');
   if(pdBox) pdBox.classList.add('pd-bowl-mode'); // all products use the locked Add-to-Cart footer
   pdSelectedSize = null;   // reset any previous selection
@@ -3452,8 +3508,8 @@ function openProductDetail(pid){
   } else {
     // Single-select option (1 out of N); one locked "Add to Cart" that bounces down after adding.
     choose.style.display = '';
-    choose.textContent = isBowl ? 'Choose your acai bowl' : 'Choose your option';
-    pdAddPrompt = isBowl ? 'Choose your bowl' : 'Choose your option';
+    choose.textContent = isBowl ? 'Choose your acai bowl' : (isProtein ? 'Choice of Size' : 'Choose your option');
+    pdAddPrompt = isBowl ? 'Choose your bowl' : (isProtein ? 'Choose your size' : 'Choose your option');
     opts.classList.toggle('pd-bowl-grid', isBowl);
     let bowlSizes = p.sizes;
     if(isBowl){
@@ -3538,7 +3594,7 @@ function openProductDetail(pid){
   m.classList.add('open');
   updatePdCartSummary();
   refreshPdOptions();
-  if(window.pdIsBowl){ setBowlPage(1); }
+  if(window.pdHasPage2){ setBowlPage(1); }
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }
     else { box.style.transform = 'translateY(0)'; }
@@ -3711,6 +3767,7 @@ function renderCartItems(){
       if(item.size) vparts.push('('+String(item.size).split(' - ')[0]+')');
       if(item.press) vparts.push(item.press);
       if(item.blend) vparts.push(item.blend);
+      if(item.protein) vparts.push(item.protein+' protein');
       const vtxt = vparts.join(' · ');
       const variant = vtxt ? '<div class="cart-variant">'+vtxt+'</div>' : '';
       const adds = (item.addons && item.addons.length) ? '<div class="cart-addons">'+item.addons.map(a=>a.name).join(', ')+'</div>' : '';
@@ -5162,6 +5219,10 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="pd-drizzles-wrap" class="pd-drizzles-wrap" style="display:none">
       <div class="pd-drizzles-label">Add-on Drizzles <span class="pd-drizzles-hint">— optional, add as many as you like</span></div>
       <div id="pd-drizzles" class="pd-drizzles"></div>
+    </div>
+    <div id="pd-protein-wrap" style="display:none">
+      <div class="pd-choose">Protein Serving</div>
+      <div id="pd-protein" class="pd-options"></div>
     </div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (optional)</label>

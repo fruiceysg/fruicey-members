@@ -3222,6 +3222,47 @@ function refreshPdOptions(){
 // --- Superfood Bowls: single-select size (1 of N) + multi-select add-ons + one "Add to Cart" ---
 
 // Pick exactly one size; deselect the others
+// Two-page bowl flow: page 1 = choose bowl, page 2 = drizzles + note
+function setBowlPage(n){
+  window.pdBowlPage = n;
+  const optsWrap  = document.getElementById('pd-options');
+  const chooseEl  = document.getElementById('pd-choose');
+  const drizzWrap = document.getElementById('pd-drizzles-wrap');
+  const noteWrap  = document.getElementById('pd-note-wrap');
+  const backPage  = document.getElementById('pd-bowl-back-page');
+  const exitBtn   = document.getElementById('pd-bowl-exit');
+  const scroll    = document.querySelector('#product-detail-modal .pd-scroll');
+  if(n === 1){
+    if(chooseEl) chooseEl.style.display = '';
+    if(optsWrap) optsWrap.style.display = '';
+    if(drizzWrap) drizzWrap.style.display = 'none';
+    if(noteWrap) noteWrap.style.display = 'none';
+    if(backPage) backPage.style.display = 'none';
+    if(exitBtn) exitBtn.style.display = '';
+  } else {
+    if(chooseEl) chooseEl.style.display = 'none';
+    if(optsWrap) optsWrap.style.display = 'none';
+    if(drizzWrap) drizzWrap.style.display = 'block';
+    if(noteWrap) noteWrap.style.display = 'block';
+    if(backPage) backPage.style.display = '';
+    if(exitBtn) exitBtn.style.display = 'none';
+  }
+  if(scroll) scroll.scrollTop = 0;
+  refreshBowlAdd();
+}
+
+// Footer button router: page 1 advances to page 2; page 2 adds to cart
+function bowlFooterAction(){
+  if(window.pdIsBowl && window.pdBowlPage === 1){
+    if(!pdSelectedSize) return;              // must pick a bowl first
+    if(blendNeeded() && !pdSelectedBlend) return;
+    if(pressNeeded() && !pdSelectedPress) return;
+    setBowlPage(2);
+    return;
+  }
+  addBowlToCart();
+}
+
 function selectBowlSize(pid, size, base, el){
   pdSelectedSize = {pid:pid, size:size, base:base};
   document.querySelectorAll('#pd-options .pd-size').forEach(b=>b.classList.remove('selected'));
@@ -3255,6 +3296,13 @@ function refreshBowlAdd(){
     return;
   }
   if(pdSelectedSize){
+    // Page 1 of the bowl flow: advance button, no add-on total yet
+    if(window.pdIsBowl && window.pdBowlPage === 1){
+      btn.disabled = false;
+      labelEl.innerHTML = 'Next: drizzles &amp; notes <i class="ti ti-arrow-right" style="font-size:18px"></i>';
+      priceEl.textContent = '';
+      return;
+    }
     const total = Math.round((pdSelectedSize.base + addonTotal + pressAddAmt()) * 100) / 100;
     btn.disabled = false;
     labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Add to Cart';
@@ -3385,6 +3433,8 @@ function openProductDetail(pid){
   const choose = document.getElementById('pd-choose');
   const bowlAdd = document.getElementById('pd-bowl-add');
   const isBowl = showNote; // Superfood Bowls also get add-ons + note
+  window.pdIsBowl = isBowl;
+  window.pdBowlPage = 1;
   const pdBox = document.querySelector('#product-detail-modal .modal-box');
   if(pdBox) pdBox.classList.add('pd-bowl-mode'); // all products use the locked Add-to-Cart footer
   pdSelectedSize = null;   // reset any previous selection
@@ -3467,6 +3517,7 @@ function openProductDetail(pid){
   m.classList.add('open');
   updatePdCartSummary();
   refreshPdOptions();
+  if(window.pdIsBowl){ setBowlPage(1); }
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }
     else { box.style.transform = 'translateY(0)'; }
@@ -5105,11 +5156,12 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
     <div id="pd-bowl-add" class="pd-bowl-add" style="display:none">
       <div id="pd-bowl-total" class="pd-bowl-total" style="display:none"></div>
-      <button type="button" id="pd-bowl-add-btn" class="pd-bowl-add-btn" onclick="addBowlToCart()" disabled>
+      <button type="button" id="pd-bowl-add-btn" class="pd-bowl-add-btn" onclick="bowlFooterAction()" disabled>
         <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your bowl</span>
         <span class="pd-bowl-add-price"></span>
       </button>
-      <button type="button" class="pd-bowl-back" onclick="closeProductDetail()">Back or Slide down to exit</button>
+      <button type="button" id="pd-bowl-back-page" class="pd-bowl-back" onclick="setBowlPage(1)" style="display:none">&larr; Back to bowl selection</button>
+      <button type="button" id="pd-bowl-exit" class="pd-bowl-back" onclick="closeProductDetail()">Back or Slide down to exit</button>
     </div>
   </div>
 </div>

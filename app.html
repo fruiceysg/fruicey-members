@@ -3239,7 +3239,7 @@ function refreshPdOptions(){
 
 // Pick exactly one size; deselect the others
 // Two-page bowl flow: page 1 = choose bowl, page 2 = drizzles + note
-function setBowlPage(n){
+function setBowlPage(n, fromOpen){
   window.pdBowlPage = n;
   const optsWrap  = document.getElementById('pd-options');
   const chooseEl  = document.getElementById('pd-choose');
@@ -3262,8 +3262,12 @@ function setBowlPage(n){
     if(pressWrap) pressWrap.style.display = 'none';
     if(backPage) backPage.style.display = 'none';
     if(exitBtn) exitBtn.style.display = '';
-    if(imgWrap && window.__pdHadHero) imgWrap.style.display = 'flex';
-    if(imgInfo && window.__pdHadInfo) imgInfo.style.display = 'flex';
+    // Only restore images when returning from page 2 (back nav), NOT on a fresh open —
+    // on open, the open flow has already set the correct image visibility.
+    if(!fromOpen){
+      if(imgWrap && window.__pdHadHero) imgWrap.style.display = 'flex';
+      if(imgInfo && window.__pdHadInfo) imgInfo.style.display = 'flex';
+    }
   } else {
     if(chooseEl) chooseEl.style.display = 'none';
     if(optsWrap) optsWrap.style.display = 'none';
@@ -3607,7 +3611,7 @@ function openProductDetail(pid){
   m.classList.add('open');
   updatePdCartSummary();
   refreshPdOptions();
-  if(window.pdHasPage2){ setBowlPage(1); }
+  setBowlPage(1, true);   // always reset page/wrap state on open, even for single-page products
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }
     else { box.style.transform = 'translateY(0)'; }

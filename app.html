@@ -3268,7 +3268,7 @@ function setBowlPage(n){
     if(drizzWrap) drizzWrap.style.display = isBowl ? 'block' : 'none';
     if(noteWrap) noteWrap.style.display = isBowl ? 'block' : 'none';
     if(proteinWrap) proteinWrap.style.display = isProtein ? 'block' : 'none';
-    if(backPage) backPage.style.display = '';
+    if(backPage){ backPage.innerHTML = '&larr; Back to ' + (isBowl ? 'bowl' : 'size') + ' selection'; backPage.style.display = ''; }
     if(exitBtn) exitBtn.style.display = 'none';
     // Page 2: no image, just the options
     window.__pdHadHero = imgWrap ? (imgWrap.style.display !== 'none') : false;
@@ -3508,8 +3508,9 @@ function openProductDetail(pid){
   } else {
     // Single-select option (1 out of N); one locked "Add to Cart" that bounces down after adding.
     choose.style.display = '';
-    choose.textContent = isBowl ? 'Choose your acai bowl' : (isProtein ? 'Choice of Size' : 'Choose your option');
-    pdAddPrompt = isBowl ? 'Choose your bowl' : (isProtein ? 'Choose your size' : 'Choose your option');
+    const sizeHeadingCat = (currentCat === 'Shakes & Smoothies' || currentCat === 'Juices');
+    choose.textContent = isBowl ? 'Choose your acai bowl' : ((isProtein || sizeHeadingCat) ? 'Choice of Size' : 'Choose your option');
+    pdAddPrompt = isBowl ? 'Choose your bowl' : ((isProtein || sizeHeadingCat) ? 'Choose your size' : 'Choose your option');
     opts.classList.toggle('pd-bowl-grid', isBowl);
     let bowlSizes = p.sizes;
     if(isBowl){

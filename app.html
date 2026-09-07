@@ -3450,6 +3450,8 @@ function setBowlPage(n, fromOpen){
   const exitBtn   = document.getElementById('pd-bowl-exit');
   const imgWrap   = document.getElementById('pd-imgwrap');
   const imgInfo   = document.getElementById('pd-imgwrap-info');
+  const descEl    = document.getElementById('pd-desc');
+  const preorderEl= document.getElementById('pd-preorder');
   const scroll    = document.querySelector('#product-detail-modal .pd-scroll');
   const isBowl = !!window.pdIsBowl, isProtein = !!window.pdIsProtein, isPress = !!window.pdIsPressPage;
   if(n === 1){
@@ -3461,11 +3463,13 @@ function setBowlPage(n, fromOpen){
     if(pressWrap) pressWrap.style.display = 'none';
     if(backPage) backPage.style.display = 'none';
     if(exitBtn) exitBtn.style.display = '';
-    // Only restore images when returning from page 2 (back nav), NOT on a fresh open —
-    // on open, the open flow has already set the correct image visibility.
+    // Only restore images/description when returning from page 2 (back nav), NOT on a fresh open —
+    // on open, the open flow has already set the correct visibility.
     if(!fromOpen){
       if(imgWrap && window.__pdHadHero) imgWrap.style.display = 'flex';
       if(imgInfo && window.__pdHadInfo) imgInfo.style.display = 'flex';
+      if(descEl && window.__pdHadDesc) descEl.style.display = 'block';
+      if(preorderEl && window.__pdHadPreorder) preorderEl.style.display = 'block';
     }
   } else {
     if(chooseEl) chooseEl.style.display = 'none';
@@ -3476,11 +3480,15 @@ function setBowlPage(n, fromOpen){
     if(pressWrap) pressWrap.style.display = isPress ? 'block' : 'none';
     if(backPage){ backPage.innerHTML = '&larr; Back to ' + (isBowl ? 'bowl selection' : (isPress ? 'option' : 'size selection')); backPage.style.display = ''; }
     if(exitBtn) exitBtn.style.display = 'none';
-    // Page 2: no image, just the options
+    // Page 2: no image and no description, just the product name and the options
     window.__pdHadHero = imgWrap ? (imgWrap.style.display !== 'none') : false;
     window.__pdHadInfo = imgInfo ? (imgInfo.style.display !== 'none') : false;
+    window.__pdHadDesc = descEl ? (descEl.style.display !== 'none') : false;
+    window.__pdHadPreorder = preorderEl ? (preorderEl.style.display !== 'none') : false;
     if(imgWrap) imgWrap.style.display = 'none';
     if(imgInfo) imgInfo.style.display = 'none';
+    if(descEl) descEl.style.display = 'none';
+    if(preorderEl) preorderEl.style.display = 'none';
   }
   if(scroll) scroll.scrollTop = 0;
   refreshBowlAdd();

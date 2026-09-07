@@ -370,7 +370,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-suggest-add i{font-size:16px}
 .pd-suggest-add:active{transform:scale(.95)}
 .pd-suggest-add.added{background:var(--green);color:#fff}
-.pd-suggest-skip{display:block;width:calc(100% - 32px);margin:14px 16px 0;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:var(--text2);font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;transition:background .15s}
+.pd-suggest-skip{display:block;width:calc(100% - 32px);margin:14px 16px 0;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:var(--text);font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;text-align:left;transition:background .15s}
 .pd-suggest-skip:active{background:#f2f2f2}
 .pd-drizzle .pd-drizzle-name{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);text-align:left;line-height:1.2}
 .pd-drizzle .pd-drizzle-price{font-size:12px;font-weight:700;color:var(--text2);flex-shrink:0;white-space:nowrap}
@@ -3495,13 +3495,39 @@ function renderBowlSuggestions(){
         + (desc ? '<div class="pd-suggest-desc">'+desc+'</div>' : '')
         + (price ? '<div class="pd-suggest-price">'+price+'</div>' : '')
       + '</div>'
-      + '<button type="button" class="pd-suggest-add" data-sug="'+p.id+'" onclick="addSuggestionToCart(\''+p.id+'\',this)"><i class="ti ti-plus"></i>Add</button>'
+      + '<button type="button" class="pd-suggest-add" data-sug="'+p.id+'" onclick="toggleSuggestion(\''+p.id+'\',this)"><i class="ti ti-plus"></i>Add</button>'
       + '</div>';
   }).join('');
+  // Reflect any already-added suggestions (e.g. after navigating back to this page)
+  syncSuggestionButtons();
 }
 
-// Add a suggested product to the cart (default/first size) without disturbing the in-progress bowl
-function addSuggestionToCart(pid, btn){
+// Set of suggestion product ids added during this bowl flow
+function suggestSet(){ if(!window.pdSuggestAdded) window.pdSuggestAdded = {}; return window.pdSuggestAdded; }
+
+// Recompute the total value of suggestions added in this flow (from actual cart lines)
+function suggestFlowTotal(){
+  const added = suggestSet();
+  let t = 0;
+  Object.keys(added).forEach(function(pid){
+    const p = PRODUCT_MAP[pid];
+    if(p && p.sizes && p.sizes[0]) t += (Number(p.sizes[0].p)||0);
+  });
+  return Math.round(t*100)/100;
+}
+
+// Update each suggestion button to match whether it's currently added
+function syncSuggestionButtons(){
+  const added = suggestSet();
+  document.querySelectorAll('#pd-suggest-list .pd-suggest-add').forEach(function(b){
+    const pid = b.dataset.sug;
+    if(added[pid]){ b.classList.add('added'); b.innerHTML = '<i class="ti ti-check"></i>Added'; }
+    else { b.classList.remove('added'); b.innerHTML = '<i class="ti ti-plus"></i>Add'; }
+  });
+}
+
+// Toggle a suggested product in/out of the cart; button keeps its state, total updates
+function toggleSuggestion(pid, btn){
   if(!currentUser){ openLogin(); return; }
   const p = PRODUCT_MAP[pid];
   if(!p || !p.sizes || !p.sizes.length) return;
@@ -3509,16 +3535,21 @@ function addSuggestionToCart(pid, btn){
   const size = s.l || '';
   const price = Number(s.p)||0;
   const label = p.name + (size ? ' ('+size+')' : '');
-  const exist = cart.find(i=>i.id===pid && i.size===size && !i.blend && !i.press && !i.protein && !i.note && !i.addonSig);
-  if(exist){ exist.qty++; } else {
-    cart.push({id:pid, name:p.name, size:size, label:label, price:price, qty:1, note:'', addons:[]});
+  const added = suggestSet();
+  const idx = cart.findIndex(i=>i.id===pid && i.size===size && !i.blend && !i.press && !i.protein && !i.note && !i.addonSig);
+  if(added[pid]){
+    // Remove: drop one qty (or the line) and clear the added flag
+    if(idx >= 0){ if(cart[idx].qty>1) cart[idx].qty--; else cart.splice(idx,1); }
+    delete added[pid];
+    showToast(p.name+' removed');
+  } else {
+    if(idx >= 0){ cart[idx].qty++; } else {
+      cart.push({id:pid, name:p.name, size:size, label:label, price:price, qty:1, note:'', addons:[]});
+    }
+    added[pid] = true;
+    showToast(p.name+' added to cart');
   }
-  // Track what was added during THIS bowl flow so the footer button total can include it
-  window.pdSuggestTotal = (window.pdSuggestTotal || 0) + price;
-  saveCart(); updateCartBadge();
-  if(btn){ btn.classList.add('added'); btn.innerHTML='<i class="ti ti-check"></i>Added'; setTimeout(function(){ btn.classList.remove('added'); btn.innerHTML='<i class="ti ti-plus"></i>Add'; }, 1400); }
-  refreshBowlAdd();
-  showToast(p.name+' added to cart');
+  saveCart(); updateCartBadge(); syncSuggestionButtons(); refreshBowlAdd();
 }
 
 // Pick exactly one size; deselect the others
@@ -3649,7 +3680,7 @@ function refreshBowlAdd(){
   }
   // Live total shown on the button's right: this bowl (base + drizzles + press + protein)
   // PLUS any "Complete your order" suggestions added during this flow.
-  const suggestTotal = window.pdSuggestTotal || 0;
+  const suggestTotal = suggestFlowTotal();
   const liveTotal = pdSelectedSize
     ? Math.round((pdSelectedSize.base + addonTotal + pressAddAmt() + proteinAddAmt() + suggestTotal) * 100) / 100
     : 0;
@@ -3960,7 +3991,7 @@ function openProductDetail(pid){
   updatePdCartSummary();
   refreshPdOptions();
   __suggestBuiltFor = null;   // fresh suggestion picks each time the sheet opens
-  window.pdSuggestTotal = 0;  // reset per-flow suggestions total
+  window.pdSuggestAdded = {}; // reset per-flow suggestion selections
   setBowlPage(1, true);   // always reset page/wrap state on open, even for single-page products
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }

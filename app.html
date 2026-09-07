@@ -3392,7 +3392,7 @@ function updatePdCartSummary(){
     else el.classList.remove('show');
   }
   const bt = document.getElementById('pd-bowl-total');
-  if(bt){ if(count){ bt.innerHTML = txt; bt.style.display = 'flex'; } else { bt.innerHTML = ''; bt.style.display = 'none'; } }
+  if(bt){ bt.innerHTML = ''; bt.style.display = 'none'; }
 }
 
 // Add a chosen size to the cart (shared by the detail sheet)
@@ -3511,8 +3511,11 @@ function addSuggestionToCart(pid, btn){
   if(exist){ exist.qty++; } else {
     cart.push({id:pid, name:p.name, size:size, label:label, price:price, qty:1, note:'', addons:[]});
   }
-  saveCart(); updateCartBadge(); updatePdCartSummary();
+  // Track what was added during THIS bowl flow so the footer button total can include it
+  window.pdSuggestTotal = (window.pdSuggestTotal || 0) + price;
+  saveCart(); updateCartBadge();
   if(btn){ btn.classList.add('added'); btn.innerHTML='<i class="ti ti-check"></i>Added'; setTimeout(function(){ btn.classList.remove('added'); btn.innerHTML='<i class="ti ti-plus"></i>Add'; }, 1400); }
+  refreshBowlAdd();
   showToast(p.name+' added to cart');
 }
 
@@ -3636,10 +3639,11 @@ function refreshBowlAdd(){
     addonTotal = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')]
       .reduce((s,a)=>s + (parseFloat(a.dataset.price)||0), 0);
   }
-  // Live bowl price (base + drizzles + press + protein) — shown on the button's right on every page
-  // once a size/bowl is chosen, so the amount updates as add-ons are selected.
+  // Live total shown on the button's right: this bowl (base + drizzles + press + protein)
+  // PLUS any "Complete your order" suggestions added during this flow.
+  const suggestTotal = window.pdSuggestTotal || 0;
   const liveTotal = pdSelectedSize
-    ? Math.round((pdSelectedSize.base + addonTotal + pressAddAmt() + proteinAddAmt()) * 100) / 100
+    ? Math.round((pdSelectedSize.base + addonTotal + pressAddAmt() + proteinAddAmt() + suggestTotal) * 100) / 100
     : 0;
   const livePriceStr = pdSelectedSize ? '$'+liveTotal.toFixed(2) : '';
   // Page 1 of a multi-page flow: advance button once a size is chosen (page-2 gates handled there)
@@ -3948,6 +3952,7 @@ function openProductDetail(pid){
   updatePdCartSummary();
   refreshPdOptions();
   __suggestBuiltFor = null;   // fresh suggestion picks each time the sheet opens
+  window.pdSuggestTotal = 0;  // reset per-flow suggestions total
   setBowlPage(1, true);   // always reset page/wrap state on open, even for single-page products
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     if(side){ box.style.opacity = '1'; box.style.transform = 'scale(1)'; }

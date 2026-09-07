@@ -3231,6 +3231,8 @@ function setBowlPage(n){
   const noteWrap  = document.getElementById('pd-note-wrap');
   const backPage  = document.getElementById('pd-bowl-back-page');
   const exitBtn   = document.getElementById('pd-bowl-exit');
+  const imgWrap   = document.getElementById('pd-imgwrap');
+  const imgInfo   = document.getElementById('pd-imgwrap-info');
   const scroll    = document.querySelector('#product-detail-modal .pd-scroll');
   if(n === 1){
     if(chooseEl) chooseEl.style.display = '';
@@ -3239,6 +3241,7 @@ function setBowlPage(n){
     if(noteWrap) noteWrap.style.display = 'none';
     if(backPage) backPage.style.display = 'none';
     if(exitBtn) exitBtn.style.display = '';
+    if(imgWrap && window.__pdHadHero) imgWrap.style.display = 'flex';
   } else {
     if(chooseEl) chooseEl.style.display = 'none';
     if(optsWrap) optsWrap.style.display = 'none';
@@ -3246,6 +3249,10 @@ function setBowlPage(n){
     if(noteWrap) noteWrap.style.display = 'block';
     if(backPage) backPage.style.display = '';
     if(exitBtn) exitBtn.style.display = 'none';
+    // Page 2 (drizzles & notes): no image, just the options
+    window.__pdHadHero = imgWrap ? (imgWrap.style.display !== 'none') : false;
+    if(imgWrap) imgWrap.style.display = 'none';
+    if(imgInfo) imgInfo.style.display = 'none';
   }
   if(scroll) scroll.scrollTop = 0;
   refreshBowlAdd();
@@ -3448,14 +3455,28 @@ function openProductDetail(pid){
     choose.textContent = isBowl ? 'Choose your acai bowl' : 'Choose your option';
     pdAddPrompt = isBowl ? 'Choose your bowl' : 'Choose your option';
     opts.classList.toggle('pd-bowl-grid', isBowl);
-    opts.innerHTML = p.sizes.map(s => {
+    let bowlSizes = p.sizes;
+    if(isBowl){
+      // Force dessert options into the left column, meal options into the right,
+      // by interleaving them as dessert,meal,dessert,meal per grid row.
+      const desserts = p.sizes.filter(s => /dessert/i.test(s.l||''));
+      const meals    = p.sizes.filter(s => /meal/i.test(s.l||''));
+      const others   = p.sizes.filter(s => !/dessert|meal/i.test(s.l||''));
+      if(desserts.length && meals.length){
+        const paired = [];
+        const rows = Math.max(desserts.length, meals.length);
+        for(let i=0;i<rows;i++){ if(desserts[i]) paired.push(desserts[i]); if(meals[i]) paired.push(meals[i]); }
+        bowlSizes = paired.concat(others);
+      }
+    }
+    opts.innerHTML = bowlSizes.map(s => {
       const size = (s.l||'').replace(/"/g,'&quot;');
       const parts = (s.l||'Regular').split(' - ');
       const mainL = parts[0];
       const subL = parts.slice(1).join(' - ');
       if(isBowl){
         const isMeal = /meal/i.test(mainL);
-        const icoPx = isMeal ? 30 : 20;   // small bowl = dessert, larger bowl = meal
+        const icoPx = isMeal ? 46 : 34;   // small bowl = dessert, larger bowl = meal (enlarged)
         const bowlSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:'+icoPx+'px;height:'+icoPx+'px"><path d="M3.8 8 L5 14.5 H19 L20.2 8"/></svg>';
         return '<button type="button" class="pd-size pd-bowl-opt" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'" onclick="selectBowlSize(\''+p.id+'\',\''+size+'\','+s.p+',this)">'
           + '<span class="pd-bowl-ico">'+bowlSvg+'</span>'

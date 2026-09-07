@@ -287,6 +287,9 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .cat-tabs::-webkit-scrollbar{display:none}
 .cat-pill{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:rgba(255,255,255,0.75);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--text2);font-family:var(--body)}
 .cat-pill.active{background:var(--green);border-color:var(--green);color:#fff}
+/* Login / Sign up segmented switch */
+.ltab{flex:1;padding:9px;border:none;border-radius:8px;background:none;font-family:var(--font);font-size:15px;cursor:pointer;color:var(--text3);transition:background .18s,color .18s,box-shadow .18s}
+.ltab.active{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(28,77,58,.28)}
 @media (min-width:900px){
   .cat-tabs{overflow-x:visible;flex-wrap:wrap;justify-content:stretch}
   .cat-pill{flex:1 1 0;text-align:center;padding:10px 12px;font-size:13px}
@@ -2290,9 +2293,9 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <div class="modal-bg" id="login-modal">
   <div class="modal-box">
     <div class="modal-handle"></div>
-    <div style="display:flex;gap:0;margin-bottom:16px;background:#f5f5f7;border-radius:10px;padding:3px">
-      <button class="ltab active" id="ltab-login" onclick="showLoginTab('login')" style="flex:1;padding:8px;border:none;border-radius:8px;background:#fff;font-family:var(--font);font-size:15px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.1)">Log in</button>
-      <button class="ltab" id="ltab-register" onclick="showLoginTab('register')" style="flex:1;padding:8px;border:none;border-radius:8px;background:none;font-family:var(--font);font-size:15px;cursor:pointer;color:var(--text3)">Sign up</button>
+    <div class="ltab-switch" style="display:flex;gap:0;margin-bottom:16px;background:#f5f5f7;border-radius:10px;padding:3px">
+      <button class="ltab active" id="ltab-login" onclick="showLoginTab('login')">Log in</button>
+      <button class="ltab" id="ltab-register" onclick="showLoginTab('register')">Sign up</button>
     </div>
 
     <div id="lpanel-login">

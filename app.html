@@ -3246,18 +3246,20 @@ function setBowlPage(n){
   const drizzWrap = document.getElementById('pd-drizzles-wrap');
   const noteWrap  = document.getElementById('pd-note-wrap');
   const proteinWrap = document.getElementById('pd-protein-wrap');
+  const pressWrap = document.getElementById('pd-press-wrap');
   const backPage  = document.getElementById('pd-bowl-back-page');
   const exitBtn   = document.getElementById('pd-bowl-exit');
   const imgWrap   = document.getElementById('pd-imgwrap');
   const imgInfo   = document.getElementById('pd-imgwrap-info');
   const scroll    = document.querySelector('#product-detail-modal .pd-scroll');
-  const isBowl = !!window.pdIsBowl, isProtein = !!window.pdIsProtein;
+  const isBowl = !!window.pdIsBowl, isProtein = !!window.pdIsProtein, isPress = !!window.pdIsPressPage;
   if(n === 1){
     if(chooseEl) chooseEl.style.display = '';
     if(optsWrap) optsWrap.style.display = '';
     if(drizzWrap) drizzWrap.style.display = 'none';
     if(noteWrap) noteWrap.style.display = 'none';
     if(proteinWrap) proteinWrap.style.display = 'none';
+    if(pressWrap) pressWrap.style.display = 'none';
     if(backPage) backPage.style.display = 'none';
     if(exitBtn) exitBtn.style.display = '';
     if(imgWrap && window.__pdHadHero) imgWrap.style.display = 'flex';
@@ -3268,7 +3270,8 @@ function setBowlPage(n){
     if(drizzWrap) drizzWrap.style.display = isBowl ? 'block' : 'none';
     if(noteWrap) noteWrap.style.display = isBowl ? 'block' : 'none';
     if(proteinWrap) proteinWrap.style.display = isProtein ? 'block' : 'none';
-    if(backPage){ backPage.innerHTML = '&larr; Back to ' + (isBowl ? 'bowl' : 'size') + ' selection'; backPage.style.display = ''; }
+    if(pressWrap) pressWrap.style.display = isPress ? 'block' : 'none';
+    if(backPage){ backPage.innerHTML = '&larr; Back to ' + (isBowl ? 'bowl selection' : (isPress ? 'option' : 'size selection')); backPage.style.display = ''; }
     if(exitBtn) exitBtn.style.display = 'none';
     // Page 2: no image, just the options
     window.__pdHadHero = imgWrap ? (imgWrap.style.display !== 'none') : false;
@@ -3285,7 +3288,8 @@ function bowlFooterAction(){
   if(window.pdHasPage2 && window.pdBowlPage === 1){
     if(!pdSelectedSize) return;              // must pick a size first
     if(blendNeeded() && !pdSelectedBlend) return;
-    if(pressNeeded() && !pdSelectedPress) return;
+    // Press choice happens on page 2 for press items, so don't gate advancement on it
+    if(pressNeeded() && !window.pdIsPressPage && !pdSelectedPress) return;
     setBowlPage(2);
     return;
   }
@@ -3312,6 +3316,19 @@ function refreshBowlAdd(){
     addonTotal = [...document.querySelectorAll('#pd-drizzles .pd-drizzle.selected')]
       .reduce((s,a)=>s + (parseFloat(a.dataset.price)||0), 0);
   }
+  // Page 1 of a two-page flow: advance button once a size is chosen (page-2 gates handled there)
+  if(pdSelectedSize && window.pdHasPage2 && window.pdBowlPage === 1){
+    // Bowls/protein have no page-1 sub-gate; press items choose press on page 2.
+    // Blend (for juices) is still a page-1 requirement when applicable.
+    if(!(blendNeeded() && !pdSelectedBlend)){
+      btn.disabled = false;
+      const nextLbl = window.pdIsProtein ? 'Next: protein serving'
+                    : (window.pdIsPressPage ? 'Next: press type' : 'Next: drizzles &amp; notes');
+      labelEl.innerHTML = nextLbl + ' <i class="ti ti-arrow-right" style="font-size:18px"></i>';
+      priceEl.textContent = '';
+      return;
+    }
+  }
   if(pdSelectedSize && blendNeeded() && !pdSelectedBlend){
     btn.disabled = true;
     labelEl.innerHTML = '<i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your blend';
@@ -3325,14 +3342,6 @@ function refreshBowlAdd(){
     return;
   }
   if(pdSelectedSize){
-    // Page 1 of a two-page flow: advance button, no add-on total yet
-    if(window.pdHasPage2 && window.pdBowlPage === 1){
-      btn.disabled = false;
-      const nextLbl = window.pdIsProtein ? 'Next: protein serving' : 'Next: drizzles &amp; notes';
-      labelEl.innerHTML = nextLbl + ' <i class="ti ti-arrow-right" style="font-size:18px"></i>';
-      priceEl.textContent = '';
-      return;
-    }
     // Page 2 protein: require a protein serving before enabling Add
     if(window.pdIsProtein && !pdSelectedProtein){
       btn.disabled = true;
@@ -3476,9 +3485,12 @@ function openProductDetail(pid){
   // Protein-serving items (Recovery/Recharge/Refuel/Boost/Powerhouse): 2nd page with protein choice
   const PROTEIN_IDS = new Set(['ss13','ss14','ss15','ss16','ss17']);
   const isProtein = PROTEIN_IDS.has(p.id);
+  // Immunity Press items: 2nd page for press type (Fresh/Clarity)
+  const isPress = PRESS_IDS.has(p.id);
   window.pdIsBowl = isBowl;
   window.pdIsProtein = isProtein;
-  window.pdHasPage2 = isBowl || isProtein;
+  window.pdIsPressPage = isPress;
+  window.pdHasPage2 = isBowl || isProtein || isPress;
   window.pdBowlPage = 1;
   pdSelectedProtein = null;
   // Populate protein serving options (single-select)
@@ -3581,7 +3593,7 @@ function openProductDetail(pid){
           + '<span class="pd-size-price">'+(o.add?'+$'+o.add.toFixed(2):'')+'<span class="pd-size-tick"><i class="ti ti-check"></i></span></span>'
           + '</button>';
       }).join('');
-      pressWrap.style.display = 'block';
+      pressWrap.style.display = 'none'; // shown on page 2 via setBowlPage
     } else {
       pressEl.innerHTML = '';
       pressWrap.style.display = 'none';

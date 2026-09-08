@@ -2464,7 +2464,7 @@ function openOrderReceipt(data){
     +'<div style="display:flex;justify-content:space-between"><span>Date</span><span>'+formatDT(data.date||data.createdAt||'')+'</span></div>'
     +(data.time?'<div style="display:flex;justify-content:space-between"><span>Time</span><span>'+data.time+'</span></div>':'')
     +(memberName?'<div style="display:flex;justify-content:space-between"><span>Member</span><span>'+memberName+'</span></div>':'')
-    +(isPos?'':'<div style="display:flex;justify-content:space-between"><span>Collection</span><span>'+(data.collectTime||'')+'</span></div>')
+    +(isPos?'':'<div style="display:flex;justify-content:space-between"><span>Collection</span><span>'+cleanCollect(data.collectTime||'')+'</span></div>')
     +'</div>'
     +(items.length?'<table style="width:100%;border-collapse:collapse;margin-bottom:4px">'
       +'<thead><tr style="border-bottom:1.5px solid #ddd">'
@@ -4608,11 +4608,9 @@ async function loadOrders(){
     if(orders.length){
       html += '<div style="font-size:12px;font-weight:700;color:#888;padding:12px 16px 4px;text-transform:uppercase;letter-spacing:.5px">App Orders</div>';
       html += orders.map(o => {
-        const items = Array.isArray(o.items) ? o.items : [];
         return '<div class="order-card" data-order="'+encodeURIComponent(JSON.stringify({...o,type:'app'}))+'" onclick="openOrderReceipt(JSON.parse(decodeURIComponent(this.dataset.order)))" style="cursor:pointer">'
           +'<div class="order-header"><div><div class="order-id">'+o.id+'</div><div class="order-time">'+formatDT(o.createdAt)+'</div></div><span class="status-badge status-'+o.status+'">'+o.status+'</span></div>'
-          +'<div class="order-items">'+items.map(i=>i.qty+'x '+i.label).join(' · ')+'</div>'
-          +'<div class="order-footer"><span class="order-total">$'+parseFloat(o.total).toFixed(2)+'</span><span class="order-collect">Tap to view receipt</span></div>'
+          +'<div class="order-footer"><span class="order-collect">Tap to view receipt</span></div>'
           +'</div>';
       }).join('');
     }
@@ -4660,6 +4658,24 @@ function formatDT(s){
   const m = str.match(/(\w+)\s+(\w+)\s+(\d+)\s+(\d{4})/);
   if(m){ const mn={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; return m[4]+'-'+(mn[m[2]]||'01')+'-'+String(parseInt(m[3])).padStart(2,'0'); }
   return str.slice(0,10);
+}
+
+// Strip any "GMT+0800 (Singapore Standard Time)" style timezone tail from a collection date/time.
+function cleanCollect(s){
+  let str = String(s||'').trim();
+  if(!str) return '';
+  // If it's a full JS Date string, reformat to "YYYY-MM-DD  h:mm AM/PM"
+  if(/[A-Za-z]{3}\s+[A-Za-z]{3}\s+\d+\s+\d{4}/.test(str)){
+    const d = new Date(str);
+    if(!isNaN(d.getTime())){
+      const y=d.getFullYear(), mo=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+      let h=d.getHours(); const mi=String(d.getMinutes()).padStart(2,'0');
+      const ap=h>=12?'PM':'AM'; h=h%12; if(h===0) h=12;
+      return y+'-'+mo+'-'+day+'  '+h+':'+mi+' '+ap;
+    }
+  }
+  // Otherwise just strip a trailing "(...)" and any "GMT..." tail
+  return str.replace(/\s*\(.*?\)\s*$/,'').replace(/\s*GMT[+-]?\d{0,4}.*$/i,'').trim();
 }
 
 // ── REWARDS (stamp card embedded) ────────────────────────────

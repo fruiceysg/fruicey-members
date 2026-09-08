@@ -372,7 +372,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-suggest-add.added{background:var(--green);color:#fff}
 .pd-suggest-skip{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:var(--green-light);color:var(--green-dark);border:none;border-radius:12px;padding:9px 14px;font-family:var(--body);font-weight:700;font-size:13px;cursor:pointer;transition:transform .12s,background .15s}
 .pd-suggest-skip:active{transform:scale(.95)}
-.pd-suggest-skiprow{margin:10px 16px 0}
+.pd-suggest-skiprow{margin:10px 16px 18px}
 .pd-drizzle .pd-drizzle-name{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);text-align:left;line-height:1.2}
 .pd-drizzle .pd-drizzle-price{font-size:12px;font-weight:700;color:var(--text2);flex-shrink:0;white-space:nowrap}
 .pd-drizzle .pd-drizzle-tick{display:none}
@@ -2291,13 +2291,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
   </div>
 
-  <div class="acc-section-label">Contact</div>
-  <div class="acc-group">
-    <div class="acc-item"><div class="acc-item-ico mail"><i class="ti ti-mail"></i></div><div class="acc-item-label">Email</div><div class="acc-item-val" id="acc-email"></div></div>
-    <div class="acc-item"><div class="acc-item-ico phone"><i class="ti ti-phone"></i></div><div class="acc-item-label">Phone</div><div class="acc-item-val" id="acc-phone2"></div></div>
-    <div class="acc-item" id="acc-bday-row" style="display:none"><div class="acc-item-ico cake"><i class="ti ti-cake"></i></div><div class="acc-item-label">Birthday</div><div class="acc-item-val" id="acc-bday"></div></div>
-  </div>
-
   <div class="acc-section-label">Fruicey Credit</div>
   <div class="acc-credit-card">
     <div class="acc-credit-label">Available balance</div>
@@ -2306,6 +2299,13 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <button class="acc-credit-btn primary" onclick="openAddCredit()"><i class="ti ti-plus"></i>Add Credit</button>
       <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
     </div>
+  </div>
+
+  <div class="acc-section-label">My Details</div>
+  <div class="acc-group">
+    <div class="acc-item"><div class="acc-item-ico mail"><i class="ti ti-mail"></i></div><div class="acc-item-label">Email</div><div class="acc-item-val" id="acc-email"></div></div>
+    <div class="acc-item"><div class="acc-item-ico phone"><i class="ti ti-phone"></i></div><div class="acc-item-label">Phone</div><div class="acc-item-val" id="acc-phone2"></div></div>
+    <div class="acc-item" id="acc-bday-row" style="display:none"><div class="acc-item-ico cake"><i class="ti ti-cake"></i></div><div class="acc-item-label">Birthday</div><div class="acc-item-val" id="acc-bday"></div></div>
   </div>
   </div>
 </div>
@@ -3612,9 +3612,9 @@ function setBowlPage(n, fromOpen){
       if(proteinWrap) proteinWrap.style.display = 'none';
       if(pressWrap) pressWrap.style.display = 'none';
       if(n===3) renderBowlSuggestions();
-      // Hide the bowl's product name specifically on the suggestions page
+      // Hide the bowl's product name on the suggestions and notes pages
       const nameEl = document.getElementById('pd-name');
-      if(nameEl) nameEl.style.display = (n===3) ? 'none' : '';
+      if(nameEl) nameEl.style.display = (n===3 || n===4) ? 'none' : '';
       let backLbl = 'bowl selection';
       if(n===3) backLbl = 'drizzles';
       else if(n===4) backLbl = 'suggestions';
@@ -3856,13 +3856,17 @@ function openProductDetail(pid){
   if(zbtn) zbtn.style.display = showHero ? '' : 'none';
   if(showHero){
     wrap.style.display = 'flex';
-    document.getElementById('pd-img').src = 'https://lh3.googleusercontent.com/d/'+imgId+'=w1200';
+    const heroImg = document.getElementById('pd-img');
+    heroImg.removeAttribute('src');   // clear stale image so the previous product's photo doesn't linger
+    heroImg.src = 'https://lh3.googleusercontent.com/d/'+imgId+'=w1200';
   } else { wrap.style.display = 'none'; }
   // Info image, shown just above "Choose your option" for Immunity/Nutritional/Longevity Press (main image stays at top)
   const infoWrap = document.getElementById('pd-imgwrap-info');
   if(infoWrap){
     if(moveImgAboveChoose && infoId){
-      document.getElementById('pd-img-info').src = 'https://lh3.googleusercontent.com/d/'+infoId+'=w1200';
+      const infoImg = document.getElementById('pd-img-info');
+      infoImg.removeAttribute('src');   // clear stale image first to avoid the swap lag
+      infoImg.src = 'https://lh3.googleusercontent.com/d/'+infoId+'=w1200';
       infoWrap.style.display = 'flex';
     } else { infoWrap.style.display = 'none'; }
   }
@@ -3936,11 +3940,7 @@ function openProductDetail(pid){
       const mainL = parts[0];
       const subL = parts.slice(1).join(' - ');
       if(isBowl){
-        const isMeal = /meal/i.test(mainL);
-        const icoPx = isMeal ? 46 : 34;   // small bowl = dessert, larger bowl = meal (enlarged)
-        const bowlSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:'+icoPx+'px;height:'+icoPx+'px"><path d="M3.8 8 L5 14.5 H19 L20.2 8"/></svg>';
         return '<button type="button" class="pd-size pd-bowl-opt" data-pid="'+p.id+'" data-size="'+size+'" data-base="'+s.p+'" onclick="selectBowlSize(\''+p.id+'\',\''+size+'\','+s.p+',this)">'
-          + '<span class="pd-bowl-ico">'+bowlSvg+'</span>'
           + '<span class="pd-size-label"><span class="pd-size-main">'+mainL+'</span>'+(subL?'<span class="pd-size-sub">'+subL+'</span>':'')+'</span>'
           + '<span class="pd-size-price">$'+s.p.toFixed(2)+'<span class="pd-size-tick"><i class="ti ti-check"></i></span></span>'
           + '</button>';

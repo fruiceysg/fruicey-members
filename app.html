@@ -1577,12 +1577,12 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div id="delivery-time-note" class="del-note" style="display:none">Your <b>preferred</b> date &amp; time — we'll confirm availability with you via WhatsApp.<br>For bulk / corporate orders, please send a direct enquiry to Wilson.</div>
       </div>
       <div id="delivery-fields" style="display:none;margin-bottom:12px">
+        <div id="delivery-fee-info" class="del-fee" style="margin-bottom:8px"><span class="del-hint">Enter your postal code to calculate the delivery fee.</span></div>
         <div class="collect-sub">Delivery address <span class="req-star">*</span></div>
         <input id="delivery-postal" class="del-input" inputmode="numeric" maxlength="6" placeholder="Postal code (6 digits) *" oninput="onDeliveryPostalInput()">
         <input id="delivery-address" class="del-input" placeholder="Address (auto-filled — edit if needed) *">
-        <input id="delivery-unit" class="del-input" placeholder="Unit no. (e.g. #12-34)">
+        <input id="delivery-unit" class="del-input" placeholder="Unit no. (e.g. #12-34) *">
         <input id="delivery-phone" class="del-input" placeholder="Contact number *">
-        <div id="delivery-fee-info" class="del-fee"><span class="del-hint">Enter your postal code to calculate the delivery fee.</span></div>
         <div class="del-tnc">
           <div class="del-tnc-title">Delivery notes</div>
           <ul>
@@ -1600,6 +1600,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <textarea id="order-notes" rows="2" placeholder="" style="width:100%;padding:8px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;resize:none"></textarea>
       </div>
       <div id="delivery-fee-row" class="total-row" style="display:none;font-weight:500;font-size:13px"><span>Delivery</span><span id="delivery-fee-val">$0.00</span></div>
+      <div class="total-row" style="font-weight:500;font-size:13px"><span>Platform fee</span><span id="platform-fee-val">$0.50</span></div>
       <div class="total-row"><span>Total</span><span id="cart-total-val">$0.00</span></div>
       <div id="credit-checkout-row" style="display:none;background:#f0faf3;border-radius:10px;padding:12px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2497,6 +2498,8 @@ function openOrderReceipt(data){
     +'<div style="border-top:2px dashed #ddd;margin-top:6px;padding-top:8px">'
     +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>Subtotal</span><span>$'+(parseFloat(data.subtotal||total)).toFixed(2)+'</span></div>':'')
     +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--green);margin-bottom:3px"><span>Discount</span><span>-$'+disc.toFixed(2)+'</span></div>':'')
+    +((!isPos && parseFloat(data.deliveryFee)>0)?'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>Delivery</span><span>$'+parseFloat(data.deliveryFee).toFixed(2)+'</span></div>':'')
+    +((!isPos && parseFloat(data.platformFee)>0)?'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span>Platform fee</span><span>$'+parseFloat(data.platformFee).toFixed(2)+'</span></div>':'')
     +'<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;margin-bottom:6px"><span>Total</span><span style="color:var(--green)">$'+total.toFixed(2)+'</span></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555"><span>Payment</span><span style="font-weight:600">'+(data.payment||'')+'</span></div>'
     +(!isPos&&data.status?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-top:4px"><span>Status</span><span class="status-badge status-'+(data.status||'')+'">'+(data.status||'')+'</span></div>':'')
@@ -4313,6 +4316,7 @@ function renderTimePills(){
 // ── DELIVERY (fee by distance + order value; free within 3km over $30) ──
 const SHOP_POSTAL = '596180', FREE_RADIUS_KM = 3, SENTOSA_SURCHARGE = 15;
 let shopLatLng = null, deliveryFee = 0, deliveryInfo = null, deliveryPostalTimer = null;
+const PLATFORM_FEE = 0.50;   // flat platform fee added to every order
 
 async function geocodePostal(postal){
   const url = 'https://www.onemap.gov.sg/api/common/elastic/search?searchVal='+encodeURIComponent(postal)+'&returnGeom=Y&getAddrDetails=Y&pageNum=1';
@@ -4405,7 +4409,7 @@ function updateCartTotals(){
     if(fv) fv.textContent = isDelivery ? (fee>0 ? '$'+fee.toFixed(2) : 'Free') : '$0.00';
   }
   const tv = document.getElementById('cart-total-val');
-  if(tv) tv.textContent = '$'+(sub+fee).toFixed(2);
+  if(tv) tv.textContent = '$'+(sub+fee+PLATFORM_FEE).toFixed(2);
 }
 
 document.addEventListener('click', function(e){
@@ -4468,13 +4472,14 @@ async function checkout(){
     deliveryPhone   = (document.getElementById('delivery-phone').value||'').trim();
     if(!/^\d{6}$/.test(deliveryPostal)){ showToast('Please enter a valid 6-digit delivery postal code'); return; }
     if(!deliveryAddress){ showToast('Please enter your delivery address'); return; }
+    if(!deliveryUnit){ showToast('Please enter your unit number'); return; }
     if(!deliveryPhone){ showToast('Please enter a delivery contact number'); return; }
   }
 
   const notes = document.getElementById('order-notes').value.trim();
   const sub   = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const fee   = isDelivery ? deliveryFee : 0;
-  const grand = +(sub + fee).toFixed(2);
+  const grand = +(sub + fee + PLATFORM_FEE).toFixed(2);
   const btn   = document.getElementById('checkout-btn');
   btn.textContent='Placing order...'; btn.disabled=true;
 
@@ -4499,6 +4504,7 @@ async function checkout(){
     collectTime: collectDate+' '+collectTime,
     collectType: isDelivery?'Delivery':'Self pick-up',
     deliveryFee: fee.toFixed(2),
+    platformFee: PLATFORM_FEE.toFixed(2),
     deliveryPostal, deliveryAddress, deliveryUnit, deliveryPhone,
     deliveryDistanceKm: (deliveryInfo && deliveryInfo.distanceKm!=null) ? deliveryInfo.distanceKm.toFixed(2) : '',
     notes,
@@ -4671,22 +4677,24 @@ async function loadOrders(){
 
 function formatDT(s){
   if(!s) return '';
+  const dmy = (y,mo,day)=> String(day).padStart(2,'0')+'-'+String(mo).padStart(2,'0')+'-'+y;
   if(typeof s === 'number'){
     if(s > 25000){
-      // Google Sheets serial date
       const d = new Date(Math.round((s - 25569) * 86400 * 1000));
-      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      return dmy(d.getFullYear(), d.getMonth()+1, d.getDate());
     }
     return '';
   }
   const str = String(s);
-  if(/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0,16);
+  // Already "YYYY-MM-DD" (optionally followed by time) → flip to DD-MM-YYYY, keep any time tail
+  let m1 = str.match(/^(\d{4})-(\d{2})-(\d{2})(.*)$/);
+  if(m1){ const tail = (m1[4]||'').slice(0,6).trim(); return dmy(m1[1], m1[2], m1[3]) + (tail?(' '+tail):''); }
   if(/^\d{5,}$/.test(str)){
     const d = new Date(Math.round((parseFloat(str) - 25569) * 86400 * 1000));
-    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    return dmy(d.getFullYear(), d.getMonth()+1, d.getDate());
   }
   const m = str.match(/(\w+)\s+(\w+)\s+(\d+)\s+(\d{4})/);
-  if(m){ const mn={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; return m[4]+'-'+(mn[m[2]]||'01')+'-'+String(parseInt(m[3])).padStart(2,'0'); }
+  if(m){ const mn={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; return dmy(m[4], (mn[m[2]]||'01'), String(parseInt(m[3]))); }
   return str.slice(0,10);
 }
 
@@ -4694,18 +4702,22 @@ function formatDT(s){
 function cleanCollect(s){
   let str = String(s||'').trim();
   if(!str) return '';
-  // If it's a full JS Date string, reformat to "YYYY-MM-DD  h:mm AM/PM"
+  // If it's a full JS Date string, reformat to "DD-MM-YYYY  h:mm AM/PM"
   if(/[A-Za-z]{3}\s+[A-Za-z]{3}\s+\d+\s+\d{4}/.test(str)){
     const d = new Date(str);
     if(!isNaN(d.getTime())){
       const y=d.getFullYear(), mo=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
       let h=d.getHours(); const mi=String(d.getMinutes()).padStart(2,'0');
       const ap=h>=12?'PM':'AM'; h=h%12; if(h===0) h=12;
-      return y+'-'+mo+'-'+day+'  '+h+':'+mi+' '+ap;
+      return day+'-'+mo+'-'+y+'  '+h+':'+mi+' '+ap;
     }
   }
-  // Otherwise just strip a trailing "(...)" and any "GMT..." tail
-  return str.replace(/\s*\(.*?\)\s*$/,'').replace(/\s*GMT[+-]?\d{0,4}.*$/i,'').trim();
+  // Strip a trailing "(...)" and any "GMT..." tail
+  str = str.replace(/\s*\(.*?\)\s*$/,'').replace(/\s*GMT[+-]?\d{0,4}.*$/i,'').trim();
+  // Flip a leading YYYY-MM-DD to DD-MM-YYYY, keeping any time tail
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})(.*)$/);
+  if(m){ return m[3]+'-'+m[2]+'-'+m[1] + (m[4]||''); }
+  return str;
 }
 
 // ── REWARDS (stamp card embedded) ────────────────────────────

@@ -521,6 +521,9 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .del-input{width:100%;padding:9px 10px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;margin-bottom:8px}
 .del-input:focus{outline:none;border-color:var(--green)}
 .req-star{color:#e74c3c;font-weight:700}
+.field-error{border:1.5px solid #e74c3c !important;border-radius:8px;background:#fff5f5 !important;box-shadow:0 0 0 3px rgba(231,76,60,.12);animation:field-shake .3s}
+.field-error.date-scroll,.field-error.time-scroll{padding:6px;background:#fff5f5 !important}
+@keyframes field-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 /* Creating Order overlay */
 #creating-order-overlay{position:fixed;inset:0;z-index:10001;background:rgba(255,255,255,.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center}
 #creating-order-overlay.show{display:flex}
@@ -4438,20 +4441,35 @@ document.addEventListener('click', function(e){
     collectDate = dateSlot.dataset.date;
     document.querySelectorAll('[data-date]').forEach(t=>t.classList.remove('selected'));
     dateSlot.classList.add('selected');
+    const dc=document.getElementById('date-slots-container'); if(dc) dc.classList.remove('field-error');
     renderTimePills();   // today shows only future times; other days show all
     return;
   }
   const timeSlot = e.target.closest('[data-time]');
-  if(timeSlot){ collectTime=timeSlot.dataset.time; document.querySelectorAll('[data-time]').forEach(t=>t.classList.remove('selected')); timeSlot.classList.add('selected'); return; }
+  if(timeSlot){ collectTime=timeSlot.dataset.time; document.querySelectorAll('[data-time]').forEach(t=>t.classList.remove('selected')); timeSlot.classList.add('selected'); const tc=document.getElementById('time-slots-container'); if(tc) tc.classList.remove('field-error'); return; }
 });
 
 // ── CHECKOUT ──────────────────────────────────────────────────
 // pendingOrder holds a built-but-not-yet-placed order while the PayNow QR is shown.
 let pendingOrder = null, _placingOrder = false;
+function clearFieldErrors(){
+  document.querySelectorAll('.field-error').forEach(el=>el.classList.remove('field-error'));
+}
+function flagField(id){
+  const el = document.getElementById(id);
+  if(el){ el.classList.add('field-error'); el.scrollIntoView({behavior:'smooth', block:'center'}); if(el.focus) try{el.focus();}catch(e){} }
+}
+// Remove a field's error highlight as soon as the customer types into it
+['delivery-postal','delivery-address','delivery-unit','delivery-phone'].forEach(function(id){
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', function(){ el.classList.remove('field-error'); });
+});
 async function checkout(){
   if(!cart.length){ showToast('Cart is empty'); return; }
-  if(!collectTime){ showToast('Please select a '+(collectMode==='delivery'?'preferred delivery':'collection')+' time'); return; }
-  if(!collectDate){ showToast('Please select a '+(collectMode==='delivery'?'preferred delivery':'collection')+' date'); return; }
+  clearFieldErrors();
+  const isDelivery = collectMode==='delivery';
+  if(!collectDate){ showToast('Please select a '+(isDelivery?'preferred delivery':'collection')+' date'); flagField('date-slots-container'); return; }
+  if(!collectTime){ showToast('Please select a '+(isDelivery?'preferred delivery':'collection')+' time'); flagField('time-slots-container'); return; }
 
   // Re-check stock right before ordering, in case an item sold out while browsing.
   await fetchStock();
@@ -4463,17 +4481,16 @@ async function checkout(){
     return;
   }
 
-  const isDelivery = collectMode==='delivery';
   let deliveryPostal='', deliveryAddress='', deliveryUnit='', deliveryPhone='';
   if(isDelivery){
     deliveryPostal  = (document.getElementById('delivery-postal').value||'').trim();
     deliveryAddress = (document.getElementById('delivery-address').value||'').trim();
     deliveryUnit    = (document.getElementById('delivery-unit').value||'').trim();
     deliveryPhone   = (document.getElementById('delivery-phone').value||'').trim();
-    if(!/^\d{6}$/.test(deliveryPostal)){ showToast('Please enter a valid 6-digit delivery postal code'); return; }
-    if(!deliveryAddress){ showToast('Please enter your delivery address'); return; }
-    if(!deliveryUnit){ showToast('Please enter your unit number'); return; }
-    if(!deliveryPhone){ showToast('Please enter a delivery contact number'); return; }
+    if(!/^\d{6}$/.test(deliveryPostal)){ showToast('Please enter a valid 6-digit delivery postal code'); flagField('delivery-postal'); return; }
+    if(!deliveryAddress){ showToast('Please enter your delivery address'); flagField('delivery-address'); return; }
+    if(!deliveryUnit){ showToast('Please enter your unit number'); flagField('delivery-unit'); return; }
+    if(!deliveryPhone){ showToast('Please enter a delivery contact number'); flagField('delivery-phone'); return; }
   }
 
   const notes = document.getElementById('order-notes').value.trim();
@@ -4590,8 +4607,7 @@ async function sendWhatsApp(){
     const items   = (p.items||[]).map(i=>i.qty+'x '+i.label).join(', ');
     const amount  = '$'+parseFloat(p.total).toFixed(2);
     const collect = (p.collectType?p.collectType+' · ':'')+(p.collectTime||'');
-    const msg = encodeURIComponent(
-      `Hi Fruicey! I've made a PayNow payment for my order.\n`+
+    const msgRaw = `Hi Fruicey! I've made a PayNow payment for my order.\n`+
       `Here's my payment screenshot below.\n\n`+
       `Order ID: ${orderId}\n`+
       `Name: ${currentUser.first} ${currentUser.last}\n`+
@@ -4599,10 +4615,18 @@ async function sendWhatsApp(){
       `Items: ${items}\n`+
       `Total: ${amount}\n`+
       `Collection: ${collect}\n\n`+
-      `Please confirm my order. Thank you!`
-    );
-    const waUrl = 'https://wa.me/'+WA+'?text='+msg;
-    if(waTab){ waTab.location.href = waUrl; } else { window.location.href = waUrl; }
+      `Please confirm my order. Thank you!`;
+    const msg = encodeURIComponent(msgRaw);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(isMobile){
+      // Deep-link straight into the installed WhatsApp app (avoids the wa.me "download" web page).
+      if(waTab) waTab.close();
+      window.location.href = 'whatsapp://send?phone='+WA+'&text='+msg;
+    } else {
+      // Desktop: open WhatsApp Web / desktop app via wa.me in the pre-opened tab.
+      const waUrl = 'https://wa.me/'+WA+'?text='+msg;
+      if(waTab){ waTab.location.href = waUrl; } else { window.location.href = waUrl; }
+    }
     // Order is placed — clear everything now
     pendingOrder = null;
     cart = []; renderCartItems(); updateCartBadge();
@@ -5347,7 +5371,11 @@ async function sendCreditWhatsApp(){
     'Credit Top-up: $'+amount.toFixed(2)+'\n\n'+
     'Please approve my credit deposit. Thank you!'
   );
-  window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
+  if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    window.location.href = 'whatsapp://send?phone='+WA+'&text='+msg;
+  } else {
+    window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
+  }
   closeAddCredit();
   showToast('Payment sent! Credit will be added once approved.');
 }

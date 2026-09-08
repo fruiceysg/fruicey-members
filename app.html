@@ -2867,6 +2867,8 @@ currentScreen = tab;
   if(tab==='orders')  loadOrders();
   if(tab==='rewards') loadRewards();
   if(tab==='account') loadAccount();
+  // Poll stock only while the Menu is open so browsing stays current; stop it elsewhere.
+  if(tab==='menu') startStockPoll(); else stopStockPoll();
   var _pf=document.getElementById('pog-open-btn'); if(_pf) _pf.style.display = (tab==='rewards') ? 'flex' : 'none';
 }
 
@@ -3212,11 +3214,34 @@ function initMenu(){
   // Render products immediately from the local catalogue so the tab feels instant.
   renderProducts();
   // Refresh stock (sold-out flags) in the background on every Menu open so it stays current.
-  // Non-blocking: the grid is already shown; sold-out flags re-apply when the data arrives.
-  apiGet({action:'getStock'}).then(res=>{
-    if(res.stock){ stockStatus = res.stock; renderProducts(); }
+  fetchStock();
+}
+
+// Fetch current stock and re-render only if something actually changed (avoids needless repaints)
+function fetchStock(){
+  return apiGet({action:'getStock'}).then(res=>{
+    if(res && res.stock){
+      const changed = JSON.stringify(res.stock) !== JSON.stringify(stockStatus);
+      stockStatus = res.stock;
+      if(changed && currentScreen === 'menu') renderProducts();
+    }
   }).catch(()=>{});
 }
+
+let __stockPollTimer = null;
+function startStockPoll(){
+  if(__stockPollTimer) return;
+  __stockPollTimer = setInterval(function(){
+    if(document.visibilityState === 'visible') fetchStock();  // only when app is on-screen
+  }, 15000);
+}
+function stopStockPoll(){
+  if(__stockPollTimer){ clearInterval(__stockPollTimer); __stockPollTimer = null; }
+}
+// Refresh immediately when the customer returns to the app while on the Menu
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && currentScreen === 'menu') fetchStock();
+});
 
 function renderCatPills(){
   const el = document.getElementById('cat-tabs');
@@ -4394,6 +4419,16 @@ async function checkout(){
   if(!cart.length){ showToast('Cart is empty'); return; }
   if(!collectTime){ showToast('Please select a '+(collectMode==='delivery'?'preferred delivery':'collection')+' time'); return; }
   if(!collectDate){ showToast('Please select a '+(collectMode==='delivery'?'preferred delivery':'collection')+' date'); return; }
+
+  // Re-check stock right before ordering, in case an item sold out while browsing.
+  await fetchStock();
+  const oos = cart.filter(i => stockStatus[i.id] === false);
+  if(oos.length){
+    const names = oos.map(i => i.name).join(', ');
+    showToast('Sorry, now out of stock: ' + names + '. Please remove to continue.');
+    if(typeof renderCartItems === 'function') renderCartItems();
+    return;
+  }
 
   const isDelivery = collectMode==='delivery';
   let deliveryPostal='', deliveryAddress='', deliveryUnit='', deliveryPhone='';

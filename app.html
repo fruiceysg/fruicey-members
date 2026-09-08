@@ -3609,14 +3609,14 @@ function setBowlPage(n, fromOpen){
       let backLbl = 'bowl selection';
       if(n===3) backLbl = 'drizzles';
       else if(n===4) backLbl = 'suggestions';
-      if(backPage){ backPage.innerHTML = '&larr; Back to ' + backLbl; backPage.style.display = ''; }
+      if(backPage){ backPage.innerHTML = 'Back to ' + backLbl; backPage.style.display = ''; }
     } else {
       if(drizzWrap) drizzWrap.style.display = 'none';
       if(suggestWrap) suggestWrap.style.display = 'none';
       if(noteWrap) noteWrap.style.display = 'none';
       if(proteinWrap) proteinWrap.style.display = isProtein ? 'block' : 'none';
       if(pressWrap) pressWrap.style.display = isPress ? 'block' : 'none';
-      if(backPage){ backPage.innerHTML = '&larr; Back to ' + (isPress ? 'option' : 'size selection'); backPage.style.display = ''; }
+      if(backPage){ backPage.innerHTML = 'Back to ' + (isPress ? 'option' : 'size selection'); backPage.style.display = ''; }
     }
     if(exitBtn) exitBtn.style.display = 'none';
     // Page 2+: no image and no description, just the product name and the options
@@ -3693,7 +3693,7 @@ function refreshBowlAdd(){
       btn.disabled = false;
       const nextLbl = window.pdIsProtein ? 'Next: protein serving'
                     : (window.pdIsPressPage ? 'Next: press type' : 'Next: Drizzles');
-      labelEl.innerHTML = nextLbl + ' <i class="ti ti-arrow-right" style="font-size:18px"></i>';
+      labelEl.innerHTML = nextLbl;
       priceEl.textContent = window.pdIsBowl ? livePriceStr : '';
       return;
     }
@@ -3701,13 +3701,13 @@ function refreshBowlAdd(){
   // Bowl mid-flow: page 2 -> suggestions, page 3 -> notes
   if(window.pdIsBowl && pdSelectedSize && page === 2){
     btn.disabled = false;
-    labelEl.innerHTML = 'Next: Suggestions <i class="ti ti-arrow-right" style="font-size:18px"></i>';
+    labelEl.innerHTML = 'Next: Suggestions';
     priceEl.textContent = livePriceStr;
     return;
   }
   if(window.pdIsBowl && pdSelectedSize && page === 3){
     btn.disabled = false;
-    labelEl.innerHTML = 'Next: Notes <i class="ti ti-arrow-right" style="font-size:18px"></i>';
+    labelEl.innerHTML = 'Next: Notes';
     priceEl.textContent = livePriceStr;
     return;
   }
@@ -5661,7 +5661,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your bowl</span>
         <span class="pd-bowl-add-price"></span>
       </button>
-      <button type="button" id="pd-bowl-back-page" class="pd-bowl-back" onclick="bowlBackAction()" style="display:none">&larr; Back to bowl selection</button>
+      <button type="button" id="pd-bowl-back-page" class="pd-bowl-back" onclick="bowlBackAction()" style="display:none">Back to bowl selection</button>
       <button type="button" id="pd-bowl-exit" class="pd-bowl-back" onclick="closeProductDetail()">Back<span class="pd-exit-extra"> or Slide down to exit</span></button>
     </div>
   </div>

@@ -3209,12 +3209,15 @@ const DRIZZLES = [
 
 function initMenu(){
   if(!currentCat){ currentCat = CATS[0]; renderCatPills(); }
-  // Show spinner while loading stock
-  showTabLoader('product-grid');
-  apiGet({action:'getStock'}).then(res=>{
-    if(res.stock) stockStatus = res.stock;
-    renderProducts();
-  }).catch(()=>renderProducts());
+  // Render products immediately from the local catalogue so the tab feels instant.
+  renderProducts();
+  // Fetch stock (sold-out flags) once per session in the background; re-apply when it arrives.
+  if(!window.__stockFetched){
+    window.__stockFetched = true;
+    apiGet({action:'getStock'}).then(res=>{
+      if(res.stock){ stockStatus = res.stock; renderProducts(); }
+    }).catch(()=>{ window.__stockFetched = false; });
+  }
 }
 
 function renderCatPills(){

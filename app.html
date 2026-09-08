@@ -370,8 +370,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-suggest-add i{font-size:16px}
 .pd-suggest-add:active{transform:scale(.95)}
 .pd-suggest-add.added{background:var(--green);color:#fff}
-.pd-suggest-skip{display:block;width:calc(100% - 32px);margin:14px 16px 0;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);background:#fff;color:var(--text);font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;text-align:right;transition:background .15s}
-.pd-suggest-skip:active{background:#f2f2f2}
+.pd-suggest-skip{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:var(--green-light);color:var(--green-dark);border:none;border-radius:12px;padding:9px 14px;font-family:var(--body);font-weight:700;font-size:13px;cursor:pointer;transition:transform .12s,background .15s}
+.pd-suggest-skip:active{transform:scale(.95)}
 .pd-drizzle .pd-drizzle-name{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);text-align:left;line-height:1.2}
 .pd-drizzle .pd-drizzle-price{font-size:12px;font-weight:700;color:var(--text2);flex-shrink:0;white-space:nowrap}
 .pd-drizzle .pd-drizzle-tick{display:none}
@@ -393,6 +393,10 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-bowl-add{flex:0 0 auto;background:#fff;border-top:1px solid var(--border);padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
 .pd-bowl-total{display:flex;align-items:center;gap:6px;font-family:var(--font);font-weight:700;font-size:13px;color:var(--green-dark)}
 .pd-bowl-add-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:none;border-radius:14px;padding:14px 18px;background:var(--green);color:#fff;font-family:var(--font);font-weight:700;font-size:15px;cursor:pointer;transition:opacity .15s}
+.pd-bowl-row{display:flex;align-items:stretch;gap:10px}
+.pd-bowl-row .pd-bowl-add-btn{flex:1 1 auto;width:auto;margin:0}
+.pd-bowl-row .pd-bowl-back{flex:0 0 auto;width:auto;margin:0;padding:12px 20px;white-space:nowrap}
+.pd-bowl-row .pd-exit-extra{display:none}
 .pd-bowl-add-btn:disabled{opacity:.45;cursor:default}
 .pd-bowl-add-label{display:flex;align-items:center;gap:8px}
 .pd-bowl-add-price{font-weight:800}
@@ -3609,14 +3613,14 @@ function setBowlPage(n, fromOpen){
       let backLbl = 'bowl selection';
       if(n===3) backLbl = 'drizzles';
       else if(n===4) backLbl = 'suggestions';
-      if(backPage){ backPage.innerHTML = 'Back to ' + backLbl; backPage.style.display = ''; }
+      if(backPage){ backPage.textContent = 'Back'; backPage.style.display = ''; }
     } else {
       if(drizzWrap) drizzWrap.style.display = 'none';
       if(suggestWrap) suggestWrap.style.display = 'none';
       if(noteWrap) noteWrap.style.display = 'none';
       if(proteinWrap) proteinWrap.style.display = isProtein ? 'block' : 'none';
       if(pressWrap) pressWrap.style.display = isPress ? 'block' : 'none';
-      if(backPage){ backPage.innerHTML = 'Back to ' + (isPress ? 'option' : 'size selection'); backPage.style.display = ''; }
+      if(backPage){ backPage.textContent = 'Back'; backPage.style.display = ''; }
     }
     if(exitBtn) exitBtn.style.display = 'none';
     // Page 2+: no image and no description, just the product name and the options
@@ -5641,7 +5645,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <div class="pd-choose">Complete your order</div>
       <div class="pd-suggest-sub">A drink pairs perfectly with your bowl — add any you like.</div>
       <div id="pd-suggest-list" class="pd-suggest-list"></div>
-      <button type="button" class="pd-suggest-skip" onclick="setBowlPage(4)">No thanks!</button>
+      <div style="display:flex;justify-content:flex-end;padding:14px 16px 0"><button type="button" class="pd-suggest-skip" onclick="setBowlPage(4)">No thanks!</button></div>
     </div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (optional)</label>
@@ -5657,12 +5661,14 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
     <div id="pd-bowl-add" class="pd-bowl-add" style="display:none">
       <div id="pd-bowl-total" class="pd-bowl-total" style="display:none"></div>
-      <button type="button" id="pd-bowl-add-btn" class="pd-bowl-add-btn" onclick="bowlFooterAction()" disabled>
-        <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your bowl</span>
-        <span class="pd-bowl-add-price"></span>
-      </button>
-      <button type="button" id="pd-bowl-back-page" class="pd-bowl-back" onclick="bowlBackAction()" style="display:none">Back to bowl selection</button>
-      <button type="button" id="pd-bowl-exit" class="pd-bowl-back" onclick="closeProductDetail()">Back<span class="pd-exit-extra"> or Slide down to exit</span></button>
+      <div class="pd-bowl-row">
+        <button type="button" id="pd-bowl-back-page" class="pd-bowl-back" onclick="bowlBackAction()" style="display:none">Back</button>
+        <button type="button" id="pd-bowl-exit" class="pd-bowl-back" onclick="closeProductDetail()">Back<span class="pd-exit-extra"> or Slide down to exit</span></button>
+        <button type="button" id="pd-bowl-add-btn" class="pd-bowl-add-btn" onclick="bowlFooterAction()" disabled>
+          <span class="pd-bowl-add-label"><i class="ti ti-shopping-cart-plus" style="font-size:18px"></i> Choose your bowl</span>
+          <span class="pd-bowl-add-price"></span>
+        </button>
+      </div>
     </div>
   </div>
 </div>

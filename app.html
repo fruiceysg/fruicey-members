@@ -540,6 +540,14 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .paynow-box img{width:200px;height:auto;margin:0 auto;display:block;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
 .paynow-amount{font-family:var(--font);font-size:28px;color:var(--green);margin:12px 0 4px}
 .paynow-note{font-size:12px;color:var(--text3);line-height:1.5}
+.paynow-summary{background:#f9f9f9;border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.paynow-sum-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px}
+.paynow-sum-label{color:var(--text3);font-weight:600;flex-shrink:0}
+.paynow-sum-val{color:var(--text);text-align:right}
+.paynow-items-list{margin:10px 0;padding:10px 0;border-top:1px solid rgba(0,0,0,.07);border-bottom:1px solid rgba(0,0,0,.07);display:flex;flex-direction:column;gap:7px}
+.paynow-item{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13.5px}
+.paynow-item-name{color:var(--text);line-height:1.35}
+.paynow-item-qty{color:var(--text2);font-weight:700;flex-shrink:0}
 
 /* ORDERS */
 .order-card{background:#fff;border-radius:var(--r);margin:10px 16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06)}
@@ -2374,10 +2382,10 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         </ol>
       </div>
     </div>
-    <div style="background:#f9f9f9;border-radius:10px;padding:12px;font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.8">
-      <div><b>Order:</b> <span id="paynow-orderid"></span></div>
-      <div><b>Items:</b> <span id="paynow-items"></span></div>
-      <div><b>Collection:</b> <span id="paynow-collect"></span></div>
+    <div class="paynow-summary">
+      <div class="paynow-sum-row"><span class="paynow-sum-label">Order</span><span class="paynow-sum-val" id="paynow-orderid"></span></div>
+      <div class="paynow-items-list" id="paynow-items"></div>
+      <div class="paynow-sum-row"><span class="paynow-sum-label">Collection</span><span class="paynow-sum-val" id="paynow-collect"></span></div>
     </div>
     <div class="ack-note">
       <div class="ack-note-title"><i class="ti ti-chef-hat"></i> What happens next?</div>
@@ -4512,7 +4520,9 @@ function showPayNow(order){
   try{ items = typeof items==='string' ? JSON.parse(items) : (items||[]); }catch(e){ items = []; }
   document.getElementById('paynow-amount').textContent = '$'+sub.toFixed(2);
   document.getElementById('paynow-orderid').textContent = order.id || 'assigned once you tap "I\'ve paid"';
-  document.getElementById('paynow-items').textContent = items.map(i=>i.qty+'x '+i.label).join(', ');
+  document.getElementById('paynow-items').innerHTML = items.map(function(i){
+    return '<div class="paynow-item"><span class="paynow-item-name">'+(i.label||i.name||'')+'</span><span class="paynow-item-qty">×'+i.qty+'</span></div>';
+  }).join('');
   document.getElementById('paynow-collect').textContent = (order.collectType?order.collectType+' · ':'')+(order.collectTime||'');
   document.getElementById('paynow-modal').classList.add('open');
 }

@@ -4559,7 +4559,7 @@ function showPayNow(order){
   document.getElementById('paynow-items').innerHTML = items.map(function(i){
     return '<div class="paynow-item"><span class="paynow-item-name">'+(i.label||i.name||'')+'</span><span class="paynow-item-qty">×'+i.qty+'</span></div>';
   }).join('');
-  document.getElementById('paynow-collect').textContent = (order.collectType?order.collectType+' · ':'')+(order.collectTime||'');
+  document.getElementById('paynow-collect').textContent = (order.collectType?order.collectType+' · ':'')+cleanCollect(order.collectTime||'');
   document.getElementById('paynow-modal').classList.add('open');
 }
 

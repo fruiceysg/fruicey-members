@@ -572,38 +572,41 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .tier-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:8px}
 
 /* ── Account tab visual redesign ── */
-.acc-profile-card{position:relative;margin:14px 16px;padding:22px 18px;border-radius:20px;color:#fff;
-  background:linear-gradient(135deg,var(--green),var(--green-dark));box-shadow:0 10px 26px rgba(28,77,58,.28);overflow:hidden}
-.acc-profile-card::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08)}
-.acc-profile-card::before{content:"";position:absolute;left:-30px;bottom:-50px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06)}
-.acc-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:30px;font-weight:700;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.35)}
-.acc-profile-top{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
-.acc-profile-name{font-family:var(--font);font-size:24px;line-height:1.1}
-.acc-profile-sub{font-size:12.5px;opacity:.9;margin-top:3px;display:flex;align-items:center;gap:5px}
-.acc-profile-sub i{font-size:14px}
-.acc-profile-contact{position:relative;z-index:1;margin-top:16px;display:flex;flex-direction:column;gap:8px}
-.acc-contact-row{display:flex;align-items:center;gap:10px;font-size:13.5px;background:rgba(255,255,255,.12);padding:9px 12px;border-radius:12px}
-.acc-contact-row i{font-size:17px;opacity:.95}
+/* ── Account tab — Apple-style sleek ── */
+.acc-wrap{max-width:640px;margin:0 auto;padding:8px 16px 24px}
+/* Profile: centered avatar, quiet typography */
+.acc-profile-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:22px 16px 6px;background:none;box-shadow:none;color:inherit}
+.acc-profile-card::before,.acc-profile-card::after{display:none}
+.acc-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:34px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 8px 22px rgba(28,77,58,.22)}
+.acc-profile-top{display:flex;flex-direction:column;align-items:center;gap:10px}
+.acc-profile-name{font-size:24px;font-weight:700;letter-spacing:-.4px;color:var(--text);margin-top:12px}
+.acc-profile-sub{font-size:13px;color:var(--text3);margin-top:2px;display:inline-flex;align-items:center;gap:5px}
+.acc-profile-sub i{font-size:15px;color:var(--green)}
 
-.acc-credit-card{margin:14px 16px;padding:20px 18px;border-radius:20px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.07);text-align:center;position:relative;overflow:hidden}
-.acc-credit-icon{width:52px;height:52px;border-radius:16px;background:var(--green-light);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 6px}
-.acc-credit-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
-.acc-credit-amount{font-family:var(--font);font-size:40px;font-weight:700;color:var(--green);line-height:1.1;margin:2px 0 14px}
+/* Section label, iOS-style */
+.acc-section-label{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin:22px 4px 7px}
+/* Inset grouped list (like iOS Settings) */
+.acc-group{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.acc-item{display:flex;align-items:center;gap:12px;padding:13px 16px;position:relative}
+.acc-item + .acc-item::before{content:"";position:absolute;top:0;left:52px;right:0;height:1px;background:rgba(0,0,0,.07)}
+.acc-item-ico{width:29px;height:29px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;flex-shrink:0}
+.acc-item-ico.mail{background:#34a2e0}
+.acc-item-ico.phone{background:#43c463}
+.acc-item-ico.cake{background:#ff8a5c}
+.acc-item-label{font-size:15px;color:var(--text);flex-shrink:0}
+.acc-item-val{margin-left:auto;font-size:15px;color:var(--text3);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Credit — clean hero number, subtle actions */
+.acc-credit-card{background:#fff;border-radius:14px;padding:22px 18px 16px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.acc-credit-icon{display:none}
+.acc-credit-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.acc-credit-amount{font-size:44px;font-weight:700;letter-spacing:-1px;color:var(--text);line-height:1.05;margin:4px 0 16px}
 .acc-credit-actions{display:flex;gap:10px}
-.acc-credit-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;border-radius:14px;border:none;font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.acc-credit-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:11px;border:none;font-family:var(--body);font-weight:600;font-size:14px;cursor:pointer;transition:opacity .15s,transform .12s}
 .acc-credit-btn i{font-size:17px}
-.acc-credit-btn.primary{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(28,77,58,.25)}
-.acc-credit-btn.ghost{background:var(--green-light);color:var(--green-dark)}
-.acc-credit-btn:active{transform:scale(.97)}
-
-.acc-tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 16px 14px}
-.acc-tile{background:#fff;border-radius:18px;padding:18px 14px;text-align:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.06);transition:transform .12s,box-shadow .12s;border:1px solid rgba(0,0,0,.03)}
-.acc-tile:active{transform:scale(.97)}
-.acc-tile-ico{width:50px;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:25px;margin:0 auto 9px}
-.acc-tile-ico.orders{background:#eaf3ff;color:#3b7dd8}
-.acc-tile-ico.rewards{background:#fff3e0;color:#e08a1e}
-.acc-tile-title{font-weight:700;font-size:14px;color:var(--text)}
-.acc-tile-sub{font-size:11.5px;color:var(--text3);margin-top:2px}
+.acc-credit-btn.primary{background:var(--green);color:#fff}
+.acc-credit-btn.ghost{background:rgba(120,120,128,.12);color:var(--green-dark)}
+.acc-credit-btn:active{transform:scale(.97);opacity:.9}
 
 .acc-logout-fixed{position:fixed;top:8px;z-index:999;width:42px;padding:0;background:none;border:none;cursor:pointer;color:#e74c3c;display:none;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:2px;text-shadow:0 1px 3px rgba(255,255,255,.9);right:54px}
 .acc-logout-fixed i{font-size:22px}
@@ -2279,30 +2282,31 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 
   <!-- Profile card -->
+  <div class="acc-wrap">
   <div class="acc-profile-card">
     <div class="acc-profile-top">
       <div class="acc-avatar" id="acc-avatar">F</div>
-      <div>
-        <div class="acc-profile-name" id="acc-name">My Account</div>
-        <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span>Fruicey Member</span></div>
-      </div>
-    </div>
-    <div class="acc-profile-contact">
-      <div class="acc-contact-row"><i class="ti ti-mail"></i><span id="acc-email"></span></div>
-      <div class="acc-contact-row"><i class="ti ti-phone"></i><span id="acc-phone2"></span></div>
-      <div class="acc-contact-row" id="acc-bday-row" style="display:none"><i class="ti ti-cake"></i><span id="acc-bday"></span></div>
+      <div class="acc-profile-name" id="acc-name">My Account</div>
+      <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span>Fruicey Member</span></div>
     </div>
   </div>
 
-  <!-- Credit card -->
+  <div class="acc-section-label">Contact</div>
+  <div class="acc-group">
+    <div class="acc-item"><div class="acc-item-ico mail"><i class="ti ti-mail"></i></div><div class="acc-item-label">Email</div><div class="acc-item-val" id="acc-email"></div></div>
+    <div class="acc-item"><div class="acc-item-ico phone"><i class="ti ti-phone"></i></div><div class="acc-item-label">Phone</div><div class="acc-item-val" id="acc-phone2"></div></div>
+    <div class="acc-item" id="acc-bday-row" style="display:none"><div class="acc-item-ico cake"><i class="ti ti-cake"></i></div><div class="acc-item-label">Birthday</div><div class="acc-item-val" id="acc-bday"></div></div>
+  </div>
+
+  <div class="acc-section-label">Fruicey Credit</div>
   <div class="acc-credit-card">
-    <div class="acc-credit-icon"><i class="ti ti-wallet"></i></div>
-    <div class="acc-credit-label">Fruicey Credit</div>
+    <div class="acc-credit-label">Available balance</div>
     <div class="acc-credit-amount" id="acc-credit-balance">$0.00</div>
     <div class="acc-credit-actions">
       <button class="acc-credit-btn primary" onclick="openAddCredit()"><i class="ti ti-plus"></i>Add Credit</button>
       <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
     </div>
+  </div>
   </div>
 </div>
 
@@ -5655,7 +5659,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <div class="pd-choose">Complete your order</div>
       <div class="pd-suggest-sub">A drink pairs perfectly with your bowl — add any you like.</div>
       <div id="pd-suggest-list" class="pd-suggest-list"></div>
-      <div class="pd-suggest-row pd-suggest-skiprow"><span class="pd-suggest-info"><span class="pd-suggest-name">Not right now</span></span><button type="button" class="pd-suggest-skip" onclick="setBowlPage(4)">No thanks!</button></div>
+      <div class="pd-suggest-row pd-suggest-skiprow"><span class="pd-suggest-info"></span><button type="button" class="pd-suggest-skip" onclick="setBowlPage(4)">No thanks!</button></div>
     </div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (optional)</label>

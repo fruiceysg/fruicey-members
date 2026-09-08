@@ -372,6 +372,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .pd-suggest-add.added{background:var(--green);color:#fff}
 .pd-suggest-skip{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:var(--green-light);color:var(--green-dark);border:none;border-radius:12px;padding:9px 14px;font-family:var(--body);font-weight:700;font-size:13px;cursor:pointer;transition:transform .12s,background .15s}
 .pd-suggest-skip:active{transform:scale(.95)}
+.pd-suggest-skiprow{margin:10px 16px 0}
 .pd-drizzle .pd-drizzle-name{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);text-align:left;line-height:1.2}
 .pd-drizzle .pd-drizzle-price{font-size:12px;font-weight:700;color:var(--text2);flex-shrink:0;white-space:nowrap}
 .pd-drizzle .pd-drizzle-tick{display:none}
@@ -4300,7 +4301,16 @@ async function computeDelivery(){
       updateCartTotals(); return;
     }
     const addrEl = document.getElementById('delivery-address');
-    if(addrEl && !addrEl.value.trim()) addrEl.value = cust.address;
+    // Auto-fill the address for the new postal. Overwrite when the field is empty OR still holds
+    // a previous auto-filled value (so correcting the postal updates the address). Only a value the
+    // user typed themselves is preserved.
+    if(addrEl){
+      const cur = addrEl.value.trim();
+      if(!cur || cur === (window.__autoFilledAddr||'')){
+        addrEl.value = cust.address;
+        window.__autoFilledAddr = cust.address;
+      }
+    }
     const dist = kmBetween(shopLatLng, cust);
     const isSentosa = /SENTOSA/i.test((cust.address||'')+' '+(cust.building||''));
     let fee = (dist<=FREE_RADIUS_KM && sub>30) ? 0 : tierFee(sub);
@@ -5645,11 +5655,11 @@ document.addEventListener('DOMContentLoaded', function(){
       <div class="pd-choose">Complete your order</div>
       <div class="pd-suggest-sub">A drink pairs perfectly with your bowl — add any you like.</div>
       <div id="pd-suggest-list" class="pd-suggest-list"></div>
-      <div style="display:flex;justify-content:flex-end;padding:14px 16px 0"><button type="button" class="pd-suggest-skip" onclick="setBowlPage(4)">No thanks!</button></div>
+      <div class="pd-suggest-row pd-suggest-skiprow"><span class="pd-suggest-info"><span class="pd-suggest-name">Not right now</span></span><button type="button" class="pd-suggest-skip" onclick="setBowlPage(4)">No thanks!</button></div>
     </div>
     <div id="pd-note-wrap" class="pd-note-wrap" style="display:none">
       <label class="pd-note-label" for="pd-note">Note to Wilson (optional)</label>
-      <textarea id="pd-note" class="pd-note" rows="2" placeholder=""></textarea>
+      <textarea id="pd-note" class="pd-note" rows="4" placeholder=""></textarea>
     </div>
     <div id="pd-cart-summary" class="pd-cart-summary">
       <div class="pd-cs-total" id="pd-cart-summary-text"></div>

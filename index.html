@@ -111,6 +111,7 @@ input.err{border-color:var(--danger)!important}
     <button class="tab" onclick="switchTab('register',event)"><i class="ti ti-user-plus"></i> Register</button>
     <button class="tab" id="tab-applications" onclick="switchTab('applications',event)"><i class="ti ti-inbox"></i> Applications</button>
     <button class="tab" onclick="switchTab('tiers',event)"><i class="ti ti-sparkles"></i> Tiers</button>
+    <button class="tab" onclick="switchTab('reviews',event)"><i class="ti ti-message-star"></i> Reviews</button>
     <button class="tab" onclick="switchTab('backup',event)"><i class="ti ti-database"></i> Backup</button>
   </div>
 
@@ -220,6 +221,15 @@ input.err{border-color:var(--danger)!important}
         <button class="btn btn-outline" onclick="importData()"><i class="ti ti-upload"></i> Import &amp; restore</button>
       </div>
       <div class="card info-card"><p style="font-size:13px;color:var(--text2);line-height:1.6"><i class="ti ti-info-circle"></i> <strong>Tip:</strong> Export weekly and save to Google Drive as backup.</p></div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div id="sec-reviews" class="section">
+      <div class="card">
+        <div class="section-title">Customer reviews</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">Approve reviews to show them on the app home page, or delete unwanted ones. Pending reviews are not visible to customers.</p>
+        <div id="reviews-list">Loading…</div>
+      </div>
     </div>
 
   </div>
@@ -399,6 +409,7 @@ function switchTab(tab,e){
   if(tab==='dashboard')renderDashboard();
   if(tab==='members')renderMembers();
   if(tab==='applications')renderApplications();
+  if(tab==='reviews')loadReviews();
 }
 function switchTabDirect(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -409,6 +420,41 @@ function switchTabDirect(tab){
 }
 
 function render(){renderDashboard();renderMembers();renderTransactions();populateMemberSelect();renderApplications();}
+
+// ── REVIEWS MODERATION ──
+async function loadReviews(){
+  const box = document.getElementById('reviews-list');
+  box.innerHTML = 'Loading…';
+  try{
+    const res = await apiPost({action:'moderateReview', list:true});
+    const list = (res && res.reviews) || [];
+    if(!list.length){ box.innerHTML = '<p style="font-size:13px;color:var(--text2)">No reviews yet.</p>'; return; }
+    box.innerHTML = list.map(function(r){
+      const img = r.photoUrl ? '<img src="'+r.photoUrl+'=w300" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0" loading="lazy">' : '';
+      const pending = r.status !== 'approved';
+      return '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)">'
+        + img
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-weight:600;font-size:14px">'+(r.name||'Anonymous')+' '
+          + '<span style="font-size:11px;padding:2px 8px;border-radius:10px;'+(pending?'background:#fff3e0;color:#e08a1e':'background:#e6f6ec;color:#1c7d3a')+'">'+(pending?'Pending':'Approved')+'</span></div>'
+          + '<div style="font-size:13px;color:var(--text2);margin:4px 0;line-height:1.4">'+(r.message||'').replace(/</g,'&lt;')+'</div>'
+          + '<div style="font-size:11px;color:var(--text3)">'+(r.createdAt||'')+'</div>'
+          + '<div style="display:flex;gap:8px;margin-top:8px">'
+            + (pending?'<button class="btn btn-primary btn-sm" onclick="approveReview(\''+r.id+'\')"><i class="ti ti-check"></i> Approve</button>':'')
+            + '<button class="btn btn-outline btn-sm" onclick="deleteReview(\''+r.id+'\')"><i class="ti ti-trash"></i> Delete</button>'
+          + '</div>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+  }catch(e){ box.innerHTML = '<p style="font-size:13px;color:#e74c3c">Could not load reviews.</p>'; }
+}
+async function approveReview(id){
+  try{ const res=await apiPost({action:'moderateReview', action2:'approve', id:id}); if(res&&res.success){ showToast('Review approved'); loadReviews(); } else showToast('Error'); }catch(e){ showToast('Connection error'); }
+}
+async function deleteReview(id){
+  if(!confirm('Delete this review permanently?')) return;
+  try{ const res=await apiPost({action:'moderateReview', action2:'delete', id:id}); if(res&&res.success){ showToast('Review deleted'); loadReviews(); } else showToast('Error'); }catch(e){ showToast('Connection error'); }
+}
 
 function renderDashboard(){
   const totalSpend=transactions.reduce((s,t)=>s+t.amount,0);
@@ -550,7 +596,7 @@ function deleteMember(id){
   const m=members.find(x=>x.id===id);if(!m)return;
   if(!confirm('Delete '+m.first+' '+m.last+'?\n\nThis will permanently remove the member and ALL their transactions. This cannot be undone.'))return;
   closeModalDirect();
-  apiPost({action:'deleteMember',id,phone:(m.phone||'')}).then(res=>{
+  apiPost({action:'deleteMember',id}).then(res=>{
     if(res.success){loadFromSheets();showToast(m.first+' '+m.last+' deleted');}
     else showToast('Error deleting member');
   }).catch(e=>{console.error('Delete error:',e);showToast('Connection error: '+e.message);});

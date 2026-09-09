@@ -131,6 +131,22 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* 6 FEATURE IMAGES (boxed, contained, rounded — matches top banner) */
 .home-features{display:flex;flex-direction:column;gap:32px;max-width:860px;margin:16px auto;padding:0 16px}
+/* Customer reviews carousel */
+.home-reviews-section{max-width:1200px;margin:24px auto 8px;padding:0 8px}
+.home-reviews-title{font-family:var(--font);font-size:26px;color:var(--green-dark);text-align:center;margin-bottom:14px;letter-spacing:.5px}
+.home-reviews{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 8px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.home-reviews::-webkit-scrollbar{display:none}
+.review-card{flex:0 0 auto;width:230px;scroll-snap-align:center;background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07);overflow:hidden;display:flex;flex-direction:column}
+.review-card-img{width:100%;height:150px;object-fit:cover;background:#f2f2f2;display:block}
+.review-card-body{padding:12px 14px}
+.review-card-msg{font-size:13px;color:var(--text);line-height:1.45;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.review-card-name{font-family:var(--font);font-size:14px;color:var(--green-dark);margin-top:8px}
+.review-card-date{font-size:11px;color:var(--text3);margin-top:1px}
+.review-empty{color:var(--text3);font-size:13px;text-align:center;padding:16px;width:100%}
+.review-share-btn{display:flex;align-items:center;justify-content:center;gap:7px;margin:4px auto 0;padding:11px 20px;border-radius:999px;border:1.5px solid var(--green);background:#fff;color:var(--green-dark);font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .12s,background .15s}
+.review-share-btn i{font-size:17px}
+.review-share-btn:active{transform:scale(.97)}
+@media (min-width:900px){ .home-reviews{justify-content:center} }
 /* Home product-category carousel */
 .home-carousel-section{max-width:1500px;margin:20px auto 8px;padding:0 8px}
 .home-carousel-title{font-family:var(--font);font-size:26px;color:var(--green-dark);text-align:center;margin-bottom:14px;letter-spacing:.5px}
@@ -1114,10 +1130,11 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
     <img src="top-banner.jpg" alt="Fruicey top banner" loading="eager" onerror="this.style.display='none'">
   </div>
 
-  <!-- Product category carousel -->
-  <div class="home-carousel-section">
-    <div class="home-carousel-title">Our Products</div>
-    <div class="home-carousel" id="home-carousel"></div>
+  <!-- Customer reviews carousel -->
+  <div class="home-reviews-section">
+    <div class="home-reviews-title">Happy Vibes</div>
+    <div class="home-reviews" id="home-reviews"></div>
+    <button type="button" class="review-share-btn" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
   </div>
 
   <!-- 6 feature images (swappable: replace the file of the same name) -->
@@ -2369,6 +2386,26 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<!-- Review submission modal -->
+<div class="modal-bg" id="review-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Share your experience</div>
+    <div style="font-size:12.5px;color:var(--text3);margin-bottom:12px">Tell us about your visit! Reviews appear once approved. 💚</div>
+    <div class="field"><label>Your name</label><input type="text" id="rv-name" maxlength="40" placeholder="e.g. Sarah"></div>
+    <div class="field"><label>Your message</label><textarea id="rv-message" rows="4" maxlength="600" placeholder="Loved the acai bowl!" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:14px;resize:none"></textarea></div>
+    <div class="field">
+      <label>Add a photo (optional)</label>
+      <input type="file" id="rv-photo" accept="image/*" onchange="onReviewPhotoPick(event)" style="display:none">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('rv-photo').click()" style="width:100%"><i class="ti ti-photo-up"></i> Choose photo</button>
+      <div id="rv-photo-preview" style="margin-top:8px;display:none"><img id="rv-photo-img" style="max-width:100%;max-height:180px;border-radius:10px;display:block"></div>
+    </div>
+    <div class="err" id="rv-err"></div>
+    <button class="btn btn-primary" id="rv-submit-btn" onclick="submitReview()" style="margin-top:8px">Submit</button>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="document.getElementById('review-modal').classList.remove('open')">Cancel</button>
+  </div>
+</div>
+
 <!-- ═══ LOGIN MODAL ═══ -->
 <div class="modal-bg" id="login-modal">
   <div class="modal-box">
@@ -3135,33 +3172,69 @@ function initHomeScreen(){
     if(hl) hl.src = srcLogo.src;
     if(dl) dl.src = srcLogo.src;
   }
-  renderHomeCarousel();
+  renderHomeReviews();
 }
 
-// Build the "Our Products" carousel: one image per category, tapping jumps to that Menu category
-function renderHomeCarousel(){
-  const el = document.getElementById('home-carousel');
+// ── CUSTOMER REVIEWS ──────────────────────────────────────────
+function renderHomeReviews(){
+  const el = document.getElementById('home-reviews');
   if(!el) return;
-  // Friendly display names for the carousel (grouping presses under "Fresh Presses")
-  const cards = [
-    {cat:'Shakes & Smoothies', name:'Shakes & Smoothies'},
-    {cat:'Superfood Bowls',    name:'Superfood Bowls'},
-    {cat:'Juices',             name:'Juices'},
-    {cat:'Immunity Press',     name:'Fresh Presses'},
-    {cat:'Nutritional Press',  name:'Nutritional'},
-    {cat:'Longevity Press',    name:'Longevity'},
-    {cat:'Wellness Press',     name:'Wellness'}
-  ];
-  el.innerHTML = cards.map(function(c){
-    // representative image = first product in that category that has an image
-    let imgHtml = '';
-    const prods = (CATALOGUE[c.cat]||[]);
-    for(let i=0;i<prods.length;i++){ if(IMG[prods[i].id]){ imgHtml = '<img src="https://lh3.googleusercontent.com/d/'+IMG[prods[i].id]+'=w300" alt="" loading="lazy">'; break; } }
-    return '<button type="button" class="home-cat-card" onclick="goMenuCat(\''+c.cat.replace(/'/g,"\\'")+'\')">'
-      + '<div class="home-cat-imgwrap">'+imgHtml+'</div>'
-      + '<div class="home-cat-name">'+c.name+'</div>'
-      + '</button>';
-  }).join('');
+  apiGet({action:'getReviews', limit:20}).then(res=>{
+    const list = (res && res.reviews) || [];
+    if(!list.length){ el.innerHTML = '<div class="review-empty">Be the first to share your experience! 💚</div>'; return; }
+    el.innerHTML = list.map(function(r){
+      const img = r.photoUrl ? '<img class="review-card-img" src="'+r.photoUrl+'=w400" alt="" loading="lazy">' : '';
+      const msg = r.message ? '<div class="review-card-msg">'+String(r.message).replace(/</g,'&lt;')+'</div>' : '';
+      return '<div class="review-card">'+img+'<div class="review-card-body">'+msg
+        +'<div class="review-card-name">'+String(r.name||'Anonymous').replace(/</g,'&lt;')+'</div>'
+        +'<div class="review-card-date">'+formatDT(r.createdAt)+'</div>'
+        +'</div></div>';
+    }).join('');
+  }).catch(()=>{ el.innerHTML = '<div class="review-empty">Reviews unavailable right now.</div>'; });
+}
+
+let __reviewPhoto = null; // {base64, mime}
+function openReviewForm(){
+  document.getElementById('rv-name').value = (currentUser ? (currentUser.first||'') : '');
+  document.getElementById('rv-message').value = '';
+  document.getElementById('rv-err').style.display = 'none';
+  document.getElementById('rv-photo-preview').style.display = 'none';
+  document.getElementById('rv-photo').value = '';
+  __reviewPhoto = null;
+  document.getElementById('review-modal').classList.add('open');
+}
+function onReviewPhotoPick(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  if(file.size > 6*1024*1024){ showToast('Photo too large (max 6MB)'); e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = function(){
+    const dataUrl = reader.result;
+    const base64 = String(dataUrl).split(',')[1];
+    __reviewPhoto = { base64: base64, mime: file.type || 'image/jpeg' };
+    const img = document.getElementById('rv-photo-img');
+    img.src = dataUrl;
+    document.getElementById('rv-photo-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+async function submitReview(){
+  const name = document.getElementById('rv-name').value.trim();
+  const message = document.getElementById('rv-message').value.trim();
+  const err = document.getElementById('rv-err');
+  if(!message && !__reviewPhoto){ err.textContent='Please write a message or add a photo.'; err.style.display='block'; return; }
+  const btn = document.getElementById('rv-submit-btn');
+  btn.textContent='Submitting...'; btn.disabled=true;
+  try{
+    const payload = {action:'submitReview', name:name, message:message};
+    if(__reviewPhoto){ payload.photoBase64 = __reviewPhoto.base64; payload.photoMime = __reviewPhoto.mime; }
+    const res = await apiPost(payload);
+    if(res && res.success){
+      document.getElementById('review-modal').classList.remove('open');
+      showToast('Thank you! Your review will appear once approved. 💚');
+    } else { err.textContent='Could not submit. Please try again.'; err.style.display='block'; }
+  }catch(e){ err.textContent='Connection error.'; err.style.display='block'; }
+  btn.textContent='Submit'; btn.disabled=false;
 }
 
 // ── DRAWER MENU ───────────────────────────────────────────────

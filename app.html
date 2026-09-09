@@ -1130,13 +1130,6 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
     <img src="top-banner.jpg" alt="Fruicey top banner" loading="eager" onerror="this.style.display='none'">
   </div>
 
-  <!-- Customer reviews carousel -->
-  <div class="home-reviews-section">
-    <div class="home-reviews-title">Happy Vibes</div>
-    <div class="home-reviews" id="home-reviews"></div>
-    <button type="button" class="review-share-btn" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
-  </div>
-
   <!-- 6 feature images (swappable: replace the file of the same name) -->
   <div class="home-features">
     <div class="feature-wrap feat1">
@@ -1168,6 +1161,12 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
     <div class="feature-wrap feat6">
       <img class="feature-img" src="feature6.jpg" alt="Superfood Bowls — tap to view menu" loading="eager" style="cursor:pointer" onclick="goMenuCat('Superfood Bowls')">
     </div>
+  </div>
+
+  <!-- Customer reviews carousel -->
+  <div class="home-reviews-section">
+    <div class="home-reviews-title">Happy Vibes</div>
+    <div class="home-reviews" id="home-reviews"></div>
   </div>
 
   <!-- Scrolling marquee (replaces Why Choose Us) -->
@@ -2372,6 +2371,8 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="acc-item"><div class="acc-item-ico phone"><i class="ti ti-phone"></i></div><div class="acc-item-label">Phone</div><div class="acc-item-val" id="acc-phone2"></div></div>
     <div class="acc-item" id="acc-bday-row" style="display:none"><div class="acc-item-ico cake"><i class="ti ti-cake"></i></div><div class="acc-item-label">Birthday</div><div class="acc-item-val" id="acc-bday"></div></div>
   </div>
+
+  <button type="button" class="review-share-btn" style="margin-top:24px" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
   </div>
 </div>
 
@@ -3176,6 +3177,16 @@ function initHomeScreen(){
 }
 
 // ── CUSTOMER REVIEWS ──────────────────────────────────────────
+function reviewPhotoSrc(photoUrl, w){
+  if(!photoUrl || /^ERR:/.test(photoUrl)) return '';
+  if(photoUrl.indexOf('gdrive:')===0){
+    const id = photoUrl.slice(7);
+    return 'https://drive.google.com/thumbnail?id='+id+'&sz=w'+(w||400);
+  }
+  // Legacy lh3 URLs already stored
+  if(/^https?:\/\//.test(photoUrl)) return photoUrl + (photoUrl.indexOf('=w')>-1?'':'=w'+(w||400));
+  return '';
+}
 function renderHomeReviews(){
   const el = document.getElementById('home-reviews');
   if(!el) return;
@@ -3183,7 +3194,8 @@ function renderHomeReviews(){
     const list = (res && res.reviews) || [];
     if(!list.length){ el.innerHTML = '<div class="review-empty">Be the first to share your experience! 💚</div>'; return; }
     el.innerHTML = list.map(function(r){
-      const img = r.photoUrl ? '<img class="review-card-img" src="'+r.photoUrl+'=w400" alt="" loading="lazy">' : '';
+      const src = reviewPhotoSrc(r.photoUrl, 400);
+      const img = src ? '<img class="review-card-img" src="'+src+'" alt="" loading="lazy" referrerpolicy="no-referrer">' : '';
       const msg = r.message ? '<div class="review-card-msg">'+String(r.message).replace(/</g,'&lt;')+'</div>' : '';
       return '<div class="review-card">'+img+'<div class="review-card-body">'+msg
         +'<div class="review-card-name">'+String(r.name||'Anonymous').replace(/</g,'&lt;')+'</div>'
@@ -3206,15 +3218,27 @@ function openReviewForm(){
 function onReviewPhotoPick(e){
   const file = e.target.files && e.target.files[0];
   if(!file) return;
-  if(file.size > 6*1024*1024){ showToast('Photo too large (max 6MB)'); e.target.value=''; return; }
+  if(!/^image\//.test(file.type||'')){ showToast('Please choose an image file'); e.target.value=''; return; }
   const reader = new FileReader();
   reader.onload = function(){
-    const dataUrl = reader.result;
-    const base64 = String(dataUrl).split(',')[1];
-    __reviewPhoto = { base64: base64, mime: file.type || 'image/jpeg' };
-    const img = document.getElementById('rv-photo-img');
-    img.src = dataUrl;
-    document.getElementById('rv-photo-preview').style.display = 'block';
+    const imgEl = new Image();
+    imgEl.onload = function(){
+      // Downscale to max 1000px on the long edge so the upload stays small & reliable
+      const MAX = 1000;
+      let w = imgEl.width, h = imgEl.height;
+      if(w > h && w > MAX){ h = Math.round(h*MAX/w); w = MAX; }
+      else if(h >= w && h > MAX){ w = Math.round(w*MAX/h); h = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      __reviewPhoto = { base64: dataUrl.split(',')[1], mime: 'image/jpeg' };
+      const prev = document.getElementById('rv-photo-img');
+      prev.src = dataUrl;
+      document.getElementById('rv-photo-preview').style.display = 'block';
+    };
+    imgEl.onerror = function(){ showToast('Could not read that image'); };
+    imgEl.src = reader.result;
   };
   reader.readAsDataURL(file);
 }

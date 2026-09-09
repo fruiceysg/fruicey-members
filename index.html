@@ -430,7 +430,10 @@ async function loadReviews(){
     const list = (res && res.reviews) || [];
     if(!list.length){ box.innerHTML = '<p style="font-size:13px;color:var(--text2)">No reviews yet.</p>'; return; }
     box.innerHTML = list.map(function(r){
-      const img = r.photoUrl ? '<img src="'+r.photoUrl+'=w300" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0" loading="lazy">' : '';
+      let src = '';
+      if(r.photoUrl && r.photoUrl.indexOf('gdrive:')===0) src='https://drive.google.com/thumbnail?id='+r.photoUrl.slice(7)+'&sz=w300';
+      else if(r.photoUrl && /^https?:/.test(r.photoUrl)) src=r.photoUrl+(r.photoUrl.indexOf('=w')>-1?'':'=w300');
+      const img = src ? '<img src="'+src+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0" loading="lazy" referrerpolicy="no-referrer">' : (r.photoUrl && r.photoUrl.indexOf('ERR:')===0 ? '<div style="width:80px;height:80px;border-radius:8px;background:#fdecea;color:#c0392b;font-size:9px;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;flex-shrink:0">photo failed</div>' : '');
       const pending = r.status !== 'approved';
       return '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)">'
         + img

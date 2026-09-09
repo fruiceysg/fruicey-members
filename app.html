@@ -131,6 +131,22 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* 6 FEATURE IMAGES (boxed, contained, rounded — matches top banner) */
 .home-features{display:flex;flex-direction:column;gap:32px;max-width:860px;margin:16px auto;padding:0 16px}
+/* Home product-category carousel */
+.home-carousel-section{max-width:1500px;margin:20px auto 8px;padding:0 8px}
+.home-carousel-title{font-family:var(--font);font-size:26px;color:var(--green-dark);text-align:center;margin-bottom:14px;letter-spacing:.5px}
+.home-carousel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 8px 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.home-carousel::-webkit-scrollbar{display:none}
+.home-cat-card{flex:0 0 auto;width:150px;scroll-snap-align:center;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px;transition:transform .15s}
+.home-cat-card:active{transform:scale(.95)}
+.home-cat-imgwrap{width:130px;height:130px;display:flex;align-items:center;justify-content:center}
+.home-cat-imgwrap img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.12))}
+.home-cat-name{font-family:var(--font);font-size:15px;color:var(--text2);text-align:center;line-height:1.2}
+@media (min-width:900px){
+  .home-carousel{justify-content:center;flex-wrap:nowrap}
+  .home-cat-card{width:190px}
+  .home-cat-imgwrap{width:160px;height:160px}
+  .home-cat-name{font-size:17px}
+}
 
 /* TOP BANNER (full-width, vertical space only) */
 .top-banner-box{margin:16px 0;padding:0}
@@ -1096,6 +1112,12 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <!-- Top banner (below sliding banner) -->
   <div class="top-banner-box tb-top">
     <img src="top-banner.jpg" alt="Fruicey top banner" loading="eager" onerror="this.style.display='none'">
+  </div>
+
+  <!-- Product category carousel -->
+  <div class="home-carousel-section">
+    <div class="home-carousel-title">Our Products</div>
+    <div class="home-carousel" id="home-carousel"></div>
   </div>
 
   <!-- 6 feature images (swappable: replace the file of the same name) -->
@@ -3113,6 +3135,33 @@ function initHomeScreen(){
     if(hl) hl.src = srcLogo.src;
     if(dl) dl.src = srcLogo.src;
   }
+  renderHomeCarousel();
+}
+
+// Build the "Our Products" carousel: one image per category, tapping jumps to that Menu category
+function renderHomeCarousel(){
+  const el = document.getElementById('home-carousel');
+  if(!el) return;
+  // Friendly display names for the carousel (grouping presses under "Fresh Presses")
+  const cards = [
+    {cat:'Shakes & Smoothies', name:'Shakes & Smoothies'},
+    {cat:'Superfood Bowls',    name:'Superfood Bowls'},
+    {cat:'Juices',             name:'Juices'},
+    {cat:'Immunity Press',     name:'Fresh Presses'},
+    {cat:'Nutritional Press',  name:'Nutritional'},
+    {cat:'Longevity Press',    name:'Longevity'},
+    {cat:'Wellness Press',     name:'Wellness'}
+  ];
+  el.innerHTML = cards.map(function(c){
+    // representative image = first product in that category that has an image
+    let imgHtml = '';
+    const prods = (CATALOGUE[c.cat]||[]);
+    for(let i=0;i<prods.length;i++){ if(IMG[prods[i].id]){ imgHtml = '<img src="https://lh3.googleusercontent.com/d/'+IMG[prods[i].id]+'=w300" alt="" loading="lazy">'; break; } }
+    return '<button type="button" class="home-cat-card" onclick="goMenuCat(\''+c.cat.replace(/'/g,"\\'")+'\')">'
+      + '<div class="home-cat-imgwrap">'+imgHtml+'</div>'
+      + '<div class="home-cat-name">'+c.name+'</div>'
+      + '</button>';
+  }).join('');
 }
 
 // ── DRAWER MENU ───────────────────────────────────────────────

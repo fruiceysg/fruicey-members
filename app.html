@@ -136,8 +136,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .home-reviews-title{font-family:var(--font);font-size:26px;color:var(--green-dark);text-align:center;margin-bottom:14px;letter-spacing:.5px}
 .home-reviews{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 8px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .home-reviews::-webkit-scrollbar{display:none}
-.review-card{flex:0 0 auto;width:300px;scroll-snap-align:center;background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07);overflow:hidden;display:flex;flex-direction:column}
-.review-card-img{width:100%;height:200px;object-fit:cover;object-position:center;background:#f2f2f2;display:block}
+.review-card{flex:0 0 auto;width:300px;scroll-snap-align:center;background:#ffffff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07);overflow:hidden;display:flex;flex-direction:column}
+.review-card-img{width:100%;height:200px;object-fit:cover;object-position:center;background:#ffffff;display:block}
 @media (min-width:900px){
   .review-card{width:400px}
   .review-card-img{height:260px}
@@ -2396,9 +2396,9 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <div class="modal-box">
     <div class="modal-handle"></div>
     <div class="modal-title">Share your experience</div>
-    <div style="font-size:12.5px;color:var(--text3);margin-bottom:12px">Tell us about your visit! Reviews appear once approved. 💚</div>
+    <div style="font-size:12.5px;color:var(--text3);margin-bottom:12px">Tell us about your visit! Reviews appear once approved.</div>
     <div class="field"><label>Your name</label><input type="text" id="rv-name" maxlength="40" placeholder="e.g. Sarah"></div>
-    <div class="field"><label>Your message</label><textarea id="rv-message" rows="4" maxlength="600" placeholder="Loved the acai bowl!" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:14px;resize:none"></textarea></div>
+    <div class="field"><label>Your message</label><textarea id="rv-message" rows="4" maxlength="600" placeholder="" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:14px;resize:none"></textarea></div>
     <div class="field">
       <label>Add a photo (optional)</label>
       <input type="file" id="rv-photo" accept="image/*" onchange="onReviewPhotoPick(event)" style="display:none">
@@ -3186,7 +3186,7 @@ function renderHomeReviews(){
   if(!el) return;
   apiGet({action:'getReviews', limit:12}).then(res=>{
     const list = (res && res.reviews) || [];
-    if(!list.length){ el.innerHTML = '<div class="review-empty">Be the first to share your experience! 💚</div>'; return; }
+    if(!list.length){ el.innerHTML = '<div class="review-empty">Be the first to share your experience!</div>'; return; }
     el.innerHTML = list.map(function(r){
       const img = r.photo ? '<img class="review-card-img" src="'+r.photo+'" alt="" loading="lazy">' : '';
       const msg = r.message ? '<div class="review-card-msg">'+String(r.message).replace(/</g,'&lt;')+'</div>' : '';
@@ -3248,7 +3248,7 @@ async function submitReview(){
     const res = await apiPost(payload);
     if(res && res.success){
       document.getElementById('review-modal').classList.remove('open');
-      showToast('Thank you! Your review will appear once approved. 💚');
+      showToast('Thank you! Your review will appear once approved.');
     } else { err.textContent='Could not submit. Please try again.'; err.style.display='block'; }
   }catch(e){ err.textContent='Connection error.'; err.style.display='block'; }
   btn.textContent='Submit'; btn.disabled=false;

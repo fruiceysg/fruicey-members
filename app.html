@@ -3177,25 +3177,14 @@ function initHomeScreen(){
 }
 
 // ── CUSTOMER REVIEWS ──────────────────────────────────────────
-function reviewPhotoSrc(photoUrl, w){
-  if(!photoUrl || /^ERR:/.test(photoUrl)) return '';
-  if(photoUrl.indexOf('gdrive:')===0){
-    const id = photoUrl.slice(7);
-    return 'https://drive.google.com/thumbnail?id='+id+'&sz=w'+(w||400);
-  }
-  // Legacy lh3 URLs already stored
-  if(/^https?:\/\//.test(photoUrl)) return photoUrl + (photoUrl.indexOf('=w')>-1?'':'=w'+(w||400));
-  return '';
-}
 function renderHomeReviews(){
   const el = document.getElementById('home-reviews');
   if(!el) return;
-  apiGet({action:'getReviews', limit:20}).then(res=>{
+  apiGet({action:'getReviews', limit:12}).then(res=>{
     const list = (res && res.reviews) || [];
     if(!list.length){ el.innerHTML = '<div class="review-empty">Be the first to share your experience! 💚</div>'; return; }
     el.innerHTML = list.map(function(r){
-      const src = reviewPhotoSrc(r.photoUrl, 400);
-      const img = src ? '<img class="review-card-img" src="'+src+'" alt="" loading="lazy" referrerpolicy="no-referrer">' : '';
+      const img = r.photo ? '<img class="review-card-img" src="'+r.photo+'" alt="" loading="lazy">' : '';
       const msg = r.message ? '<div class="review-card-msg">'+String(r.message).replace(/</g,'&lt;')+'</div>' : '';
       return '<div class="review-card">'+img+'<div class="review-card-body">'+msg
         +'<div class="review-card-name">'+String(r.name||'Anonymous').replace(/</g,'&lt;')+'</div>'
@@ -3224,14 +3213,14 @@ function onReviewPhotoPick(e){
     const imgEl = new Image();
     imgEl.onload = function(){
       // Downscale to max 1000px on the long edge so the upload stays small & reliable
-      const MAX = 1000;
+      const MAX = 800;
       let w = imgEl.width, h = imgEl.height;
       if(w > h && w > MAX){ h = Math.round(h*MAX/w); w = MAX; }
       else if(h >= w && h > MAX){ w = Math.round(w*MAX/h); h = MAX; }
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
       __reviewPhoto = { base64: dataUrl.split(',')[1], mime: 'image/jpeg' };
       const prev = document.getElementById('rv-photo-img');
       prev.src = dataUrl;

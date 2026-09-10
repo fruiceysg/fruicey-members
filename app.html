@@ -323,7 +323,7 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .sub-dot.active{background:var(--green);transform:scale(1.25)}
 .sub-slide-tap{cursor:pointer}
 .sub-slide-tap:active{filter:brightness(.97)}
-.sub-tap-badge{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;background:#25D366;color:#fff;font-family:var(--font);font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.22);pointer-events:none;z-index:2}
+.sub-tap-badge{position:absolute;top:26px;right:12px;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;background:rgba(0,0,0,.4);color:#fff;font-family:var(--font);font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none;z-index:2}
 .sub-tap-badge i{font-size:15px}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
@@ -3432,19 +3432,23 @@ function buildSubscriptionPacks(){
       });
       tapSlide.addEventListener('click', function(){ if(!moved) subscribeWhatsApp(name); });
     }
-    // Loop: a forward swipe while already on the last slide jumps back to the first
+    // Loop: a forward swipe while already resting on the last slide jumps back to the first
     if(count > 1){
-      let px = 0, tracking = false;
-      track.addEventListener('pointerdown', function(e){ px = e.clientX; tracking = true; });
-      track.addEventListener('pointerup', function(e){
+      let px = 0, startedAtEnd = false, tracking = false;
+      const isAtEnd = function(){ return track.scrollLeft >= (track.scrollWidth - track.clientWidth - 2); };
+      const onStart = function(x){ px = x; startedAtEnd = isAtEnd(); tracking = true; };
+      const onEnd = function(x){
         if(!tracking) return;
         tracking = false;
-        const dx = e.clientX - px;                                   // negative = swiped left (forward)
-        const atEnd = track.scrollLeft >= (track.scrollWidth - track.clientWidth - 2);
-        if(atEnd && dx < -30){
+        const dx = x - px;                                           // negative = swiped left (forward)
+        if(startedAtEnd && dx < -30){
           track.scrollTo({ left: 0, behavior: 'smooth' });           // wrap around to first slide
         }
-      });
+      };
+      track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, {passive:true});
+      track.addEventListener('touchend',   function(e){ onEnd((e.changedTouches[0]||{}).clientX || 0); }, {passive:true});
+      track.addEventListener('pointerdown', function(e){ if(e.pointerType!=='touch') onStart(e.clientX); });
+      track.addEventListener('pointerup',   function(e){ if(e.pointerType!=='touch') onEnd(e.clientX); });
     }
     pack.dataset.built = '1';
   });

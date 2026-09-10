@@ -95,7 +95,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* HOME SITE HEADER (top bar with menu + logo) */
 .site-header{position:sticky;top:0;z-index:60;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid var(--border)}
-.site-menu-btn{width:40px;height:40px;flex-shrink:0;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;color:var(--text);transition:background .15s}
+.site-menu-btn{width:40px;height:40px;flex-shrink:0;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;color:var(--green-dark);transition:background .15s}
 .site-menu-btn:active{background:var(--green-light)}
 .site-menu-btn i{font-size:26px}
 .site-header img.site-logo{height:46px;display:block;justify-self:center}
@@ -3112,7 +3112,9 @@ function initVibesSparkle(replay){
   if(!section) return;
   section.classList.remove('vibes-show');
   section.classList.add('vibes-hidden');
+  var fired = false;
   var trigger = function(){
+    if(fired) return; fired = true;
     section.classList.remove('vibes-hidden');
     section.classList.add('vibes-show');
     spawnVibeSparkles(section);
@@ -3123,8 +3125,13 @@ function initVibesSparkle(replay){
     entries.forEach(function(e){
       if(e.isIntersecting){ trigger(); vibesIO.unobserve(e.target); }
     });
-  }, {threshold:0.25});
+  }, {threshold:0.1});
   vibesIO.observe(section);
+  // Fallback: if the section is already on screen at init, or the observer never fires,
+  // reveal it anyway so it never gets stuck invisible.
+  var rect = section.getBoundingClientRect();
+  if(rect.top < window.innerHeight && rect.bottom > 0){ trigger(); }
+  setTimeout(function(){ trigger(); }, 2500);
 }
 
 // Fill any .loader-spinner with staggered letter spans: h a r v e s t i n g . . .
@@ -3255,9 +3262,10 @@ function initHomeScreen(){
 }
 
 // ── CUSTOMER REVIEWS ──────────────────────────────────────────
-function renderHomeReviews(){
+function renderHomeReviews(attempt){
   const el = document.getElementById('home-reviews');
   if(!el) return;
+  attempt = attempt || 1;
   apiGet({action:'getReviews', limit:12}).then(res=>{
     const list = (res && res.reviews) || [];
     if(!list.length){ el.innerHTML = '<div class="review-empty">Be the first to share your experience!</div>'; return; }
@@ -3269,7 +3277,11 @@ function renderHomeReviews(){
         +'<div class="review-card-date">'+formatDT(r.createdAt)+'</div>'
         +'</div></div>';
     }).join('');
-  }).catch(()=>{ el.innerHTML = '<div class="review-empty">Reviews unavailable right now.</div>'; });
+  }).catch(()=>{
+    // Transient server hiccup — retry a couple of times before showing the fallback
+    if(attempt < 3){ setTimeout(function(){ renderHomeReviews(attempt+1); }, 1200*attempt); }
+    else { el.innerHTML = '<div class="review-empty">Reviews unavailable right now.</div>'; }
+  });
 }
 
 let __reviewPhoto = null; // {base64, mime}

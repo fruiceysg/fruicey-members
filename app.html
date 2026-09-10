@@ -321,11 +321,8 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .sub-dots{display:flex;justify-content:center;gap:8px;margin:12px 0 0}
 .sub-dot{width:8px;height:8px;padding:0;border:none;border-radius:50%;background:var(--border);cursor:pointer;transition:background .2s ease,transform .2s ease}
 .sub-dot.active{background:var(--green);transform:scale(1.25)}
-.sub-enquire-card{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:18px;aspect-ratio:1/1;padding:24px 24px 24%;border:none;background:var(--green-light);font-family:var(--font);cursor:pointer;transition:filter .15s ease}
-.sub-enquire-card:active{filter:brightness(.96)}
-.sub-wa-circle{display:flex;align-items:center;justify-content:center;width:88px;height:88px;border-radius:50%;background:#25D366;box-shadow:0 4px 14px rgba(37,211,102,.4)}
-.sub-wa-circle i{font-size:52px;color:#fff}
-.sub-wa-label{font-size:18px;color:var(--green-dark);text-align:center;line-height:1.3}
+.sub-slide-tap{cursor:pointer}
+.sub-slide-tap:active{filter:brightness(.97)}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
 .hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
@@ -1542,7 +1539,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <span class="story-title">Subscriptions</span>
   </header>
   <div class="sub-body">
-    <p class="sub-intro">Swipe through each pack, then enquire &amp; pay via PayNow on WhatsApp.</p>
+    <p class="sub-intro">Swipe each pack to view what&rsquo;s inside. Tap the first image to enquire &amp; pay via PayNow on WhatsApp.</p>
 
     <div class="sub-pack" data-main="sc1.jpg" data-ids="ip01,ip03,ip05,ip06" data-name="Starter Pack"></div>
     <div class="sub-pack" data-main="sc2.jpg" data-ids="ip02,ip08,ip03,ip04,ip05,ip07" data-name="Balance Boost"></div>
@@ -3389,17 +3386,12 @@ function buildSubscriptionPacks(){
     });
     const count = urls.length;
     let slides = '', dots = '';
-    // Image slides
+    // Image slides — the FIRST slide is tappable to enquire via WhatsApp
     for(let i = 0; i < count; i++){
-      slides += '<div class="sub-slide"><img src="'+urls[i]+'" alt="'+name+' '+(i+1)+'" loading="lazy" onerror="this.style.display=\'none\'"></div>';
+      const cls = (i === 0) ? 'sub-slide sub-slide-tap' : 'sub-slide';
+      slides += '<div class="'+cls+'"><img src="'+urls[i]+'" alt="'+name+' '+(i+1)+'" loading="lazy" onerror="this.style.display=\'none\'"></div>';
       dots   += '<button class="sub-dot'+(i===0?' active':'')+'" data-i="'+i+'" aria-label="Go to image '+(i+1)+'"></button>';
     }
-    // Final slide: whole slide is clickable (circular logo + label, sitting lower)
-    slides += '<button class="sub-slide sub-enquire-card" aria-label="Enquire about '+name+' &amp; pay via WhatsApp">'+
-          '<span class="sub-wa-circle"><i class="ti ti-brand-whatsapp"></i></span>'+
-          '<span class="sub-wa-label">Enquire &amp; pay via WhatsApp</span>'+
-      '</button>';
-    dots += '<button class="sub-dot" data-i="'+count+'" aria-label="Enquire via WhatsApp"></button>';
     pack.innerHTML =
       '<div class="sub-carousel"><div class="sub-track">'+slides+'</div></div>'+
       (count > 1 ? '<div class="sub-dots">'+dots+'</div>' : '');
@@ -3425,8 +3417,16 @@ function buildSubscriptionPacks(){
         });
       });
     }
-    const enquireBtn = pack.querySelector('.sub-enquire-card');
-    if(enquireBtn) enquireBtn.addEventListener('click', function(){ subscribeWhatsApp(name); });
+    // First slide -> WhatsApp, but only on a real tap (not a swipe/drag)
+    const tapSlide = pack.querySelector('.sub-slide-tap');
+    if(tapSlide){
+      let sx = 0, sy = 0, moved = false;
+      tapSlide.addEventListener('pointerdown', function(e){ sx = e.clientX; sy = e.clientY; moved = false; });
+      tapSlide.addEventListener('pointermove', function(e){
+        if(Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) moved = true;
+      });
+      tapSlide.addEventListener('click', function(){ if(!moved) subscribeWhatsApp(name); });
+    }
     pack.dataset.built = '1';
   });
 }

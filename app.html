@@ -323,6 +323,8 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .sub-dot.active{background:var(--green);transform:scale(1.25)}
 .sub-slide-tap{cursor:pointer}
 .sub-slide-tap:active{filter:brightness(.97)}
+.sub-tap-badge{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;background:#25D366;color:#fff;font-family:var(--font);font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.22);pointer-events:none;z-index:2}
+.sub-tap-badge i{font-size:15px}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
 .hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
@@ -3389,7 +3391,10 @@ function buildSubscriptionPacks(){
     // Image slides — the FIRST slide is tappable to enquire via WhatsApp
     for(let i = 0; i < count; i++){
       const cls = (i === 0) ? 'sub-slide sub-slide-tap' : 'sub-slide';
-      slides += '<div class="'+cls+'"><img src="'+urls[i]+'" alt="'+name+' '+(i+1)+'" loading="lazy" onerror="this.style.display=\'none\'"></div>';
+      const badge = (i === 0)
+        ? '<span class="sub-tap-badge"><i class="ti ti-brand-whatsapp"></i>Tap to buy</span>'
+        : '';
+      slides += '<div class="'+cls+'"><img src="'+urls[i]+'" alt="'+name+' '+(i+1)+'" loading="lazy" onerror="this.style.display=\'none\'">'+badge+'</div>';
       dots   += '<button class="sub-dot'+(i===0?' active':'')+'" data-i="'+i+'" aria-label="Go to image '+(i+1)+'"></button>';
     }
     pack.innerHTML =
@@ -3426,6 +3431,20 @@ function buildSubscriptionPacks(){
         if(Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) moved = true;
       });
       tapSlide.addEventListener('click', function(){ if(!moved) subscribeWhatsApp(name); });
+    }
+    // Loop: a forward swipe while already on the last slide jumps back to the first
+    if(count > 1){
+      let px = 0, tracking = false;
+      track.addEventListener('pointerdown', function(e){ px = e.clientX; tracking = true; });
+      track.addEventListener('pointerup', function(e){
+        if(!tracking) return;
+        tracking = false;
+        const dx = e.clientX - px;                                   // negative = swiped left (forward)
+        const atEnd = track.scrollLeft >= (track.scrollWidth - track.clientWidth - 2);
+        if(atEnd && dx < -30){
+          track.scrollTo({ left: 0, behavior: 'smooth' });           // wrap around to first slide
+        }
+      });
     }
     pack.dataset.built = '1';
   });

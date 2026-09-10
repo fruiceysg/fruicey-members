@@ -312,10 +312,18 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 /* SUBSCRIPTIONS */
 .sub-body{max-width:680px;margin:0 auto;padding:20px 20px 44px}
 .sub-intro{font-size:14px;color:var(--text2);text-align:center;margin:0 0 20px;line-height:1.6}
-.sub-card{display:block;width:100%;padding:0;margin:0 0 20px;border:none;background:none;cursor:pointer;border-radius:16px;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.sub-card:active{transform:scale(.985)}
-.sub-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.12)}
-.sub-img{width:100%;height:auto;display:block;background:var(--green-light)}
+.sub-pack{margin:0 0 30px}
+.sub-carousel{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);background:var(--green-light)}
+.sub-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sub-track::-webkit-scrollbar{display:none}
+.sub-slide{flex:0 0 100%;scroll-snap-align:center;width:100%}
+.sub-slide img{width:100%;height:auto;display:block}
+.sub-dots{display:flex;justify-content:center;gap:8px;margin:12px 0 0}
+.sub-dot{width:8px;height:8px;padding:0;border:none;border-radius:50%;background:var(--border);cursor:pointer;transition:background .2s ease,transform .2s ease}
+.sub-dot.active{background:var(--green);transform:scale(1.25)}
+.sub-enquire{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:14px 0 0;padding:13px 18px;border:none;border-radius:12px;background:#25D366;color:#fff;font-family:var(--font);font-size:16px;cursor:pointer;transition:filter .15s ease}
+.sub-enquire:active{filter:brightness(.92)}
+.sub-enquire i{font-size:20px}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
 .hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
@@ -1532,23 +1540,12 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <span class="story-title">Subscriptions</span>
   </header>
   <div class="sub-body">
-    <p class="sub-intro">Tap a pack to enquire &amp; pay via PayNow on WhatsApp.</p>
+    <p class="sub-intro">Swipe through each pack, then enquire &amp; pay via PayNow on WhatsApp.</p>
 
-    <button class="sub-card" onclick="subscribeWhatsApp('Starter Pack')" aria-label="Starter Pack">
-      <img class="sub-img" src="sc1.jpg" alt="Starter Pack" loading="lazy" onerror="this.style.display='none'">
-    </button>
-
-    <button class="sub-card" onclick="subscribeWhatsApp('Balance Boost')" aria-label="Balance Boost">
-      <img class="sub-img" src="sc2.jpg" alt="Balance Boost" loading="lazy" onerror="this.style.display='none'">
-    </button>
-
-    <button class="sub-card" onclick="subscribeWhatsApp('Full Immunity')" aria-label="Full Immunity">
-      <img class="sub-img" src="sc3.jpg" alt="Full Immunity" loading="lazy" onerror="this.style.display='none'">
-    </button>
-
-    <button class="sub-card" onclick="subscribeWhatsApp('Family Fortify')" aria-label="Family Fortify">
-      <img class="sub-img" src="sc4.jpg" alt="Family Fortify" loading="lazy" onerror="this.style.display='none'">
-    </button>
+    <div class="sub-pack" data-ids="ip01,ip03,ip05,ip06" data-name="Starter Pack"></div>
+    <div class="sub-pack" data-ids="ip02,ip08,ip03,ip04,ip05,ip07" data-name="Balance Boost"></div>
+    <div class="sub-pack" data-ids="ip02,ip01,ip03,ip04,ip05,ip06,ip07,ip08" data-name="Full Immunity"></div>
+    <div class="sub-pack" data-ids="ip02,ip01,ip03,ip04,ip05,ip06,ip07,ip08" data-name="Family Fortify"></div>
 
   </div>
 </div>
@@ -3362,6 +3359,7 @@ function openSubscriptions(){
   document.getElementById('scr-subscriptions').classList.add('active');
   document.body.classList.remove('home-active');
   document.documentElement.style.background = '';
+  buildSubscriptionPacks();
   currentScreen = 'subscriptions';
   window.scrollTo(0,0);
 }
@@ -3372,6 +3370,50 @@ function subscribeWhatsApp(packName){
   } else {
     window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
   }
+}
+// Build each subscription pack: image carousel with swipe + tappable dots, WhatsApp button below.
+function buildSubscriptionPacks(){
+  document.querySelectorAll('.sub-pack').forEach(function(pack){
+    if(pack.dataset.built) return;              // build once
+    const ids   = (pack.dataset.ids || '').split(',').filter(Boolean);
+    const count = ids.length;
+    const name  = pack.dataset.name || '';
+    let slides = '', dots = '';
+    for(let i = 0; i < count; i++){
+      const fileId = IMG_INFO[ids[i]] || '';
+      const url = fileId ? 'https://lh3.googleusercontent.com/d/'+fileId+'=w1200' : '';
+      slides += '<div class="sub-slide"><img src="'+url+'" alt="'+name+' '+(i+1)+'" loading="lazy" onerror="this.style.display=\'none\'"></div>';
+      dots   += '<button class="sub-dot'+(i===0?' active':'')+'" data-i="'+i+'" aria-label="Go to image '+(i+1)+'"></button>';
+    }
+    pack.innerHTML =
+      '<div class="sub-carousel"><div class="sub-track">'+slides+'</div></div>'+
+      (count > 1 ? '<div class="sub-dots">'+dots+'</div>' : '')+
+      '<button class="sub-enquire" aria-label="Enquire about '+name+'"><i class="ti ti-brand-whatsapp"></i>Enquire &amp; pay via WhatsApp</button>';
+
+    const track = pack.querySelector('.sub-track');
+    const dotEls = pack.querySelectorAll('.sub-dot');
+    // Tap a dot -> scroll to that slide
+    dotEls.forEach(function(d){
+      d.addEventListener('click', function(){
+        const idx = parseInt(d.dataset.i, 10);
+        track.scrollTo({ left: idx * track.clientWidth, behavior: 'smooth' });
+      });
+    });
+    // Sync active dot while swiping/scrolling
+    if(dotEls.length){
+      let raf = null;
+      track.addEventListener('scroll', function(){
+        if(raf) return;
+        raf = requestAnimationFrame(function(){
+          const idx = Math.round(track.scrollLeft / track.clientWidth);
+          dotEls.forEach(function(d, k){ d.classList.toggle('active', k === idx); });
+          raf = null;
+        });
+      });
+    }
+    pack.querySelector('.sub-enquire').addEventListener('click', function(){ subscribeWhatsApp(name); });
+    pack.dataset.built = '1';
+  });
 }
 function drawerSoon(name){
   closeDrawer();

@@ -309,6 +309,13 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .story-img{width:100%;height:auto;display:block;border-radius:16px;background:var(--green-light);margin-bottom:14px}
 .story-block h3{font-family:var(--font);color:var(--green-dark);font-size:21px;margin:0 0 8px}
 .story-block p{font-size:15px;color:var(--text2);line-height:1.8;margin:0;white-space:pre-line}
+/* SUBSCRIPTIONS */
+.sub-body{max-width:680px;margin:0 auto;padding:20px 20px 44px}
+.sub-intro{font-size:14px;color:var(--text2);text-align:center;margin:0 0 20px;line-height:1.6}
+.sub-card{display:block;width:100%;padding:0;margin:0 0 20px;border:none;background:none;cursor:pointer;border-radius:16px;overflow:hidden;transition:transform .15s ease,box-shadow .15s ease;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.sub-card:active{transform:scale(.985)}
+.sub-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.sub-img{width:100%;height:auto;display:block;background:var(--green-light)}
 .hero-landing-copy{padding:22px 20px 18px;text-align:center;background:linear-gradient(180deg,#fff 0%,var(--green-light) 100%)}
 .hero-landing-copy h1{font-family:var(--font);font-size:26px;line-height:1.2;color:var(--green-dark);margin:0 0 10px}
 .hero-landing-copy p{font-size:13px;color:var(--text2);line-height:1.65;max-width:340px;margin:0 auto}
@@ -1518,6 +1525,34 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<!-- ═══ SUBSCRIPTIONS SCREEN ═══ -->
+<div class="screen" id="scr-subscriptions">
+  <header class="site-header story-header">
+    <button class="site-menu-btn" onclick="goTab('home')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
+    <span class="story-title">Subscriptions</span>
+  </header>
+  <div class="sub-body">
+    <p class="sub-intro">Tap a pack to enquire &amp; pay via PayNow on WhatsApp.</p>
+
+    <button class="sub-card" onclick="subscribeWhatsApp('Starter Pack')" aria-label="Starter Pack">
+      <img class="sub-img" src="sc1.jpg" alt="Starter Pack" loading="lazy" onerror="this.style.display='none'">
+    </button>
+
+    <button class="sub-card" onclick="subscribeWhatsApp('Balance Boost')" aria-label="Balance Boost">
+      <img class="sub-img" src="sc2.jpg" alt="Balance Boost" loading="lazy" onerror="this.style.display='none'">
+    </button>
+
+    <button class="sub-card" onclick="subscribeWhatsApp('Full Immunity')" aria-label="Full Immunity">
+      <img class="sub-img" src="sc3.jpg" alt="Full Immunity" loading="lazy" onerror="this.style.display='none'">
+    </button>
+
+    <button class="sub-card" onclick="subscribeWhatsApp('Family Fortify')" aria-label="Family Fortify">
+      <img class="sub-img" src="sc4.jpg" alt="Family Fortify" loading="lazy" onerror="this.style.display='none'">
+    </button>
+
+  </div>
+</div>
+
 <!-- ═══ DRAWER MENU ═══ -->
 <div class="drawer" id="site-drawer">
   <div class="drawer-backdrop" onclick="closeDrawer()"></div>
@@ -1528,7 +1563,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
     <nav class="drawer-links">
       <button class="drawer-link" onclick="closeDrawer();goTab('menu')"><i class="ti ti-cup"></i>Menu<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
-      <button class="drawer-link" onclick="drawerSoon('Subscriptions')"><i class="ti ti-calendar-repeat"></i>Subscriptions<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="openSubscriptions()"><i class="ti ti-calendar-repeat"></i>Subscriptions<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openStory()"><i class="ti ti-book"></i>Story<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="goVibes()"><i class="ti ti-photo-heart"></i>Fruicey Community Vibes<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Location and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
@@ -3319,6 +3354,24 @@ function openStory(){
   document.documentElement.style.background = '';
   currentScreen = 'story';
   window.scrollTo(0,0);
+}
+function openSubscriptions(){
+  closeDrawer();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('scr-subscriptions').classList.add('active');
+  document.body.classList.remove('home-active');
+  document.documentElement.style.background = '';
+  currentScreen = 'subscriptions';
+  window.scrollTo(0,0);
+}
+function subscribeWhatsApp(packName){
+  const msg = encodeURIComponent('Hi Wilson, I\u2019d like to subscribe to the '+packName+' pack. Please send me the PayNow details.');
+  if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    window.location.href = 'whatsapp://send?phone='+WA+'&text='+msg;
+  } else {
+    window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
+  }
 }
 function drawerSoon(name){
   closeDrawer();

@@ -285,6 +285,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 body.home-active{background:#f1f1f1}
 body.home-active .login-star{display:none}
 body:has(#scr-account.active) .login-star{display:none}
+body:has(#scr-story.active) .login-star{display:none}
+body:has(#scr-subscriptions.active) .login-star{display:none}
 #scr-home,#scr-menu,#scr-orders,#scr-rewards,#scr-account{background:#f1f1f1}
 
 /* HOME FOOTER */
@@ -3341,7 +3343,10 @@ function goVibes(){
   goTab('home');
   setTimeout(function(){
     const el = document.getElementById('home-vibes');
-    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    if(!el) return;
+    const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 67;
+    const y = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+    window.scrollTo({top: y, behavior:'smooth'});
   }, 250);
 }
 

@@ -46,6 +46,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* SCREENS */
 .screen{display:none;min-height:calc(100vh - var(--nav));position:relative;z-index:1}
 .screen.active{display:block}
+@keyframes screenSlideUpOut{from{transform:translateY(0);opacity:1}to{transform:translateY(-100%);opacity:0}}
+.screen.slide-out-up{display:block;animation:screenSlideUpOut .32s cubic-bezier(.4,0,.2,1) forwards;z-index:60;will-change:transform,opacity}
 
 /* HEADER */
 .app-header{background:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;min-height:var(--header-h);box-sizing:border-box}
@@ -1482,7 +1484,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 <!-- ═══ STORY ═══ -->
 <div class="screen" id="scr-story">
   <header class="site-header story-header">
-    <button class="site-menu-btn" onclick="goTab('home')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
+    <button class="site-menu-btn" onclick="exitScreenUp('scr-story')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
     <span class="story-title">Our Story</span>
   </header>
   <div class="story-body">
@@ -1544,7 +1546,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <!-- ═══ SUBSCRIPTIONS SCREEN ═══ -->
 <div class="screen" id="scr-subscriptions">
   <header class="site-header story-header">
-    <button class="site-menu-btn" onclick="goTab('home')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
+    <button class="site-menu-btn" onclick="exitScreenUp('scr-subscriptions')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
     <span class="story-title">Subscriptions</span>
   </header>
   <div class="sub-body">
@@ -3370,6 +3372,20 @@ function openSubscriptions(){
   buildSubscriptionPacks();
   currentScreen = 'subscriptions';
   window.scrollTo(0,0);
+}
+// Slide the current screen up and off, then return home
+function exitScreenUp(screenId){
+  const el = document.getElementById(screenId);
+  if(!el){ goTab('home'); return; }
+  el.classList.add('slide-out-up');
+  const done = function(){
+    el.removeEventListener('animationend', done);
+    el.classList.remove('slide-out-up');
+    goTab('home');
+  };
+  el.addEventListener('animationend', done);
+  // Fallback in case animationend doesn't fire
+  setTimeout(function(){ if(el.classList.contains('slide-out-up')) done(); }, 400);
 }
 function subscribeWhatsApp(packName){
   const msg = encodeURIComponent('Hi Wilson, I\u2019d like to subscribe to the '+packName+' pack. Please send me the PayNow details.');

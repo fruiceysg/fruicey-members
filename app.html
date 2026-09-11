@@ -107,8 +107,8 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .drawer.open{display:block}
 .drawer-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;transition:opacity .28s ease}
 .drawer.open .drawer-backdrop{opacity:1}
-.drawer-panel{position:absolute;top:0;left:0;bottom:0;width:80%;max-width:320px;background:#fff;box-shadow:2px 0 24px rgba(0,0,0,.18);transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto}
-.drawer.open .drawer-panel{transform:translateX(0)}
+.drawer-panel{position:absolute;top:0;left:0;bottom:0;width:80%;max-width:320px;background:#fff;box-shadow:2px 0 24px rgba(0,0,0,.18);transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto}
+.drawer.open .drawer-panel{transform:translateX(0);transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
 .drawer-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
 .drawer-head img{height:32px;display:block}
 .drawer-close{width:34px;height:34px;border:none;background:none;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:22px}

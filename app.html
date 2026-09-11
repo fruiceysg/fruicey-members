@@ -217,6 +217,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat6 .feat-cta{background:#fff;color:#7f88b3;border:none;left:7%}
 .feat3 .feat-cta{background:#fff;color:#97d2b4;left:6%;top:64%;bottom:auto;transform:translateY(-50%)}
 .feat3 .feat-cta:active{transform:translateY(-50%) scale(.96)}
+.feat8 .feat-cta{background:#fff;color:#9bd1b7;left:6%;bottom:9%}
 
 /* feature7: two buttons side by side on the right */
 .feat7-btns{position:absolute;right:2%;bottom:9%;top:auto;transform:none;display:flex;flex-direction:row;gap:8px;align-items:center;z-index:6}
@@ -1185,6 +1186,11 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
     <div class="feature-wrap feat6">
       <img class="feature-img" src="feature6.jpg" alt="Superfood Bowls — tap to view menu" loading="eager" style="cursor:pointer" onclick="goMenuCat('Superfood Bowls')">
     </div>
+  </div>
+
+  <div class="top-banner-box feature-wrap feat8">
+    <img src="feature8.jpg" alt="Fruicey feature 8" loading="eager">
+    <button class="feat-cta feat8-btn" onclick="openSubscriptions()">View Subscriptions</button>
   </div>
 
   <!-- Customer reviews carousel -->

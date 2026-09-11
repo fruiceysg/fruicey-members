@@ -620,6 +620,8 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 
 /* PAYNOW */
 .paynow-box{text-align:center;padding:16px 0}
+@keyframes confirmPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.5)}50%{box-shadow:0 0 0 8px rgba(37,211,102,0)}}
+.confirm-pulse{animation:confirmPulse 1.4s ease-in-out infinite}
 .paynow-box img{width:200px;height:auto;margin:0 auto;display:block;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
 .paynow-amount{font-family:var(--font);font-size:28px;color:var(--green);margin:12px 0 4px}
 .paynow-note{font-size:12px;color:var(--text3);line-height:1.5}
@@ -2537,8 +2539,15 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div class="ack-note-title"><i class="ti ti-chef-hat"></i> What happens next?</div>
       Wilson will review your order shortly. Once he <b>acknowledges</b> it, your order status changes to <b>Preparing</b> — that's when he starts making it. We'll keep you posted via WhatsApp.
     </div>
-    <button class="btn btn-primary" onclick="sendWhatsApp()" style="background:linear-gradient(135deg,#25D366,#128C7E)">
+    <div id="card-return-reminder" style="display:none;background:#fff4e5;border:1px solid #ffcc80;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;color:#8a5a00;line-height:1.5">
+      <b>Almost done!</b> Once your card payment goes through, come back here and tap the button below to confirm your order — otherwise Wilson won't receive it.
+    </div>
+    <button class="btn btn-primary" id="ive-paid-btn" onclick="sendWhatsApp()" style="background:linear-gradient(135deg,#25D366,#128C7E)">
       <i class="ti ti-brand-whatsapp"></i> I've paid - Notify Wilson via WhatsApp
+    </button>
+    <div style="text-align:center;font-size:12px;color:var(--text3);margin:12px 0 8px">— or pay by card —</div>
+    <button class="btn btn-primary" id="pay-card-btn" onclick="payByCard()" style="background:linear-gradient(135deg,#635bff,#4b45c6)">
+      <i class="ti ti-credit-card"></i> Pay by card (Stripe)
     </button>
     <button class="btn btn-secondary" style="margin-top:8px" onclick="document.getElementById('paynow-modal').classList.remove('open')">Close</button>
   </div>
@@ -4955,7 +4964,57 @@ function showPayNow(order){
     return '<div class="paynow-item"><span class="paynow-item-name">'+(i.label||i.name||'')+'</span><span class="paynow-item-qty">×'+i.qty+'</span></div>';
   }).join('');
   document.getElementById('paynow-collect').textContent = (order.collectType?order.collectType+' · ':'')+cleanCollect(order.collectTime||'');
+  _payNowOrder = order;                                          // remember for the card option
+  _paidByCard = false;
+  var _rem = document.getElementById('card-return-reminder'); if(_rem) _rem.style.display = 'none';
+  var _wa = document.getElementById('ive-paid-btn');
+  if(_wa){ _wa.classList.remove('confirm-pulse'); _wa.innerHTML = '<i class="ti ti-brand-whatsapp"></i> I\'ve paid - Notify Wilson via WhatsApp'; }
   document.getElementById('paynow-modal').classList.add('open');
+}
+
+// Card payment (Stripe Checkout) — an added option next to PayNow.
+// Asks the backend for a hosted payment page for the exact total, then opens it.
+// The order itself is still placed via "I've paid" (sendWhatsApp), same as PayNow.
+var _payNowOrder = null;
+var _paidByCard = false;
+async function payByCard(){
+  if(!_payNowOrder){ return; }
+  const btn = document.getElementById('pay-card-btn');
+  const label = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Preparing secure page…';
+  // Open a tab synchronously so the browser won't block it after the await.
+  const payTab = window.open('', '_blank');
+  try{
+    let items = _payNowOrder.items;
+    try{ items = typeof items==='string' ? JSON.parse(items) : (items||[]); }catch(e){ items = []; }
+    const note = 'Fruicey · ' + items.map(function(i){ return (i.label||i.name||'')+' ×'+i.qty; }).join(', ');
+    const res = await apiPost({
+      action: 'createPaymentLink',
+      total: parseFloat(_payNowOrder.total),
+      note: note.slice(0,400)
+    });
+    if(res && res.success && res.url){
+      if(payTab) payTab.location.href = res.url; else window.location.href = res.url;
+      showToast('Opening secure card payment…');
+      // Card payment is now underway — make confirming the order the required next step.
+      _paidByCard = true;
+      var rem = document.getElementById('card-return-reminder');
+      if(rem) rem.style.display = 'block';
+      var wa = document.getElementById('ive-paid-btn');
+      if(wa){
+        wa.classList.add('confirm-pulse');
+        wa.innerHTML = '<i class="ti ti-circle-check"></i> I\'ve paid by card — Confirm my order';
+      }
+    } else {
+      if(payTab) payTab.close();
+      showToast((res && res.error) ? ('Card payment unavailable: '+res.error) : 'Card payment unavailable right now.');
+    }
+  }catch(e){
+    if(payTab) payTab.close();
+    showToast('Could not start card payment. Please try PayNow.');
+  }finally{
+    btn.disabled = false; btn.innerHTML = label;
+  }
 }
 
 async function sendWhatsApp(){

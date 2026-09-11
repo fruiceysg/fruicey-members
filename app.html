@@ -1205,7 +1205,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <!-- Customer reviews carousel -->
   <!-- Scrolling marquee (replaces Why Choose Us) -->
   <div class="home-reviews-section" id="home-vibes">
-    <div class="home-reviews-title">Fruicey Community Vibes</div>
+    <div class="home-reviews-title" id="home-vibes-title">Fruicey Community Vibes</div>
     <div class="home-reviews" id="home-reviews"></div>
   </div>
 
@@ -3341,13 +3341,15 @@ function closeDrawer(){ document.getElementById('site-drawer').classList.remove(
 function goVibes(){
   closeDrawer();
   goTab('home');
-  setTimeout(function(){
-    const el = document.getElementById('home-vibes');
+  const headerH = (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 67) + 40;
+  const scrollToVibes = function(){
+    const el = document.getElementById('home-vibes-title') || document.getElementById('home-vibes');
     if(!el) return;
-    const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 67;
-    const y = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+    const y = el.getBoundingClientRect().top + window.scrollY - headerH;
     window.scrollTo({top: y, behavior:'smooth'});
-  }, 250);
+  };
+  // Re-scroll a few times so the target stays correct while images/reviews finish loading
+  [250, 600, 1000, 1500].forEach(function(t){ setTimeout(scrollToVibes, t); });
 }
 
 function openBlog(){

@@ -4993,7 +4993,7 @@ async function payByCard(){
       total: parseFloat(_payNowOrder.total),
       note: note.slice(0,400)
     });
-    if(res && res.success && res.url){
+    if(res && res.success && res.url && /^https:\/\/(checkout\.stripe\.com|.*\.stripe\.com)/.test(res.url)){
       if(payTab) payTab.location.href = res.url; else window.location.href = res.url;
       showToast('Opening secure card payment…');
       // Card payment is now underway — make confirming the order the required next step.
@@ -5007,7 +5007,11 @@ async function payByCard(){
       }
     } else {
       if(payTab) payTab.close();
-      showToast((res && res.error) ? ('Card payment unavailable: '+res.error) : 'Card payment unavailable right now.');
+      var emsg = (res && res.error) ? res.error
+               : (res && res.url) ? ('Unexpected link: '+res.url)
+               : 'no response from server';
+      showToast('Card payment unavailable: ' + emsg);
+      console.log('payByCard failed →', res);
     }
   }catch(e){
     if(payTab) payTab.close();

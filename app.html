@@ -236,10 +236,11 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* Scroll-reveal animation for home features */
 .reveal{opacity:0;transform:translateY(42px);transition:opacity 1.2s cubic-bezier(.16,1,.3,1),transform 1.2s cubic-bezier(.16,1,.3,1)}
 .reveal.in{opacity:1;transform:translateY(0)}
-/* feat3: slide + bounce in from the right (animate the image inside the clipped wrapper) */
-.feat3 img.reveal-right{opacity:0;transform:translateX(110%);transition:opacity .6s ease,transform .9s cubic-bezier(.34,1.56,.64,1)}
-.feat3 img.reveal-right.in{opacity:1;transform:translateX(0)}
+/* feat3/feat8: slide + bounce in from the right (animate the image inside the clipped wrapper) */
+.feat3 img.reveal-right,.feat8 img.reveal-right{opacity:0;transform:translateX(110%);transition:opacity .6s ease,transform .9s cubic-bezier(.34,1.56,.64,1)}
+.feat3 img.reveal-right.in,.feat8 img.reveal-right.in{opacity:1;transform:translateX(0)}
 .feature-wrap.feat3{overflow:hidden}
+.feature-wrap.feat8{overflow:hidden}
 @media (prefers-reduced-motion:reduce){
   .reveal{opacity:1!important;transform:none!important;transition:none}
 }
@@ -3090,16 +3091,16 @@ function goMenuCat(cat){
 }
 
 var revealIO = null;
-function _revealEls(){ return document.querySelectorAll('#scr-home .feat1, #scr-home .feat2, #scr-home .feat3, #scr-home .feat6'); }
+function _revealEls(){ return document.querySelectorAll('#scr-home .feat1, #scr-home .feat2, #scr-home .feat3, #scr-home .feat6, #scr-home .feat8'); }
 function _revealTarget(el){
-  // feat3 animates its inner image (wrapper clips the slide); others animate themselves
-  if(el.classList.contains('feat3')){ return el.querySelector('img') || el; }
+  // feat3/feat8 animate their inner image (wrapper clips the slide); others animate themselves
+  if(el.classList.contains('feat3') || el.classList.contains('feat8')){ return el.querySelector('img') || el; }
   return el;
 }
 function initReveal(){
   var els = _revealEls();
   els.forEach(function(el){
-    if(el.classList.contains('feat3')){ var im=el.querySelector('img'); if(im) im.classList.add('reveal-right'); }
+    if(el.classList.contains('feat3') || el.classList.contains('feat8')){ var im=el.querySelector('img'); if(im) im.classList.add('reveal-right'); }
     else el.classList.add('reveal');
   });
   if(!('IntersectionObserver' in window)){ els.forEach(function(el){ _revealTarget(el).classList.add('in'); }); return; }

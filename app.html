@@ -1484,7 +1484,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 <!-- ═══ STORY ═══ -->
 <div class="screen" id="scr-story">
   <header class="site-header story-header">
-    <button class="site-menu-btn" onclick="exitScreenUp('scr-story')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
+    <button class="site-menu-btn" onclick="goTab('home')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
     <span class="story-title">Our Story</span>
   </header>
   <div class="story-body">
@@ -1546,7 +1546,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 <!-- ═══ SUBSCRIPTIONS SCREEN ═══ -->
 <div class="screen" id="scr-subscriptions">
   <header class="site-header story-header">
-    <button class="site-menu-btn" onclick="exitScreenUp('scr-subscriptions')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
+    <button class="site-menu-btn" onclick="goTab('home')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
     <span class="story-title">Subscriptions</span>
   </header>
   <div class="sub-body">
@@ -3374,19 +3374,49 @@ function openSubscriptions(){
   window.scrollTo(0,0);
 }
 // Slide the current screen up and off, then return home
+var _exitingScreen = false;
 function exitScreenUp(screenId){
+  if(_exitingScreen) return;
   const el = document.getElementById(screenId);
   if(!el){ goTab('home'); return; }
+  _exitingScreen = true;
   el.classList.add('slide-out-up');
   const done = function(){
     el.removeEventListener('animationend', done);
     el.classList.remove('slide-out-up');
+    _exitingScreen = false;
     goTab('home');
   };
   el.addEventListener('animationend', done);
   // Fallback in case animationend doesn't fire
   setTimeout(function(){ if(el.classList.contains('slide-out-up')) done(); }, 400);
 }
+// Pull-up-to-exit: on Story/Subscriptions, once at the bottom of the page,
+// keep swiping up past the end and the page slides away to Home.
+(function(){
+  var PULL_SCREENS = { story:'scr-story', subscriptions:'scr-subscriptions' };
+  var startY = 0, atBottomOnStart = false, overpull = 0;
+  function atPageBottom(){
+    return (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 2);
+  }
+  function activeId(){ return PULL_SCREENS[currentScreen] || null; }
+  window.addEventListener('touchstart', function(e){
+    if(!activeId()) return;
+    startY = e.touches[0].clientY;
+    atBottomOnStart = atPageBottom();
+    overpull = 0;
+  }, {passive:true});
+  window.addEventListener('touchmove', function(e){
+    var id = activeId();
+    if(!id || _exitingScreen) return;
+    var dy = startY - e.touches[0].clientY;      // positive = finger moving up (content scrolls up)
+    // Only count the extra upward pull once we're pinned at the bottom
+    if(atBottomOnStart && atPageBottom() && dy > 0){
+      overpull = dy;
+      if(overpull > 90){ exitScreenUp(id); }      // threshold -> exit
+    }
+  }, {passive:true});
+})();
 function subscribeWhatsApp(packName){
   const msg = encodeURIComponent('Hi Wilson, I\u2019d like to subscribe to the '+packName+' pack. Please send me the PayNow details.');
   if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){

@@ -634,16 +634,20 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .paynow-item-name{color:var(--text);line-height:1.35}
 .paynow-item-qty{color:var(--text2);font-weight:700;flex-shrink:0}
 /* PAYMENT METHOD CHOOSER */
-.pay-choose{display:flex;gap:12px;margin:4px 0 8px}
-.pay-choose-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border:2px solid var(--border);border-radius:16px;background:#fff;cursor:pointer;font-family:var(--font);transition:border-color .15s,background .15s}
-.pay-choose-btn:hover{border-color:var(--green)}
-.pay-choose-btn i{font-size:30px;color:var(--green)}
-.pay-choose-btn .pcb-label{font-size:14px;font-weight:700;color:var(--text)}
-.pay-choose-btn .pcb-sub{font-size:11px;color:var(--text3);line-height:1.3;text-align:center}
+.pay-choose{display:flex;gap:12px;margin:6px 0 4px}
+.pay-choose-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 12px;border:1.5px solid var(--border);border-radius:20px;background:var(--card);cursor:pointer;font-family:var(--font);transition:all .18s;box-shadow:0 2px 8px rgba(28,77,58,.05)}
+.pay-choose-btn:hover{border-color:var(--green);background:var(--green-light);box-shadow:0 6px 16px rgba(28,77,58,.14);transform:translateY(-2px)}
+.pay-choose-icon{width:56px;height:56px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center}
+.pay-choose-btn:hover .pay-choose-icon{background:#fff}
+.pay-choose-icon i{font-size:28px;color:var(--green)}
+.pay-choose-btn .pcb-label{font-size:16px;color:var(--text)}
+.pay-choose-btn .pcb-sub{font-size:11.5px;color:var(--text2);line-height:1.3;text-align:center;font-family:var(--body)}
 .pay-panel{display:none}
 .pay-panel.active{display:block}
-.pay-back{display:inline-flex;align-items:center;gap:5px;background:none;border:none;color:var(--text3);font-size:13px;font-family:var(--font);cursor:pointer;padding:4px 0;margin-bottom:6px}
-.card-fee-note{background:#fff4e6;border:1px solid #ffd9a8;color:#8a5a12;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;margin-bottom:14px}
+.pay-back{display:inline-flex;align-items:center;gap:5px;background:none;border:none;color:var(--green);font-size:14px;font-family:var(--font);cursor:pointer;padding:4px 0;margin-bottom:10px;opacity:.8;transition:opacity .15s}
+.pay-back:hover{opacity:1}
+.card-fee-note{background:var(--green-light);border:1px solid rgba(28,77,58,.15);color:var(--green);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.55;margin-bottom:14px;font-family:var(--body)}
+.card-fee-note b{font-family:var(--font);font-weight:400}
 
 /* ORDERS */
 .order-card{background:#fff;border-radius:var(--r);margin:10px 16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06)}
@@ -2534,12 +2538,12 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="pay-panel active" id="pay-panel-choose">
       <div class="pay-choose">
         <button class="pay-choose-btn" onclick="selectPayMethod('paynow')">
-          <i class="ti ti-qrcode"></i>
+          <span class="pay-choose-icon"><i class="ti ti-qrcode"></i></span>
           <span class="pcb-label">PayNow QR</span>
-          <span class="pcb-sub">Scan &amp; pay, no fee</span>
+          <span class="pcb-sub">Scan &amp; pay · no fee</span>
         </button>
         <button class="pay-choose-btn" onclick="selectPayMethod('card')">
-          <i class="ti ti-credit-card"></i>
+          <span class="pay-choose-icon"><i class="ti ti-credit-card"></i></span>
           <span class="pcb-label">Pay by card</span>
           <span class="pcb-sub">$0.50 processing fee</span>
         </button>
@@ -2582,7 +2586,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div class="card-fee-note">
         <b>Pay by card</b> adds a <b>$0.50 processing fee</b>. Tap below and Wilson will WhatsApp you a secure payment link.
       </div>
-      <button class="btn btn-primary" id="pay-card-btn" onclick="payByCard()" style="background:linear-gradient(135deg,#635bff,#4b45c6)">
+      <button class="btn btn-primary" id="pay-card-btn" onclick="payByCard()">
         <i class="ti ti-credit-card"></i> Pay by card (get link via WhatsApp)
       </button>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="document.getElementById('paynow-modal').classList.remove('open')">Close</button>

@@ -3495,11 +3495,7 @@ function exitScreenUp(screenId){
 })();
 function subscribeWhatsApp(packName){
   const msg = encodeURIComponent('Hi Wilson, I\u2019d like to subscribe to the '+packName+' pack. Please send me the PayNow details.');
-  if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
-    window.location.href = 'whatsapp://send?phone='+WA+'&text='+msg;
-  } else {
-    window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
-  }
+  window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
 }
 // Build each subscription pack: image carousel with swipe + tappable dots, WhatsApp button below.
 function buildSubscriptionPacks(){
@@ -5101,16 +5097,11 @@ async function sendWhatsApp(method){
         `Collection: ${collect}\n\n`+
         `Please confirm my order. Thank you!`;
     const msg = encodeURIComponent(msgRaw);
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if(isMobile){
-      // Deep-link straight into the installed WhatsApp app (avoids the wa.me "download" web page).
-      if(waTab) waTab.close();
-      window.location.href = 'whatsapp://send?phone='+WA+'&text='+msg;
-    } else {
-      // Desktop: open WhatsApp Web / desktop app via wa.me in the pre-opened tab.
-      const waUrl = 'https://wa.me/'+WA+'?text='+msg;
-      if(waTab){ waTab.location.href = waUrl; } else { window.location.href = waUrl; }
-    }
+    // Open WhatsApp in the tab we pre-opened during the click, so THIS page never
+    // navigates away (no "leave page?" prompt) and the orders redirect below is safe.
+    // wa.me opens the installed WhatsApp app directly on mobile and WhatsApp Web on desktop.
+    const waUrl = 'https://wa.me/'+WA+'?text='+msg;
+    if(waTab){ waTab.location.href = waUrl; } else { window.open(waUrl, '_blank'); }
     // Order is placed — clear everything now
     pendingOrder = null;
     cart = []; renderCartItems(); updateCartBadge();
@@ -5855,11 +5846,7 @@ async function sendCreditWhatsApp(){
     'Credit Top-up: $'+amount.toFixed(2)+'\n\n'+
     'Please approve my credit deposit. Thank you!'
   );
-  if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
-    window.location.href = 'whatsapp://send?phone='+WA+'&text='+msg;
-  } else {
-    window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
-  }
+  window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
   closeAddCredit();
   showToast('Payment sent! Credit will be added once approved.');
 }

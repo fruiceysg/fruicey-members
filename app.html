@@ -5076,7 +5076,9 @@ async function sendWhatsApp(method){
     const p       = pendingOrder.payload;
     const items   = (p.items||[]).map(i=>i.qty+'x '+i.label).join(', ');
     const amount  = '$'+parseFloat(p.total).toFixed(2);
-    const collect = (p.collectType?p.collectType+' · ':'')+(p.collectTime||'');
+    const collectType = p.collectType || '-';
+    const collectTime = p.collectTime || '-';
+    const payMethod   = payByCardFlow ? 'Card' : 'PayNow';
     const msgRaw = payByCardFlow
       ? `Hi Fruicey!\n`+
         `I'd like to pay by card for my order.\n`+
@@ -5084,11 +5086,13 @@ async function sendWhatsApp(method){
         `\n`+
         `--- Order details ---\n`+
         `Order ID: ${orderId}\n`+
+        `Payment: ${payMethod}\n`+
         `Name: ${currentUser.first} ${currentUser.last}\n`+
         `Phone: ${currentUser.phone}\n`+
         `Items: ${items}\n`+
         `Total: ${amount}\n`+
-        `Collection: ${collect}\n`+
+        `Collection: ${collectType}\n`+
+        `Time: ${collectTime}\n`+
         `\n`+
         `Thank you!`
       : `Hi Fruicey!\n`+
@@ -5097,11 +5101,13 @@ async function sendWhatsApp(method){
         `\n`+
         `--- Order details ---\n`+
         `Order ID: ${orderId}\n`+
+        `Payment: ${payMethod}\n`+
         `Name: ${currentUser.first} ${currentUser.last}\n`+
         `Phone: ${currentUser.phone}\n`+
         `Items: ${items}\n`+
         `Total: ${amount}\n`+
-        `Collection: ${collect}\n`+
+        `Collection: ${collectType}\n`+
+        `Time: ${collectTime}\n`+
         `\n`+
         `Please confirm my order. Thank you!`;
     const msg = encodeURIComponent(msgRaw);

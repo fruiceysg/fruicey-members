@@ -5078,23 +5078,31 @@ async function sendWhatsApp(method){
     const amount  = '$'+parseFloat(p.total).toFixed(2);
     const collect = (p.collectType?p.collectType+' · ':'')+(p.collectTime||'');
     const msgRaw = payByCardFlow
-      ? `Hi Fruicey! I'd like to pay by card for my order.\n`+
-        `Please send me the card payment link. 🙏\n\n`+
+      ? `Hi Fruicey!\n`+
+        `I'd like to pay by card for my order.\n`+
+        `Please send me the card payment link.\n`+
+        `\n`+
+        `--- Order details ---\n`+
         `Order ID: ${orderId}\n`+
         `Name: ${currentUser.first} ${currentUser.last}\n`+
         `Phone: ${currentUser.phone}\n`+
         `Items: ${items}\n`+
         `Total: ${amount}\n`+
-        `Collection: ${collect}\n\n`+
+        `Collection: ${collect}\n`+
+        `\n`+
         `Thank you!`
-      : `Hi Fruicey! I've made a PayNow payment for my order.\n`+
-        `Here's my payment screenshot below.\n\n`+
+      : `Hi Fruicey!\n`+
+        `I've made a PayNow payment for my order.\n`+
+        `My payment screenshot is attached below.\n`+
+        `\n`+
+        `--- Order details ---\n`+
         `Order ID: ${orderId}\n`+
         `Name: ${currentUser.first} ${currentUser.last}\n`+
         `Phone: ${currentUser.phone}\n`+
         `Items: ${items}\n`+
         `Total: ${amount}\n`+
-        `Collection: ${collect}\n\n`+
+        `Collection: ${collect}\n`+
+        `\n`+
         `Please confirm my order. Thank you!`;
     const msg = encodeURIComponent(msgRaw);
     // We pre-opened waTab during the tap. Redirecting it to wa.me *after* the await can
@@ -5854,11 +5862,15 @@ async function sendCreditWhatsApp(){
   // Create the pending top-up now (only reaches the POS once the customer confirms payment)
   try{ await apiPost({action:'requestDeposit', phone:currentUser.phone, amount}); }catch(e){}
   var msg = encodeURIComponent(
-    'Hi Fruicey! I\'ve made a PayNow payment to top up my Fruicey Credit.\n'+
-    'Here\'s my payment screenshot below.\n\n'+
+    'Hi Fruicey!\n'+
+    'I\'ve made a PayNow payment to top up my Fruicey Credit.\n'+
+    'My payment screenshot is attached below.\n'+
+    '\n'+
+    '--- Top-up details ---\n'+
     'Name: '+currentUser.first+' '+currentUser.last+'\n'+
     'Phone: '+currentUser.phone+'\n'+
-    'Credit Top-up: $'+amount.toFixed(2)+'\n\n'+
+    'Credit Top-up: $'+amount.toFixed(2)+'\n'+
+    '\n'+
     'Please approve my credit deposit. Thank you!'
   );
   window.open('https://wa.me/'+WA+'?text='+msg, '_blank');

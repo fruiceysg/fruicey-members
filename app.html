@@ -5097,11 +5097,26 @@ async function sendWhatsApp(method){
         `Collection: ${collect}\n\n`+
         `Please confirm my order. Thank you!`;
     const msg = encodeURIComponent(msgRaw);
-    // Open WhatsApp in the tab we pre-opened during the click, so THIS page never
-    // navigates away (no "leave page?" prompt) and the orders redirect below is safe.
-    // wa.me opens the installed WhatsApp app directly on mobile and WhatsApp Web on desktop.
+    // We pre-opened waTab during the tap. Redirecting it to wa.me *after* the await can
+    // land on WhatsApp's web "install" page on mobile. Writing a tiny document into the
+    // tab that navigates itself makes the browser treat it as a fresh in-tab navigation to
+    // wa.me, which reliably hands off to the installed WhatsApp app. THIS page never moves,
+    // so there's no "leave page?" prompt.
     const waUrl = 'https://wa.me/'+WA+'?text='+msg;
-    if(waTab){ waTab.location.href = waUrl; } else { window.open(waUrl, '_blank'); }
+    if(waTab && !waTab.closed){
+      try{
+        waTab.document.open();
+        waTab.document.write('<!doctype html><meta charset="utf-8">'+
+          '<meta http-equiv="refresh" content="0;url='+waUrl+'">'+
+          '<title>Opening WhatsApp…</title>'+
+          '<body style="font-family:sans-serif;padding:24px;color:#1c4d3a">Opening WhatsApp…<br>'+
+          '<a href="'+waUrl+'">Tap here if it doesn\u2019t open.</a>'+
+          '<script>location.replace('+JSON.stringify(waUrl)+');<\/script></body>');
+        waTab.document.close();
+      }catch(e){ waTab.location.href = waUrl; }
+    } else {
+      window.open(waUrl, '_blank');
+    }
     // Order is placed — clear everything now
     pendingOrder = null;
     cart = []; renderCartItems(); updateCartBadge();

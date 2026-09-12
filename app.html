@@ -241,9 +241,9 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* feat3: slide + bounce in from the right (animate the image inside the clipped wrapper) */
 .feat3 img.reveal-right{opacity:0;transform:translateX(110%);transition:opacity .6s ease,transform .9s cubic-bezier(.34,1.56,.64,1)}
 .feat3 img.reveal-right.in{opacity:1;transform:translateX(0)}
-/* feat8: slide + bounce up in place */
-.feat8 img.reveal-right{opacity:0;transform:translateY(60%);transition:opacity .6s ease,transform .9s cubic-bezier(.34,1.56,.64,1)}
-.feat8 img.reveal-right.in{opacity:1;transform:translateY(0)}
+/* feat8: slide + bounce in from the left */
+.feat8 img.reveal-right{opacity:0;transform:translateX(-110%);transition:opacity .6s ease,transform .9s cubic-bezier(.34,1.56,.64,1)}
+.feat8 img.reveal-right.in{opacity:1;transform:translateX(0)}
 .feature-wrap.feat3{overflow:hidden}
 .feature-wrap.feat8{overflow:hidden}
 @media (prefers-reduced-motion:reduce){
@@ -628,9 +628,13 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .paynow-box img{width:180px;height:auto;display:block;border-radius:8px}
 .qr-frame{width:max-content;margin:4px auto 0;padding:16px;background:#fff;border-radius:20px;box-shadow:0 8px 28px rgba(28,77,58,.16)}
 .paynow-amount{font-family:var(--font);font-size:28px;color:var(--green);margin:12px 0 4px}
+.paynow-uen{font-family:var(--font);font-size:20px;color:var(--green);letter-spacing:.5px;margin:14px 0 2px}
 .paynow-note{font-size:12px;color:var(--text3);line-height:1.5}
 .paynow-summary{background:#f9f9f9;border-radius:12px;padding:12px 14px;margin-bottom:14px}
 .paynow-sum-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px}
+.paynow-sum-total{margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.07)}
+.paynow-sum-total .paynow-sum-label{color:var(--text);font-family:var(--font);font-size:15px}
+.paynow-sum-total .paynow-sum-val{color:var(--green);font-family:var(--font);font-size:18px}
 .paynow-sum-label{color:var(--text3);font-weight:600;flex-shrink:0}
 .paynow-sum-val{color:var(--text);text-align:right}
 .paynow-items-list{margin:10px 0;padding:10px 0;border-top:1px solid rgba(0,0,0,.07);border-bottom:1px solid rgba(0,0,0,.07);display:flex;flex-direction:column;gap:7px}
@@ -2559,8 +2563,11 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="pay-panel" id="pay-panel-paynow">
     <button class="pay-back" onclick="selectPayMethod('')"><i class="ti ti-arrow-left"></i> Payment options</button>
     <div class="paynow-box">
-      <div class="qr-frame"><img src="data:image/png;base64,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" alt="PayNow QR"></div>
-      <div class="paynow-amount" id="paynow-amount">$0.00</div>
+      <div class="qr-frame"><img id="paynow-qr-img" src="data:image/png;base64,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" alt="PayNow QR"></div>
+      <button class="btn btn-secondary" id="paynow-save-btn" onclick="savePaynowQR()" style="margin:10px auto 0;max-width:220px;display:flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-download"></i> Save QR image
+      </button>
+      <div class="paynow-uen">UEN 53434968D</div>
       <div class="paynow-note" style="margin-top:10px;text-align:left">
         <ol style="margin:0;padding-left:20px;line-height:1.8">
           <li>Open your banking app and <b>scan the QR</b> to pay.</li>
@@ -2573,6 +2580,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div class="paynow-sum-row"><span class="paynow-sum-label">Order</span><span class="paynow-sum-val" id="paynow-orderid"></span></div>
       <div class="paynow-items-list" id="paynow-items"></div>
       <div class="paynow-sum-row"><span class="paynow-sum-label">Collection</span><span class="paynow-sum-val" id="paynow-collect"></span></div>
+      <div class="paynow-sum-row paynow-sum-total"><span class="paynow-sum-label">Amount payable</span><span class="paynow-sum-val" id="paynow-payable">$0.00</span></div>
     </div>
     <div class="ack-note">
       <div class="ack-note-title">What happens next?</div>
@@ -5002,7 +5010,7 @@ function showPayNow(order){
   const sub = parseFloat(order.total);
   let items = order.items;
   try{ items = typeof items==='string' ? JSON.parse(items) : (items||[]); }catch(e){ items = []; }
-  document.getElementById('paynow-amount').textContent = '$'+sub.toFixed(2);
+  document.getElementById('paynow-payable').textContent = '$'+sub.toFixed(2);
   document.getElementById('paynow-orderid').textContent = order.id || 'assigned once you tap "I\'ve paid"';
   document.getElementById('paynow-items').innerHTML = items.map(function(i){
     return '<div class="paynow-item"><span class="paynow-item-name">'+(i.label||i.name||'')+'</span><span class="paynow-item-qty">×'+i.qty+'</span></div>';
@@ -5011,6 +5019,21 @@ function showPayNow(order){
   _payNowOrder = order;                                          // remember for the card option
   selectPayMethod('');                                          // always start on the chooser
   document.getElementById('paynow-modal').classList.add('open');
+}
+
+// Download the PayNow QR image so the customer can pay from another app.
+function savePaynowQR(){
+  try{
+    var img = document.getElementById('paynow-qr-img');
+    var a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'fruicey-paynow-qr.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }catch(e){
+    if(typeof toast==='function') toast('Could not save — long-press the QR to save instead');
+  }
 }
 
 // Switch the payment modal between the chooser ('') and a method panel.

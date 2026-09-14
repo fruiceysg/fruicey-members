@@ -2988,7 +2988,7 @@ const TOTAL_STAMPS = 9;
 let currentUser   = null;
 let authToken     = '';   // session token from login; sent on requests (backend enforces later)
 let stockStatus   = {};
-const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg
+const PREORDER_IDS = new Set(['np07','np08','lp04','lp05']); // Calcium Ca, Magnesium Mg, Oral, Cardio
 let stampMember   = null;
 let cart          = [];
 function saveCart(){ try{ sessionStorage.setItem('fruicey_cart', JSON.stringify(cart)); }catch(e){} }
@@ -4703,10 +4703,15 @@ function ymdLocal(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padSt
 function renderTimeSlots(){
   const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
+  // Pre-order items (Ca, Mg, Oral, Cardio) are made fresh on the day, so if the cart contains
+  // any of them, the earliest collection/delivery day is TOMORROW — today is not offered.
+  const hasPreorder = cart.some(function(i){ return PREORDER_IDS.has(i.id); });
+  const startDay = hasPreorder ? 1 : 0;
+
   // Next 7 days (skip Sundays) as compact date cards
   const dateContainer = document.getElementById('date-slots-container');
   const dates = [];
-  for(let d=0; d<7; d++){
+  for(let d=startDay; d<7; d++){
     const dt = new Date();
     dt.setDate(dt.getDate() + d);
     if(dt.getDay() === 0) continue; // skip Sunday
@@ -4715,6 +4720,9 @@ function renderTimeSlots(){
     dates.push({val, top, num: dt.getDate()});
   }
 
+  // If a previously-picked date is now invalid (e.g. it was "today" before a pre-order item was
+  // added), reset to the earliest allowed date.
+  if(collectDate && !dates.some(function(x){ return x.val===collectDate; })){ collectDate = ''; }
   if(!collectDate && dates.length) collectDate = dates[0].val;
 
   dateContainer.innerHTML = dates.map(d =>

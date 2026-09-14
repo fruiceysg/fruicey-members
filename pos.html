@@ -2238,6 +2238,21 @@ async function checkout(){
           date: dateStr,
           rcptNo: sale.rcptNo
         }).catch(()=>{});
+        // Auto-award one stamp per product tendered (total item quantity) to the member.
+        const stampQty = cart.reduce(function(s,i){ return s + (parseInt(i.qty)||1); }, 0);
+        if(stampQty > 0){
+          apiPost({
+            action:'addStampsForSale',
+            phone: np(currentMember.phone),
+            qty: stampQty
+          }).then(function(r){
+            if(r && r.success){
+              let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+currentMember.first+' ('+r.stamps+'/9)';
+              if(r.completedThisSale>0) msg += ' — card'+(r.completedThisSale>1?'s':'')+' completed!';
+              showToast(msg);
+            }
+          }).catch(()=>{});
+        }
       }
       await apiPost({
         action:'addPOSSale',

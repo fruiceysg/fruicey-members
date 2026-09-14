@@ -3025,8 +3025,15 @@ if (currentUser) { setTimeout(function(){ try{ startNotif(); }catch(e){} }, 200)
 
 // ── API HELPERS ───────────────────────────────────────────────
 function np(p){ let d=(p||'').replace(/\D/g,''); if(d.startsWith('65')&&d.length>8)d=d.slice(2); return d; }
-async function apiGet(params){ const p=new URLSearchParams({...params, ...(authToken?{token:authToken}:{}), _:Date.now()}); const r=await fetch(API+'?'+p, {cache:'no-store'}); return r.json(); }
-async function apiPost(body){ const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body, ...(authToken?{token:authToken}:{})})}); return r.json(); }
+// fetch with a timeout so a lagging/unreachable server fails fast instead of hanging forever.
+function fetchWithTimeout(url, opts, ms){
+  ms = ms || 20000;
+  const ctrl = new AbortController();
+  const t = setTimeout(function(){ ctrl.abort(); }, ms);
+  return fetch(url, {...opts, signal: ctrl.signal}).finally(function(){ clearTimeout(t); });
+}
+async function apiGet(params){ const p=new URLSearchParams({...params, ...(authToken?{token:authToken}:{}), _:Date.now()}); const r=await fetchWithTimeout(API+'?'+p, {cache:'no-store'}); return r.json(); }
+async function apiPost(body){ const r=await fetchWithTimeout(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body, ...(authToken?{token:authToken}:{})})}); return r.json(); }
 
 // ── NAVIGATION ────────────────────────────────────────────────
 // ── HOME SLIDER (seamless one-way loop) ────────────────────────
@@ -3688,14 +3695,14 @@ function initMenu(){
 }
 
 // Fetch current stock and re-render only if something actually changed (avoids needless repaints)
-function fetchStock(){
+function fetchStock(throwOnError){
   return apiGet({action:'getStock'}).then(res=>{
     if(res && res.stock){
       const changed = JSON.stringify(res.stock) !== JSON.stringify(stockStatus);
       stockStatus = res.stock;
       if(changed && currentScreen === 'menu') renderProducts();
     }
-  }).catch(()=>{});
+  }).catch(function(e){ if(throwOnError) throw e; });
 }
 
 let __stockPollTimer = null;
@@ -4906,13 +4913,25 @@ async function checkout(){
   if(!collectDate){ showToast('Please select a '+(isDelivery?'preferred delivery':'collection')+' date'); flagField('date-slots-container'); return; }
   if(!collectTime){ showToast('Please select a '+(isDelivery?'preferred delivery':'collection')+' time'); flagField('time-slots-container'); return; }
 
+  // Give instant feedback the moment the button is tapped — BEFORE the stock re-check
+  // network call, which is where the lag is usually felt.
+  const btn = document.getElementById('checkout-btn');
+  btn.textContent='Processing order...'; btn.disabled=true;
+
   // Re-check stock right before ordering, in case an item sold out while browsing.
-  await fetchStock();
+  try{
+    await fetchStock(true);
+  }catch(e){
+    btn.textContent='Place Order'; btn.disabled=false;
+    showToast(e && e.name==='AbortError' ? 'Server timed out. Please check your connection and try again.' : 'Could not reach the server. Please check your connection and try again.');
+    return;
+  }
   const oos = cart.filter(i => stockStatus[i.id] === false);
   if(oos.length){
     const names = oos.map(i => i.name).join(', ');
     showToast('Sorry, now out of stock: ' + names + '. Please remove to continue.');
     if(typeof renderCartItems === 'function') renderCartItems();
+    btn.textContent='Place Order'; btn.disabled=false;
     return;
   }
 
@@ -4922,20 +4941,17 @@ async function checkout(){
     deliveryAddress = (document.getElementById('delivery-address').value||'').trim();
     deliveryUnit    = (document.getElementById('delivery-unit').value||'').trim();
     deliveryPhone   = (document.getElementById('delivery-phone').value||'').trim();
-    if(!/^\d{6}$/.test(deliveryPostal)){ showToast('Please enter a valid 6-digit delivery postal code'); flagField('delivery-postal'); return; }
-    if(!deliveryAddress){ showToast('Please enter your delivery address'); flagField('delivery-address'); return; }
-    if(!deliveryUnit){ showToast('Please enter your unit number'); flagField('delivery-unit'); return; }
-    if(!deliveryPhone){ showToast('Please enter a delivery contact number'); flagField('delivery-phone'); return; }
+    if(!/^\d{6}$/.test(deliveryPostal)){ showToast('Please enter a valid 6-digit delivery postal code'); flagField('delivery-postal'); btn.textContent='Place Order'; btn.disabled=false; return; }
+    if(!deliveryAddress){ showToast('Please enter your delivery address'); flagField('delivery-address'); btn.textContent='Place Order'; btn.disabled=false; return; }
+    if(!deliveryUnit){ showToast('Please enter your unit number'); flagField('delivery-unit'); btn.textContent='Place Order'; btn.disabled=false; return; }
+    if(!deliveryPhone){ showToast('Please enter a delivery contact number'); flagField('delivery-phone'); btn.textContent='Place Order'; btn.disabled=false; return; }
   }
 
   const notes = document.getElementById('order-notes').value.trim();
   const sub   = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const fee   = isDelivery ? deliveryFee : 0;
   const grand = +(sub + fee + PLATFORM_FEE).toFixed(2);
-  const btn   = document.getElementById('checkout-btn');
-  btn.textContent='Processing order...'; btn.disabled=true;
-  // Show the "Creating order" overlay immediately so there's instant feedback
-  // (avoids the perceived lag between tapping and the transition appearing).
+  // Show the "Creating order" overlay now that all validation has passed.
   const coEarly = document.getElementById('creating-order-overlay');
   if(coEarly) coEarly.classList.add('show');
 
@@ -4987,7 +5003,7 @@ async function checkout(){
         goTab('orders');
       } else if(res.error==='unauthorized'){ currentUser=null; authToken=''; try{sessionStorage.removeItem('fruicey_user');sessionStorage.removeItem('fruicey_token');}catch(e){} showToast('Your session expired — please log in again.'); openLogin(); }
       else { showToast('Error placing order. Please try again.'); }
-    }catch(e){ showToast('Connection error.'); }
+    }catch(e){ showToast(e && e.name==='AbortError' ? 'Server timed out. Please check your connection and try again.' : 'Connection error. Please try again.'); }
     if(coOv2) coOv2.classList.remove('show');
     btn.textContent='Place Order'; btn.disabled=false;
     return;

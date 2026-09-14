@@ -1244,7 +1244,7 @@ function viewSaleReceipt(idx){
 
 
 // ── APP ORDERS (admin status management) ──────────────────────
-const ORDER_STATUSES = ['Pending','Preparing','Ready','Completed','Cancelled'];
+const ORDER_STATUSES = ['Pending','Preparing','Ready','Cancelled'];
 const STATUS_COLORS = {Pending:'#f0c040',Preparing:'#1565c0',Ready:'#5aab74',Completed:'#8fcea1',Cancelled:'#e74c3c',Processing:'#1565c0'};
 
 async function loadAppOrders(){
@@ -1405,12 +1405,19 @@ function stripTZ(str){
 }
 
 async function updateAppOrderStatus(orderId, newStatus){
+  // Optimistic UI: reflect the new status immediately so the card updates without waiting for
+  // the network round-trip (and the POSSales sync that follows a 'Ready' order).
+  const prev = (window._appOrders||[]).find(function(x){ return String(x.id)===String(orderId); });
+  const prevStatus = prev ? prev.status : null;
+  if(prev){ prev.status = newStatus; }
+  if(typeof renderAppOrders === 'function') renderAppOrders(window._appOrders||[]);
+
   try{
     const res = await apiPost({action:'updateOrderStatus', id:orderId, status:newStatus});
     if(res.success){
       showToast('Order '+orderId+' marked '+newStatus);
-      // Auto-add to POSSales when order is Completed
-      if(newStatus === 'Completed'){
+      // A 'Ready' order is considered fulfilled — sync it into POSSales so it counts in settlement.
+      if(newStatus === 'Ready'){
         try{
           const orderRes = await apiGet({action:'getOrder', id:orderId});
           if(orderRes.order){
@@ -1438,9 +1445,12 @@ async function updateAppOrderStatus(orderId, newStatus){
       }
       loadAppOrders();
     } else {
+      // Roll back the optimistic change on failure.
+      if(prev){ prev.status = prevStatus; if(typeof renderAppOrders === 'function') renderAppOrders(window._appOrders||[]); }
       showToast('Could not update order status');
     }
   }catch(e){
+    if(prev){ prev.status = prevStatus; if(typeof renderAppOrders === 'function') renderAppOrders(window._appOrders||[]); }
     showToast('Connection error');
   }
 }

@@ -3402,7 +3402,7 @@ function closeDrawer(){ document.getElementById('site-drawer').classList.remove(
 function goVibes(){
   closeDrawer();
   goTab('home');
-  const headerH = (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 67) + 16;
+  const headerH = (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 67) + 100;
   const scrollToVibes = function(){
     const el = document.getElementById('home-vibes-title') || document.getElementById('home-vibes');
     if(!el) return;

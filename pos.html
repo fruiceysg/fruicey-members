@@ -2248,7 +2248,7 @@ async function checkout(){
           }).then(function(r){
             if(r && r.success){
               let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+currentMember.first+' ('+r.stamps+'/9)';
-              if(r.completedThisSale>0) msg += ' — card'+(r.completedThisSale>1?'s':'')+' completed!';
+              if(r.completed) msg += ' — card complete! Spin available.';
               showToast(msg);
             }
           }).catch(()=>{});

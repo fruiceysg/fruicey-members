@@ -4933,7 +4933,11 @@ async function checkout(){
   const fee   = isDelivery ? deliveryFee : 0;
   const grand = +(sub + fee + PLATFORM_FEE).toFixed(2);
   const btn   = document.getElementById('checkout-btn');
-  btn.textContent='Placing order...'; btn.disabled=true;
+  btn.textContent='Processing order...'; btn.disabled=true;
+  // Show the "Creating order" overlay immediately so there's instant feedback
+  // (avoids the perceived lag between tapping and the transition appearing).
+  const coEarly = document.getElementById('creating-order-overlay');
+  if(coEarly) coEarly.classList.add('show');
 
   // Determine payment method
   const useCreditCb = document.getElementById('use-credit-cb');

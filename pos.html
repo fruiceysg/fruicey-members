@@ -1352,13 +1352,43 @@ function renderAppOrders(orders){
         +'<div>Postal '+(o.deliveryPostal||'—')+(o.deliveryDistanceKm?' · '+o.deliveryDistanceKm+' km':'')+' · ☎ '+(o.deliveryPhone||o.phone||'')+'</div>'
         +'<div>Delivery fee: '+(dfee>0?'$'+dfee.toFixed(2):'Free')+'</div>'
         +'</div>'):'')
-      +'<div style="font-size:11px;color:#aaa;margin:4px 0">'+itemsStr+'</div>'
       +(o.notes?'<div style="font-size:11px;color:#e67e22;font-style:italic;margin-bottom:4px">Note: '+o.notes+'</div>':'')
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
       +'<span style="font-size:13px;font-weight:700;color:#8fcea1">$'+parseFloat(o.total||0).toFixed(2)+'</span>'
+      +'<button onclick="viewAppOrderReceipt(\''+o.id+'\')" style="padding:5px 10px;border:1px solid #8fcea1;border-radius:6px;background:#fff;color:#5aab74;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)"><i class="ti ti-receipt"></i> View receipt</button>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:flex-end;align-items:center;margin-top:6px">'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+buttons+'</div>'
       +'</div></div>';
   }).join('');
+}
+
+// Show a Fruicey receipt for an online app order (reuses the POS receipt renderer).
+function viewAppOrderReceipt(orderId){
+  const o = (window._appOrders||[]).find(function(x){ return String(x.id)===String(orderId); });
+  if(!o){ return; }
+  let items = [];
+  try{ items = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
+  items = items.map(function(i){
+    return { label:(i.label||i.name||''), qty:(i.qty||1), price:parseFloat(i.price||0) };
+  });
+  // Split the ordered timestamp into date + time for the receipt header.
+  const raw = stripTZ(o.createdAt||'');
+  const dm = raw.match(/\d{4}-\d{2}-\d{2}/);
+  const tm = raw.match(/\d{2}:\d{2}/);
+  const sale = {
+    items: items,
+    subtotal: parseFloat(o.total||0),
+    total: parseFloat(o.total||0),
+    discount: 0,
+    payment: o.payment || 'App PayNow',
+    member: o.name || '',
+    date: dm ? dm[0] : raw.slice(0,10),
+    time: tm ? tm[0] : '',
+    rcptNo: o.id
+  };
+  _viewingHistoricalReceipt = true;
+  showReceipt(sale, 0, 0);
 }
 
 function formatDateTime(s){

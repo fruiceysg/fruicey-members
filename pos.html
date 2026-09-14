@@ -127,7 +127,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
   </div>
 
   <div id="new-order-banner" onclick="goToNewOrder()" style="display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:#e74c3c;color:#fff;padding:12px 16px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);font-family:var(--font)">
-    🔔 <span id="new-order-banner-text">New order received!</span> — Tap to view
+    <span id="new-order-banner-text">New order received!</span> — Tap to view
     <button onclick="event.stopPropagation();dismissNewOrderBanner()" style="margin-left:12px;background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:12px;vertical-align:middle">✕</button>
   </div>
 
@@ -1324,7 +1324,7 @@ function showNewOrderAlert(count, order){
   const text   = document.getElementById('new-order-banner-text');
   if(text) text.textContent = count > 1 ? (count+' new orders received!') : ('New order from '+(order.name||'a customer')+'!');
   if(banner) banner.style.display = 'block';
-  showToast('🔔 New app order received!');
+  showToast('New app order received!');
 }
 
 function goToNewOrder(){
@@ -1355,27 +1355,24 @@ function renderAppOrders(orders){
     const nextSteps = (flowIdx !== -1 && flowIdx < ORDER_FLOW.length-1) ? [ORDER_FLOW[flowIdx+1]] : [];
     if(status !== 'Completed' && status !== 'Cancelled') nextSteps.push('Cancelled');
     const buttons = nextSteps.map(function(s){
-      return '<button class="app-order-status-btn" data-oid="'+o.id+'" data-status="'+s+'" style="padding:5px 10px;border:1px solid '+STATUS_COLORS[s]+';border-radius:6px;background:#fff;color:'+STATUS_COLORS[s]+';cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">'+s+'</button>';
+      return '<button class="app-order-status-btn" data-oid="'+o.id+'" data-status="'+s+'" onclick="event.stopPropagation(); updateAppOrderStatus(\''+o.id+'\',\''+s+'\')" style="padding:5px 10px;border:1px solid '+STATUS_COLORS[s]+';border-radius:6px;background:#fff;color:'+STATUS_COLORS[s]+';cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">'+s+'</button>';
     }).join('');
-    return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;background:#fafafa">'
+    return '<div onclick="viewAppOrderReceipt(\''+o.id+'\')" style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;background:#fafafa;cursor:pointer">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
       +'<span style="font-family:monospace;font-size:12px;font-weight:700;color:#333">'+o.id+'</span>'
       +'<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+statusColor+'22;color:'+statusColor+'">'+status+'</span>'
       +'</div>'
       +'<div style="font-size:12px;color:#555;margin-bottom:2px"><b>'+(o.name||'')+'</b> · '+(o.phone||'')+'</div>'
-      +'<div style="font-size:11px;color:#888">'+(o.createdAt?formatDateTime(o.createdAt):'')+' · '+(isDel?'🛵 Delivery':'🏪 Self pick-up')+' · '+(isDel?'Preferred: ':'Collect: ')+stripTZ(o.collectTime||'')+'</div>'
+      +'<div style="font-size:11px;color:#888">'+(o.createdAt?formatDateTime(o.createdAt):'')+' · '+(isDel?'Delivery':'Self pick-up')+' · '+(isDel?'Preferred: ':'Collect: ')+stripTZ(o.collectTime||'')+'</div>'
       +(o.payment?'<div style="font-size:11px;color:#555;margin-bottom:2px">Payment: <b>'+o.payment+'</b></div>':'')
       +(isDel?('<div style="font-size:11px;color:#234;background:#eef6ff;border:1px solid #d6e6f5;border-radius:6px;padding:6px 8px;margin:4px 0;line-height:1.5">'
         +'<div><b>Deliver to:</b> '+(o.deliveryAddress||'—')+(o.deliveryUnit?', '+o.deliveryUnit:'')+'</div>'
-        +'<div>Postal '+(o.deliveryPostal||'—')+(o.deliveryDistanceKm?' · '+o.deliveryDistanceKm+' km':'')+' · ☎ '+(o.deliveryPhone||o.phone||'')+'</div>'
+        +'<div>Postal '+(o.deliveryPostal||'—')+(o.deliveryDistanceKm?' · '+o.deliveryDistanceKm+' km':'')+' · '+(o.deliveryPhone||o.phone||'')+'</div>'
         +'<div>Delivery fee: '+(dfee>0?'$'+dfee.toFixed(2):'Free')+'</div>'
         +'</div>'):'')
       +(o.notes?'<div style="font-size:11px;color:#e67e22;font-style:italic;margin-bottom:4px">Note: '+o.notes+'</div>':'')
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">'
       +'<span style="font-size:13px;font-weight:700;color:#8fcea1">$'+parseFloat(o.total||0).toFixed(2)+'</span>'
-      +'<button onclick="viewAppOrderReceipt(\''+o.id+'\')" style="padding:5px 10px;border:1px solid #8fcea1;border-radius:6px;background:#fff;color:#5aab74;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)"><i class="ti ti-receipt"></i> View receipt</button>'
-      +'</div>'
-      +'<div style="display:flex;justify-content:flex-end;align-items:center;margin-top:6px">'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+buttons+'</div>'
       +'</div></div>';
   }).join('');

@@ -1471,6 +1471,10 @@ async function updateAppOrderStatus(orderId, newStatus){
                       let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+(o.name||'member')+' ('+r.stamps+'/9)';
                       if(r.completed) msg += ' — card complete! Spin available.';
                       showToast(msg);
+                    } else if(r && r.notEnrolled){
+                      showToast('No stamp added — '+(o.name||'customer')+' has not joined the rewards program.');
+                    } else if(r && r.duplicate){
+                      // Already stamped for this order (a re-completion) — silently ignore.
                     }
                   }).catch(()=>{});
               }

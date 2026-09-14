@@ -2215,6 +2215,7 @@ async function checkout(){
       if(posCreditPhone && posCreditBalance > 0){
         posCreditUse = Math.min(posCreditBalance, total);
       }
+      // Credit MUST be deducted first — it sets sale.payment / sale.creditUsed that the sale record needs.
       if(posCreditUse > 0 && posCreditPhone){
         const creditRes = await apiPost({action:'deductCredit', phone:posCreditPhone, amount:posCreditUse, desc:'POS Sale '+sale.rcptNo});
         if(creditRes.success){
@@ -2229,32 +2230,10 @@ async function checkout(){
           }
         }
       }
-      if(currentMember && currentMember.phone && !isOnline){
-        await apiPost({
-          action:'recordMemberSpend',
-          phone: np(currentMember.phone),
-          amount: total.toFixed(2),
-          items: cart.map(i=>i.qty+'x '+i.label).join(', '),
-          date: dateStr,
-          rcptNo: sale.rcptNo
-        }).catch(()=>{});
-        // Auto-award one stamp per product tendered (total item quantity) to the member.
-        const stampQty = cart.reduce(function(s,i){ return s + (parseInt(i.qty)||1); }, 0);
-        if(stampQty > 0){
-          apiPost({
-            action:'addStampsForSale',
-            phone: np(currentMember.phone),
-            qty: stampQty
-          }).then(function(r){
-            if(r && r.success){
-              let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+currentMember.first+' ('+r.stamps+'/9)';
-              if(r.completed) msg += ' — card complete! Spin available.';
-              showToast(msg);
-            }
-          }).catch(()=>{});
-        }
-      }
-      await apiPost({
+
+      // addPOSSale writes a DIFFERENT sheet (POSSales), so it can safely run alongside the
+      // member-sheet writes. Start it now and await it at the end.
+      const posSaleTask = apiPost({
         action:'addPOSSale',
         id: sale.id,
         rcptNo: sale.rcptNo||'',
@@ -2269,6 +2248,37 @@ async function checkout(){
         memberPhone: sale.memberPhone||'',
         creditUsed: sale.creditUsed ? sale.creditUsed.toFixed(2) : ''
       });
+
+      // Member-only: record spend, then award stamps. These MUST run one after the other —
+      // both edit the same member row in StampCards, so running them together would let one
+      // overwrite the other's columns (a lost-update race). Sequential keeps both writes safe.
+      if(currentMember && currentMember.phone && !isOnline){
+        await apiPost({
+          action:'recordMemberSpend',
+          phone: np(currentMember.phone),
+          amount: total.toFixed(2),
+          items: cart.map(i=>i.qty+'x '+i.label).join(', '),
+          date: dateStr,
+          rcptNo: sale.rcptNo
+        }).catch(()=>{});
+
+        const stampQty = cart.reduce(function(s,i){ return s + (parseInt(i.qty)||1); }, 0);
+        if(stampQty > 0){
+          await apiPost({
+            action:'addStampsForSale',
+            phone: np(currentMember.phone),
+            qty: stampQty
+          }).then(function(r){
+            if(r && r.success){
+              let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+currentMember.first+' ('+r.stamps+'/9)';
+              if(r.completed) msg += ' — card complete! Spin available.';
+              showToast(msg);
+            }
+          }).catch(()=>{});
+        }
+      }
+
+      await posSaleTask;
       // Add to local in-memory log for immediate receipt display only
       salesLog.unshift(sale);
     }catch(e){

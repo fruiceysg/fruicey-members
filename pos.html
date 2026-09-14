@@ -868,11 +868,21 @@ function batchFillJuiceImageIDs(idMap) {
   console.log('Updated '+changed+' juice image IDs. Refresh the page to see images.');
 }
 let salesLog = []; // always loaded fresh from Sheets
+// Holds a stable sale identity across tender retries (see checkout()). Cleared on success.
+let _pendingSaleSig = null, _pendingSaleId = null, _pendingRcptNo = null;
 
 // ── API ──────────────────────────────────────────────────────────────
 function np(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8)d=d.slice(2);return d;}
-async function apiGet(params){const r=await fetch(API+'?'+new URLSearchParams({...params, ...(staffToken?{token:staffToken}:{}), _:Date.now()}), {cache:'no-store'});return r.json();}
-async function apiPost(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body, ...(staffToken?{token:staffToken}:{})})});return r.json();}
+// fetch with a timeout so a lagging/unreachable server fails fast instead of hanging the POS
+// (which previously appeared frozen until a manual refresh).
+function fetchWithTimeout(url, opts, ms){
+  ms = ms || 20000;
+  const ctrl = new AbortController();
+  const t = setTimeout(function(){ ctrl.abort(); }, ms);
+  return fetch(url, Object.assign({}, opts, {signal: ctrl.signal})).finally(function(){ clearTimeout(t); });
+}
+async function apiGet(params){const r=await fetchWithTimeout(API+'?'+new URLSearchParams({...params, ...(staffToken?{token:staffToken}:{}), _:Date.now()}), {cache:'no-store'});return r.json();}
+async function apiPost(body){const r=await fetchWithTimeout(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body, ...(staffToken?{token:staffToken}:{})})});return r.json();}
 
 // ── CLOCK ────────────────────────────────────────────────────────────
 
@@ -1244,8 +1254,11 @@ function viewSaleReceipt(idx){
 
 
 // ── APP ORDERS (admin status management) ──────────────────────
-const ORDER_STATUSES = ['Pending','Preparing','Ready','Cancelled'];
+const ORDER_STATUSES = ['Pending','Preparing','Ready','Completed','Cancelled'];
 const STATUS_COLORS = {Pending:'#f0c040',Preparing:'#1565c0',Ready:'#5aab74',Completed:'#8fcea1',Cancelled:'#e74c3c',Processing:'#1565c0'};
+// Forward progression staff can move an order through. The current status shows as a badge;
+// the buttons offer only the next step(s) forward, plus Cancelled.
+const ORDER_FLOW = ['Pending','Preparing','Ready','Completed'];
 
 async function loadAppOrders(){
   const el = document.getElementById('app-orders-list');
@@ -1336,7 +1349,12 @@ function renderAppOrders(orders){
     const dfee = parseFloat(o.deliveryFee||0);
     const status = o.status || 'Pending';
     const statusColor = STATUS_COLORS[status] || '#aaa';
-    const buttons = ORDER_STATUSES.filter(function(s){ return s !== status; }).map(function(s){
+    // Offer only the NEXT step forward (Preparing → Ready → Completed) plus Cancelled.
+    // A Completed order shows no further action.
+    const flowIdx = ORDER_FLOW.indexOf(status);
+    const nextSteps = (flowIdx !== -1 && flowIdx < ORDER_FLOW.length-1) ? [ORDER_FLOW[flowIdx+1]] : [];
+    if(status !== 'Completed' && status !== 'Cancelled') nextSteps.push('Cancelled');
+    const buttons = nextSteps.map(function(s){
       return '<button class="app-order-status-btn" data-oid="'+o.id+'" data-status="'+s+'" style="padding:5px 10px;border:1px solid '+STATUS_COLORS[s]+';border-radius:6px;background:#fff;color:'+STATUS_COLORS[s]+';cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font)">'+s+'</button>';
     }).join('');
     return '<div style="padding:10px;border:1px solid #eee;border-radius:8px;margin-bottom:8px;background:#fafafa">'
@@ -1406,7 +1424,7 @@ function stripTZ(str){
 
 async function updateAppOrderStatus(orderId, newStatus){
   // Optimistic UI: reflect the new status immediately so the card updates without waiting for
-  // the network round-trip (and the POSSales sync that follows a 'Ready' order).
+  // the network round-trip (and the POSSales sync that follows a 'Completed' order).
   const prev = (window._appOrders||[]).find(function(x){ return String(x.id)===String(orderId); });
   const prevStatus = prev ? prev.status : null;
   if(prev){ prev.status = newStatus; }
@@ -1416,8 +1434,8 @@ async function updateAppOrderStatus(orderId, newStatus){
     const res = await apiPost({action:'updateOrderStatus', id:orderId, status:newStatus});
     if(res.success){
       showToast('Order '+orderId+' marked '+newStatus);
-      // A 'Ready' order is considered fulfilled — sync it into POSSales so it counts in settlement.
-      if(newStatus === 'Ready'){
+      // A 'Completed' order is fully handed over — sync it into POSSales so it counts in settlement.
+      if(newStatus === 'Completed'){
         try{
           const orderRes = await apiGet({action:'getOrder', id:orderId});
           if(orderRes.order){
@@ -1440,6 +1458,26 @@ async function updateAppOrderStatus(orderId, newStatus){
               memberPhone: o.phone||'',
               creditUsed: ''
             });
+
+            // Award stamps for a member's SELF-PICKUP app order (one per product tendered),
+            // matching in-store behaviour. Delivery orders do not earn stamps.
+            const ctype = o.collectType || '';
+            const isSelfPickup = !/delivery/i.test(ctype);
+            if(isSelfPickup && o.phone){
+              let stampItems = [];
+              try{ stampItems = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
+              const stampQty = stampItems.reduce(function(s,i){ return s + (parseInt(i.qty)||1); }, 0);
+              if(stampQty > 0){
+                apiPost({ action:'addStampsForSale', phone: np(o.phone), qty: stampQty, rcptNo: 'app_'+orderId })
+                  .then(function(r){
+                    if(r && r.success){
+                      let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+(o.name||'member')+' ('+r.stamps+'/9)';
+                      if(r.completed) msg += ' — card complete! Spin available.';
+                      showToast(msg);
+                    }
+                  }).catch(()=>{});
+              }
+            }
           }
         }catch(e){ console.log('Could not sync app order to POSSales',e); }
       }
@@ -2204,10 +2242,24 @@ async function checkout(){
   const timeStr=_sgt.toISOString().slice(11,16);
   const btn=document.getElementById('checkout-btn');
   btn.textContent='Processing...';btn.disabled=true;
+
+  // Stable sale identity across retries: if a tender lags/fails and the SAME cart is tendered
+  // again, reuse the same id + receipt number. The backend addPOSSale id-guard then rejects the
+  // duplicate row, and the receipt-based stamp guard prevents double stamps. A genuinely new/
+  // changed cart produces a different signature, hence a fresh identity.
+  const _saleSig = JSON.stringify({
+    items: cart.map(i=>({n:i.label,q:i.qty,p:i.price,r:i.remark||''})),
+    total: total, pay: paymentMethod, mem: currentMember?currentMember.phone:null
+  });
+  if(_pendingSaleSig !== _saleSig){
+    _pendingSaleSig  = _saleSig;
+    _pendingSaleId   = 'sale_'+Date.now();
+    _pendingRcptNo   = genReceiptNo();
+  }
   try{
     const sale={
-      id:'sale_'+Date.now(),
-      rcptNo: genReceiptNo(),
+      id:_pendingSaleId,
+      rcptNo: _pendingRcptNo,
       date:dateStr,
       time:timeStr,
       items:cart.map(i=>({...i})),
@@ -2277,7 +2329,8 @@ async function checkout(){
           await apiPost({
             action:'addStampsForSale',
             phone: np(currentMember.phone),
-            qty: stampQty
+            qty: stampQty,
+            rcptNo: sale.rcptNo
           }).then(function(r){
             if(r && r.success){
               let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+currentMember.first+' ('+r.stamps+'/9)';
@@ -2289,6 +2342,8 @@ async function checkout(){
       }
 
       await posSaleTask;
+      // Sale record accepted — clear the retry identity so the NEXT tender starts fresh.
+      _pendingSaleSig = null; _pendingSaleId = null; _pendingRcptNo = null;
       // Add to local in-memory log for immediate receipt display only
       salesLog.unshift(sale);
     }catch(e){

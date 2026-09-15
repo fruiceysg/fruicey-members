@@ -876,7 +876,7 @@ function np(p){let d=(p||'').replace(/\D/g,'');if(d.startsWith('65')&&d.length>8
 // fetch with a timeout so a lagging/unreachable server fails fast instead of hanging the POS
 // (which previously appeared frozen until a manual refresh).
 function fetchWithTimeout(url, opts, ms){
-  ms = ms || 20000;
+  ms = ms || 12000;
   const ctrl = new AbortController();
   const t = setTimeout(function(){ ctrl.abort(); }, ms);
   return fetch(url, Object.assign({}, opts, {signal: ctrl.signal})).finally(function(){ clearTimeout(t); });
@@ -1684,6 +1684,7 @@ async function lookupMemberByName(){
   const btn=document.getElementById('name-search-btn'); const old=btn.textContent; btn.textContent='...'; btn.disabled=true;
   try{
     const res=await apiGet({action:'getAllStampCards'});
+    if(res && res.error){ showToast('Member search failed: '+res.error); const box0=document.getElementById('member-name-results'); if(box0){box0.style.display='none';} btn.textContent=old; btn.disabled=false; return; }
     const all=(res&&res.members)?res.members:[];
     const matches=all.filter(function(m){
       const full=((m.first||'')+' '+(m.last||'')).toLowerCase();
@@ -1707,7 +1708,7 @@ async function lookupMemberByName(){
         });
       });
     }
-  }catch(e){ showToast('Connection error'); }
+  }catch(e){ showToast(e && e.name==='AbortError' ? 'Server timed out — please try again.' : 'Connection error. Please try again.'); }
   btn.textContent=old; btn.disabled=false;
 }
 

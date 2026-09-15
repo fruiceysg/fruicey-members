@@ -1431,15 +1431,23 @@ async function updateAppOrderStatus(orderId, newStatus){
     const res = await apiPost({action:'updateOrderStatus', id:orderId, status:newStatus});
     if(res.success){
       showToast('Order '+orderId+' marked '+newStatus);
-      // A 'Completed' order is fully handed over — sync it into POSSales so it counts in settlement.
+      // A 'Completed' order is fully handed over. Two independent follow-ups: sync it into
+      // POSSales (for settlement) and award stamps (for members, self-pickup). Each runs in its
+      // OWN try/catch and uses the order data already in memory — so an unstable server failing
+      // one step can never silently skip the other, and no extra network fetch is needed.
       if(newStatus === 'Completed'){
-        try{
-          const orderRes = await apiGet({action:'getOrder', id:orderId});
-          if(orderRes.order){
-            const o = orderRes.order;
-            const items = typeof o.items === 'string' ? o.items : JSON.stringify(o.items||[]);
-            const now = new Date();
-            const sgt = new Date(now.getTime() + 8*3600*1000);
+        // Use the order we already hold; only fetch as a last resort.
+        let o = (window._appOrders||[]).find(function(x){ return String(x.id)===String(orderId); });
+        if(!o || !o.phone){
+          try{ const orderRes = await apiGet({action:'getOrder', id:orderId}); if(orderRes && orderRes.order) o = orderRes.order; }catch(e){}
+        }
+        if(o){
+          const items = typeof o.items === 'string' ? o.items : JSON.stringify(o.items||[]);
+          const now = new Date();
+          const sgt = new Date(now.getTime() + 8*3600*1000);
+
+          // (a) Sync to POSSales for settlement.
+          try{
             await apiPost({
               action:'addPOSSale',
               id: 'app_'+orderId,
@@ -1455,9 +1463,10 @@ async function updateAppOrderStatus(orderId, newStatus){
               memberPhone: o.phone||'',
               creditUsed: ''
             });
+          }catch(e){ console.log('POSSales sync failed (settlement)',e); }
 
-            // Award stamps for a member's SELF-PICKUP app order (one per product tendered),
-            // matching in-store behaviour. Delivery orders do not earn stamps.
+          // (b) Award stamps — members only, self-pickup only. Independent of (a).
+          try{
             const ctype = o.collectType || '';
             const isSelfPickup = !/delivery/i.test(ctype);
             if(isSelfPickup && o.phone){
@@ -1465,22 +1474,20 @@ async function updateAppOrderStatus(orderId, newStatus){
               try{ stampItems = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
               const stampQty = stampItems.reduce(function(s,i){ return s + (parseInt(i.qty)||1); }, 0);
               if(stampQty > 0){
-                apiPost({ action:'addStampsForSale', phone: np(o.phone), qty: stampQty, rcptNo: 'app_'+orderId })
-                  .then(function(r){
-                    if(r && r.success){
-                      let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+(o.name||'member')+' ('+r.stamps+'/9)';
-                      if(r.completed) msg += ' — card complete! Spin available.';
-                      showToast(msg);
-                    } else if(r && r.notEnrolled){
-                      showToast('No stamp added — '+(o.name||'customer')+' has not joined the rewards program.');
-                    } else if(r && r.duplicate){
-                      // Already stamped for this order (a re-completion) — silently ignore.
-                    }
-                  }).catch(()=>{});
+                const r = await apiPost({ action:'addStampsForSale', phone: np(o.phone), qty: stampQty, rcptNo: 'app_'+orderId });
+                if(r && r.success){
+                  let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+(o.name||'member')+' ('+r.stamps+'/9)';
+                  if(r.completed) msg += ' — card complete! Spin available.';
+                  showToast(msg);
+                } else if(r && r.notEnrolled){
+                  showToast('No stamp added — '+(o.name||'customer')+' has not joined the rewards program.');
+                } else if(r && r.error){
+                  showToast('Stamp not added ('+r.error+'). Please add it manually.');
+                }
               }
             }
-          }
-        }catch(e){ console.log('Could not sync app order to POSSales',e); }
+          }catch(e){ showToast('Stamp could not be added (server issue). Please add it manually.'); console.log('Stamp award failed',e); }
+        }
       }
       loadAppOrders();
     } else {

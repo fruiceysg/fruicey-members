@@ -5147,17 +5147,13 @@ async function sendWhatsApp(method){
     // wa.me, which reliably hands off to the installed WhatsApp app. THIS page never moves,
     // so there's no "leave page?" prompt.
     const waUrl = 'https://wa.me/'+WA+'?text='+msg;
+    // Send the pre-opened tab straight to wa.me. wa.me itself immediately hands off to the
+    // installed WhatsApp app (mobile) or WhatsApp Web (desktop), so the customer no longer sees
+    // an "about:blank"/placeholder page in between — just WhatsApp's own brief load. THIS page
+    // never navigates, so there's still no "leave page?" prompt.
     if(waTab && !waTab.closed){
-      try{
-        waTab.document.open();
-        waTab.document.write('<!doctype html><meta charset="utf-8">'+
-          '<meta http-equiv="refresh" content="0;url='+waUrl+'">'+
-          '<title>Opening WhatsApp…</title>'+
-          '<body style="font-family:sans-serif;padding:24px;color:#1c4d3a">Opening WhatsApp…<br>'+
-          '<a href="'+waUrl+'">Tap here if it doesn\u2019t open.</a>'+
-          '<script>location.replace('+JSON.stringify(waUrl)+');<\/script></body>');
-        waTab.document.close();
-      }catch(e){ waTab.location.href = waUrl; }
+      try{ waTab.location.replace(waUrl); }
+      catch(e){ try{ waTab.location.href = waUrl; }catch(e2){ window.open(waUrl, '_blank'); } }
     } else {
       window.open(waUrl, '_blank');
     }

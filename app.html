@@ -3255,7 +3255,9 @@ document.addEventListener('DOMContentLoaded', function(){
         goTab(currentScreen!=='home'?currentScreen:'home');
       } else if(res.error==='not_found'){ err.textContent='Phone number not registered.'; err.style.display='block'; }
       else if(res.error==='wrong_password'){ err.textContent='Incorrect password.'; err.style.display='block'; }
-    }catch(e){ err.textContent='Connection error.'; err.style.display='block'; }
+      else if(res.error==='too_many_attempts'){ err.textContent='Too many attempts. Please wait a few minutes and try again.'; err.style.display='block'; }
+      else { err.textContent='Login failed'+(res && res.error?(': '+res.error):'. Please try again.'); err.style.display='block'; }
+    }catch(e){ err.textContent = (e && e.name==='AbortError') ? 'Server timed out. Please try again.' : 'Connection error.'; err.style.display='block'; }
     this.textContent='Log in'; this.disabled=false;
   });
 

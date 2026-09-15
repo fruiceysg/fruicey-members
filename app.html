@@ -3027,7 +3027,7 @@ if (currentUser) { setTimeout(function(){ try{ startNotif(); }catch(e){} }, 200)
 function np(p){ let d=(p||'').replace(/\D/g,''); if(d.startsWith('65')&&d.length>8)d=d.slice(2); return d; }
 // fetch with a timeout so a lagging/unreachable server fails fast instead of hanging forever.
 function fetchWithTimeout(url, opts, ms){
-  ms = ms || 20000;
+  ms = ms || 12000;
   const ctrl = new AbortController();
   const t = setTimeout(function(){ ctrl.abort(); }, ms);
   return fetch(url, {...opts, signal: ctrl.signal}).finally(function(){ clearTimeout(t); });
@@ -5172,7 +5172,12 @@ async function sendWhatsApp(method){
     goTab('orders');
   }catch(e){
     if(waTab) waTab.close();
-    showToast('Connection error. Please try again.');
+    showToast(e && e.name==='AbortError' ? 'Server is slow to respond — your order was not sent. Please try again.' : 'Connection error. Please try again.');
+    // Restore the button and overlay so the customer can retry — never leave it stuck on "Processing".
+    const cob = document.getElementById('checkout-btn');
+    if(cob){ cob.textContent='Place Order'; cob.disabled=false; }
+    const coov = document.getElementById('creating-order-overlay');
+    if(coov) coov.classList.remove('show');
   }
   _placingOrder = false;
 }

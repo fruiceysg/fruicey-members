@@ -881,7 +881,22 @@ function fetchWithTimeout(url, opts, ms){
   const t = setTimeout(function(){ ctrl.abort(); }, ms);
   return fetch(url, Object.assign({}, opts, {signal: ctrl.signal})).finally(function(){ clearTimeout(t); });
 }
-async function apiGet(params){const r=await fetchWithTimeout(API+'?'+new URLSearchParams({...params, ...(staffToken?{token:staffToken}:{}), _:Date.now()}), {cache:'no-store'});return r.json();}
+// Apps Script serialises requests, so a READ can time out just because it queued behind others.
+// Retry reads ONCE automatically — re-reading is always safe and turns a counter-side
+// "can't connect" on member search / order check into a brief pause instead of a failure.
+// WRITES are never auto-retried here: a blind retry could double-charge credit or double-save a
+// sale if the first call succeeded but its response was lost. Writes rely on their own
+// idempotency guards + manual retry instead.
+async function apiGet(params){
+  try{
+    const r = await fetchWithTimeout(API+'?'+new URLSearchParams({...params, ...(staffToken?{token:staffToken}:{}), _:Date.now()}), {cache:'no-store'});
+    return await r.json();
+  }catch(e){
+    await new Promise(function(res){ setTimeout(res, 800); });   // brief backoff
+    const r2 = await fetchWithTimeout(API+'?'+new URLSearchParams({...params, ...(staffToken?{token:staffToken}:{}), _:Date.now()}), {cache:'no-store'});
+    return await r2.json();
+  }
+}
 async function apiPost(body){const r=await fetchWithTimeout(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({...body, ...(staffToken?{token:staffToken}:{})})});return r.json();}
 
 // ── CLOCK ────────────────────────────────────────────────────────────

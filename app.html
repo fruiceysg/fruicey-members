@@ -2628,7 +2628,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <button class="btn btn-primary" id="order-placed-wa-btn" style="display:flex;align-items:center;justify-content:center;gap:6px">
       <i class="ti ti-brand-whatsapp"></i> Notify Wilson on WhatsApp
     </button>
-    <button class="btn btn-secondary" style="margin-top:8px" onclick="document.getElementById('order-placed-modal').classList.remove('open'); goTab('orders');">I'll do it later</button>
+    <div style="font-size:11.5px;color:var(--text3);text-align:center;margin-top:10px;line-height:1.5">Please send the WhatsApp message so Wilson can confirm your payment and start your order.</div>
   </div>
 </div>
 
@@ -5201,10 +5201,16 @@ function showOrderPlaced(waUrl, isCard){
     : 'Tap below to send your payment details to Wilson on WhatsApp to confirm your order.'; }
   btn.onclick = function(){
     window.open(waUrl, '_blank');
-    modal.classList.remove('open');
-    goTab('orders');
+    closeOrderPlaced();
   };
   modal.classList.add('open');
+}
+
+// Close the order-placed confirmation and land the customer on their orders list.
+function closeOrderPlaced(){
+  const modal = document.getElementById('order-placed-modal');
+  if(modal) modal.classList.remove('open');
+  goTab('orders');
 }
 
 // ── ORDERS ────────────────────────────────────────────────────

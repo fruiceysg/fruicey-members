@@ -4993,6 +4993,7 @@ async function checkout(){
   // otherwise held until the customer taps "I've paid" on the PayNow screen.
   const orderPayload = {
     action:'placeOrder',
+    clientOrderId: 'co_'+Date.now()+'_'+Math.random().toString(36).slice(2,8), // unique per checkout, for duplicate rejection
     userId: currentUser.id,
     name:   currentUser.first+' '+currentUser.last,
     phone:  currentUser.phone,
@@ -5099,12 +5100,23 @@ async function sendWhatsApp(method){
   if(_placingOrder) return;                                   // guard against double-taps
   if(!pendingOrder){ document.getElementById('paynow-modal').classList.remove('open'); return; }
   _placingOrder = true;
+  // Also visually disable BOTH payment buttons immediately — the flag alone can let a fast
+  // double-tap through on a slow connection, which was creating duplicate orders.
+  const _ivePaidBtn = document.getElementById('ive-paid-btn');
+  const _payCardBtn = document.getElementById('pay-card-btn');
+  const _restoreBtns = function(){
+    if(_ivePaidBtn){ _ivePaidBtn.disabled=false; }
+    if(_payCardBtn){ _payCardBtn.disabled=false; }
+  };
+  if(_ivePaidBtn){ _ivePaidBtn.disabled=true; }
+  if(_payCardBtn){ _payCardBtn.disabled=true; }
   try{
     const res = await apiPost(pendingOrder.payload);          // NOW the order is actually created
     if(!res || !res.success){
       if(res && res.error==='unauthorized'){ currentUser=null; authToken=''; try{sessionStorage.removeItem('fruicey_user');sessionStorage.removeItem('fruicey_token');}catch(e){} showToast('Your session expired — please log in again.'); openLogin(); }
       else showToast('Could not place your order. Please try again.');
       _placingOrder = false;
+      _restoreBtns();
       return;
     }
     const orderId = res.orderId;
@@ -5172,6 +5184,7 @@ async function sendWhatsApp(method){
     if(cob){ cob.textContent='Place Order'; cob.disabled=false; }
     const coov = document.getElementById('creating-order-overlay');
     if(coov) coov.classList.remove('show');
+    _restoreBtns();
   }
   _placingOrder = false;
 }

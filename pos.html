@@ -1666,6 +1666,7 @@ function updateClock(){
 setInterval(updateClock,1000);
 
 // ── MEMBER ───────────────────────────────────────────────────────────
+var _foundMember = null;
 async function lookupMember(){
   const phone=memberPhoneVal.trim()||document.getElementById('member-phone').value.trim();
   if(!phone){showToast('Enter phone number');return;}
@@ -1674,9 +1675,13 @@ async function lookupMember(){
   try{
     const res=await apiGet({action:'getStampCard',phone:np(phone)});
     if(res.error==='not_found'){showToast('Rewards member not found');clearMemberDisplay();}
-    else if(res.member){ selectFoundMember(res.member); }
-  }catch(e){showToast('Connection error');}
+    else if(res.member){ _foundMember = res.member; }
+    else { _foundMember = null; }
+  }catch(e){showToast('Connection error'); _foundMember=null;}
   btn.textContent='Search';btn.disabled=false;
+  // Display OUTSIDE the network try/catch: a rendering error here must not be reported as a
+  // "connection error" (the member was found fine).
+  if(_foundMember){ selectFoundMember(_foundMember); _foundMember=null; }
 }
 
 // Shared: load a found member into the sale (used by phone lookup AND name search)
@@ -1697,6 +1702,7 @@ async function lookupMemberByName(){
   const q=(document.getElementById('member-name-input').value||'').trim().toLowerCase();
   if(!q){ showToast('Enter a name'); return; }
   const btn=document.getElementById('name-search-btn'); const old=btn.textContent; btn.textContent='...'; btn.disabled=true;
+  let _single=null;
   try{
     const res=await apiGet({action:'getAllStampCards'});
     if(res && res.error){ showToast('Member search failed: '+res.error); const box0=document.getElementById('member-name-results'); if(box0){box0.style.display='none';} btn.textContent=old; btn.disabled=false; return; }
@@ -1707,7 +1713,7 @@ async function lookupMemberByName(){
     });
     const box=document.getElementById('member-name-results');
     if(matches.length===0){ if(box){box.style.display='none';box.innerHTML='';} showToast('No member found'); }
-    else if(matches.length===1){ selectFoundMember(matches[0]); }
+    else if(matches.length===1){ _single = matches[0]; }
     else {
       box.style.display='block';
       box.innerHTML=matches.slice(0,25).map(function(m){
@@ -1725,6 +1731,8 @@ async function lookupMemberByName(){
     }
   }catch(e){ showToast(e && e.name==='AbortError' ? 'Server timed out — please try again.' : 'Connection error. Please try again.'); }
   btn.textContent=old; btn.disabled=false;
+  // Display a single match OUTSIDE the try/catch — a render error must not read as a network error.
+  if(_single){ selectFoundMember(_single); }
 }
 
 function computeTier(member,txns){
@@ -1740,12 +1748,14 @@ function computeTier(member,txns){
 function showMemberDisplay(m){
   const stamps = parseInt(m.stamps)||0;
   const completed = parseInt(m.cardsCompleted)||0;
+  const first = (m.first||'');
+  const last  = (m.last||'');
   const el = document.getElementById('member-result');
   el.style.display = 'block';
   el.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
-    +'<div style="width:36px;height:36px;border-radius:50%;background:#8fcea122;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#8fcea1;flex-shrink:0">'+(m.first[0]||'').toUpperCase()+(m.last[0]||'').toUpperCase()+'</div>'
-    +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+m.first+' '+m.last+'</div>'
-    +'<div style="font-size:11px;color:#888">'+m.phone+'</div>'
+    +'<div style="width:36px;height:36px;border-radius:50%;background:#8fcea122;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#8fcea1;flex-shrink:0">'+(first[0]||'').toUpperCase()+(last[0]||'').toUpperCase()+'</div>'
+    +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+first+' '+last+'</div>'
+    +'<div style="font-size:11px;color:#888">'+(m.phone||'')+'</div>'
     +'<div style="font-size:11px;color:#8fcea1;margin-top:2px">'+stamps+'/9 stamps'+(completed>0?' · '+completed+' completed':'')+'</div>'
     +(stamps>=9?'<div style="font-size:11px;color:#e67e22;font-weight:700">Card complete!</div>':'')
     +'</div></div>';

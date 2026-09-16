@@ -2617,6 +2617,21 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<!-- Order placed → notify Wilson on WhatsApp (button opens WhatsApp on a fresh tap, no blank tab) -->
+<div class="modal-bg" id="order-placed-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Order placed!</div>
+    <div class="ack-note" style="margin-bottom:16px">
+      <div id="order-placed-sub">Tap below to notify Wilson on WhatsApp to confirm your order.</div>
+    </div>
+    <button class="btn btn-primary" id="order-placed-wa-btn" style="display:flex;align-items:center;justify-content:center;gap:6px">
+      <i class="ti ti-brand-whatsapp"></i> Notify Wilson on WhatsApp
+    </button>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="document.getElementById('order-placed-modal').classList.remove('open'); goTab('orders');">I'll do it later</button>
+  </div>
+</div>
+
 <!-- Pot of Gold pop-out -->
 <div class="pog-modal" id="pog-modal">
   <div class="pog-backdrop" onclick="closePotOfGold()"></div>
@@ -5084,12 +5099,9 @@ async function sendWhatsApp(method){
   if(_placingOrder) return;                                   // guard against double-taps
   if(!pendingOrder){ document.getElementById('paynow-modal').classList.remove('open'); return; }
   _placingOrder = true;
-  // Open a tab synchronously (inside the click) so the browser won't block it after the await.
-  const waTab = window.open('', '_blank');
   try{
     const res = await apiPost(pendingOrder.payload);          // NOW the order is actually created
     if(!res || !res.success){
-      if(waTab) waTab.close();
       if(res && res.error==='unauthorized'){ currentUser=null; authToken=''; try{sessionStorage.removeItem('fruicey_user');sessionStorage.removeItem('fruicey_token');}catch(e){} showToast('Your session expired — please log in again.'); openLogin(); }
       else showToast('Could not place your order. Please try again.');
       _placingOrder = false;
@@ -5141,22 +5153,7 @@ async function sendWhatsApp(method){
         `\n`+
         `Please confirm my order. Thank you!`;
     const msg = encodeURIComponent(msgRaw);
-    // We pre-opened waTab during the tap. Redirecting it to wa.me *after* the await can
-    // land on WhatsApp's web "install" page on mobile. Writing a tiny document into the
-    // tab that navigates itself makes the browser treat it as a fresh in-tab navigation to
-    // wa.me, which reliably hands off to the installed WhatsApp app. THIS page never moves,
-    // so there's no "leave page?" prompt.
     const waUrl = 'https://wa.me/'+WA+'?text='+msg;
-    // Send the pre-opened tab straight to wa.me. wa.me itself immediately hands off to the
-    // installed WhatsApp app (mobile) or WhatsApp Web (desktop), so the customer no longer sees
-    // an "about:blank"/placeholder page in between — just WhatsApp's own brief load. THIS page
-    // never navigates, so there's still no "leave page?" prompt.
-    if(waTab && !waTab.closed){
-      try{ waTab.location.replace(waUrl); }
-      catch(e){ try{ waTab.location.href = waUrl; }catch(e2){ window.open(waUrl, '_blank'); } }
-    } else {
-      window.open(waUrl, '_blank');
-    }
     // Order is placed — clear everything now
     pendingOrder = null;
     cart = []; renderCartItems(); updateCartBadge();
@@ -5164,10 +5161,11 @@ async function sendWhatsApp(method){
     if(useCreditCb){ useCreditCb.checked = false; toggleCreditCheckout(); }
     closeCart();
     document.getElementById('paynow-modal').classList.remove('open');
-    showToast(payByCardFlow ? 'Order sent! Wilson will WhatsApp you the card payment link.' : 'Order sent! Please wait for confirmation.');
-    goTab('orders');
+    // Show a clear confirmation with a WhatsApp button. Opening WhatsApp from the user's tap on
+    // that button (a fresh gesture) means NO pre-opened blank tab and a reliable hand-off on every
+    // device — and the customer clearly sees the order succeeded first.
+    showOrderPlaced(waUrl, payByCardFlow);
   }catch(e){
-    if(waTab) waTab.close();
     showToast(e && e.name==='AbortError' ? 'Server is slow to respond — your order was not sent. Please try again.' : 'Connection error. Please try again.');
     // Restore the button and overlay so the customer can retry — never leave it stuck on "Processing".
     const cob = document.getElementById('checkout-btn');
@@ -5176,6 +5174,24 @@ async function sendWhatsApp(method){
     if(coov) coov.classList.remove('show');
   }
   _placingOrder = false;
+}
+
+// Confirmation shown after an order is placed. The WhatsApp button opens on the user's tap
+// (a fresh gesture) — so there is never a pre-opened blank tab, and the hand-off is reliable.
+function showOrderPlaced(waUrl, isCard){
+  const modal = document.getElementById('order-placed-modal');
+  const sub   = document.getElementById('order-placed-sub');
+  const btn   = document.getElementById('order-placed-wa-btn');
+  if(!modal || !btn){ window.open(waUrl, '_blank'); goTab('orders'); return; }
+  if(sub){ sub.textContent = isCard
+    ? 'Tap below to message Wilson on WhatsApp for your card payment link.'
+    : 'Tap below to send your payment details to Wilson on WhatsApp to confirm your order.'; }
+  btn.onclick = function(){
+    window.open(waUrl, '_blank');
+    modal.classList.remove('open');
+    goTab('orders');
+  };
+  modal.classList.add('open');
 }
 
 // ── ORDERS ────────────────────────────────────────────────────

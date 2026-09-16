@@ -854,6 +854,9 @@ const CAT_ICONS  = {'Shakes & Smoothies':'ti-droplet','Superfood Bowls':'ti-bowl
 
 let cart = [], currentMember = null, memberDiscount = 0, currentCat = 'Shakes & Smoothies', paymentMethod = '';
 const ONLINE_PLATFORMS = ['GrabFood','FoodPanda','Online Shop'];
+// Products that do NOT earn a rewards stamp. Custom Fruit (juCF) is excluded; Custom Bowl (sb00)
+// and Custom Juice (ju00) DO earn stamps like normal menu items.
+const NO_STAMP_IDS = ['juCF'];
 let stockStatus = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg // id -> true/false
 
@@ -1487,7 +1490,8 @@ async function updateAppOrderStatus(orderId, newStatus){
             if(isSelfPickup && o.phone){
               let stampItems = [];
               try{ stampItems = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
-              const stampQty = stampItems.reduce(function(s,i){ return s + (parseInt(i.qty)||1); }, 0);
+              // One stamp per product, EXCEPT Custom Fruit (juCF) which does not earn stamps.
+              const stampQty = stampItems.reduce(function(s,i){ return NO_STAMP_IDS.indexOf(i.id)!==-1 ? s : s + (parseInt(i.qty)||1); }, 0);
               if(stampQty > 0){
                 const r = await apiPost({ action:'addStampsForSale', phone: np(o.phone), qty: stampQty, rcptNo: 'app_'+orderId });
                 if(r && r.success){
@@ -2358,7 +2362,8 @@ async function checkout(){
           rcptNo: sale.rcptNo
         }).catch(()=>{});
 
-        const stampQty = cart.reduce(function(s,i){ return s + (parseInt(i.qty)||1); }, 0);
+        // One stamp per product tendered, EXCEPT Custom Fruit (juCF) which does not earn stamps.
+        const stampQty = cart.reduce(function(s,i){ return NO_STAMP_IDS.indexOf(i.id)!==-1 ? s : s + (parseInt(i.qty)||1); }, 0);
         if(stampQty > 0){
           await apiPost({
             action:'addStampsForSale',

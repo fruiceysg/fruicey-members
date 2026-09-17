@@ -699,13 +699,24 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .tier-panel{width:100%;max-width:420px;margin:6px auto 0;background:#fff;border-radius:20px;padding:14px;box-shadow:0 6px 20px rgba(0,0,0,.08);box-sizing:border-box}
 .tier-ecard{position:relative;width:100%;aspect-ratio:1536/1024;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.16)}
 .tier-ecard-img{width:100%;height:100%;object-fit:cover;display:block}
-.tier-ecard-overlay{position:absolute;left:7%;bottom:22%;text-align:left;max-width:70%}
-.tier-ecard-name{font-family:var(--font);font-size:22px;line-height:1.1;color:#3a3a3a;text-shadow:0 1px 3px rgba(255,255,255,.6)}
-.tier-ecard-tier{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-top:3px;font-family:var(--body)}
-.tier-ecard.t-diamond .tier-ecard-name,.tier-ecard.t-diamond .tier-ecard-tier{color:#2a3a4a;text-shadow:0 1px 3px rgba(255,255,255,.75)}
+.tier-ecard-overlay{position:absolute;left:8%;bottom:12%;text-align:left;max-width:80%;z-index:2}
+.tier-ecard-name{font-family:var(--font);font-size:22px;line-height:1.1;color:#4a3a1a;text-shadow:0 1px 3px rgba(255,255,255,.55)}
+.tier-ecard-tier{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6a5a2a;margin-top:3px;font-family:var(--body)}
+.tier-ecard.t-platinum .tier-ecard-name{color:#3a3a3a}.tier-ecard.t-platinum .tier-ecard-tier{color:#555}
+.tier-ecard.t-diamond .tier-ecard-name{color:#2a3a4a}.tier-ecard.t-diamond .tier-ecard-tier{color:#3a4a5a}
 .tier-member-head{text-align:center}
 /* MONTHLY TRACKER */
 .tier-tracker{width:100%;margin:12px auto 2px;padding:0 2px;box-sizing:border-box}
+.tier-cheer{font-family:var(--font);font-size:16px;color:var(--green);text-align:center;margin-bottom:8px;line-height:1.25}
+.tier-journey{display:flex;justify-content:space-between;margin:12px 2px 0;position:relative}
+.tier-journey::before{content:'';position:absolute;top:6px;left:10%;right:10%;height:2px;background:var(--green-light);z-index:0}
+.tj-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative;z-index:1}
+.tj-dot{width:13px;height:13px;border-radius:50%;background:#e6e6e6;border:2px solid #fff;box-shadow:0 0 0 1px #ddd;transition:all .3s}
+.tj-lbl{font-size:9.5px;letter-spacing:.3px;color:var(--text3);text-transform:uppercase;font-family:var(--body)}
+.tj-step.reached .tj-dot{background:var(--green);box-shadow:0 0 0 1px var(--green)}
+.tj-step.reached .tj-lbl{color:var(--green);font-weight:700}
+.tj-step.current .tj-dot{width:17px;height:17px;background:var(--green);box-shadow:0 0 0 3px var(--green-light),0 0 0 1px var(--green)}
+.tj-step.current .tj-lbl{color:var(--green-dark);font-weight:700}
 .tier-tracker-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2);margin-bottom:6px;font-family:var(--body)}
 .tier-bar{height:8px;border-radius:6px;background:var(--green-light);overflow:hidden}
 .tier-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--green),var(--green-dark));width:0%;transition:width .5s ease}
@@ -2464,11 +2475,18 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         </div>
         <!-- Monthly spend tracker (inside the panel, under the card) -->
         <div id="tier-tracker" class="tier-tracker">
+          <div id="tier-cheer" class="tier-cheer"></div>
+          <div class="tier-bar"><div id="tier-bar-fill" class="tier-bar-fill"></div></div>
           <div class="tier-tracker-row">
             <span id="tier-tracker-spend">This month: $0.00</span>
             <span id="tier-tracker-goal"></span>
           </div>
-          <div class="tier-bar"><div id="tier-bar-fill" class="tier-bar-fill"></div></div>
+          <div class="tier-journey" id="tier-journey">
+            <div class="tj-step" data-t="Member"><span class="tj-dot"></span><span class="tj-lbl">Member</span></div>
+            <div class="tj-step" data-t="Gold"><span class="tj-dot"></span><span class="tj-lbl">Gold</span></div>
+            <div class="tj-step" data-t="Platinum"><span class="tj-dot"></span><span class="tj-lbl">Platinum</span></div>
+            <div class="tj-step" data-t="Diamond"><span class="tj-dot"></span><span class="tj-lbl">Diamond</span></div>
+          </div>
           <div id="tier-tracker-note" class="tier-tracker-note"></div>
         </div>
       </div>
@@ -5934,17 +5952,39 @@ async function loadMemberTier(fullName){
     // Monthly tracker (shown for everyone, inside the panel).
     if(tracker) tracker.style.display='block';
     if(tSpend) tSpend.textContent = 'This month: $'+spend.toFixed(2);
+    const cheerEl = document.getElementById('tier-cheer');
+    // Light up the tier-journey stepper.
+    const journeyOrder = ['Member','Gold','Platinum','Diamond'];
+    const curIdx = journeyOrder.indexOf(tier);
+    document.querySelectorAll('#tier-journey .tj-step').forEach(function(step){
+      const si = journeyOrder.indexOf(step.getAttribute('data-t'));
+      step.classList.remove('reached','current');
+      if(si < curIdx) step.classList.add('reached');
+      else if(si === curIdx) step.classList.add('current');
+    });
+
     if(res.nextTier){
       const pct = res.nextMin ? Math.min(100, Math.round(spend/res.nextMin*100)) : 0;
       if(tGoal) tGoal.textContent = 'Next: '+res.nextTier+' ($'+res.nextMin+')';
       if(tFill) tFill.style.width = pct+'%';
+      // Encouraging headline that shifts with how close they are.
+      if(cheerEl){
+        let cheer;
+        if(spend<=0)          cheer = 'Your journey starts here — every sip counts!';
+        else if(pct>=80)      cheer = 'So close to '+res.nextTier+'! One more treat and you\'re there.';
+        else if(pct>=50)      cheer = 'You\'re over halfway to '+res.nextTier+' — keep it up!';
+        else if(pct>=20)      cheer = 'Great start this month! '+res.nextTier+' is in your sights.';
+        else                  cheer = 'You\'re on your way to '+res.nextTier+'!';
+        cheerEl.textContent = cheer;
+      }
       if(tNote) tNote.textContent = res.toNext>0
-        ? 'Spend $'+res.toNext.toFixed(2)+' more this month to reach '+res.nextTier+'.'
-        : 'You\'ve reached '+res.nextTier+' — keep going!';
+        ? 'Just $'+res.toNext.toFixed(2)+' more this month to unlock '+res.nextTier+'.'
+        : 'You\'ve unlocked '+res.nextTier+' this month!';
     } else {
       if(tGoal) tGoal.textContent = 'Top tier';
       if(tFill) tFill.style.width = '100%';
-      if(tNote) tNote.textContent = 'You\'re at the top tier this month. Amazing!';
+      if(cheerEl) cheerEl.textContent = 'You\'re a Fruicey Diamond legend this month!';
+      if(tNote) tNote.textContent = 'Top tier unlocked — enjoy your 15% off and birthday treat.';
     }
   }catch(e){ /* silent — tier display is non-critical */ }
 }

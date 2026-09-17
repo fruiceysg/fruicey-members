@@ -694,7 +694,6 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .acc-profile-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 10px 0;background:none;box-shadow:none;color:inherit}
 .acc-profile-card::before,.acc-profile-card::after{display:none}
 .acc-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:34px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 8px 22px rgba(28,77,58,.22)}
-/* TIER E-CARD */
 /* TIER PANEL: white rounded box holding the card + tracker as one unit */
 .tier-panel{width:100%;max-width:420px;margin:6px auto 0;background:#fff;border-radius:20px;padding:14px;box-shadow:0 6px 20px rgba(0,0,0,.08);box-sizing:border-box}
 .tier-ecard{position:relative;width:100%;aspect-ratio:1536/1024;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.16)}
@@ -2464,9 +2463,37 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <div class="acc-wrap">
   <div class="acc-profile-card">
     <div class="acc-profile-top">
-      <div class="acc-avatar" id="acc-avatar">F</div>
-      <div class="acc-profile-name" id="acc-name">My Account</div>
-      <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span>Fruicey Member</span></div>
+      <!-- TIER CARD (Gold/Platinum/Diamond) — hidden until loadMemberTier decides -->
+      <div id="tier-panel" class="tier-panel" style="display:none">
+        <div id="tier-ecard" class="tier-ecard">
+          <img id="tier-ecard-img" class="tier-ecard-img" src="" alt="Membership card">
+          <div class="tier-ecard-overlay">
+            <div id="tier-ecard-name" class="tier-ecard-name"></div>
+            <div id="tier-ecard-tier" class="tier-ecard-tier"></div>
+          </div>
+        </div>
+        <div id="tier-tracker" class="tier-tracker">
+          <div id="tier-cheer" class="tier-cheer"></div>
+          <div class="tier-bar"><div id="tier-bar-fill" class="tier-bar-fill"></div></div>
+          <div class="tier-tracker-row">
+            <span id="tier-tracker-spend">This month: $0.00</span>
+            <span id="tier-tracker-goal"></span>
+          </div>
+          <div class="tier-journey" id="tier-journey">
+            <div class="tj-step" data-t="Member"><span class="tj-dot"></span><span class="tj-lbl">Member</span></div>
+            <div class="tj-step" data-t="Gold"><span class="tj-dot"></span><span class="tj-lbl">Gold</span></div>
+            <div class="tj-step" data-t="Platinum"><span class="tj-dot"></span><span class="tj-lbl">Platinum</span></div>
+            <div class="tj-step" data-t="Diamond"><span class="tj-dot"></span><span class="tj-lbl">Diamond</span></div>
+          </div>
+          <div id="tier-tracker-note" class="tier-tracker-note"></div>
+        </div>
+      </div>
+      <!-- BASE MEMBER fallback: avatar + name (shown when no card tier) -->
+      <div id="tier-member-head">
+        <div class="acc-avatar" id="acc-avatar">F</div>
+        <div class="acc-profile-name" id="acc-name">My Account</div>
+        <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span>Fruicey Member</span></div>
+      </div>
     </div>
   </div>
 
@@ -5841,6 +5868,8 @@ async function loadAccount(){
   if(nameEl) nameEl.textContent = fullName;
   const avEl = document.getElementById('acc-avatar');
   if(avEl){ avEl.textContent = ((first[0]||'') + (last[0]||'')).toUpperCase() || 'F'; }
+  // Fetch tier and swap avatar↔card (non-blocking; guarded to account tab inside the function).
+  loadMemberTier(fullName);
   document.getElementById('acc-email').textContent=currentUser.email;
   const phEl = document.getElementById('acc-phone2');
   if(phEl) phEl.textContent = currentUser.phone || '';
@@ -5900,37 +5929,33 @@ async function loadMemberTier(fullName){
   const tGoal   = document.getElementById('tier-tracker-goal');
   const tFill   = document.getElementById('tier-bar-fill');
   const tNote   = document.getElementById('tier-tracker-note');
-  // Show the panel immediately with a light loading state so the card area isn't blank while the
-  // (potentially slow) spend calculation runs.
-  if(panel) panel.style.display='block';
-  const cheerEl0 = document.getElementById('tier-cheer');
-  if(cheerEl0) cheerEl0.textContent = 'Loading your membership…';
+  const cheerEl = document.getElementById('tier-cheer');
   try{
     const res = await apiGet({action:'getMemberTier', phone:currentUser.phone});
-    // If the user navigated away while this slow call was in flight, don't render (prevents the
-    // account card appearing over another tab).
+    // If the user navigated away while this slow call was in flight, don't render.
     if(currentScreen !== 'account'){ return; }
     if(!res || !res.success){ return; }
     const tier = res.tier || 'Member';
     const spend = parseFloat(res.monthSpend||0);
 
-    // The panel (card + tracker) always shows; the base-member header only when no card.
-    if(panel) panel.style.display='block';
     if(tier === 'Member'){
-      if(ecard) ecard.style.display='none';       // no card image for base member
-      if(mHead) mHead.style.display='block';       // show name header instead
-    } else {
-      if(mHead) mHead.style.display='none';
-      if(ecard){ ecard.style.display='block'; ecard.className='tier-ecard t-'+tier.toLowerCase(); }
-      if(ecImg) ecImg.src = TIER_CARDS[tier] || '';
-      if(ecName) ecName.textContent = fullName;
-      if(ecTier) ecTier.textContent = tier + ' Member';
+      // Base member: show the avatar head, hide the card panel entirely.
+      if(panel) panel.style.display='none';
+      if(mHead) mHead.style.display='block';
+      return;   // no card/tracker for base member
     }
 
-    // Monthly tracker (shown for everyone, inside the panel).
+    // Gold/Platinum/Diamond: show the card panel, hide the avatar head.
+    if(mHead) mHead.style.display='none';
+    if(panel) panel.style.display='block';
+    if(ecard){ ecard.style.display='block'; ecard.className='tier-ecard t-'+tier.toLowerCase(); }
+    if(ecImg) ecImg.src = TIER_CARDS[tier] || '';
+    if(ecName) ecName.textContent = fullName;
+    if(ecTier) ecTier.textContent = tier + ' Member';
+
+    // Monthly tracker.
     if(tracker) tracker.style.display='block';
     if(tSpend) tSpend.textContent = 'This month: $'+spend.toFixed(2);
-    const cheerEl = document.getElementById('tier-cheer');
     // Light up the tier-journey stepper.
     const journeyOrder = ['Member','Gold','Platinum','Diamond'];
     const curIdx = journeyOrder.indexOf(tier);

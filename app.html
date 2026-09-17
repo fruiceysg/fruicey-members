@@ -694,16 +694,23 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .acc-profile-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 10px 0;background:none;box-shadow:none;color:inherit}
 .acc-profile-card::before,.acc-profile-card::after{display:none}
 .acc-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:34px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 8px 22px rgba(28,77,58,.22)}
-/* TIER CARDS: 3-card row, current lit, others dimmed */
-.tier-cards{display:flex;gap:8px;width:100%;justify-content:center;margin:6px 0 4px}
-.tier-c{flex:1;max-width:33%;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .3s}
-.tier-c img{width:100%;aspect-ratio:1536/1024;object-fit:cover;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.14);filter:grayscale(1) brightness(.82);opacity:.45;transition:all .35s}
-.tier-c-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-family:var(--body);transition:all .3s}
-/* current tier: full colour, larger, lifted */
-.tier-c.current img{filter:none;opacity:1;box-shadow:0 8px 22px rgba(0,0,0,.22);transform:scale(1.06)}
-.tier-c.current .tier-c-lbl{color:var(--green);font-weight:700}
-.tier-hint{font-size:12.5px;color:var(--text3);text-align:center;margin:8px 0 0;font-family:var(--body);line-height:1.4}
+/* TIER CAROUSEL: full-width swipeable cards */
+.tier-carousel{width:100%;max-width:440px;margin:6px auto 0;overflow:hidden;border-radius:16px;touch-action:pan-y}
+.tier-track{display:flex;width:100%;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+.tier-slide{flex:0 0 100%;width:100%;box-sizing:border-box}
+.tier-slide img{width:100%;aspect-ratio:1536/1024;object-fit:cover;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:block}
+.tier-dots{display:flex;justify-content:center;gap:7px;margin:12px 0 2px}
+.tier-dot{width:8px;height:8px;border-radius:50%;background:#d5d5d5;cursor:pointer;transition:all .25s}
+.tier-dot.active{background:var(--green);width:22px;border-radius:5px}
+.tier-hint{font-size:12.5px;color:var(--text3);text-align:center;margin:6px 0 0;font-family:var(--body);line-height:1.4}
 .tier-member-head{text-align:center}
+/* TIER PERKS */
+.tier-perks{width:100%;max-width:440px;margin:14px auto 0;background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 14px rgba(0,0,0,.06);box-sizing:border-box}
+.tier-perks-title{font-family:var(--font);font-size:17px;color:var(--green);margin-bottom:10px}
+.tier-perks-list{list-style:none;margin:0;padding:0}
+.tier-perks-list li{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--text);line-height:1.5;margin-bottom:8px;font-family:var(--body)}
+.tier-perks-list li i{color:var(--green);font-size:16px;flex-shrink:0;margin-top:1px}
+.tier-perks-tc{font-size:11px;color:var(--text3);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0;font-family:var(--body)}
 .acc-profile-top{display:flex;flex-direction:column;align-items:center;gap:10px}
 .acc-profile-name{font-size:24px;font-weight:700;letter-spacing:-.4px;color:var(--text);margin-top:12px}
 .acc-profile-sub{font-size:13px;color:var(--text3);margin-top:2px;display:inline-flex;align-items:center;gap:5px}
@@ -2447,17 +2454,30 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <div class="acc-wrap">
   <div class="acc-profile-card">
     <div class="acc-profile-top">
-      <!-- 3-card tier row: current tier lit, others dimmed -->
-      <div id="tier-cards" class="tier-cards">
-        <div class="tier-c" data-t="Gold"><img src="fruicey_gold_card.jpg" alt="Gold" loading="lazy"><span class="tier-c-lbl">Gold</span></div>
-        <div class="tier-c" data-t="Platinum"><img src="fruicey_platinum_card.jpg" alt="Platinum" loading="lazy"><span class="tier-c-lbl">Platinum</span></div>
-        <div class="tier-c" data-t="Diamond"><img src="fruicey_diamond_card.jpg" alt="Diamond" loading="lazy"><span class="tier-c-lbl">Diamond</span></div>
+      <!-- Full-width swipeable tier carousel -->
+      <div id="tier-carousel" class="tier-carousel">
+        <div id="tier-track" class="tier-track">
+          <div class="tier-slide" data-t="Gold"><img src="fruicey_gold_card.jpg" alt="Gold card" loading="lazy"></div>
+          <div class="tier-slide" data-t="Platinum"><img src="fruicey_platinum_card.jpg" alt="Platinum card" loading="lazy"></div>
+          <div class="tier-slide" data-t="Diamond"><img src="fruicey_diamond_card.jpg" alt="Diamond card" loading="lazy"></div>
+        </div>
       </div>
-      <div id="tier-hint" class="tier-hint"></div>
-      <!-- Member identity line -->
+      <div id="tier-dots" class="tier-dots">
+        <span class="tier-dot" data-i="0"></span>
+        <span class="tier-dot" data-i="1"></span>
+        <span class="tier-dot" data-i="2"></span>
+      </div>
+      <!-- Member identity + status -->
       <div id="tier-member-head">
         <div class="acc-profile-name" id="acc-name">My Account</div>
         <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span id="tier-status-label">Fruicey Member</span></div>
+      </div>
+      <div id="tier-hint" class="tier-hint"></div>
+      <!-- Perks of the currently-shown tier -->
+      <div id="tier-perks" class="tier-perks">
+        <div class="tier-perks-title" id="tier-perks-title">Gold perks</div>
+        <ul class="tier-perks-list" id="tier-perks-list"></ul>
+        <div class="tier-perks-tc">Membership tiers &amp; rewards are excluded for corporate or bulk orders. Tiers are earned by monthly spend and reset each calendar month.</div>
       </div>
     </div>
   </div>
@@ -5881,6 +5901,58 @@ const TIER_CARDS = {
   Diamond:  'fruicey_diamond_card.jpg'
 };
 
+// Perks shown for each tier card as the member swipes.
+const TIER_PERKS = {
+  Gold:     ['5% off all regular-priced products', 'A free menu product of your choice in your birthday month', 'Earn stamps toward the prize wheel'],
+  Platinum: ['10% off all regular-priced products', 'A free menu product of your choice in your birthday month', 'Earn stamps toward the prize wheel'],
+  Diamond:  ['15% off all regular-priced products', 'A free menu product of your choice in your birthday month', 'Earn stamps toward the prize wheel']
+};
+const TIER_ORDER = ['Gold','Platinum','Diamond'];   // carousel order (matches slides)
+let _tierIndex = 0;
+
+function renderTierPerks(idx){
+  const tier = TIER_ORDER[idx] || 'Gold';
+  const titleEl = document.getElementById('tier-perks-title');
+  const listEl  = document.getElementById('tier-perks-list');
+  if(titleEl) titleEl.textContent = tier + ' perks';
+  if(listEl){
+    listEl.innerHTML = (TIER_PERKS[tier]||[]).map(function(p){
+      return '<li><i class="ti ti-check"></i><span>'+p+'</span></li>';
+    }).join('');
+  }
+}
+
+function goTierSlide(idx){
+  idx = Math.max(0, Math.min(TIER_ORDER.length-1, idx));
+  _tierIndex = idx;
+  const track = document.getElementById('tier-track');
+  if(track) track.style.transform = 'translateX(-'+(idx*100)+'%)';
+  document.querySelectorAll('#tier-dots .tier-dot').forEach(function(d,i){
+    d.classList.toggle('active', i===idx);
+  });
+  renderTierPerks(idx);
+}
+
+// Wire dots + swipe once.
+(function initTierCarousel(){
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('#tier-dots .tier-dot').forEach(function(d){
+      d.addEventListener('click', function(){ goTierSlide(parseInt(this.getAttribute('data-i'))||0); });
+    });
+    const car = document.getElementById('tier-carousel');
+    if(car){
+      let sx=0, dragging=false;
+      car.addEventListener('touchstart', function(e){ sx=e.touches[0].clientX; dragging=true; }, {passive:true});
+      car.addEventListener('touchend', function(e){
+        if(!dragging) return; dragging=false;
+        const dx = e.changedTouches[0].clientX - sx;
+        if(dx < -40) goTierSlide(_tierIndex+1);
+        else if(dx > 40) goTierSlide(_tierIndex-1);
+      }, {passive:true});
+    }
+  });
+})();
+
 async function loadMemberTier(fullName){
   if(!currentUser) return;
   const hint  = document.getElementById('tier-hint');
@@ -5891,18 +5963,15 @@ async function loadMemberTier(fullName){
     if(!res || !res.success){ return; }
     const tier = res.tier || 'Member';
 
-    // Light up the current tier card; dim the rest. (Base 'Member' → all dimmed.)
-    document.querySelectorAll('#tier-cards .tier-c').forEach(function(c){
-      c.classList.toggle('current', c.getAttribute('data-t') === tier);
-    });
+    // Open the carousel on the member's current tier (base Member → start at Gold as the goal).
+    const startIdx = TIER_ORDER.indexOf(tier);
+    goTierSlide(startIdx >= 0 ? startIdx : 0);
 
-    // Status label under the name.
     if(label) label.textContent = (tier==='Member') ? 'Fruicey Member' : 'Fruicey '+tier+' Member';
 
-    // One small encouraging hint line.
     if(hint){
       if(res.nextTier && res.toNext>0){
-        hint.textContent = 'Spend $'+res.toNext.toFixed(2)+' more this month to light up '+res.nextTier+'.';
+        hint.textContent = 'Spend $'+res.toNext.toFixed(2)+' more this month to reach '+res.nextTier+'.';
       } else if(res.nextTier){
         hint.textContent = 'You\'ve unlocked '+res.nextTier+' this month!';
       } else {

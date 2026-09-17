@@ -6008,7 +6008,7 @@ async function loadMemberTier(fullName){
     // above current = locked (hidden behind the lock SVG — a surprise). Base 'Member' = all locked.
     const memIdx = TIER_ORDER.indexOf(tier);   // -1 for base Member
     document.querySelectorAll('#tier-track .tier-slide').forEach(function(slide, i){
-      slide.classList.remove('passed','locked','current-tier');
+      slide.classList.remove('passed','locked');
       if(memIdx < 0){ slide.classList.add('locked'); }        // base member: all locked
       else if(i < memIdx){ slide.classList.add('passed'); }   // earned before → greyscale
       else if(i === memIdx){ /* current → full colour, no class */ }

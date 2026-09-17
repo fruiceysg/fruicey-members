@@ -3178,6 +3178,7 @@ currentScreen = tab;
   if(tab==='orders')  loadOrders();
   if(tab==='rewards') loadRewards();
   if(tab==='account') loadAccount();
+  else { var _tp=document.getElementById('tier-panel'); if(_tp) _tp.style.display='none'; }
   // Poll stock only while the Menu is open so browsing stays current; stop it elsewhere.
   if(tab==='menu') startStockPoll(); else stopStockPoll();
   var _pf=document.getElementById('pog-open-btn'); if(_pf) _pf.style.display = (tab==='rewards') ? 'flex' : 'none';
@@ -5994,7 +5995,11 @@ async function loadMemberTier(fullName){
       if(cheerEl) cheerEl.textContent = 'You\'re a Fruicey Diamond legend this month!';
       if(tNote) tNote.textContent = 'Top tier unlocked — enjoy your 15% off and birthday treat.';
     }
-  }catch(e){ /* silent — tier display is non-critical */ }
+  }catch(e){
+    // Tier fetch failed (often the backend being slow). Don't leave it stuck on "Loading…".
+    const cheerErr = document.getElementById('tier-cheer');
+    if(cheerErr) cheerErr.textContent = 'Membership details will refresh shortly.';
+  }
 }
 
 async function loadUserCredit(){

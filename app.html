@@ -5907,7 +5907,7 @@ async function loadMemberTier(fullName){
   const tNote   = document.getElementById('tier-tracker-note');
   try{
     const res = await apiGet({action:'getMemberTier', phone:currentUser.phone});
-    if(!res || !res.success) return;
+    if(!res || !res.success){ console.log('getMemberTier not available or failed:', res); return; }
     const tier = res.tier || 'Member';
     const spend = parseFloat(res.monthSpend||0);
 

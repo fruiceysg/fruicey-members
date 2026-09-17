@@ -5908,6 +5908,18 @@ async function loadMemberTier(fullName){
   try{
     const res = await apiGet({action:'getMemberTier', phone:currentUser.phone});
     if(res && res._debug) console.log('TIER DEBUG:', JSON.stringify(res._debug), 'spend=', res.monthSpend);
+    // TEMP on-screen debug (removed after diagnosis)
+    try{
+      var dbgEl = document.getElementById('tier-debug-box');
+      if(!dbgEl){
+        dbgEl = document.createElement('div');
+        dbgEl.id = 'tier-debug-box';
+        dbgEl.style.cssText = 'max-width:340px;margin:8px auto;padding:8px;font-size:10px;font-family:monospace;background:#fff3cd;border:1px solid #ffe08a;border-radius:8px;white-space:pre-wrap;word-break:break-all;color:#664d03';
+        var tk = document.getElementById('tier-tracker');
+        if(tk && tk.parentNode) tk.parentNode.insertBefore(dbgEl, tk.nextSibling);
+      }
+      dbgEl.textContent = 'DEBUG spend='+ (res&&res.monthSpend) +'\n'+ JSON.stringify((res&&res._debug)||res, null, 1);
+    }catch(e){}
     if(!res || !res.success){ console.log('getMemberTier not available or failed:', res); return; }
     const tier = res.tier || 'Member';
     const spend = parseFloat(res.monthSpend||0);

@@ -5951,15 +5951,11 @@ function renderTierPerks(idx){
   const tier = TIER_ORDER[idx] || 'Gold';
   const titleEl = document.getElementById('tier-perks-title');
   const listEl  = document.getElementById('tier-perks-list');
-  // Is this tier locked for the current member? (index above their current tier)
+  // Perks are ALWAYS shown so members know what each tier offers and what to aim for.
+  // (Only the card image stays a locked surprise until the tier is reached.)
   const slide = document.querySelectorAll('#tier-track .tier-slide')[idx];
   const locked = slide && slide.classList.contains('locked');
-  if(locked){
-    if(titleEl) titleEl.textContent = tier + ' — locked';
-    if(listEl) listEl.innerHTML = '<li><i class="ti ti-lock"></i><span>Reach '+tier+' to reveal this card and its perks. It\'s a surprise!</span></li>';
-    return;
-  }
-  if(titleEl) titleEl.textContent = tier + ' perks';
+  if(titleEl) titleEl.textContent = locked ? (tier + ' perks — locked') : (tier + ' perks');
   if(listEl){
     listEl.innerHTML = (TIER_PERKS[tier]||[]).map(function(p){
       return '<li><i class="ti ti-check"></i><span>'+p+'</span></li>';

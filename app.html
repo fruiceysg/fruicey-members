@@ -2584,7 +2584,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
     <div class="ack-note">
       <div class="ack-note-title">What happens next?</div>
-      Wilson will review your order shortly. Once he <b>acknowledges</b> it, your order status changes to <b>Preparing</b> — that's when he starts making it. We'll keep you posted via WhatsApp.
+      Wilson will review your order shortly. Once he <b>acknowledges</b> it, your order status changes to <b>Preparing</b> — that's when he starts making it.
     </div>
     <button class="btn btn-primary" id="ive-paid-btn" onclick="sendWhatsApp('paynow')">
       <i class="ti ti-brand-whatsapp"></i> I've paid - Notify Wilson via WhatsApp
@@ -5077,6 +5077,19 @@ function savePaynowQR(){
     if(typeof toast==='function') toast('Could not save — long-press the QR to save instead');
   }
 }
+function saveCreditQR(){
+  try{
+    var img = document.getElementById('credit-qr-img');
+    var a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'fruicey-paynow-qr.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }catch(e){
+    if(typeof toast==='function') toast('Could not save — long-press the QR to save instead');
+  }
+}
 
 // Switch the payment modal between the chooser ('') and a method panel.
 function selectPayMethod(method){
@@ -6271,17 +6284,27 @@ document.addEventListener('DOMContentLoaded', function(){
       <button class="btn btn-primary" id="credit-submit-btn" onclick="submitCreditDeposit()">Continue to PayNow</button>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="closeAddCredit()">Cancel</button>
     </div>
-    <!-- Step 2: PayNow QR + WhatsApp -->
+    <!-- Step 2: PayNow QR + WhatsApp (matches cart checkout PayNow design) -->
     <div id="credit-step-paynow" style="display:none">
       <div class="modal-title">Pay via PayNow</div>
       <div class="paynow-box">
-        <img src="data:image/png;base64,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" alt="PayNow QR" style="max-width:160px">
-        <div style="font-size:24px;font-weight:700;color:var(--green);margin-top:8px" id="credit-paynow-amount">$0.00</div>
+        <div class="qr-frame"><img id="credit-qr-img" src="data:image/png;base64,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" alt="PayNow QR"></div>
+        <button class="btn btn-secondary" id="credit-qr-save-btn" onclick="saveCreditQR()" style="margin:10px auto 0;max-width:220px;display:flex;align-items:center;justify-content:center;gap:6px">
+          <i class="ti ti-download"></i> Save QR image
+        </button>
+        <div class="paynow-uen">UEN 53434968D</div>
       </div>
-      <div style="font-size:12px;color:var(--text3);margin:12px 0;text-align:center">
-        After PayNow, tap below to send your payment screenshot via WhatsApp for verification.
+      <div class="paynow-summary">
+        <div class="paynow-sum-row paynow-sum-total"><span class="paynow-sum-label">Top-up amount</span><span class="paynow-sum-val" id="credit-paynow-amount">$0.00</span></div>
       </div>
-      <button class="btn btn-primary" onclick="sendCreditWhatsApp()" style="background:linear-gradient(135deg,#25D366,#128C7E)">
+      <div class="paynow-note" style="margin-top:10px;text-align:left">
+        <ol style="margin:0;padding-left:20px;line-height:1.8">
+          <li>Open your banking app and <b>scan the QR</b> to pay.</li>
+          <li><b>Screenshot</b> your payment confirmation.</li>
+          <li>Tap <b>I've paid</b> below, then <b>send the screenshot</b> to Wilson on WhatsApp.</li>
+        </ol>
+      </div>
+      <button class="btn btn-primary" onclick="sendCreditWhatsApp()">
         <i class="ti ti-brand-whatsapp"></i> I've paid — Send screenshot via WhatsApp
       </button>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="closeAddCredit()">Cancel — I haven't paid</button>

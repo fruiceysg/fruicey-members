@@ -694,6 +694,20 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .acc-profile-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:22px 16px 6px;background:none;box-shadow:none;color:inherit}
 .acc-profile-card::before,.acc-profile-card::after{display:none}
 .acc-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:34px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 8px 22px rgba(28,77,58,.22)}
+/* TIER E-CARD */
+.tier-ecard{position:relative;width:100%;max-width:340px;aspect-ratio:1536/1024;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+.tier-ecard-img{width:100%;height:100%;object-fit:cover;display:block}
+.tier-ecard-overlay{position:absolute;left:0;bottom:0;padding:14px 16px;text-align:left}
+.tier-ecard-name{font-family:var(--font);font-size:20px;line-height:1.1;color:#3a3a3a;text-shadow:0 1px 2px rgba(255,255,255,.5)}
+.tier-ecard-tier{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-top:3px;font-family:var(--body)}
+.tier-ecard.t-diamond .tier-ecard-name,.tier-ecard.t-diamond .tier-ecard-tier{color:#2a3a4a;text-shadow:0 1px 2px rgba(255,255,255,.7)}
+.tier-member-head{text-align:center}
+/* MONTHLY TRACKER */
+.tier-tracker{width:100%;max-width:340px;margin:14px auto 0}
+.tier-tracker-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2);margin-bottom:6px;font-family:var(--body)}
+.tier-bar{height:8px;border-radius:6px;background:var(--green-light);overflow:hidden}
+.tier-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--green),var(--green-dark));width:0%;transition:width .5s ease}
+.tier-tracker-note{font-size:12px;color:var(--text3);text-align:center;margin-top:8px;font-family:var(--body)}
 .acc-profile-top{display:flex;flex-direction:column;align-items:center;gap:10px}
 .acc-profile-name{font-size:24px;font-weight:700;letter-spacing:-.4px;color:var(--text);margin-top:12px}
 .acc-profile-sub{font-size:13px;color:var(--text3);margin-top:2px;display:inline-flex;align-items:center;gap:5px}
@@ -2437,9 +2451,28 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <div class="acc-wrap">
   <div class="acc-profile-card">
     <div class="acc-profile-top">
-      <div class="acc-avatar" id="acc-avatar">F</div>
-      <div class="acc-profile-name" id="acc-name">My Account</div>
-      <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span>Fruicey Member</span></div>
+      <!-- Tier e-card (Gold/Platinum/Diamond). Base Member sees a plain header + tracker instead. -->
+      <div id="tier-ecard" class="tier-ecard" style="display:none">
+        <img id="tier-ecard-img" class="tier-ecard-img" src="" alt="Membership card">
+        <div class="tier-ecard-overlay">
+          <div id="tier-ecard-name" class="tier-ecard-name"></div>
+          <div id="tier-ecard-tier" class="tier-ecard-tier"></div>
+        </div>
+      </div>
+      <!-- Base Member (no card yet) -->
+      <div id="tier-member-head" class="tier-member-head" style="display:none">
+        <div class="acc-profile-name" id="acc-name">My Account</div>
+        <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span>Fruicey Member</span></div>
+      </div>
+      <!-- Monthly spend tracker -->
+      <div id="tier-tracker" class="tier-tracker" style="display:none">
+        <div class="tier-tracker-row">
+          <span id="tier-tracker-spend">This month: $0.00</span>
+          <span id="tier-tracker-goal"></span>
+        </div>
+        <div class="tier-bar"><div id="tier-bar-fill" class="tier-bar-fill"></div></div>
+        <div id="tier-tracker-note" class="tier-tracker-note"></div>
+      </div>
     </div>
   </div>
 
@@ -5812,8 +5845,8 @@ async function loadAccount(){
   const fullName = (first + ' ' + last).trim() || 'My Account';
   const nameEl = document.getElementById('acc-name');
   if(nameEl) nameEl.textContent = fullName;
-  const avEl = document.getElementById('acc-avatar');
-  if(avEl){ avEl.textContent = ((first[0]||'') + (last[0]||'')).toUpperCase() || 'F'; }
+  // Tier e-card / tracker are populated by loadMemberTier() (live monthly spend).
+  loadMemberTier(fullName);
   document.getElementById('acc-email').textContent=currentUser.email;
   const phEl = document.getElementById('acc-phone2');
   if(phEl) phEl.textContent = currentUser.phone || '';
@@ -5852,6 +5885,65 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // ── CREDIT ACCOUNT SYSTEM ─────────────────────────────────────
 let userCreditBalance = 0;
+
+// Card image files (upload these to the repo alongside feature1.jpg etc.)
+const TIER_CARDS = {
+  Gold:     'fruicey_gold_card.jpg',
+  Platinum: 'fruicey_platinum_card.jpg',
+  Diamond:  'fruicey_diamond_card.jpg'
+};
+
+async function loadMemberTier(fullName){
+  if(!currentUser) return;
+  const ecard   = document.getElementById('tier-ecard');
+  const ecImg   = document.getElementById('tier-ecard-img');
+  const ecName  = document.getElementById('tier-ecard-name');
+  const ecTier  = document.getElementById('tier-ecard-tier');
+  const mHead   = document.getElementById('tier-member-head');
+  const tracker = document.getElementById('tier-tracker');
+  const tSpend  = document.getElementById('tier-tracker-spend');
+  const tGoal   = document.getElementById('tier-tracker-goal');
+  const tFill   = document.getElementById('tier-bar-fill');
+  const tNote   = document.getElementById('tier-tracker-note');
+  try{
+    const res = await apiGet({action:'getMemberTier', phone:currentUser.phone});
+    if(!res || !res.success) return;
+    const tier = res.tier || 'Member';
+    const spend = parseFloat(res.monthSpend||0);
+
+    if(tier === 'Member'){
+      // Base member: no card — show name header + tracker toward Gold.
+      if(ecard) ecard.style.display='none';
+      if(mHead) mHead.style.display='block';
+    } else {
+      // Gold/Platinum/Diamond: show the e-card with name overlaid bottom-left.
+      if(mHead) mHead.style.display='none';
+      if(ecard){
+        ecard.style.display='block';
+        ecard.className = 'tier-ecard t-'+tier.toLowerCase();
+      }
+      if(ecImg) ecImg.src = TIER_CARDS[tier] || '';
+      if(ecName) ecName.textContent = fullName;
+      if(ecTier) ecTier.textContent = tier + ' Member';
+    }
+
+    // Monthly tracker (shown for everyone).
+    if(tracker) tracker.style.display='block';
+    if(tSpend) tSpend.textContent = 'This month: $'+spend.toFixed(2);
+    if(res.nextTier){
+      const pct = res.nextMin ? Math.min(100, Math.round(spend/res.nextMin*100)) : 0;
+      if(tGoal) tGoal.textContent = 'Next: '+res.nextTier+' ($'+res.nextMin+')';
+      if(tFill) tFill.style.width = pct+'%';
+      if(tNote) tNote.textContent = res.toNext>0
+        ? 'Spend $'+res.toNext.toFixed(2)+' more this month to reach '+res.nextTier+'.'
+        : 'You\'ve reached '+res.nextTier+' — keep going!';
+    } else {
+      if(tGoal) tGoal.textContent = 'Top tier';
+      if(tFill) tFill.style.width = '100%';
+      if(tNote) tNote.textContent = 'You\'re at the top tier this month. Amazing!';
+    }
+  }catch(e){ /* silent — tier display is non-critical */ }
+}
 
 async function loadUserCredit(){
   if(!currentUser) return;

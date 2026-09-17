@@ -5930,8 +5930,16 @@ async function loadMemberTier(fullName){
   const tGoal   = document.getElementById('tier-tracker-goal');
   const tFill   = document.getElementById('tier-bar-fill');
   const tNote   = document.getElementById('tier-tracker-note');
+  // Show the panel immediately with a light loading state so the card area isn't blank while the
+  // (potentially slow) spend calculation runs.
+  if(panel) panel.style.display='block';
+  const cheerEl0 = document.getElementById('tier-cheer');
+  if(cheerEl0) cheerEl0.textContent = 'Loading your membership…';
   try{
     const res = await apiGet({action:'getMemberTier', phone:currentUser.phone});
+    // If the user navigated away while this slow call was in flight, don't render (prevents the
+    // account card appearing over another tab).
+    if(currentScreen !== 'account'){ return; }
     if(!res || !res.success){ return; }
     const tier = res.tier || 'Member';
     const spend = parseFloat(res.monthSpend||0);

@@ -697,16 +697,23 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 /* TIER CAROUSEL: full-width swipeable cards */
 .tier-carousel{width:100%;max-width:440px;margin:6px auto 0;overflow:hidden;border-radius:16px;touch-action:pan-y}
 .tier-track{display:flex;width:100%;transition:transform .45s cubic-bezier(.4,0,.2,1)}
-.tier-slide{flex:0 0 100%;width:100%;box-sizing:border-box}
-.tier-slide img{width:100%;aspect-ratio:1536/1024;object-fit:cover;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:block}
+.tier-slide{flex:0 0 100%;width:100%;box-sizing:border-box;position:relative}
+.tier-slide-img{width:100%;aspect-ratio:1536/1024;object-fit:cover;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:block;transition:filter .35s}
+/* passed tier: greyscale */
+.tier-slide.passed .tier-slide-img{filter:grayscale(1) brightness(.9)}
+/* locked tier: hide the card, show a sleek locked panel (surprise) */
+.tier-lock{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--green-dark));color:rgba(255,255,255,.9);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.tier-slide.locked .tier-slide-img{visibility:hidden}
+.tier-slide.locked .tier-lock{display:flex}
+.tier-lock-lbl{font-family:var(--font);font-size:18px;letter-spacing:1px;color:#fff;opacity:.95}
 .tier-dots{display:flex;justify-content:center;gap:7px;margin:12px 0 2px}
 .tier-dot{width:8px;height:8px;border-radius:50%;background:#d5d5d5;cursor:pointer;transition:all .25s}
 .tier-dot.active{background:var(--green);width:22px;border-radius:5px}
 .tier-hint{font-size:12.5px;color:var(--text3);text-align:center;margin:6px 0 0;font-family:var(--body);line-height:1.4}
 .tier-member-head{text-align:center}
 /* TIER PERKS */
-.tier-perks{width:100%;max-width:440px;margin:14px auto 0;background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 14px rgba(0,0,0,.06);box-sizing:border-box}
-.tier-perks-title{font-family:var(--font);font-size:17px;color:var(--green);margin-bottom:10px}
+.tier-perks{width:100%;max-width:440px;margin:14px auto 0;background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 14px rgba(0,0,0,.06);box-sizing:border-box;text-align:left}
+.tier-perks-title{font-family:var(--font);font-size:17px;color:var(--green);margin-bottom:10px;text-align:left}
 .tier-perks-list{list-style:none;margin:0;padding:0}
 .tier-perks-list li{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--text);line-height:1.5;margin-bottom:8px;font-family:var(--body)}
 .tier-perks-list li i{color:var(--green);font-size:16px;flex-shrink:0;margin-top:1px}
@@ -2457,9 +2464,39 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <!-- Full-width swipeable tier carousel -->
       <div id="tier-carousel" class="tier-carousel">
         <div id="tier-track" class="tier-track">
-          <div class="tier-slide" data-t="Gold"><img src="fruicey_gold_card.jpg" alt="Gold card" loading="lazy"></div>
-          <div class="tier-slide" data-t="Platinum"><img src="fruicey_platinum_card.jpg" alt="Platinum card" loading="lazy"></div>
-          <div class="tier-slide" data-t="Diamond"><img src="fruicey_diamond_card.jpg" alt="Diamond card" loading="lazy"></div>
+          <div class="tier-slide" data-t="Gold">
+            <img class="tier-slide-img" src="fruicey_gold_card.jpg" alt="Gold card" loading="lazy">
+            <div class="tier-lock">
+              <svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="14" y="28" width="36" height="26" rx="6" fill="currentColor" opacity=".92"/>
+                <path d="M22 28v-6a10 10 0 0 1 20 0v6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="32" cy="40" r="4" fill="#fff"/><rect x="30" y="42" width="4" height="7" rx="2" fill="#fff"/>
+              </svg>
+              <div class="tier-lock-lbl">Gold</div>
+            </div>
+          </div>
+          <div class="tier-slide" data-t="Platinum">
+            <img class="tier-slide-img" src="fruicey_platinum_card.jpg" alt="Platinum card" loading="lazy">
+            <div class="tier-lock">
+              <svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="14" y="28" width="36" height="26" rx="6" fill="currentColor" opacity=".92"/>
+                <path d="M22 28v-6a10 10 0 0 1 20 0v6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="32" cy="40" r="4" fill="#fff"/><rect x="30" y="42" width="4" height="7" rx="2" fill="#fff"/>
+              </svg>
+              <div class="tier-lock-lbl">Platinum</div>
+            </div>
+          </div>
+          <div class="tier-slide" data-t="Diamond">
+            <img class="tier-slide-img" src="fruicey_diamond_card.jpg" alt="Diamond card" loading="lazy">
+            <div class="tier-lock">
+              <svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="14" y="28" width="36" height="26" rx="6" fill="currentColor" opacity=".92"/>
+                <path d="M22 28v-6a10 10 0 0 1 20 0v6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="32" cy="40" r="4" fill="#fff"/><rect x="30" y="42" width="4" height="7" rx="2" fill="#fff"/>
+              </svg>
+              <div class="tier-lock-lbl">Diamond</div>
+            </div>
+          </div>
         </div>
       </div>
       <div id="tier-dots" class="tier-dots">
@@ -5914,6 +5951,14 @@ function renderTierPerks(idx){
   const tier = TIER_ORDER[idx] || 'Gold';
   const titleEl = document.getElementById('tier-perks-title');
   const listEl  = document.getElementById('tier-perks-list');
+  // Is this tier locked for the current member? (index above their current tier)
+  const slide = document.querySelectorAll('#tier-track .tier-slide')[idx];
+  const locked = slide && slide.classList.contains('locked');
+  if(locked){
+    if(titleEl) titleEl.textContent = tier + ' — locked';
+    if(listEl) listEl.innerHTML = '<li><i class="ti ti-lock"></i><span>Reach '+tier+' to reveal this card and its perks. It\'s a surprise!</span></li>';
+    return;
+  }
   if(titleEl) titleEl.textContent = tier + ' perks';
   if(listEl){
     listEl.innerHTML = (TIER_PERKS[tier]||[]).map(function(p){
@@ -5963,9 +6008,20 @@ async function loadMemberTier(fullName){
     if(!res || !res.success){ return; }
     const tier = res.tier || 'Member';
 
+    // Set each card's state: below current = passed (greyscale), current = full colour,
+    // above current = locked (hidden behind the lock SVG — a surprise). Base 'Member' = all locked.
+    const memIdx = TIER_ORDER.indexOf(tier);   // -1 for base Member
+    document.querySelectorAll('#tier-track .tier-slide').forEach(function(slide, i){
+      slide.classList.remove('passed','locked','current-tier');
+      if(memIdx < 0){ slide.classList.add('locked'); }        // base member: all locked
+      else if(i < memIdx){ slide.classList.add('passed'); }   // earned before → greyscale
+      else if(i === memIdx){ /* current → full colour, no class */ }
+      else { slide.classList.add('locked'); }                 // not yet reached → locked
+    });
+
     // Open the carousel on the member's current tier (base Member → start at Gold as the goal).
-    const startIdx = TIER_ORDER.indexOf(tier);
-    goTierSlide(startIdx >= 0 ? startIdx : 0);
+    const startIdx = memIdx >= 0 ? memIdx : 0;
+    goTierSlide(startIdx);
 
     if(label) label.textContent = (tier==='Member') ? 'Fruicey Member' : 'Fruicey '+tier+' Member';
 

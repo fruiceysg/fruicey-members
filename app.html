@@ -2489,7 +2489,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <!-- Full-width swipeable tier carousel -->
       <div id="tier-carousel" class="tier-carousel">
         <div id="tier-track" class="tier-track">
-          <div class="tier-slide" data-t="Gold">
+          <div class="tier-slide locked" data-t="Gold">
             <img class="tier-slide-img" src="fruicey_gold_card.jpg" alt="Gold card" loading="lazy">
             <div class="tier-lock">
               <svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -2500,7 +2500,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
               <div class="tier-lock-lbl">Gold</div>
             </div>
           </div>
-          <div class="tier-slide" data-t="Platinum">
+          <div class="tier-slide locked" data-t="Platinum">
             <img class="tier-slide-img" src="fruicey_platinum_card.jpg" alt="Platinum card" loading="lazy">
             <div class="tier-lock">
               <svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -2511,7 +2511,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
               <div class="tier-lock-lbl">Platinum</div>
             </div>
           </div>
-          <div class="tier-slide" data-t="Diamond">
+          <div class="tier-slide locked" data-t="Diamond">
             <img class="tier-slide-img" src="fruicey_diamond_card.jpg" alt="Diamond card" loading="lazy">
             <div class="tier-lock">
               <svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -5973,7 +5973,7 @@ const TIER_PERKS = {
 const TIER_ORDER = ['Gold','Platinum','Diamond'];   // carousel order (matches slides)
 // Minimum monthly spend per tier (matches getMemberTier/THRESH in Code.gs).
 const TIER_MIN   = { Gold:70, Platinum:120, Diamond:150 };
-const TIER_COLOR = { Gold:'#c99700', Platinum:'#8a94a6', Diamond:'#e8ecef' }; // accent bar (Diamond = off-white)
+const TIER_COLOR = { Gold:'#c99700', Platinum:'#8a94a6', Diamond:'#d3d9de' }; // accent bar (Diamond = darker off-white)
 const TIER_INK   = { Gold:'#c99700', Platinum:'#8a94a6', Diamond:'#9198a0' }; // readable text/icon colour
 
 // Render all three tier perk cards in a row (static; shown under My Details).
@@ -5998,22 +5998,32 @@ document.addEventListener('DOMContentLoaded', renderAllTierPerks);
 function renderTierTracker(res){
   const el = document.getElementById('tier-tracker');
   if(!el) return;
-  const MAX   = TIER_MIN.Diamond || 150;
   const spend = Math.max(0, parseFloat((res&&res.monthSpend)||0));
-  const pct   = Math.min(100, MAX ? (spend/MAX)*100 : 0);
-  const dots = TIER_ORDER.map(function(name){
-    const min = TIER_MIN[name];
-    const p   = Math.min(100, (min/MAX)*100);
-    const hit = spend >= min ? ' reached' : '';
+  // Equal-spaced bands: 0 → Gold → Platinum → Diamond (each segment the same width).
+  const stops = [0].concat(TIER_ORDER.map(function(n){ return TIER_MIN[n]; })); // e.g. [0,70,120,150]
+  const seg = 100/(stops.length-1);                                             // 3 tiers → 33.3% each
+  // Star position: locate spend's band and interpolate within it.
+  let starPct = 100;
+  for(let i=0;i<stops.length-1;i++){
+    if(spend < stops[i+1]){
+      const frac = (stops[i+1]-stops[i]) ? (spend-stops[i])/(stops[i+1]-stops[i]) : 0;
+      starPct = (i + Math.max(0,Math.min(1,frac))) * seg;
+      break;
+    }
+  }
+  // Tier dots at equal positions (Gold 33.3%, Platinum 66.6%, Diamond 100%).
+  const dots = TIER_ORDER.map(function(name, idx){
+    const p   = (idx+1)*seg;
+    const hit = spend >= TIER_MIN[name] ? ' reached' : '';
     return '<div class="tt-milestone'+hit+'" style="left:'+p+'%"></div>'
-         + '<div class="tt-mlabel'+hit+'" style="left:'+p+'%"><b>'+name+'</b>$'+min+'</div>';
+         + '<div class="tt-mlabel'+hit+'" style="left:'+p+'%"><b>'+name+'</b>$'+TIER_MIN[name]+'</div>';
   }).join('');
   el.innerHTML =
       '<div class="tt-top"><span class="tt-spent">This month: <b>$'+spend.toFixed(2)+'</b></span></div>'
     + '<div class="tt-track">'
-    +   '<div class="tt-fill" style="width:'+pct+'%"></div>'
+    +   '<div class="tt-fill" style="width:'+starPct+'%"></div>'
     +   dots
-    +   '<i class="ti ti-star-filled tt-star" style="left:'+pct+'%"></i>'
+    +   '<i class="ti ti-star-filled tt-star" style="left:'+starPct+'%"></i>'
     + '</div>';
 }
 let _tierIndex = 0;

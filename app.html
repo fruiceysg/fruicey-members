@@ -3839,7 +3839,9 @@ function stopStockPoll(){
 }
 // Refresh immediately when the customer returns to the app while on the Menu
 document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState === 'visible' && currentScreen === 'menu') fetchStock();
+  if(document.visibilityState !== 'visible') return;
+  if(currentScreen === 'menu') fetchStock();
+  if(currentUser && _notifTimer) notifPoll();   // catch up on order status right after returning
 });
 
 function renderCatPills(){
@@ -5557,7 +5559,7 @@ async function notifPoll(){
   }catch(e){}
   _notifSeeded = true;
 }
-function startNotif(){ if(_notifTimer||!currentUser) return; notifPoll(); _notifTimer=setInterval(notifPoll, 15000); }
+function startNotif(){ if(_notifTimer||!currentUser) return; notifPoll(); _notifTimer=setInterval(function(){ if(document.visibilityState==='visible') notifPoll(); }, 60000); }
 function stopNotif(){ if(_notifTimer){ clearInterval(_notifTimer); _notifTimer=null; } _notifSeeded=false; _notifOrders={}; _notifDeposits={}; }
 
 function renderStampCard(m){
@@ -6499,7 +6501,7 @@ function toggleCreditCheckout(){
 
 // Auto-refresh credit balance every 30 seconds when on Account tab
 setInterval(function(){
-  if(currentUser && document.getElementById('scr-account') && document.getElementById('scr-account').style.display !== 'none'){
+  if(currentUser && document.visibilityState==='visible' && document.getElementById('scr-account') && document.getElementById('scr-account').style.display !== 'none'){
     loadUserCredit();
   }
 }, 30000);

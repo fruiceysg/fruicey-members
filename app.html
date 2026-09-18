@@ -710,6 +710,19 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .tier-dot{width:8px;height:8px;border-radius:50%;background:#d5d5d5;cursor:pointer;transition:all .25s}
 .tier-dot.active{background:var(--green);width:22px;border-radius:5px}
 .tier-hint{font-size:12.5px;color:var(--text3);text-align:center;margin:6px 0 0;font-family:var(--body);line-height:1.4}
+/* ── Spending tracker: progress bar with a star marker ── */
+.tier-tracker{width:100%;max-width:320px;margin:16px auto 2px;padding:0 16px;font-family:var(--body)}
+.tt-top{text-align:center;margin-bottom:6px}
+.tt-spent{font-size:12.5px;color:var(--text2)}
+.tt-spent b{font-size:15px;color:var(--green-dark)}
+.tt-track{position:relative;height:9px;background:#e9e9ec;border-radius:999px;margin:8px 0 30px}
+.tt-fill{position:absolute;top:0;left:0;height:100%;border-radius:999px;background:linear-gradient(90deg,#4a9d78,var(--green-dark));transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.tt-milestone{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #d5d5da;z-index:1;transition:border-color .3s}
+.tt-milestone.reached{border-color:var(--green-dark)}
+.tt-star{position:absolute;top:50%;transform:translate(-50%,-50%);color:#f5b301;font-size:24px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));transition:left .7s cubic-bezier(.2,.8,.2,1);z-index:3;pointer-events:none}
+.tt-mlabel{position:absolute;top:16px;transform:translateX(-50%);text-align:center;font-size:9.5px;color:var(--text3);line-height:1.25;white-space:nowrap}
+.tt-mlabel b{display:block;font-size:10px;color:var(--text2);font-weight:700}
+.tt-mlabel.reached b{color:var(--green-dark)}
 .tier-member-head{text-align:center}
 /* TIER PERKS */
 .tier-perks{width:100%;max-width:440px;margin:14px auto 0;background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 14px rgba(0,0,0,.06);box-sizing:border-box;text-align:left}
@@ -722,12 +735,12 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .perks-section{width:100%;max-width:440px;margin:0 auto}
 .perks-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:stretch}
 .perk-card{background:#fff;border-radius:14px;padding:12px 10px;box-shadow:0 3px 14px rgba(0,0,0,.06);display:flex;flex-direction:column;border-top:3px solid var(--pc,#ddd)}
-.perk-card-name{font-family:var(--font);font-size:14px;font-weight:700;color:var(--pc,#333);line-height:1.1}
+.perk-card-name{font-family:var(--font);font-size:14px;font-weight:700;color:var(--pi,var(--pc,#333));line-height:1.1}
 .perk-card-min{font-size:10.5px;color:var(--text3);margin:3px 0 8px;font-family:var(--body)}
 .perk-card-min b{color:var(--text);font-size:12px}
 .perk-card ul{list-style:none;margin:0;padding:0;flex:1}
 .perk-card li{display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--text);line-height:1.35;margin-bottom:6px;font-family:var(--body)}
-.perk-card li i{color:var(--pc,var(--green));font-size:12px;flex-shrink:0;margin-top:1px}
+.perk-card li i{color:var(--pi,var(--pc,var(--green)));font-size:12px;flex-shrink:0;margin-top:1px}
 .perks-tc{font-size:11px;color:var(--text3);line-height:1.5;margin-top:12px;font-family:var(--body)}
 @media(max-width:360px){.perk-card{padding:10px 7px}.perk-card li{font-size:10px}.perk-card-name{font-size:12.5px}}
 .acc-profile-top{display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -2521,6 +2534,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div class="acc-profile-name" id="acc-name">My Account</div>
         <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span id="tier-status-label">Fruicey Member</span></div>
       </div>
+      <div id="tier-tracker" class="tier-tracker"></div>
       <div id="tier-hint" class="tier-hint"></div>
     </div>
   </div>
@@ -5957,9 +5971,10 @@ const TIER_PERKS = {
   Diamond:  ['15% off all regular-priced products', 'A free menu product of your choice in your birthday month', 'Double stamps in your birthday month', 'Earn stamps toward the prize wheel']
 };
 const TIER_ORDER = ['Gold','Platinum','Diamond'];   // carousel order (matches slides)
-// Minimum monthly spend per tier (must match TIERS[] in Code.gs).
-const TIER_MIN   = { Gold:50, Platinum:100, Diamond:400 };
-const TIER_COLOR = { Gold:'#c99700', Platinum:'#8a94a6', Diamond:'#2fa8bd' };
+// Minimum monthly spend per tier (matches getMemberTier/THRESH in Code.gs).
+const TIER_MIN   = { Gold:70, Platinum:120, Diamond:150 };
+const TIER_COLOR = { Gold:'#c99700', Platinum:'#8a94a6', Diamond:'#e8ecef' }; // accent bar (Diamond = off-white)
+const TIER_INK   = { Gold:'#c99700', Platinum:'#8a94a6', Diamond:'#9198a0' }; // readable text/icon colour
 
 // Render all three tier perk cards in a row (static; shown under My Details).
 function renderAllTierPerks(){
@@ -5969,7 +5984,7 @@ function renderAllTierPerks(){
     const perks = (TIER_PERKS[tier]||[]).map(function(p){
       return '<li><i class="ti ti-check"></i><span>'+p+'</span></li>';
     }).join('');
-    return '<div class="perk-card" style="--pc:'+TIER_COLOR[tier]+'">'
+    return '<div class="perk-card" style="--pc:'+TIER_COLOR[tier]+';--pi:'+TIER_INK[tier]+'">'
       + '<div class="perk-card-name">'+tier+'</div>'
       + '<div class="perk-card-min">Min. <b>$'+TIER_MIN[tier]+'</b>/mth</div>'
       + '<ul>'+perks+'</ul>'
@@ -5977,6 +5992,30 @@ function renderAllTierPerks(){
   }).join('');
 }
 document.addEventListener('DOMContentLoaded', renderAllTierPerks);
+
+// Creative spending tracker: a progress bar from $0 to the top tier, with the
+// member's star marking their current monthly spend and dots for each tier.
+function renderTierTracker(res){
+  const el = document.getElementById('tier-tracker');
+  if(!el) return;
+  const MAX   = TIER_MIN.Diamond || 150;
+  const spend = Math.max(0, parseFloat((res&&res.monthSpend)||0));
+  const pct   = Math.min(100, MAX ? (spend/MAX)*100 : 0);
+  const dots = TIER_ORDER.map(function(name){
+    const min = TIER_MIN[name];
+    const p   = Math.min(100, (min/MAX)*100);
+    const hit = spend >= min ? ' reached' : '';
+    return '<div class="tt-milestone'+hit+'" style="left:'+p+'%"></div>'
+         + '<div class="tt-mlabel'+hit+'" style="left:'+p+'%"><b>'+name+'</b>$'+min+'</div>';
+  }).join('');
+  el.innerHTML =
+      '<div class="tt-top"><span class="tt-spent">This month: <b>$'+spend.toFixed(2)+'</b></span></div>'
+    + '<div class="tt-track">'
+    +   '<div class="tt-fill" style="width:'+pct+'%"></div>'
+    +   dots
+    +   '<i class="ti ti-star-filled tt-star" style="left:'+pct+'%"></i>'
+    + '</div>';
+}
 let _tierIndex = 0;
 
 function renderTierPerks(idx){
@@ -6052,6 +6091,8 @@ async function loadMemberTier(fullName){
     goTierSlide(startIdx);
 
     if(label) label.textContent = (tier==='Member') ? 'Fruicey Member' : 'Fruicey '+tier+' Member';
+
+    renderTierTracker(res);
 
     if(hint){
       if(res.nextTier && res.toNext>0){

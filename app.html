@@ -718,6 +718,18 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .tier-perks-list li{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--text);line-height:1.5;margin-bottom:8px;font-family:var(--body)}
 .tier-perks-list li i{color:var(--green);font-size:16px;flex-shrink:0;margin-top:1px}
 .tier-perks-tc{font-size:11px;color:var(--text3);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0;font-family:var(--body)}
+/* ── Membership perks: 3 tier cards in a row (under My Details) ── */
+.perks-section{width:100%;max-width:440px;margin:0 auto}
+.perks-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:stretch}
+.perk-card{background:#fff;border-radius:14px;padding:12px 10px;box-shadow:0 3px 14px rgba(0,0,0,.06);display:flex;flex-direction:column;border-top:3px solid var(--pc,#ddd)}
+.perk-card-name{font-family:var(--font);font-size:14px;font-weight:700;color:var(--pc,#333);line-height:1.1}
+.perk-card-min{font-size:10.5px;color:var(--text3);margin:3px 0 8px;font-family:var(--body)}
+.perk-card-min b{color:var(--text);font-size:12px}
+.perk-card ul{list-style:none;margin:0;padding:0;flex:1}
+.perk-card li{display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--text);line-height:1.35;margin-bottom:6px;font-family:var(--body)}
+.perk-card li i{color:var(--pc,var(--green));font-size:12px;flex-shrink:0;margin-top:1px}
+.perks-tc{font-size:11px;color:var(--text3);line-height:1.5;margin-top:12px;font-family:var(--body)}
+@media(max-width:360px){.perk-card{padding:10px 7px}.perk-card li{font-size:10px}.perk-card-name{font-size:12.5px}}
 .acc-profile-top{display:flex;flex-direction:column;align-items:center;gap:10px}
 .acc-profile-name{font-size:24px;font-weight:700;letter-spacing:-.4px;color:var(--text);margin-top:12px}
 .acc-profile-sub{font-size:13px;color:var(--text3);margin-top:2px;display:inline-flex;align-items:center;gap:5px}
@@ -2510,12 +2522,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span id="tier-status-label">Fruicey Member</span></div>
       </div>
       <div id="tier-hint" class="tier-hint"></div>
-      <!-- Perks of the currently-shown tier -->
-      <div id="tier-perks" class="tier-perks">
-        <div class="tier-perks-title" id="tier-perks-title">Gold perks</div>
-        <ul class="tier-perks-list" id="tier-perks-list"></ul>
-        <div class="tier-perks-tc">Membership tiers &amp; rewards are excluded for corporate or bulk orders. Tiers are earned by monthly spend and reset each calendar month. The free birthday-month menu product is subject to availability, valid during your birthday month only, and cannot be exchanged for cash or other items.</div>
-      </div>
     </div>
   </div>
 
@@ -2536,6 +2542,12 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="acc-item"><div class="acc-item-ico mail"><i class="ti ti-mail"></i></div><div class="acc-item-label">Email</div><div class="acc-item-val" id="acc-email"></div></div>
     <div class="acc-item"><div class="acc-item-ico phone"><i class="ti ti-phone"></i></div><div class="acc-item-label">Phone</div><div class="acc-item-val" id="acc-phone2"></div></div>
     <div class="acc-item" id="acc-bday-row" style="display:none"><div class="acc-item-ico cake"><i class="ti ti-cake"></i></div><div class="acc-item-label">Birthday</div><div class="acc-item-val" id="acc-bday"></div></div>
+  </div>
+
+  <div class="acc-section-label">Membership Perks</div>
+  <div class="perks-section">
+    <div class="perks-row" id="tier-perks-cards"></div>
+    <div class="perks-tc">Membership tiers &amp; rewards are excluded for corporate or bulk orders. Tiers are earned by monthly spend and reset each calendar month. The free birthday-month menu product is subject to availability, valid during your birthday month only, and cannot be exchanged for cash or other items.</div>
   </div>
   </div>
 </div>
@@ -5945,6 +5957,26 @@ const TIER_PERKS = {
   Diamond:  ['15% off all regular-priced products', 'A free menu product of your choice in your birthday month', 'Double stamps in your birthday month', 'Earn stamps toward the prize wheel']
 };
 const TIER_ORDER = ['Gold','Platinum','Diamond'];   // carousel order (matches slides)
+// Minimum monthly spend per tier (must match TIERS[] in Code.gs).
+const TIER_MIN   = { Gold:50, Platinum:100, Diamond:400 };
+const TIER_COLOR = { Gold:'#c99700', Platinum:'#8a94a6', Diamond:'#2fa8bd' };
+
+// Render all three tier perk cards in a row (static; shown under My Details).
+function renderAllTierPerks(){
+  const wrap = document.getElementById('tier-perks-cards');
+  if(!wrap) return;
+  wrap.innerHTML = TIER_ORDER.map(function(tier){
+    const perks = (TIER_PERKS[tier]||[]).map(function(p){
+      return '<li><i class="ti ti-check"></i><span>'+p+'</span></li>';
+    }).join('');
+    return '<div class="perk-card" style="--pc:'+TIER_COLOR[tier]+'">'
+      + '<div class="perk-card-name">'+tier+'</div>'
+      + '<div class="perk-card-min">Min. <b>$'+TIER_MIN[tier]+'</b>/mth</div>'
+      + '<ul>'+perks+'</ul>'
+      + '</div>';
+  }).join('');
+}
+document.addEventListener('DOMContentLoaded', renderAllTierPerks);
 let _tierIndex = 0;
 
 function renderTierPerks(idx){

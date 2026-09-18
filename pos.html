@@ -72,7 +72,22 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .btn-export{background:#27ae60;color:#fff;border:none;flex:1;min-width:110px;padding:9px;border-radius:var(--r);cursor:pointer;font-size:12px;font-family:var(--font);font-weight:500}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 18px;border-radius:var(--r);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
-@media(max-width:640px){.layout{flex-direction:column-reverse}.cart-panel{width:100%;border-left:none;border-top:1px solid #e8e8e8;max-height:42dvh}.product-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));padding:8px}.top-title{display:none}}
+@media(max-width:640px){
+  .layout{flex-direction:column-reverse}
+  .cart-panel{width:100%;border-left:none;border-top:1px solid #e8e8e8;max-height:42dvh}
+  .product-grid{grid-template-columns:repeat(4,1fr);gap:6px;padding:8px}
+  .product-card img{height:64px!important;padding:2px!important}
+  .pname{font-size:10.5px;margin-bottom:4px}
+  .size-btn{padding:3px 5px;font-size:9px}
+  .top-title{display:none}
+  /* smaller payment-mode + tender controls so the order list keeps room */
+  .cart-footer{padding:6px 8px}
+  .cart-footer .summary-row,.cart-footer .disc-row,.cart-footer .total-row{font-size:11px}
+  .pay-grid{gap:4px}
+  .pay-btn{padding:4px 2px;font-size:10px}
+  .pay-btn i{font-size:12px}
+  .charge-btn{padding:8px;font-size:14px}
+}
 /* Landscape phones (short height, e.g. Samsung S10 rotated): keep side-by-side, but shrink the
    payment/tender controls so the current-order list gets more room and scrolls. Targets short
    screens only — does NOT affect iPad/desktop (their height is well above 500px). */

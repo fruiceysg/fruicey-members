@@ -1742,6 +1742,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Location and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
       <button class="drawer-link" onclick="openCorporate()"><i class="ti ti-briefcase"></i>Corporate Events<span class="drawer-link-arrow ti ti-mail"></span></button>
       <button class="drawer-link" onclick="openShipping()"><i class="ti ti-truck-delivery"></i>Shipping and Delivery<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" id="sound-toggle" type="button" onclick="toggleSound()"><i class="ti ti-volume"></i><span class="snd-label">Sound on</span></button>
     </nav>
     <div class="drawer-foot">
       68 Jalan Jurong Kechil, #01-10<br>
@@ -4869,7 +4870,7 @@ function updateCartBadge(){
   updatePdCartSummary();
 }
 
-function openCart(){ renderCartItems(); loadUserCredit(); document.getElementById('cart-sheet').classList.add('open'); }
+function openCart(){ renderCartItems(); loadUserCredit(); document.getElementById('cart-sheet').classList.add('open'); playProceed(); }
 function closeCart(){ document.getElementById('cart-sheet').classList.remove('open'); }
 function clearCart(){
   if(!cart.length) return;
@@ -5407,6 +5408,7 @@ async function sendWhatsApp(method){
 // Confirmation shown after an order is placed. The WhatsApp button opens on the user's tap
 // (a fresh gesture) — so there is never a pre-opened blank tab, and the hand-off is reliable.
 function showOrderPlaced(waUrl, isCard){
+  playSuccess();
   const modal = document.getElementById('order-placed-modal');
   const sub   = document.getElementById('order-placed-sub');
   const btn   = document.getElementById('order-placed-wa-btn');
@@ -5801,6 +5803,7 @@ function spinMiniWheel(){
   const btn=document.getElementById('mini-spin-btn');
   if(btn){btn.disabled=true;btn.textContent='Spinning...';}
   wheelSpinning=true;
+  playSpinStart();
   const extra=5+Math.random()*3, stop=Math.random()*2*Math.PI;
   const total=extra*2*Math.PI+stop, dur=10000+Math.random()*3000;
   const start=performance.now(), startA=currentAngle;
@@ -5828,14 +5831,22 @@ function spinMiniWheel(){
 // ── Sound effects: synthesized chimes (no audio files; works offline). ──
 // Original tones in a clean, classic style — not copies of any brand's sounds.
 var _sfxCtx = null, _sfxOn = true;
+try{ _sfxOn = (localStorage.getItem('fx_sound') !== 'off'); }catch(e){}
 function _sfxAC(){
   if(_sfxCtx) return _sfxCtx;
   try{ _sfxCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ _sfxCtx = null; }
   return _sfxCtx;
 }
-// iOS/Android start the audio context suspended — resume it on the first user interaction.
+// iOS/Android + desktop autoplay policies start the context suspended — resume on first interaction.
 function _sfxUnlock(){ var c=_sfxAC(); if(c && c.state==='suspended'){ c.resume().catch(function(){}); } }
-['touchend','mousedown','keydown'].forEach(function(ev){ window.addEventListener(ev, _sfxUnlock, {passive:true}); });
+['touchend','mousedown','keydown','click'].forEach(function(ev){ window.addEventListener(ev, _sfxUnlock, {passive:true}); });
+// Resume the context (if needed) THEN schedule — so nothing is lost while it's still suspended.
+function _sfxPlay(schedule){
+  if(!_sfxOn) return;
+  var c=_sfxAC(); if(!c) return;
+  if(c.state === 'suspended'){ c.resume().then(schedule).catch(function(){}); }
+  else { schedule(); }
+}
 function _sfxTone(freq, delay, dur, type, peak){
   var c=_sfxAC(); if(!c) return;
   var o=c.createOscillator(), g=c.createGain();
@@ -5848,17 +5859,40 @@ function _sfxTone(freq, delay, dur, type, peak){
   o.start(t); o.stop(t+dur+0.03);
 }
 // Celebratory flourish when a prize is won
-function playTada(){
-  if(!_sfxOn) return; _sfxUnlock();
-  [523.25, 659.25, 783.99, 1046.50].forEach(function(f,i){ _sfxTone(f, i*0.10, 0.55, 'triangle', 0.20); }); // C5 E5 G5 C6
-  _sfxTone(1567.98, 0.40, 0.60, 'sine', 0.10); // high shimmer
+function playTada(){ _sfxPlay(function(){
+  [523.25, 659.25, 783.99, 1046.50].forEach(function(f,i){ _sfxTone(f, i*0.10, 0.55, 'triangle', 0.22); }); // C5 E5 G5 C6
+  _sfxTone(1567.98, 0.40, 0.60, 'sine', 0.12); // high shimmer
+}); }
+// Soft two-note confirm for a "proceed" action (add to cart, open cart)
+function playProceed(){ _sfxPlay(function(){
+  _sfxTone(587.33, 0,    0.11, 'sine', 0.16); // D5
+  _sfxTone(880.00, 0.06, 0.15, 'sine', 0.14); // A5
+}); }
+// Bright three-note success when an order is placed
+function playSuccess(){ _sfxPlay(function(){
+  _sfxTone(659.25, 0,    0.15, 'sine',     0.18); // E5
+  _sfxTone(987.77, 0.11, 0.22, 'sine',     0.16); // B5
+  _sfxTone(1318.51,0.22, 0.32, 'triangle', 0.12); // E6
+}); }
+// Quick rising tick when the wheel starts spinning
+function playSpinStart(){ _sfxPlay(function(){
+  _sfxTone(392.00, 0,    0.10, 'triangle', 0.15); // G4
+  _sfxTone(523.25, 0.06, 0.12, 'triangle', 0.13); // C5
+}); }
+// Sound on/off (persisted); toggled from the burger menu
+function toggleSound(){
+  _sfxOn = !_sfxOn;
+  try{ localStorage.setItem('fx_sound', _sfxOn ? 'on' : 'off'); }catch(e){}
+  updateSoundToggle();
+  if(_sfxOn){ _sfxUnlock(); playProceed(); }
 }
-// Soft two-note confirm for a "proceed" action
-function playProceed(){
-  if(!_sfxOn) return; _sfxUnlock();
-  _sfxTone(587.33, 0,    0.11, 'sine', 0.14); // D5
-  _sfxTone(880.00, 0.06, 0.15, 'sine', 0.12); // A5
+function updateSoundToggle(){
+  var b=document.getElementById('sound-toggle'); if(!b) return;
+  var lbl=b.querySelector('.snd-label'); if(lbl) lbl.textContent = 'Sound ' + (_sfxOn ? 'on' : 'off');
+  var ic=b.querySelector('i'); if(ic) ic.className = 'ti ' + (_sfxOn ? 'ti-volume' : 'ti-volume-off');
 }
+document.addEventListener('DOMContentLoaded', updateSoundToggle);
+updateSoundToggle();
 
 function sparkleBurst(host){
   if(!host) return;

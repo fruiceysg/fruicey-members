@@ -317,6 +317,23 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 /* STORY SCREEN */
 #scr-story{background:#fff;min-height:calc(100vh - var(--nav))}
 .story-header .story-title{font-family:var(--font);font-size:20px;color:var(--green);text-align:center}
+/* ── Shipping & Delivery page ── */
+#scr-shipping .ship-body{padding:18px 20px 96px;max-width:520px;margin:0 auto}
+.ship-intro{font-family:var(--body);font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:18px}
+.ship-sec{margin-bottom:20px}
+.ship-sec h3{font-family:var(--font);font-size:18px;color:var(--green-dark);margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.ship-sec h3 i{font-size:20px}
+.ship-sec ul{margin:0;padding:0;list-style:none}
+.ship-sec li{position:relative;padding-left:20px;font-family:var(--body);font-size:13.5px;color:var(--text);line-height:1.55;margin-bottom:7px}
+.ship-sec li:before{content:'';position:absolute;left:4px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--green)}
+.ship-sec a{color:var(--green-dark);font-weight:600}
+.ship-note{font-family:var(--body);font-size:12px;color:var(--text3);line-height:1.5;margin-top:8px;padding-top:14px;border-top:1px solid #f0f0f0}
+.ship-fees{margin-top:12px;background:var(--green-light);border-radius:12px;padding:12px 14px}
+.ship-fees-title{font-family:var(--font);font-size:14px;color:var(--green-dark);margin-bottom:6px}
+.ship-fee-row{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--body);font-size:13px;color:var(--text);padding:5px 0;border-top:1px solid rgba(28,77,58,.1)}
+.ship-fee-row:first-of-type{border-top:none}
+.ship-fee-row b{color:var(--green-dark);font-weight:700}
+.ship-fees-foot{font-family:var(--body);font-size:11.5px;color:var(--text3);line-height:1.5;margin-top:8px}
 .story-body{max-width:680px;margin:0 auto;padding:20px 20px 44px}
 .story-block{margin-bottom:34px}
 .story-img{width:100%;height:auto;display:block;border-radius:16px;background:var(--green-light);margin-bottom:14px}
@@ -1652,6 +1669,64 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 </div>
 
 <!-- ═══ DRAWER MENU ═══ -->
+<!-- ═══ SHIPPING & DELIVERY ═══ -->
+<div class="screen" id="scr-shipping">
+  <header class="site-header story-header">
+    <button class="site-menu-btn" onclick="goTab('home')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
+    <span class="story-title">Shipping &amp; Delivery</span>
+  </header>
+  <div class="ship-body">
+    <div class="ship-intro">How we get your Fruicey to you — the same terms shown at checkout.</div>
+
+    <div class="ship-sec">
+      <h3><i class="ti ti-truck-delivery"></i>Delivery</h3>
+      <ul>
+        <li>Free delivery within 3&nbsp;km for orders above $35.</li>
+        <li>Otherwise the delivery fee is based on your order value — see the table below.</li>
+        <li>Fulfilment up to ~1.5&nbsp;hrs, subject to items / quantity ordered.</li>
+        <li>+$20 surcharge for Sentosa.</li>
+        <li>We deliver across Singapore incl. Sentosa, excluding other offshore islands &amp; restricted zones.</li>
+        <li>Unsuccessful deliveries incur a $20 re-delivery fee per trip — please ensure your address is entered correctly.</li>
+      </ul>
+      <div class="ship-fees">
+        <div class="ship-fees-title">Delivery fee by order value</div>
+        <div class="ship-fee-row"><span>Over $80</span><b>Free</b></div>
+        <div class="ship-fee-row"><span>Over $50, up to $80</span><b>$5</b></div>
+        <div class="ship-fee-row"><span>Over $30, up to $50</span><b>$10</b></div>
+        <div class="ship-fee-row"><span>$30 and under</span><b>$15</b></div>
+        <div class="ship-fees-foot">Within 3&nbsp;km: free when you spend over $35. Sentosa: +$20 on top. A $0.50 platform fee applies to every order.</div>
+      </div>
+    </div>
+
+    <div class="ship-sec">
+      <h3><i class="ti ti-clock-hour-4"></i>Delivery timing</h3>
+      <ul>
+        <li>Delivery slots start from 12pm, Monday to Saturday.</li>
+        <li>Earliest delivery is the next day — same-day delivery isn't available.</li>
+        <li>Choose your preferred date &amp; time; we'll confirm availability with you via WhatsApp.</li>
+      </ul>
+    </div>
+
+    <div class="ship-sec">
+      <h3><i class="ti ti-building-store"></i>Self pick-up</h3>
+      <ul>
+        <li>Collect from our store at 68 Jalan Jurong Kechil #01-10, Suites at Bukit Timah (nearest MRT: Beauty World, Exit C).</li>
+        <li>Available Monday to Saturday, 11am–8pm.</li>
+        <li>Please allow around 30&nbsp;minutes for us to prepare your order.</li>
+      </ul>
+    </div>
+
+    <div class="ship-sec">
+      <h3><i class="ti ti-briefcase"></i>Bulk &amp; corporate orders</h3>
+      <ul>
+        <li>For bulk or corporate orders, send a direct enquiry to Wilson at <a href="mailto:wilson@fruicey.sg?subject=Bulk%20%2F%20Corporate%20Order%20Enquiry">wilson@fruicey.sg</a>.</li>
+      </ul>
+    </div>
+
+    <div class="ship-note">These terms mirror the delivery notes shown at checkout and may be updated from time to time.</div>
+  </div>
+</div>
+
 <div class="drawer" id="site-drawer">
   <div class="drawer-backdrop" onclick="closeDrawer()"></div>
   <div class="drawer-panel">
@@ -1666,7 +1741,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <button class="drawer-link" onclick="goVibes()"><i class="ti ti-photo-heart"></i>Fruicey Community Vibes<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Location and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
       <button class="drawer-link" onclick="openCorporate()"><i class="ti ti-briefcase"></i>Corporate Events<span class="drawer-link-arrow ti ti-mail"></span></button>
-      <button class="drawer-link" onclick="drawerSoon('Shipping and Delivery')"><i class="ti ti-truck-delivery"></i>Shipping and Delivery<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="openShipping()"><i class="ti ti-truck-delivery"></i>Shipping and Delivery<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
     </nav>
     <div class="drawer-foot">
       68 Jalan Jurong Kechil, #01-10<br>
@@ -1769,12 +1844,12 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div class="del-tnc">
           <div class="del-tnc-title">Delivery notes</div>
           <ul>
-            <li>Free delivery within 3&nbsp;km for orders above $30.</li>
+            <li>Free delivery within 3&nbsp;km for orders above $35.</li>
             <li>Otherwise delivery from $5, based on order value.</li>
             <li>Fulfilment up to ~1.5&nbsp;hrs, subject to items / quantity ordered.</li>
-            <li>+$15 surcharge for Sentosa.</li>
+            <li>+$20 surcharge for Sentosa.</li>
             <li>We deliver across Singapore incl. Sentosa, excluding other offshore islands &amp; restricted zones.</li>
-            <li>Unsuccessful deliveries incur a $15 re-delivery fee per trip — please ensure your address is entered correctly.</li>
+            <li>Unsuccessful deliveries incur a $20 re-delivery fee per trip — please ensure your address is entered correctly.</li>
           </ul>
         </div>
       </div>
@@ -3587,6 +3662,16 @@ function openSubscriptions(){
   currentScreen = 'subscriptions';
   window.scrollTo(0,0);
 }
+function openShipping(){
+  closeDrawer();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('scr-shipping').classList.add('active');
+  document.body.classList.remove('home-active');
+  document.documentElement.style.background = '';
+  currentScreen = 'shipping';
+  window.scrollTo(0,0);
+}
 // Slide the current screen up and off, then return home
 var _exitingScreen = false;
 function exitScreenUp(screenId){
@@ -4899,8 +4984,8 @@ function renderTimePills(){
   ).join('');
 }
 
-// ── DELIVERY (fee by distance + order value; free within 3km over $30) ──
-const SHOP_POSTAL = '596180', FREE_RADIUS_KM = 3, SENTOSA_SURCHARGE = 15;
+// ── DELIVERY (fee by distance + order value; free within 3km over $35) ──
+const SHOP_POSTAL = '596180', FREE_RADIUS_KM = 3, SENTOSA_SURCHARGE = 20;
 let shopLatLng = null, deliveryFee = 0, deliveryInfo = null, deliveryPostalTimer = null;
 const PLATFORM_FEE = 0.50;   // flat platform fee added to every order
 
@@ -4962,7 +5047,7 @@ async function computeDelivery(){
     }
     const dist = kmBetween(shopLatLng, cust);
     const isSentosa = /SENTOSA/i.test((cust.address||'')+' '+(cust.building||''));
-    let fee = (dist<=FREE_RADIUS_KM && sub>30) ? 0 : tierFee(sub);
+    let fee = (dist<=FREE_RADIUS_KM && sub>35) ? 0 : tierFee(sub);
     if(isSentosa) fee += SENTOSA_SURCHARGE;
     deliveryFee = fee;
     deliveryInfo = {postal, address:(addrEl?addrEl.value:cust.address), distanceKm:dist, isSentosa, fee};
@@ -4971,7 +5056,7 @@ async function computeDelivery(){
       msg = '<span class="del-ok">Free delivery</span> <span class="del-hint">('+dist.toFixed(1)+' km away)</span>';
     } else {
       msg = '<span class="del-ok">Delivery fee: $'+fee.toFixed(2)+'</span> <span class="del-hint">('+dist.toFixed(1)+' km'+(isSentosa?', incl. $'+SENTOSA_SURCHARGE+' Sentosa surcharge':'')+')</span>';
-      if(sub<=30 && dist<=FREE_RADIUS_KM){ msg += '<div class="del-hint" style="margin-top:2px">Spend over $30 to get free delivery (within 3 km).</div>'; }
+      if(sub<=35 && dist<=FREE_RADIUS_KM){ msg += '<div class="del-hint" style="margin-top:2px">Spend over $35 to get free delivery (within 3 km).</div>'; }
     }
     feeEl.innerHTML = msg;
     updateCartTotals();

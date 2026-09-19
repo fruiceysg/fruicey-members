@@ -6476,7 +6476,7 @@ function makeImageZoom(cfg){
 }
 
 // Product-detail card (the size-picker sheet) — the image users actually see
-var pdZoom = makeImageZoom({zoomId:'pd-imgwrap', imgId:'pd-img', enlargeId:'pd-enlarge', btnId:'pd-zoombtn', canZoomClass:'pd-can-zoom', zoomedClass:'pd-zoomed', enlargeSel:'.pd-enlarge'});
+var pdZoom = makeImageZoom({noDesktopHover:true, zoomId:'pd-imgwrap', imgId:'pd-img', enlargeId:'pd-enlarge', btnId:'pd-zoombtn', canZoomClass:'pd-can-zoom', zoomedClass:'pd-zoomed', enlargeSel:'.pd-enlarge'});
 window.__pdResetZoom = pdZoom.reset;
 // Product-info image viewer (kept in sync in case it's used)
 var piZoom = makeImageZoom({noDesktopHover:true, zoomId:'pi-zoom', imgId:'product-info-img', enlargeId:'pi-enlarge', btnId:'pi-zoombtn', canZoomClass:'pi-can-zoom', zoomedClass:'pi-zoomed', enlargeSel:'.pi-enlarge'});
@@ -6735,13 +6735,11 @@ document.addEventListener('DOMContentLoaded', function(){
     <div class="pd-head">
       <div class="pd-head-text"></div>
       <div class="pd-actions">
-        <button id="pd-zoombtn" class="pd-zoombtn" type="button" aria-label="Zoom in"><i class="ti ti-zoom-in"></i></button>
         <button class="pd-close" onclick="closeProductDetail()" aria-label="Close">&times;</button>
       </div>
     </div>
     <div id="pd-imgwrap" class="pd-imgwrap">
       <img id="pd-img" alt="">
-      <div class="pd-hint"><i class="ti ti-zoom-in"></i> Hover to zoom</div>
       <button id="pd-enlarge" class="pd-enlarge" type="button" aria-label="Enlarge image"><i class="ti ti-zoom-in"></i></button>
     </div>
     <div id="pd-name" class="pd-name"></div>

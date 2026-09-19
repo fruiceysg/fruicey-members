@@ -51,7 +51,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 
 /* HEADER */
 .app-header{background:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;min-height:var(--header-h);box-sizing:border-box}
-.app-header img{height:46px}
+.app-header img{height:46px;cursor:pointer}
 .app-header-title{font-family:var(--font);font-size:24px;color:var(--green)}
 .header-right{margin-left:auto;font-size:12px;color:var(--text3);margin-right:44px}
 
@@ -3434,6 +3434,11 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 // ── HOME ──────────────────────────────────────────────────────
+// Tapping the Fruicey logo in a tab header (Menu/Orders/Rewards/Account) returns to the Home tab.
+document.addEventListener('click', function(e){
+  if(e.target.closest('.app-header img')) goTab('home');
+});
+
 function initHomeScreen(){
   // Reuse the logo already embedded in the Menu header (avoids duplicating base64)
   var srcLogo = document.querySelector('#scr-menu .app-header img');

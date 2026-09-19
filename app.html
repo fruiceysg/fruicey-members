@@ -4149,6 +4149,7 @@ function addSizeToCart(pid, size, price, el){
   const exist = cart.find(i=>i.id===pid && i.size===size && (i.note||'')===note && (i.addonSig||'')===addonSig);
   if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size, label, price:finalPrice, qty:1, note, addons, addonSig}); }
   updateCartBadge();
+  playProceed();
   const row = (el && el.closest) ? el.closest('.pd-opt') : el;
   if(row){ row.classList.add('added'); setTimeout(()=>row.classList.remove('added'), 450); }
   refreshPdOptions();
@@ -5824,6 +5825,41 @@ function spinMiniWheel(){
   requestAnimationFrame(animate);
 }
 
+// ── Sound effects: synthesized chimes (no audio files; works offline). ──
+// Original tones in a clean, classic style — not copies of any brand's sounds.
+var _sfxCtx = null, _sfxOn = true;
+function _sfxAC(){
+  if(_sfxCtx) return _sfxCtx;
+  try{ _sfxCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ _sfxCtx = null; }
+  return _sfxCtx;
+}
+// iOS/Android start the audio context suspended — resume it on the first user interaction.
+function _sfxUnlock(){ var c=_sfxAC(); if(c && c.state==='suspended'){ c.resume().catch(function(){}); } }
+['touchend','mousedown','keydown'].forEach(function(ev){ window.addEventListener(ev, _sfxUnlock, {passive:true}); });
+function _sfxTone(freq, delay, dur, type, peak){
+  var c=_sfxAC(); if(!c) return;
+  var o=c.createOscillator(), g=c.createGain();
+  o.type=type||'sine'; o.frequency.value=freq;
+  o.connect(g); g.connect(c.destination);
+  var t=c.currentTime+delay;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak||0.18, t+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.start(t); o.stop(t+dur+0.03);
+}
+// Celebratory flourish when a prize is won
+function playTada(){
+  if(!_sfxOn) return; _sfxUnlock();
+  [523.25, 659.25, 783.99, 1046.50].forEach(function(f,i){ _sfxTone(f, i*0.10, 0.55, 'triangle', 0.20); }); // C5 E5 G5 C6
+  _sfxTone(1567.98, 0.40, 0.60, 'sine', 0.10); // high shimmer
+}
+// Soft two-note confirm for a "proceed" action
+function playProceed(){
+  if(!_sfxOn) return; _sfxUnlock();
+  _sfxTone(587.33, 0,    0.11, 'sine', 0.14); // D5
+  _sfxTone(880.00, 0.06, 0.15, 'sine', 0.12); // A5
+}
+
 function sparkleBurst(host){
   if(!host) return;
   try{ if(getComputedStyle(host).position==='static') host.style.position='relative'; }catch(e){}
@@ -5845,6 +5881,7 @@ function sparkleBurst(host){
 
 function showMiniResult(seg){
   sparkleBurst(document.getElementById('rewards-wheel'));
+  playTada();
   const el=document.getElementById('mini-wheel-result');
   el.style.display='block'; el.style.background=seg.color;
   document.getElementById('mini-result-name').textContent=seg.name;

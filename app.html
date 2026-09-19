@@ -3693,7 +3693,7 @@ function exitScreenUp(screenId){
 // Pull-up-to-exit: on Story/Subscriptions, once at the bottom of the page,
 // keep swiping up past the end and the page slides away to Home.
 (function(){
-  var PULL_SCREENS = { story:'scr-story', subscriptions:'scr-subscriptions' };
+  var PULL_SCREENS = { story:'scr-story', subscriptions:'scr-subscriptions', shipping:'scr-shipping' };
   var startY = 0, atBottomOnStart = false, overpull = 0;
   function atPageBottom(){
     return (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 2);

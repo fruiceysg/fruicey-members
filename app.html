@@ -1702,7 +1702,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <h3><i class="ti ti-clock-hour-4"></i>Delivery timing</h3>
       <ul>
         <li>Delivery slots start from 12pm, Monday to Saturday.</li>
-        <li>Earliest delivery is the next day — same-day delivery isn't available.</li>
         <li>Choose your preferred date &amp; time; we'll confirm availability with you via WhatsApp.</li>
         <li>For Sunday delivery, please contact Wilson.</li>
       </ul>
@@ -1711,10 +1710,9 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="ship-sec">
       <h3><i class="ti ti-building-store"></i>Self pick-up</h3>
       <ul>
-        <li>Collect from our store at 68 Jalan Jurong Kechil #01-10, Suites at Bukit Timah (nearest MRT: Beauty World, Exit C).</li>
+        <li>Collect from our store at 68 Jalan Jurong Kechil #01-10, Suites at Bukit Timah (nearest MRT: Beauty World, Exit C; buses 41, 61, 66, 77, 157, 173, 174, 970, 985).</li>
         <li>Available Monday to Saturday, 11am–8pm.</li>
         <li>Please allow around 30&nbsp;minutes for us to prepare your order.</li>
-        <li>By bus: 41, 61, 66, 77, 157, 173, 174, 970, 985.</li>
       </ul>
     </div>
 
@@ -6418,7 +6416,7 @@ function makeImageZoom(cfg){
     zoomBtn = document.getElementById(cfg.btnId);
     if(!zoomEl || !imgEl) return;
 
-    if(canHover){
+    if(canHover && !cfg.noDesktopHover){
       // Desktop: move the mouse over the image to magnify that spot
       zoomEl.classList.add(cfg.canZoomClass);
       zoomEl.addEventListener('mousemove', function(e){
@@ -6481,7 +6479,7 @@ function makeImageZoom(cfg){
 var pdZoom = makeImageZoom({zoomId:'pd-imgwrap', imgId:'pd-img', enlargeId:'pd-enlarge', btnId:'pd-zoombtn', canZoomClass:'pd-can-zoom', zoomedClass:'pd-zoomed', enlargeSel:'.pd-enlarge'});
 window.__pdResetZoom = pdZoom.reset;
 // Product-info image viewer (kept in sync in case it's used)
-var piZoom = makeImageZoom({zoomId:'pi-zoom', imgId:'product-info-img', enlargeId:'pi-enlarge', btnId:'pi-zoombtn', canZoomClass:'pi-can-zoom', zoomedClass:'pi-zoomed', enlargeSel:'.pi-enlarge'});
+var piZoom = makeImageZoom({noDesktopHover:true, zoomId:'pi-zoom', imgId:'product-info-img', enlargeId:'pi-enlarge', btnId:'pi-zoombtn', canZoomClass:'pi-can-zoom', zoomedClass:'pi-zoomed', enlargeSel:'.pi-enlarge'});
 window.__piResetZoom = piZoom.reset;
 (function(){
   function initAll(){ pdZoom.init(); piZoom.init(); }
@@ -6719,13 +6717,11 @@ document.addEventListener('DOMContentLoaded', function(){
     <div class="pi-topbar">
       <div id="product-info-title" class="pi-title"></div>
       <div class="pi-actions">
-        <button id="pi-zoombtn" class="pi-zoombtn" type="button" aria-label="Zoom in"><i class="ti ti-zoom-in"></i></button>
         <button onclick="closeProductInfoModal()" class="pi-close" aria-label="Close">&times;</button>
       </div>
     </div>
     <div id="pi-zoom" class="pi-zoom">
       <img id="product-info-img" src="" alt="Product Info">
-      <div class="pi-hint"><i class="ti ti-zoom-in"></i> Hover to zoom</div>
       <button id="pi-enlarge" class="pi-enlarge" type="button" aria-label="Enlarge image"><i class="ti ti-zoom-in"></i></button>
     </div>
   </div>

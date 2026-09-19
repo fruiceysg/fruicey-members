@@ -4871,7 +4871,7 @@ function updateCartBadge(){
   updatePdCartSummary();
 }
 
-function openCart(){ renderCartItems(); loadUserCredit(); document.getElementById('cart-sheet').classList.add('open'); playProceed(); }
+function openCart(){ renderCartItems(); loadUserCredit(); document.getElementById('cart-sheet').classList.add('open'); playCashier(); }
 function closeCart(){ document.getElementById('cart-sheet').classList.remove('open'); }
 function clearCart(){
   if(!cart.length) return;
@@ -5894,22 +5894,27 @@ function _sfxSweep(f1, f2, delay, dur, type, peak){
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
   o.start(t); o.stop(t+dur+0.03);
 }
-// Soft bubble "bloop" when a product is selected
+// Two-bubble "bloop" (rising, ends higher) when a product is selected
 function playBubble(){ _sfxPlay(function(){
-  _sfxSweep(280, 620, 0, 0.13, 'sine', 0.20);
+  _sfxSweep(300, 520, 0,    0.10, 'sine', 0.18);
+  _sfxSweep(520, 860, 0.09, 0.13, 'sine', 0.20);
 }); }
 // Crisper bubble pop when a product is added to the cart
 function playBubblePop(){ _sfxPlay(function(){
   _sfxSweep(500, 940, 0, 0.09, 'sine', 0.22);
   _sfxTone(1250, 0.05, 0.06, 'sine', 0.10);
 }); }
-// Short click when switching tabs
-function playClick(){ _sfxPlay(function(){
-  _sfxTone(2200, 0,     0.028, 'square',   0.09);
-  _sfxTone(1100, 0.006, 0.035, 'triangle', 0.07);
+// Light bubble for each choice tapped inside the product options
+function playPick(){ _sfxPlay(function(){
+  _sfxSweep(360, 640, 0, 0.09, 'sine', 0.16);
 }); }
-// Bottom-nav tab taps play a click (works for mouse click + touch)
-document.addEventListener('click', function(e){ if(e.target && e.target.closest && e.target.closest('.nav-tab')) playClick(); }, {passive:true});
+document.addEventListener('click', function(e){ if(e.target && e.target.closest && e.target.closest('.pd-size, .pd-drizzle')) playPick(); }, {passive:true});
+// Cash-register "cha-ching" when opening the order summary / cart
+function playCashier(){ _sfxPlay(function(){
+  _sfxTone(987.77,  0,    0.10, 'triangle', 0.15); // B5
+  _sfxTone(1567.98, 0.09, 0.34, 'triangle', 0.16); // G6 rings out
+  _sfxTone(2093.00, 0.09, 0.34, 'sine',     0.06); // shimmer
+}); }
 // Sound on/off (persisted); toggled from the burger menu
 function toggleSound(){
   _sfxOn = !_sfxOn;

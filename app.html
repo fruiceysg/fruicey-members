@@ -4150,7 +4150,7 @@ function addSizeToCart(pid, size, price, el){
   const exist = cart.find(i=>i.id===pid && i.size===size && (i.note||'')===note && (i.addonSig||'')===addonSig);
   if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size, label, price:finalPrice, qty:1, note, addons, addonSig}); }
   updateCartBadge();
-  playProceed();
+  playBubblePop();
   const row = (el && el.closest) ? el.closest('.pd-opt') : el;
   if(row){ row.classList.add('added'); setTimeout(()=>row.classList.remove('added'), 450); }
   refreshPdOptions();
@@ -4517,6 +4517,7 @@ function addBowlToCart(){
 
 // Open the kiosk-style product detail sheet
 function openProductDetail(pid){
+  playBubble();
   const p = PRODUCT_MAP[pid];
   if(!p) return;
   const isPremium = PREMIUM_CATS.has(currentCat);
@@ -5879,6 +5880,36 @@ function playSpinStart(){ _sfxPlay(function(){
   _sfxTone(392.00, 0,    0.10, 'triangle', 0.15); // G4
   _sfxTone(523.25, 0.06, 0.12, 'triangle', 0.13); // C5
 }); }
+// Frequency-swept tone — gives a "bubble"/pop character
+function _sfxSweep(f1, f2, delay, dur, type, peak){
+  var c=_sfxAC(); if(!c) return;
+  var o=c.createOscillator(), g=c.createGain();
+  o.type=type||'sine';
+  o.connect(g); g.connect(c.destination);
+  var t=c.currentTime+delay;
+  o.frequency.setValueAtTime(f1, t);
+  o.frequency.exponentialRampToValueAtTime(f2, t+dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak||0.18, t+0.010);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.start(t); o.stop(t+dur+0.03);
+}
+// Soft bubble "bloop" when a product is selected
+function playBubble(){ _sfxPlay(function(){
+  _sfxSweep(280, 620, 0, 0.13, 'sine', 0.20);
+}); }
+// Crisper bubble pop when a product is added to the cart
+function playBubblePop(){ _sfxPlay(function(){
+  _sfxSweep(500, 940, 0, 0.09, 'sine', 0.22);
+  _sfxTone(1250, 0.05, 0.06, 'sine', 0.10);
+}); }
+// Short click when switching tabs
+function playClick(){ _sfxPlay(function(){
+  _sfxTone(2200, 0,     0.028, 'square',   0.09);
+  _sfxTone(1100, 0.006, 0.035, 'triangle', 0.07);
+}); }
+// Bottom-nav tab taps play a click (works for mouse click + touch)
+document.addEventListener('click', function(e){ if(e.target && e.target.closest && e.target.closest('.nav-tab')) playClick(); }, {passive:true});
 // Sound on/off (persisted); toggled from the burger menu
 function toggleSound(){
   _sfxOn = !_sfxOn;

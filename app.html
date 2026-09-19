@@ -400,6 +400,10 @@ body:has(#fq-embed.open) .pog-float,
 body:has(.modal-bg.open) #fullscreen-label,
 body:has(.cart-sheet.open) #fullscreen-btn,
 body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
+/* Desktop only: hide the full-screen control at top-right of the tabs */
+@media (min-width:900px){
+  #fullscreen-btn,#fullscreen-label{display:none!important}
+}
 #product-detail-modal .modal-box{transform:translateY(100%);transition:transform .35s cubic-bezier(.22,.68,0,1),opacity .28s ease;padding:0;display:flex;flex-direction:column;overflow:hidden}
 .pd-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 @media (min-width:900px){

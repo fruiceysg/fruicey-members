@@ -460,6 +460,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button onclick="closePwModal()" class="btn-print">Cancel</button>
           <button onclick="confirmPwModal()" class="btn-done" style="background:#8fcea1">Confirm</button>
         </div>
+        <button id="pw-setup-bio" onclick="setupBiometric()" style="display:none;width:100%;margin-top:8px;padding:10px;background:#fff;border:1.5px solid #8fcea1;border-radius:8px;color:#4a9d78;font-weight:600;font-size:13px;cursor:pointer;font-family:var(--font)"><i class="ti ti-fingerprint"></i> Set up fingerprint on this device</button>
       </div>
     </div>
   </div>
@@ -601,16 +602,77 @@ async function doLogin(){
 // ── STAFF AUTH MODAL ─────────────────────────────────────────
 let _pwResolve = null;
 
-function requireStaffAuth(action){
+// ── Biometric (fingerprint) auth via WebAuthn ────────────────────────────────
+// This is a DEVICE gate: a successful fingerprint proves the person can unlock this
+// device, not a server-verified staff identity. The credential id is stored in THIS
+// browser only. The password modal stays as the fallback (and the enrolment path).
+const _BIO_KEY = 'fx_bio_cred';
+function _bioSupported(){ return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create); }
+function _bioEnrolled(){ try{ return !!localStorage.getItem(_BIO_KEY); }catch(e){ return false; } }
+function _bioB64(buf){ var b=new Uint8Array(buf),s=''; for(var i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
+function _bioUnb64(str){ var bin=atob(str),arr=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i); return arr.buffer; }
+
+async function enrollBiometric(){
+  if(!_bioSupported()) return false;
+  try{
+    var name = (loggedInStaff && loggedInStaff.username) || 'pos-staff';
+    var cred = await navigator.credentials.create({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      rp: { name: 'Fruicey POS' },
+      user: { id: new TextEncoder().encode(name), name: name, displayName: name },
+      pubKeyCredParams: [{ type:'public-key', alg:-7 }, { type:'public-key', alg:-257 }],
+      authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required' },
+      timeout: 60000, attestation:'none'
+    }});
+    localStorage.setItem(_BIO_KEY, _bioB64(cred.rawId));
+    return true;
+  }catch(e){ return false; }
+}
+
+async function verifyBiometric(){
+  if(!_bioSupported() || !_bioEnrolled()) return false;
+  try{
+    var assertion = await navigator.credentials.get({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ type:'public-key', id: _bioUnb64(localStorage.getItem(_BIO_KEY)), transports:['internal'] }],
+      userVerification: 'required',
+      timeout: 60000
+    }});
+    return !!assertion;
+  }catch(e){ return false; }
+}
+
+async function requireStaffAuth(action){
+  // Fingerprint first, if enrolled on this device.
+  if(_bioSupported() && _bioEnrolled()){
+    try{ if(await verifyBiometric()) return true; }catch(e){}
+    // cancelled or failed → fall through to the password fallback
+  }
   return new Promise(resolve => {
     _pwResolve = resolve;
     document.getElementById('pw-modal-title').textContent = 'Staff Verification';
     document.getElementById('pw-modal-desc').textContent = 'Enter your password to ' + action + '.';
     document.getElementById('pw-modal-input').value = '';
     document.getElementById('pw-modal-err').style.display = 'none';
+    var setupBtn = document.getElementById('pw-setup-bio');
+    if(setupBtn) setupBtn.style.display = (_bioSupported() && !_bioEnrolled()) ? 'block' : 'none';
     document.getElementById('pw-modal').classList.add('open');
     setTimeout(()=>document.getElementById('pw-modal-input').focus(), 100);
   });
+}
+
+// Enrol this device's fingerprint (create() runs inside this tap for a reliable gesture),
+// then authorise the pending action, since passing the device biometric is the gate.
+async function setupBiometric(){
+  var errEl = document.getElementById('pw-modal-err');
+  var ok = await enrollBiometric();
+  if(!ok){ errEl.textContent = 'Could not set up fingerprint on this device.'; errEl.style.display='block'; return; }
+  showToast('Fingerprint enabled on this device');
+  var resolve = _pwResolve; _pwResolve = null;
+  document.getElementById('pw-modal').classList.remove('open');
+  document.getElementById('pw-modal-input').value='';
+  errEl.style.display='none';
+  if(resolve) resolve(true);
 }
 
 async function confirmPwModal(){

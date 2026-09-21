@@ -2036,7 +2036,7 @@ document.addEventListener('click', function(e){
     if(!prod) return;
     if(stockStatus[pid] === false){ showToast('Item is out of stock'); return; }
     const label = prod.name+(size?' ('+size+')':'');
-    const existing = cart.find(i=>i.id===pid&&i.size===size);
+    const existing = cart.find(i=>i.id===pid&&i.size===size&&(+i.price).toFixed(2)===(+price).toFixed(2));
     if(existing){existing.qty++;}
     else{cart.push({id:pid,name:prod.name,size,label,price,qty:1});}
     // Flash

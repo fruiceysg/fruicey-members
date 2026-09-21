@@ -146,6 +146,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
     </div>
     <div id="login-err" style="display:none;color:#e74c3c;font-size:12px;margin-bottom:10px;font-weight:500"></div>
     <button onclick="doLogin()" style="width:100%;padding:13px;background:#8fcea1;color:#fff;border:none;border-radius:25px;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font)">Log In</button>
+    <button id="bio-login-btn" onclick="bioLogin()" style="display:none;width:100%;margin-top:10px;padding:12px;background:#fff;color:#4a9d78;border:1.5px solid #8fcea1;border-radius:25px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font)"><i class="ti ti-fingerprint"></i> Log in with fingerprint</button>
   </div>
 </div>
 
@@ -156,6 +157,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
     <span class="top-title">Point of Sale</span><span id="_key-debug-indicator" style="display:none"></span>
     <div class="top-right">
       <span id="staff-name" style="font-size:12px;color:#888"></span>
+      <button onclick="openChangePw()" style="padding:5px 11px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:12px;color:#555;font-family:var(--font)">Password</button>
       <button onclick="doLogout()" style="padding:5px 11px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:12px;color:#555;font-family:var(--font)">Log out</button>
       <span id="clock"></span>
       <button class="sales-btn" id="sales-btn"><i class="ti ti-chart-bar"></i> Sales</button>
@@ -465,6 +467,26 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
     </div>
   </div>
 
+  <!-- CHANGE PASSWORD MODAL -->
+  <div class="modal-bg" id="chpw-modal">
+    <div class="modal-box" style="max-width:320px">
+      <div class="modal-hdr"><span class="modal-hdr-title">Change Password</span><button class="modal-close" onclick="closeChangePw()">✕</button></div>
+      <div class="modal-body">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Current password</label>
+        <input type="password" id="chpw-cur" style="width:100%;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px;outline:none;font-family:var(--font);margin-bottom:10px">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">New password</label>
+        <input type="password" id="chpw-new" style="width:100%;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px;outline:none;font-family:var(--font);margin-bottom:10px">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Confirm new password</label>
+        <input type="password" id="chpw-conf" style="width:100%;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px;outline:none;font-family:var(--font);margin-bottom:8px" onkeydown="if(event.key==='Enter')submitChangePw()">
+        <div id="chpw-err" style="display:none;color:#e74c3c;font-size:12px;margin-bottom:8px;font-weight:500"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+          <button onclick="closeChangePw()" class="btn-print">Cancel</button>
+          <button onclick="submitChangePw()" class="btn-done" style="background:#8fcea1">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- CASH TENDER MODAL -->
   <div class="modal-bg" id="cash-modal">
     <div class="modal-box" style="max-width:320px">
@@ -587,6 +609,7 @@ async function doLogin(){
   staffToken = res.token || '';
   sessionStorage.setItem('fruicey_staff', JSON.stringify(loggedInStaff));
   sessionStorage.setItem('fruicey_staff_token', staffToken);
+  try{ localStorage.setItem('fruicey_staff', JSON.stringify(loggedInStaff)); localStorage.setItem('fruicey_staff_token', staffToken); }catch(e){}
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('pos-app').style.display = 'flex';
   document.getElementById('staff-name').textContent = account.name;
@@ -597,6 +620,72 @@ async function doLogin(){
   initPOSListeners();
   loadSalesFromSheets().catch(()=>{});
   startNewOrderPolling();
+  maybeOfferBioEnroll();
+}
+
+// ── Fingerprint login (device gate over a stored staff session) ──────────────
+function _enterPOSFromSession(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('pos-app').style.display = 'flex';
+  document.getElementById('staff-name').textContent = (loggedInStaff && loggedInStaff.name) || '';
+  updateClock(); renderCats(); loadStock(); renderCart(); initPOSListeners();
+  loadSalesFromSheets().catch(()=>{});
+  startNewOrderPolling();
+}
+async function bioLogin(){
+  var saved='', tok='';
+  try{ saved = localStorage.getItem('fruicey_staff')||''; tok = localStorage.getItem('fruicey_staff_token')||''; }catch(e){}
+  if(!saved || !tok){ showToast('No saved login on this device — use your password'); return; }
+  var ok = await verifyBiometric();
+  if(!ok){ showToast('Fingerprint not recognized'); return; }
+  loggedInStaff = JSON.parse(saved);
+  staffToken = tok;
+  try{ sessionStorage.setItem('fruicey_staff', saved); sessionStorage.setItem('fruicey_staff_token', tok); }catch(e){}
+  _enterPOSFromSession();
+}
+function updateBioLoginBtn(){
+  var btn = document.getElementById('bio-login-btn'); if(!btn) return;
+  var hasSession = false;
+  try{ hasSession = !!(localStorage.getItem('fruicey_staff') && localStorage.getItem('fruicey_staff_token')); }catch(e){}
+  btn.style.display = (_bioSupported() && _bioEnrolled() && hasSession) ? 'block' : 'none';
+}
+function maybeOfferBioEnroll(){
+  if(!_bioSupported() || _bioEnrolled()) return;
+  setTimeout(async function(){
+    if(confirm('Enable fingerprint login on this device?')){
+      var ok = await enrollBiometric();
+      showToast(ok ? 'Fingerprint login enabled' : 'Could not set up fingerprint');
+    }
+  }, 500);
+}
+
+// ── Change staff password (from the POS top bar) ─────────────────────────────
+function openChangePw(){
+  document.getElementById('chpw-cur').value='';
+  document.getElementById('chpw-new').value='';
+  document.getElementById('chpw-conf').value='';
+  document.getElementById('chpw-err').style.display='none';
+  document.getElementById('chpw-modal').classList.add('open');
+}
+function closeChangePw(){ document.getElementById('chpw-modal').classList.remove('open'); }
+async function submitChangePw(){
+  var cur=document.getElementById('chpw-cur').value, nw=document.getElementById('chpw-new').value, cf=document.getElementById('chpw-conf').value;
+  var err=document.getElementById('chpw-err');
+  if(!cur || !nw){ err.textContent='Fill in all fields.'; err.style.display='block'; return; }
+  if(nw.length<6){ err.textContent='New password must be at least 6 characters.'; err.style.display='block'; return; }
+  if(nw!==cf){ err.textContent='New passwords do not match.'; err.style.display='block'; return; }
+  var res;
+  try{ res = await apiPost({action:'changeStaffPassword', token:staffToken, current:cur, next:nw}); }
+  catch(e){ err.textContent='Connection error. Please try again.'; err.style.display='block'; return; }
+  if(!res || !res.success){
+    err.textContent = (res&&res.error==='wrong_current') ? 'Current password is incorrect.'
+                    : (res&&res.error==='too_short') ? 'New password too short.'
+                    : (res&&res.error==='unauthorized') ? 'Session expired — please log in again.'
+                    : 'Could not update password.';
+    err.style.display='block'; return;
+  }
+  showToast('Password updated');
+  closeChangePw();
 }
 
 // ── STAFF AUTH MODAL ─────────────────────────────────────────
@@ -713,6 +802,7 @@ function doLogout(){
   loggedInStaff = null; staffToken = '';
   sessionStorage.removeItem('fruicey_staff');
   sessionStorage.removeItem('fruicey_staff_token');
+  try{ localStorage.removeItem('fruicey_staff'); localStorage.removeItem('fruicey_staff_token'); }catch(e){}
   cart = []; currentMember = null; memberDiscount = 0; paymentMethod = '';
   memberPhoneVal = '';
   if(_newOrderPollHandle){ clearInterval(_newOrderPollHandle); _newOrderPollHandle = null; }
@@ -721,6 +811,7 @@ function doLogout(){
   document.getElementById('login-username').value = '';
   document.getElementById('login-password').value = '';
   document.getElementById('login-err').style.display = 'none';
+  updateBioLoginBtn();
 }
 
 
@@ -3005,6 +3096,7 @@ if(checkLogin()){
 } else {
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('pos-app').style.display='none';
+  updateBioLoginBtn();
 }
 }catch(err){console.error('Init error:',err);sessionStorage.removeItem('fruicey_staff');sessionStorage.removeItem('fruicey_staff_token');loggedInStaff=null;staffToken='';document.getElementById('login-screen').style.display='flex';document.getElementById('pos-app').style.display='none';}
 

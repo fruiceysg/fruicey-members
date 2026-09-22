@@ -1550,21 +1550,35 @@ function playOrderBeep(){
     });
   }catch(e){}
 }
+// Repeat the beep every few seconds until the order is acknowledged (banner dismissed).
+let _orderBeepTimer = null;
+function startOrderBeepLoop(){
+  if(_orderBeepTimer) return;
+  playOrderBeep();
+  var n = 0;
+  _orderBeepTimer = setInterval(function(){
+    if(++n > 150){ stopOrderBeepLoop(); return; }   // safety cap (~10 min)
+    playOrderBeep();
+  }, 4000);
+}
+function stopOrderBeepLoop(){
+  if(_orderBeepTimer){ clearInterval(_orderBeepTimer); _orderBeepTimer = null; }
+}
 
 function showNewOrderAlert(count, order){
   // Alert the browser tab even when you're working on another tab
-  playOrderBeep();
   if(document.hidden){ startTitleFlash(count > 1 ? (count+' new orders!') : 'New order!'); }
   // Red dot on the tab
   const dot = document.getElementById('app-orders-dot');
   if(dot) dot.style.display = 'block';
   // Banner pop-up (skip if staff is already on the App Orders tab)
-  if(currentPosTab === 'orders'){ loadAppOrders(); return; }
+  if(currentPosTab === 'orders'){ playOrderBeep(); loadAppOrders(); return; }
   const banner = document.getElementById('new-order-banner');
   const text   = document.getElementById('new-order-banner-text');
   if(text) text.textContent = count > 1 ? (count+' new orders received!') : ('New order from '+(order.name||'a customer')+'!');
   if(banner) banner.style.display = 'block';
   showToast('New app order received!');
+  startOrderBeepLoop();   // keep beeping until acknowledged
 }
 
 function goToNewOrder(){
@@ -1575,6 +1589,8 @@ function goToNewOrder(){
 function dismissNewOrderBanner(){
   const banner = document.getElementById('new-order-banner');
   if(banner) banner.style.display = 'none';
+  stopOrderBeepLoop();
+  stopTitleFlash();
 }
 
 function renderAppOrders(orders){

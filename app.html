@@ -721,7 +721,7 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .tier-slide{flex:0 0 100%;width:100%;box-sizing:border-box;position:relative}
 .tier-slide-img{width:100%;aspect-ratio:1536/1024;object-fit:cover;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.2);display:block;transition:filter .35s}
 /* passed tier: greyscale */
-.tier-slide.passed .tier-slide-img{filter:grayscale(1) brightness(.9)}
+.tier-slide.passed .tier-slide-img{filter:grayscale(1) brightness(.82);opacity:.5}
 /* locked tier: hide the card, show a sleek locked panel (surprise) */
 .tier-lock{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--green-dark));color:rgba(255,255,255,.9);box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .tier-slide.locked .tier-slide-img{visibility:hidden}

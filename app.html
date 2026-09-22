@@ -5635,13 +5635,18 @@ async function notifPoll(){
   if(!currentUser) return;
   try{
     const or = await apiGet({action:'getOrders', phone:np(currentUser.phone)});
+    let _statusChanged = false;
     ((or&&or.orders)||[]).forEach(function(o){
       const prev=_notifOrders[o.id];
       if(_notifSeeded && prev!==undefined && prev!==o.status){
         showRewardPopup('Order Update', 'Your order <b>'+o.id+'</b> is now <b>'+o.status+'</b>.');
+        _statusChanged = true;
       }
       _notifOrders[o.id]=o.status;
     });
+    // Redraw the orders screen live if it's open, so the status badge updates without a reload.
+    var _ordScr = document.getElementById('scr-orders');
+    if(_statusChanged && _ordScr && _ordScr.classList.contains('active') && typeof loadOrders==='function') loadOrders();
   }catch(e){}
   try{
     const cr = await apiGet({action:'getMemberCredit', phone:currentUser.phone});

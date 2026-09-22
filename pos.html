@@ -1521,7 +1521,40 @@ async function pollNewAppOrders(){
   }catch(e){ /* silent — will retry on next interval */ }
 }
 
+// ── Tab alert: flash the browser tab title + beep when a new order arrives ──
+let _titleFlashTimer = null;
+const _origTitle = document.title;
+function startTitleFlash(msg){
+  if(_titleFlashTimer) return;
+  var on = true;
+  _titleFlashTimer = setInterval(function(){ document.title = on ? ('🔴 ' + msg) : _origTitle; on = !on; }, 900);
+}
+function stopTitleFlash(){
+  if(_titleFlashTimer){ clearInterval(_titleFlashTimer); _titleFlashTimer = null; }
+  document.title = _origTitle;
+}
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) stopTitleFlash(); });
+let _beepCtx = null;
+function _beepUnlock(){ try{ _beepCtx = _beepCtx || new (window.AudioContext||window.webkitAudioContext)(); if(_beepCtx.state==='suspended') _beepCtx.resume(); }catch(e){} }
+['click','keydown','touchend'].forEach(function(ev){ window.addEventListener(ev, _beepUnlock, {passive:true}); });
+function playOrderBeep(){
+  try{
+    _beepUnlock(); if(!_beepCtx) return;
+    var t = _beepCtx.currentTime;
+    [[880,0],[1174.66,0.18]].forEach(function(n){
+      var o=_beepCtx.createOscillator(), g=_beepCtx.createGain();
+      o.type='sine'; o.frequency.value=n[0]; o.connect(g); g.connect(_beepCtx.destination);
+      var s=t+n[1];
+      g.gain.setValueAtTime(0.0001,s); g.gain.exponentialRampToValueAtTime(0.25,s+0.02); g.gain.exponentialRampToValueAtTime(0.0001,s+0.5);
+      o.start(s); o.stop(s+0.55);
+    });
+  }catch(e){}
+}
+
 function showNewOrderAlert(count, order){
+  // Alert the browser tab even when you're working on another tab
+  playOrderBeep();
+  if(document.hidden){ startTitleFlash(count > 1 ? (count+' new orders!') : 'New order!'); }
   // Red dot on the tab
   const dot = document.getElementById('app-orders-dot');
   if(dot) dot.style.display = 'block';

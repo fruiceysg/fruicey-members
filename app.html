@@ -303,6 +303,8 @@ body:has(#scr-subscriptions.active) .login-star{display:none}
 
 /* AI CHAT WIDGET (self-contained floating widget, embedded as a transparent iframe) */
 #fq-embed{position:fixed;right:0;bottom:var(--nav);width:104px;height:104px;border:none;background:transparent;z-index:150;transition:width .28s ease,height .28s ease,bottom .28s ease}
+/* AI chat only on the Home tab */
+body:not(.home-active) #fq-embed{display:none!important}
 /* When the cart bar is visible, lift the collapsed chat bubble above it */
 body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 #fq-embed.open{width:min(100vw,392px);height:min(100dvh,648px)}
@@ -370,6 +372,8 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 
 /* MENU */
 .cat-tabs{display:flex;overflow-x:auto;padding:10px 16px;gap:8px;background:#fff;border-bottom:1px solid var(--border);scrollbar-width:none}
+.menu-promo-banner{font-family:var(--font);text-align:center;background:var(--green);color:#fff;padding:9px 16px;font-size:15px;line-height:1.25;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:6px}
+.menu-promo-banner i{font-size:17px}
 .cat-tabs::-webkit-scrollbar{display:none}
 .cat-pill{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:rgba(255,255,255,0.75);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--text2);font-family:var(--body)}
 .cat-pill.active{background:var(--green);border-color:var(--green);color:#fff}
@@ -1585,6 +1589,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   </div>
   </div><!-- /home-topbar -->
 
+  <div class="menu-promo-banner"><i class="ti ti-discount-2"></i>Self-collect in shop &amp; enjoy 10% off!</div>
   <div id="cat-tabs" class="cat-tabs"></div>
   <div id="product-grid" class="product-grid"></div>
 </div>

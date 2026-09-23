@@ -5436,16 +5436,13 @@ async function loadOrders(){
   const el = document.getElementById('orders-list');
   showTabLoader('orders-list');
   try{
-    // Fetch both app orders and POS purchases in parallel
-    const [ordersRes, posRes] = await Promise.all([
-      apiGet({action:'getOrders', phone:np(currentUser.phone)}),
-      apiGet({action:'getMemberPOS', phone:np(currentUser.phone)})
-    ]);
+    // One combined round-trip (app orders + in-store purchases) instead of two.
+    const res = await apiGet({action:'getOrdersScreen', phone:np(currentUser.phone)});
 
-    const orders   = ordersRes.orders||[];
+    const orders   = res.orders||[];
     // In-store purchases exclude app orders that were synced into POSSales on completion
     // (their id is prefixed 'app_'), since those already show under App Orders above.
-    const posSales = (posRes.sales||[]).filter(function(s){ return !String(s.id||'').startsWith('app_'); });
+    const posSales = (res.sales||[]).filter(function(s){ return !String(s.id||'').startsWith('app_'); });
 
     if(!orders.length && !posSales.length){
       el.innerHTML = '<div style="text-align:center;padding:3rem;color:#bbb"><div style="font-family:var(--font);font-size:18px">No purchases yet</div><div style="font-size:13px;margin-top:4px">Your orders and in-store purchases will appear here</div></div>';

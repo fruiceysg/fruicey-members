@@ -1860,6 +1860,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       </div>
       <div id="delivery-fee-row" class="total-row" style="display:none;font-weight:500;font-size:13px"><span>Delivery</span><span id="delivery-fee-val">$0.00</span></div>
       <div class="total-row" style="font-weight:500;font-size:13px"><span>Platform fee</span><span id="platform-fee-val">$0.50</span></div>
+      <div id="member-disc-row" class="total-row" style="display:none;font-weight:500;font-size:13px;color:var(--green)"><span>Member self-collect (10% off)</span><span id="member-disc-val">-$0.00</span></div>
       <div class="total-row"><span>Total</span><span id="cart-total-val">$0.00</span></div>
       <div id="credit-checkout-row" style="display:none;background:#f0faf3;border-radius:10px;padding:12px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2911,103 +2912,103 @@ function closeOrderReceipt(){
 
 const CATALOGUE = {
   'Superfood Bowls': [
-    {id:'sb01',name:'Rainbowl Acai',        cal:319, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb02',name:'Dreamy Acai',          cal:376, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:6.90},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:9.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:7.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:10.40}]},
-    {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:7.90},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.40},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb05',name:'Double Rainbowl Acai', cal:445, sizes:[{l:'Unsweetened Smoothie Pulps',p:10.90},{l:'Tasty Sorbet Swirls',p:11.90}]},
-    {id:'sb06',name:'Galaxy Dream Acai',    cal:610, sizes:[{l:'Unsweetened Smoothie Pulps',p:9.90},{l:'Tasty Sorbet Swirls',p:10.90}]}
+    {id:'sb01',name:'Rainbowl Acai',        cal:319, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:8.70},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:12.00},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:9.30},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:13.10}]},
+    {id:'sb02',name:'Dreamy Acai',          cal:376, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:7.60},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:10.90},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:8.20},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:11.50}]},
+    {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:8.70},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:12.00},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:9.30},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:13.10}]},
+    {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:8.70},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:12.00},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:9.30},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:13.10}]},
+    {id:'sb05',name:'Double Rainbowl Acai', cal:445, sizes:[{l:'Unsweetened Smoothie Pulps',p:12.00},{l:'Tasty Sorbet Swirls',p:13.10}]},
+    {id:'sb06',name:'Galaxy Dream Acai',    cal:610, sizes:[{l:'Unsweetened Smoothie Pulps',p:10.90},{l:'Tasty Sorbet Swirls',p:12.00}]}
   ],
   'Shakes & Smoothies': [
-    {id:'ss01',name:'Coco Chacha',              sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
-    {id:'ss02',name:'Follow That Rainbow',       sizes:[{l:'M',p:5.80},{l:'L',p:6.80}]},
-    {id:'ss03',name:'Cojito',                    sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
-    {id:'ss04',name:'Pina Cocolada',             sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
-    {id:'ss05',name:'Fruicey Sling',             sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
-    {id:'ss06',name:'Kampung Spirit',            sizes:[{l:'M',p:5.40},{l:'L',p:6.40}]},
-    {id:'ss07',name:'Berry Shiok',               sizes:[{l:'S',p:5.80},{l:'M',p:6.80}]},
-    {id:'ss08',name:'Bright Sky',                sizes:[{l:'S',p:5.80},{l:'M',p:6.80}]},
-    {id:'ss09',name:'Lovacado',                  sizes:[{l:'S',p:5.80},{l:'M',p:6.80}]},
-    {id:'ss10',name:'Cup of Gold',               sizes:[{l:'S',p:5.80},{l:'M',p:6.80}]},
-    {id:'ss11',name:'Horizon',                   sizes:[{l:'S',p:5.80},{l:'M',p:6.80}]},
-    {id:'ss12',name:'Adventure',                 sizes:[{l:'S',p:5.80},{l:'M',p:6.80}]},
-    {id:'ss13',name:'Recovery',                  sizes:[{l:'S',p:7.8},{l:'M',p:8.8}]},
-    {id:'ss14',name:'Recharge',                  sizes:[{l:'S',p:7.8},{l:'M',p:8.8}]},
-    {id:'ss15',name:'Refuel',                    sizes:[{l:'S',p:7.4},{l:'M',p:8.4}]},
-    {id:'ss16',name:'Boost',                     sizes:[{l:'S',p:7.4},{l:'M',p:8.4}]},
-    {id:'ss17',name:'Powerhouse',                sizes:[{l:'S',p:7.4},{l:'M',p:8.4}]},
-    {id:'ss18',name:'Mango Yogurt Swirl',        sizes:[{l:'M',p:6.60},{l:'L',p:7.60}]},
-    {id:'ss19',name:'Iced Mango Hibiscus Tea',   sizes:[{l:'M',p:5.60},{l:'L',p:6.60}]},
-    {id:'ss20',name:'Iced Hunny Mango Lemonade', sizes:[{l:'M',p:5.60},{l:'L',p:6.60}]},
-    {id:'ss21',name:'Mango Sago in a Cup',       sizes:[{l:'M',p:5.60},{l:'L',p:6.60}]}
+    {id:'ss01',name:'Coco Chacha',              sizes:[{l:'M',p:6.00},{l:'L',p:7.10}]},
+    {id:'ss02',name:'Follow That Rainbow',       sizes:[{l:'M',p:6.40},{l:'L',p:7.50}]},
+    {id:'ss03',name:'Cojito',                    sizes:[{l:'M',p:6.00},{l:'L',p:7.10}]},
+    {id:'ss04',name:'Pina Cocolada',             sizes:[{l:'M',p:6.00},{l:'L',p:7.10}]},
+    {id:'ss05',name:'Fruicey Sling',             sizes:[{l:'M',p:6.00},{l:'L',p:7.10}]},
+    {id:'ss06',name:'Kampung Spirit',            sizes:[{l:'M',p:6.00},{l:'L',p:7.10}]},
+    {id:'ss07',name:'Berry Shiok',               sizes:[{l:'S',p:6.40},{l:'M',p:7.50}]},
+    {id:'ss08',name:'Bright Sky',                sizes:[{l:'S',p:6.40},{l:'M',p:7.50}]},
+    {id:'ss09',name:'Lovacado',                  sizes:[{l:'S',p:6.40},{l:'M',p:7.50}]},
+    {id:'ss10',name:'Cup of Gold',               sizes:[{l:'S',p:6.40},{l:'M',p:7.50}]},
+    {id:'ss11',name:'Horizon',                   sizes:[{l:'S',p:6.40},{l:'M',p:7.50}]},
+    {id:'ss12',name:'Adventure',                 sizes:[{l:'S',p:6.40},{l:'M',p:7.50}]},
+    {id:'ss13',name:'Recovery',                  sizes:[{l:'S',p:8.60},{l:'M',p:9.70}]},
+    {id:'ss14',name:'Recharge',                  sizes:[{l:'S',p:8.60},{l:'M',p:9.70}]},
+    {id:'ss15',name:'Refuel',                    sizes:[{l:'S',p:8.20},{l:'M',p:9.30}]},
+    {id:'ss16',name:'Boost',                     sizes:[{l:'S',p:8.20},{l:'M',p:9.30}]},
+    {id:'ss17',name:'Powerhouse',                sizes:[{l:'S',p:8.20},{l:'M',p:9.30}]},
+    {id:'ss18',name:'Mango Yogurt Swirl',        sizes:[{l:'M',p:7.30},{l:'L',p:8.40}]},
+    {id:'ss19',name:'Iced Mango Hibiscus Tea',   sizes:[{l:'M',p:6.20},{l:'L',p:7.30}]},
+    {id:'ss20',name:'Iced Hunny Mango Lemonade', sizes:[{l:'M',p:6.20},{l:'L',p:7.30}]},
+    {id:'ss21',name:'Mango Sago in a Cup',       sizes:[{l:'M',p:6.20},{l:'L',p:7.30}]}
   ],
   'Juices': [
-    {id:'ju01',name:'Watermelon Lemonade',     sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju02',name:'Watermelon Pineapple',    sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju03',name:'Watermelon Lychee',       sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju04',name:'Watermelon Strawberry',   sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju05',name:'Watermelon Soursop',      sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju06',name:'Strawberry Soursop',      sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju07',name:'Peanut Butter Banana',    sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]},
-    {id:'ju08',name:'Chocolate Banana',        sizes:[{l:'M',p:5.50},{l:'L',p:6.50}]},
-    {id:'ju09',name:'Chocolate Avocado',       sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]},
-    {id:'ju10',name:'Apple Beetroot Carrot',   sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju11',name:'Apple Celery Cucumber',   sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju12',name:'Apple Pineapple',         sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju13',name:'Pineapple Orange',        sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju14',name:'Orange Passion',          sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju15',name:'Mango Orange',            sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju16',name:'Apple Orange',            sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju17',name:'Watermelon Yakult',       sizes:[{l:'S No Ice',p:6.20},{l:'M',p:5.70},{l:'L',p:6.70}]},
-    {id:'ju18',name:'Apple Yakult',            sizes:[{l:'S No Ice',p:6.20},{l:'M',p:5.70},{l:'L',p:6.70}]},
-    {id:'ju19',name:'Carrot Orange',           sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju20',name:'Carrot Milk',             sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju21',name:'Watermelon Milk',         sizes:[{l:'S No Ice',p:5.50},{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju22',name:'Avocado Shake',           sizes:[{l:'M',p:5.50},{l:'L',p:6.50}]},
-    {id:'ju23',name:'Papaya Shake',            sizes:[{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju24',name:'Mango Shake',             sizes:[{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju25',name:'Banana Shake',            sizes:[{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju26',name:'Strawberry Shake',        sizes:[{l:'M',p:5.00},{l:'L',p:6.00}]},
-    {id:'ju27',name:'Strawberry Banana Shake', sizes:[{l:'M',p:5.50},{l:'L',p:6.50}]},
-    {id:'ju28',name:'Avocado Coconut',         sizes:[{l:'M',p:6.50},{l:'L',p:7.50}]},
-    {id:'ju29',name:'Soursop Coconut',         sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]},
-    {id:'ju30',name:'Strawberry Coconut',      sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]},
-    {id:'ju31',name:'Mango Coconut',           sizes:[{l:'M',p:6.00},{l:'L',p:7.00}]}
+    {id:'ju01',name:'Watermelon Lemonade',     sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju02',name:'Watermelon Pineapple',    sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju03',name:'Watermelon Lychee',       sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju04',name:'Watermelon Strawberry',   sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju05',name:'Watermelon Soursop',      sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju06',name:'Strawberry Soursop',      sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju07',name:'Peanut Butter Banana',    sizes:[{l:'M',p:6.60},{l:'L',p:7.70}]},
+    {id:'ju08',name:'Chocolate Banana',        sizes:[{l:'M',p:6.10},{l:'L',p:7.20}]},
+    {id:'ju09',name:'Chocolate Avocado',       sizes:[{l:'M',p:6.60},{l:'L',p:7.70}]},
+    {id:'ju10',name:'Apple Beetroot Carrot',   sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju11',name:'Apple Celery Cucumber',   sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju12',name:'Apple Pineapple',         sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju13',name:'Pineapple Orange',        sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju14',name:'Orange Passion',          sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju15',name:'Mango Orange',            sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju16',name:'Apple Orange',            sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju17',name:'Watermelon Yakult',       sizes:[{l:'S No Ice',p:6.90},{l:'M',p:6.30},{l:'L',p:7.40}]},
+    {id:'ju18',name:'Apple Yakult',            sizes:[{l:'S No Ice',p:6.90},{l:'M',p:6.30},{l:'L',p:7.40}]},
+    {id:'ju19',name:'Carrot Orange',           sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju20',name:'Carrot Milk',             sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju21',name:'Watermelon Milk',         sizes:[{l:'S No Ice',p:6.10},{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju22',name:'Avocado Shake',           sizes:[{l:'M',p:6.10},{l:'L',p:7.20}]},
+    {id:'ju23',name:'Papaya Shake',            sizes:[{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju24',name:'Mango Shake',             sizes:[{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju25',name:'Banana Shake',            sizes:[{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju26',name:'Strawberry Shake',        sizes:[{l:'M',p:5.50},{l:'L',p:6.60}]},
+    {id:'ju27',name:'Strawberry Banana Shake', sizes:[{l:'M',p:6.10},{l:'L',p:7.20}]},
+    {id:'ju28',name:'Avocado Coconut',         sizes:[{l:'M',p:7.20},{l:'L',p:8.30}]},
+    {id:'ju29',name:'Soursop Coconut',         sizes:[{l:'M',p:6.60},{l:'L',p:7.70}]},
+    {id:'ju30',name:'Strawberry Coconut',      sizes:[{l:'M',p:6.60},{l:'L',p:7.70}]},
+    {id:'ju31',name:'Mango Coconut',           sizes:[{l:'M',p:6.60},{l:'L',p:7.70}]}
   ],
   'Immunity Press': [
-    {id:'ip01',name:'Energy',   sizes:[{l:'Bottled',p:6.40},{l:'Iced S',p:5.40}]},
-    {id:'ip02',name:'Soothe',   sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
-    {id:'ip03',name:'Restore',  sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
-    {id:'ip04',name:'Calm',     sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
-    {id:'ip05',name:'Cleanse',  sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
-    {id:'ip06',name:'Defence',  sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]},
-    {id:'ip07',name:'Repair',   sizes:[{l:'Bottled',p:6.40},{l:'Iced S',p:5.40}]},
-    {id:'ip08',name:'Regulate', sizes:[{l:'Bottled',p:6.80},{l:'Iced S',p:5.80}]}
+    {id:'ip01',name:'Energy',   sizes:[{l:'Bottled',p:7.10},{l:'Iced S',p:6.00}]},
+    {id:'ip02',name:'Soothe',   sizes:[{l:'Bottled',p:7.50},{l:'Iced S',p:6.40}]},
+    {id:'ip03',name:'Restore',  sizes:[{l:'Bottled',p:7.50},{l:'Iced S',p:6.40}]},
+    {id:'ip04',name:'Calm',     sizes:[{l:'Bottled',p:7.50},{l:'Iced S',p:6.40}]},
+    {id:'ip05',name:'Cleanse',  sizes:[{l:'Bottled',p:7.50},{l:'Iced S',p:6.40}]},
+    {id:'ip06',name:'Defence',  sizes:[{l:'Bottled',p:7.50},{l:'Iced S',p:6.40}]},
+    {id:'ip07',name:'Repair',   sizes:[{l:'Bottled',p:7.10},{l:'Iced S',p:6.00}]},
+    {id:'ip08',name:'Regulate', sizes:[{l:'Bottled',p:7.50},{l:'Iced S',p:6.40}]}
   ],
   'Nutritional Press': [
-    {id:'np01',name:'Vita A',        sizes:[{l:'',p:7.20}]},
-    {id:'np02',name:'Vita B9',       sizes:[{l:'',p:7.80}]},
-    {id:'np03',name:'Vita C',        sizes:[{l:'',p:7.20}]},
-    {id:'np04',name:'Dietary Fibre', sizes:[{l:'',p:7.80}]},
-    {id:'np05',name:'Iron Fe',       sizes:[{l:'',p:7.20}]},
-    {id:'np06',name:'Potassium K',   sizes:[{l:'',p:7.20}]},
-    {id:'np07',name:'Calcium Ca',    sizes:[{l:'',p:8.80}]},
-    {id:'np08',name:'Magnesium Mg',  sizes:[{l:'',p:7.80}]}
+    {id:'np01',name:'Vita A',        sizes:[{l:'',p:8.00}]},
+    {id:'np02',name:'Vita B9',       sizes:[{l:'',p:8.60}]},
+    {id:'np03',name:'Vita C',        sizes:[{l:'',p:8.00}]},
+    {id:'np04',name:'Dietary Fibre', sizes:[{l:'',p:8.60}]},
+    {id:'np05',name:'Iron Fe',       sizes:[{l:'',p:8.00}]},
+    {id:'np06',name:'Potassium K',   sizes:[{l:'',p:8.00}]},
+    {id:'np07',name:'Calcium Ca',    sizes:[{l:'',p:9.70}]},
+    {id:'np08',name:'Magnesium Mg',  sizes:[{l:'',p:8.60}]}
   ],
   'Longevity Press': [
-    {id:'lp01', name:'Neuro',  sizes:[{l:'', p:7.80}]},
-    {id:'lp02', name:'Derma',  sizes:[{l:'', p:7.80}]},
-    {id:'lp03', name:'Zen',    sizes:[{l:'', p:7.60}]},
-    {id:'lp04', name:'Oral',   sizes:[{l:'', p:7.80}]},
-    {id:'lp05', name:'Cardio', sizes:[{l:'', p:9.40}]},
-    {id:'lp06', name:'Vision', sizes:[{l:'', p:7.80}]},
+    {id:'lp01', name:'Neuro',  sizes:[{l:'', p:8.60}]},
+    {id:'lp02', name:'Derma',  sizes:[{l:'', p:8.60}]},
+    {id:'lp03', name:'Zen',    sizes:[{l:'', p:8.40}]},
+    {id:'lp04', name:'Oral',   sizes:[{l:'', p:8.60}]},
+    {id:'lp05', name:'Cardio', sizes:[{l:'', p:10.40}]},
+    {id:'lp06', name:'Vision', sizes:[{l:'', p:8.60}]},
   ],
   'Wellness Press': [
-    {id:'wp01', name:'Radiance', sizes:[{l:'', p:6.80}]},
-    {id:'wp02', name:'Verdure',  sizes:[{l:'', p:6.80}]},
-    {id:'wp03', name:'Grace',    sizes:[{l:'', p:6.80}]},
-    {id:'wp04', name:'Serenity', sizes:[{l:'', p:6.80}]},
-    {id:'wp05', name:'Glow',     sizes:[{l:'', p:6.80}]},
+    {id:'wp01', name:'Radiance', sizes:[{l:'', p:7.50}]},
+    {id:'wp02', name:'Verdure',  sizes:[{l:'', p:7.50}]},
+    {id:'wp03', name:'Grace',    sizes:[{l:'', p:7.50}]},
+    {id:'wp04', name:'Serenity', sizes:[{l:'', p:7.50}]},
+    {id:'wp05', name:'Glow',     sizes:[{l:'', p:7.50}]},
   ],
 };
 const IMG = {
@@ -5076,14 +5077,22 @@ function updateCartTotals(){
   const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const isDelivery = collectMode==='delivery';
   const fee = isDelivery ? deliveryFee : 0;
+  // Members who self-collect in shop get 10% off (app only).
+  const disc = (currentUser && !isDelivery) ? +(sub*0.10).toFixed(2) : 0;
   const feeRow = document.getElementById('delivery-fee-row');
   if(feeRow){
     feeRow.style.display = isDelivery ? 'flex' : 'none';
     const fv = document.getElementById('delivery-fee-val');
     if(fv) fv.textContent = isDelivery ? (fee>0 ? '$'+fee.toFixed(2) : 'Free') : '$0.00';
   }
+  const dRow = document.getElementById('member-disc-row');
+  if(dRow){
+    dRow.style.display = disc>0 ? 'flex' : 'none';
+    const dv = document.getElementById('member-disc-val');
+    if(dv) dv.textContent = '-$'+disc.toFixed(2);
+  }
   const tv = document.getElementById('cart-total-val');
-  if(tv) tv.textContent = '$'+(sub+fee+PLATFORM_FEE).toFixed(2);
+  if(tv) tv.textContent = '$'+(sub - disc + fee + PLATFORM_FEE).toFixed(2);
 }
 
 document.addEventListener('click', function(e){
@@ -5179,7 +5188,8 @@ async function checkout(){
   const notes = document.getElementById('order-notes').value.trim();
   const sub   = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const fee   = isDelivery ? deliveryFee : 0;
-  const grand = +(sub + fee + PLATFORM_FEE).toFixed(2);
+  const disc  = (currentUser && !isDelivery) ? +(sub*0.10).toFixed(2) : 0;   // member self-collect 10% off
+  const grand = +(sub - disc + fee + PLATFORM_FEE).toFixed(2);
   // Show the "Creating order" overlay now that all validation has passed.
   const coEarly = document.getElementById('creating-order-overlay');
   if(coEarly) coEarly.classList.add('show');
@@ -5203,6 +5213,7 @@ async function checkout(){
     phone:  currentUser.phone,
     items:  cart.map(i=>({...i})),
     total:  grand.toFixed(2),
+    discount: disc.toFixed(2),
     collectTime: collectDate+' '+collectTime,
     collectType: isDelivery?'Delivery':'Self pick-up',
     deliveryFee: fee.toFixed(2),

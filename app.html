@@ -4837,7 +4837,7 @@ function initProductDetailSwipe(){
 // Event delegation for menu
 document.addEventListener('click', function(e){
   const catPill = e.target.closest('.cat-pill');
-  if(catPill){ playPageFlip(); currentCat=decodeURIComponent(catPill.dataset.cat); renderCatPills(); renderProducts(); return; }
+  if(catPill){ currentCat=decodeURIComponent(catPill.dataset.cat); renderCatPills(); renderProducts(); return; }
 
   const sizeBtn = e.target.closest('.size-btn');
   if(sizeBtn && sizeBtn.dataset.pid){
@@ -4882,7 +4882,7 @@ function updateCartBadge(){
 
 function openCart(){
   renderCartItems(); loadUserCredit();
-  document.getElementById('cart-sheet').classList.add('open'); playCashier();
+  document.getElementById('cart-sheet').classList.add('open');
   // Pull the member's current tier so the tier discount is accurate at checkout.
   if(currentUser){
     apiGet({action:'getMemberTier', phone:np(currentUser.phone)})
@@ -6811,11 +6811,9 @@ document.addEventListener('DOMContentLoaded', function(){
     if(Math.abs(diff) < 60) return;
     var idx = CATS.indexOf(currentCat);
     if(diff > 0 && idx < CATS.length - 1){
-      playPageFlip();
       currentCat = CATS[idx + 1];
       renderCatPills(); renderProducts();
     } else if(diff < 0 && idx > 0){
-      playPageFlip();
       currentCat = CATS[idx - 1];
       renderCatPills(); renderProducts();
     }

@@ -372,8 +372,7 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 
 /* MENU */
 .cat-tabs{display:flex;overflow-x:auto;padding:10px 16px;gap:8px;background:#fff;border-bottom:1px solid var(--border);scrollbar-width:none}
-.menu-promo-banner{font-family:var(--font);text-align:center;background:var(--green);color:#fff;padding:9px 16px;font-size:15px;line-height:1.25;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:6px}
-.menu-promo-banner i{font-size:17px}
+.menu-promo-banner{font-family:var(--font);text-align:center;background:var(--green);color:#fff;padding:9px 16px;font-size:15px;line-height:1.25;letter-spacing:.3px}
 .cat-tabs::-webkit-scrollbar{display:none}
 .cat-pill{padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);background:rgba(255,255,255,0.75);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--text2);font-family:var(--body)}
 .cat-pill.active{background:var(--green);border-color:var(--green);color:#fff}
@@ -1587,7 +1586,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
         </g>
     </svg>
   </div>
-  <div class="menu-promo-banner"><i class="ti ti-discount-2"></i>Self-collect in shop &amp; enjoy 10% off!</div>
+  <div class="menu-promo-banner">Self-collect in shop &amp; enjoy 10% off!</div>
   <div id="cat-tabs" class="cat-tabs"></div>
   </div><!-- /home-topbar -->
   <div id="product-grid" class="product-grid"></div>
@@ -1864,7 +1863,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       </div>
       <div id="delivery-fee-row" class="total-row" style="display:none;font-weight:500;font-size:13px"><span>Delivery</span><span id="delivery-fee-val">$0.00</span></div>
       <div class="total-row" style="font-weight:500;font-size:13px"><span>Platform fee</span><span id="platform-fee-val">$0.50</span></div>
-      <div id="member-disc-row" class="total-row" style="display:none;font-weight:500;font-size:13px;color:var(--green)"><span>Member self-collect (10% off)</span><span id="member-disc-val">-$0.00</span></div>
+      <div id="member-disc-row" class="total-row" style="display:none;font-weight:500;font-size:13px;color:var(--green)"><span id="member-disc-label">Member self-collect (10% off)</span><span id="member-disc-val">-$0.00</span></div>
       <div class="total-row"><span>Total</span><span id="cart-total-val">$0.00</span></div>
       <div id="credit-checkout-row" style="display:none;background:#f0faf3;border-radius:10px;padding:12px;margin-bottom:10px">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -4876,7 +4875,16 @@ function updateCartBadge(){
   updatePdCartSummary();
 }
 
-function openCart(){ renderCartItems(); loadUserCredit(); document.getElementById('cart-sheet').classList.add('open'); playCashier(); }
+function openCart(){
+  renderCartItems(); loadUserCredit();
+  document.getElementById('cart-sheet').classList.add('open'); playCashier();
+  // Pull the member's current tier so the tier discount is accurate at checkout.
+  if(currentUser){
+    apiGet({action:'getMemberTier', phone:np(currentUser.phone)})
+      .then(function(r){ if(r && r.tier){ _memberTierName = r.tier; updateCartTotals(); } })
+      .catch(function(){});
+  }
+}
 function closeCart(){ document.getElementById('cart-sheet').classList.remove('open'); }
 function clearCart(){
   if(!cart.length) return;
@@ -4996,6 +5004,17 @@ function renderTimePills(){
 const SHOP_POSTAL = '596180', FREE_RADIUS_KM = 3, SENTOSA_SURCHARGE = 20;
 let shopLatLng = null, deliveryFee = 0, deliveryInfo = null, deliveryPostalTimer = null;
 const PLATFORM_FEE = 0.50;   // flat platform fee added to every order
+// Membership tier discounts, applied AFTER the self-collect 10% — self-collect members only.
+let _memberTierName = 'Member';
+const TIER_RATE = { Gold:0.05, Platinum:0.10, Diamond:0.15, Member:0 };
+function checkoutDiscount(sub, isDelivery){
+  // Self-collect members only: subtotal −10% (self-collect), then −tier%, rounded to nearest 10c.
+  if(!(currentUser && !isDelivery)) return { discountedSub: sub, disc: 0, rate: 0 };
+  const rate = TIER_RATE[_memberTierName] || 0;
+  const discountedSub = Math.round(sub * 0.9 * (1 - rate) * 10) / 10;   // nearest 10 cents
+  const disc = +(sub - discountedSub).toFixed(2);
+  return { discountedSub, disc, rate };
+}
 
 async function geocodePostal(postal){
   const url = 'https://www.onemap.gov.sg/api/common/elastic/search?searchVal='+encodeURIComponent(postal)+'&returnGeom=Y&getAddrDetails=Y&pageNum=1';
@@ -5081,8 +5100,7 @@ function updateCartTotals(){
   const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const isDelivery = collectMode==='delivery';
   const fee = isDelivery ? deliveryFee : 0;
-  // Members who self-collect in shop get 10% off (app only).
-  const disc = (currentUser && !isDelivery) ? +(sub*0.10).toFixed(2) : 0;
+  const { discountedSub, disc, rate } = checkoutDiscount(sub, isDelivery);
   const feeRow = document.getElementById('delivery-fee-row');
   if(feeRow){
     feeRow.style.display = isDelivery ? 'flex' : 'none';
@@ -5092,11 +5110,13 @@ function updateCartTotals(){
   const dRow = document.getElementById('member-disc-row');
   if(dRow){
     dRow.style.display = disc>0 ? 'flex' : 'none';
+    const dLabel = document.getElementById('member-disc-label');
+    if(dLabel) dLabel.textContent = rate>0 ? ('Member discount (10% + '+Math.round(rate*100)+'%)') : 'Self-collect (10% off)';
     const dv = document.getElementById('member-disc-val');
     if(dv) dv.textContent = '-$'+disc.toFixed(2);
   }
   const tv = document.getElementById('cart-total-val');
-  if(tv) tv.textContent = '$'+(sub - disc + fee + PLATFORM_FEE).toFixed(2);
+  if(tv) tv.textContent = '$'+(discountedSub + fee + PLATFORM_FEE).toFixed(2);
 }
 
 document.addEventListener('click', function(e){
@@ -5192,8 +5212,8 @@ async function checkout(){
   const notes = document.getElementById('order-notes').value.trim();
   const sub   = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const fee   = isDelivery ? deliveryFee : 0;
-  const disc  = (currentUser && !isDelivery) ? +(sub*0.10).toFixed(2) : 0;   // member self-collect 10% off
-  const grand = +(sub - disc + fee + PLATFORM_FEE).toFixed(2);
+  const { discountedSub, disc } = checkoutDiscount(sub, isDelivery);   // self-collect 10% then tier %, nearest 10c
+  const grand = +(discountedSub + fee + PLATFORM_FEE).toFixed(2);
   // Show the "Creating order" overlay now that all validation has passed.
   const coEarly = document.getElementById('creating-order-overlay');
   if(coEarly) coEarly.classList.add('show');

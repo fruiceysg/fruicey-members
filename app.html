@@ -5008,10 +5008,13 @@ const PLATFORM_FEE = 0.50;   // flat platform fee added to every order
 let _memberTierName = 'Member';
 const TIER_RATE = { Gold:0.05, Platinum:0.10, Diamond:0.15, Member:0 };
 function checkoutDiscount(sub, isDelivery){
-  // Self-collect members only: subtotal −10% (self-collect), then −tier%, rounded to nearest 10c.
-  if(!(currentUser && !isDelivery)) return { discountedSub: sub, disc: 0, rate: 0 };
+  // Members get their tier % off; self-collect adds a further 10% off (delivery = tier % only).
+  // Final rounded to nearest 10c. The delivery fee is computed separately on the pre-discount value.
+  if(!currentUser) return { discountedSub: sub, disc: 0, rate: 0 };
   const rate = TIER_RATE[_memberTierName] || 0;
-  const discountedSub = Math.round(sub * 0.9 * (1 - rate) * 10) / 10;   // nearest 10 cents
+  const selfCollect = isDelivery ? 1 : 0.9;                       // self-collect: extra 10% off
+  if(selfCollect === 1 && rate === 0) return { discountedSub: sub, disc: 0, rate: 0 };
+  const discountedSub = Math.round(sub * selfCollect * (1 - rate) * 10) / 10;   // nearest 10 cents
   const disc = +(sub - discountedSub).toFixed(2);
   return { discountedSub, disc, rate };
 }
@@ -5111,7 +5114,11 @@ function updateCartTotals(){
   if(dRow){
     dRow.style.display = disc>0 ? 'flex' : 'none';
     const dLabel = document.getElementById('member-disc-label');
-    if(dLabel) dLabel.textContent = rate>0 ? ('Member discount (10% + '+Math.round(rate*100)+'%)') : 'Self-collect (10% off)';
+    if(dLabel){
+      var _pct = Math.round(rate*100);
+      dLabel.textContent = isDelivery ? (_memberTierName+' member ('+_pct+'% off)')
+                         : (rate>0 ? ('Member discount (10% + '+_pct+'%)') : 'Self-collect (10% off)');
+    }
     const dv = document.getElementById('member-disc-val');
     if(dv) dv.textContent = '-$'+disc.toFixed(2);
   }

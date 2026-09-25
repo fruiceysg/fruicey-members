@@ -6372,6 +6372,14 @@ async function loadMemberTier(fullName){
   const label = document.getElementById('tier-status-label');
   try{
     const res = await apiGet({action:'getMemberTier', phone:currentUser.phone});
+    // Share the resolved tier with the cart discount right away — independent of the
+    // current screen — so the Gold/Platinum/Diamond rate is applied at checkout even if
+    // the cart's own tier fetch didn't land. (Fix: tier discount was missing in the cart.)
+    if(res && res.success && res.tier){
+      _memberTierName = res.tier;
+      var _cs = document.getElementById('cart-sheet');
+      if(_cs && _cs.classList.contains('open')) updateCartTotals();
+    }
     if(currentScreen !== 'account'){ return; }
     if(!res || !res.success){ return; }
     const tier = res.tier || 'Member';

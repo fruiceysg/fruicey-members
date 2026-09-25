@@ -340,6 +340,41 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .story-img{width:100%;height:auto;display:block;border-radius:16px;background:var(--green-light);margin-bottom:14px}
 .story-block h3{font-family:var(--font);color:var(--green-dark);font-size:21px;margin:0 0 8px}
 .story-block p{font-size:15px;color:var(--text2);line-height:1.8;margin:0;white-space:pre-line}
+/* PERSONALISED FRUIT BOX */
+.fb-body{padding:16px 16px 110px}
+.fb-intro{font-size:13px;color:var(--text2);line-height:1.6;margin:4px 4px 16px;text-align:center}
+.fb-box-row{display:flex;gap:12px;margin-bottom:16px}
+.fb-box-opt{flex:1;background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--body);transition:all .15s}
+.fb-box-opt.active{border-color:var(--green);background:var(--green-light)}
+.fb-box-name{font-family:var(--font);font-size:18px;color:var(--green)}
+.fb-box-slots{font-size:12px;color:var(--text3)}
+.fb-box-price{font-size:15px;font-weight:700;color:var(--text)}
+.fb-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.fb-slots-label{font-family:var(--font);font-size:16px;color:var(--green);text-align:center;margin-bottom:12px}
+.fb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:280px;margin:0 auto}
+.fb-grid-jumbo{max-width:300px;gap:5px}
+.fb-cell{aspect-ratio:1/1;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.09);transition:background .2s}
+.fb-filler-note{font-size:12px;color:var(--text2);text-align:center;margin-top:14px;line-height:1.5}
+.fb-palette-title{font-family:var(--font);font-size:18px;color:var(--green);margin-bottom:6px}
+.fb-fruit{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f4f4f4}
+.fb-fruit:last-child{border-bottom:none}
+.fb-sw{width:22px;height:22px;border-radius:6px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.fb-fruit-meta{flex:1;min-width:0}
+.fb-fruit-name{font-size:15px;color:var(--text)}
+.fb-fruit-sub{font-size:12px;color:var(--text3)}
+.fb-step{display:flex;align-items:center;gap:10px}
+.fb-step-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--green);background:#fff;color:var(--green);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--body)}
+.fb-step-btn:disabled{opacity:.3;cursor:not-allowed;border-color:var(--border);color:var(--text3)}
+.fb-step-num{min-width:18px;text-align:center;font-size:15px;font-weight:600}
+.fb-footer{position:fixed;left:0;right:0;bottom:var(--nav);background:#fff;border-top:1px solid var(--border);padding:12px 16px;display:none;align-items:center;gap:14px;z-index:140}
+body:has(#scr-fruitbox.active) .fb-footer{display:flex}
+.fb-footer-price{display:flex;flex-direction:column;line-height:1.1}
+.fb-footer-price span{font-size:11px;color:var(--text3)}
+.fb-footer-price b{font-family:var(--font);font-size:22px;color:var(--green)}
+.fb-add-btn{flex:1;background:var(--green);color:#fff;border:none;border-radius:14px;padding:15px;font-family:var(--font);font-size:18px;cursor:pointer}
+.fb-add-btn:active{opacity:.9}
+@media(min-width:600px){.fb-footer{left:50%;right:auto;transform:translateX(-50%);width:100%;max-width:var(--app-w)}}
+
 /* SUBSCRIPTIONS */
 .sub-body{max-width:680px;margin:0 auto;padding:20px 20px 44px}
 .sub-intro{font-size:14px;color:var(--text2);text-align:center;margin:0 0 20px;line-height:1.6}
@@ -1665,6 +1700,45 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 </div>
 
 <!-- ═══ DRAWER MENU ═══ -->
+<!-- ═══ PERSONALISED FRUIT BOX ═══ -->
+<div class="screen" id="scr-fruitbox">
+  <header class="site-header story-header">
+    <button class="site-menu-btn" onclick="goTab('home')" aria-label="Back"><i class="ti ti-arrow-left"></i></button>
+    <span class="story-title">Personalised Fruit Box</span>
+  </header>
+  <div class="fb-body">
+    <p class="fb-intro">Build your own box. Pick a size, then choose your fruits &mdash; the slots and price update as you go. Any empty slots are filled free with a half red apple / half orange mix.</p>
+
+    <div class="fb-box-row">
+      <button class="fb-box-opt active" data-box="16" onclick="fbSetBox('16')">
+        <span class="fb-box-name">Fruicey Box</span>
+        <span class="fb-box-slots">16 slots</span>
+        <span class="fb-box-price">$24</span>
+      </button>
+      <button class="fb-box-opt" data-box="32" onclick="fbSetBox('32')">
+        <span class="fb-box-name">Jumbo Box</span>
+        <span class="fb-box-slots">32 slots</span>
+        <span class="fb-box-price">$28</span>
+      </button>
+    </div>
+
+    <div class="fb-card">
+      <div class="fb-slots-label" id="fb-slots-label">0 / 16 slots chosen</div>
+      <div class="fb-grid" id="fb-grid"></div>
+      <div class="fb-filler-note" id="fb-filler-note"></div>
+    </div>
+
+    <div class="fb-card">
+      <div class="fb-palette-title">Choose your fruits</div>
+      <div id="fb-palette"></div>
+    </div>
+  </div>
+  <div class="fb-footer">
+    <div class="fb-footer-price"><span>Total</span><b id="fb-total">$24.00</b></div>
+    <button class="fb-add-btn" onclick="fbAddToCart()">Add to cart</button>
+  </div>
+</div>
+
 <!-- ═══ SHIPPING & DELIVERY ═══ -->
 <div class="screen" id="scr-shipping">
   <header class="site-header story-header">
@@ -1733,6 +1807,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <nav class="drawer-links">
       <button class="drawer-link" onclick="closeDrawer();goTab('menu')"><i class="ti ti-cup"></i>Menu<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openSubscriptions()"><i class="ti ti-calendar-repeat"></i>Subscriptions<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="openFruitBox()"><i class="ti ti-apple"></i>Personalised Fruit Box<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openStory()"><i class="ti ti-book"></i>Story<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="goVibes()"><i class="ti ti-photo-heart"></i>Fruicey Community Vibes<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Location and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
@@ -2637,7 +2712,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <div class="acc-section-label">Membership Perks</div>
   <div class="perks-section">
     <div class="perks-row" id="tier-perks-cards"></div>
-    <div class="perks-tc">Membership tiers &amp; rewards are excluded for corporate or bulk orders. Tiers are earned by monthly spend and reset each calendar month. The free birthday-month menu product is subject to availability, valid during your birthday month only, and cannot be exchanged for cash or other items.</div>
+    <div class="perks-tc">Membership tiers, rewards, and member &amp; self-collect discounts are excluded for subscriptions, personalised fruit boxes, corporate and bulk orders. Tiers are earned by monthly spend and reset each calendar month. The free birthday-month menu product is subject to availability, valid during your birthday month only, and cannot be exchanged for cash or other items.</div>
   </div>
   </div>
 </div>
@@ -3659,6 +3734,158 @@ function openSubscriptions(){
   currentScreen = 'subscriptions';
   window.scrollTo(0,0);
 }
+// ═══ PERSONALISED FRUIT BOX ══════════════════════════════════
+const FB_BOXES = {
+  '16': { name:'Fruicey Box',       slots:16, base:24 },
+  '32': { name:'Fruicey Jumbo Box', slots:32, base:28 }
+};
+// price = per-piece top-up added to the box base; slots = slots one piece occupies
+const FB_FRUITS = [
+  { id:'red-apple',         name:'Red apple',           price:0,    slots:1, color:'#e53935' },
+  { id:'green-apple',       name:'Green apple',         price:0,    slots:1, color:'#7cb342' },
+  { id:'orange',            name:'Orange',              price:0,    slots:1, color:'#fb8c00' },
+  { id:'kiwi',              name:'Kiwi',                price:1.50, slots:1, color:'#cddc39' },
+  { id:'avocado',           name:'Avocado',             price:2.50, slots:1, color:'#33691e' },
+  { id:'blueberries',       name:'Blueberries (125g)',  price:5,    slots:1, color:'#3949ab' },
+  { id:'red-grapes',        name:'Red grapes (125g)',   price:2,    slots:1, color:'#8e24aa' },
+  { id:'green-grapes',      name:'Green grapes (125g)', price:2,    slots:1, color:'#aed581' },
+  { id:'strawberry',        name:'Strawberry (125g)',   price:5,    slots:1, color:'#e91e63' },
+  { id:'white-dragonfruit', name:'White dragonfruit',   price:2,    slots:2, color:'#f8bbd0' },
+  { id:'banana',            name:'Banana',              price:1.50, slots:3, color:'#fdd835', max:2 }
+];
+const FB_FILLER_A = 'red-apple', FB_FILLER_B = 'orange'; // leftover slots split half/half
+let fbBox = '16';
+let fbQty = {}; // fruitId -> pieces chosen
+
+function fbFruit(id){ return FB_FRUITS.find(function(f){ return f.id===id; }); }
+function fbSlotsUsed(){ return FB_FRUITS.reduce(function(n,f){ return n + (fbQty[f.id]||0)*f.slots; }, 0); }
+function fbTopups(){ return FB_FRUITS.reduce(function(n,f){ return n + (fbQty[f.id]||0)*f.price; }, 0); }
+function fbTotal(){ return FB_BOXES[fbBox].base + fbTopups(); }
+function fbFiller(){ var free = FB_BOXES[fbBox].slots - fbSlotsUsed(); var a = Math.ceil(free/2); return { free:free, a:a, b:free-a }; }
+
+function openFruitBox(){
+  closeDrawer();
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('scr-fruitbox').classList.add('active');
+  document.body.classList.remove('home-active');
+  document.documentElement.style.background = '';
+  currentScreen = 'fruitbox';
+  fbRender();
+  window.scrollTo(0,0);
+}
+
+function fbSetBox(key){
+  if(fbBox === key) return;
+  fbBox = key;
+  // trim from the last paid fruit down if the new (smaller) box can't fit
+  var over = fbSlotsUsed() - FB_BOXES[fbBox].slots;
+  for(var i=FB_FRUITS.length-1; i>=0 && over>0; i--){
+    var f = FB_FRUITS[i];
+    while((fbQty[f.id]||0) > 0 && over > 0){ fbQty[f.id]--; over -= f.slots; }
+  }
+  fbRender();
+}
+
+function fbStep(id, d){
+  var f = fbFruit(id); if(!f) return;
+  var cur = fbQty[id]||0;
+  if(d > 0){
+    if(f.max && cur >= f.max) return;
+    if(fbSlotsUsed() + f.slots > FB_BOXES[fbBox].slots) return;
+    fbQty[id] = cur + 1;
+  } else {
+    if(cur <= 0) return;
+    fbQty[id] = cur - 1;
+  }
+  fbRender();
+}
+
+function fbRender(){
+  var box = FB_BOXES[fbBox];
+  document.querySelectorAll('.fb-box-opt').forEach(function(el){ el.classList.toggle('active', el.dataset.box === fbBox); });
+
+  // grid: chosen fruits first (each piece paints its slots), then the free filler
+  var tiles = [];
+  FB_FRUITS.forEach(function(f){
+    var pieces = fbQty[f.id]||0;
+    for(var p=0;p<pieces;p++){ for(var s=0;s<f.slots;s++) tiles.push(f.color); }
+  });
+  var fill = fbFiller();
+  var cA = fbFruit(FB_FILLER_A).color, cB = fbFruit(FB_FILLER_B).color;
+  for(var i=0;i<fill.a;i++) tiles.push(cA);
+  for(var j=0;j<fill.b;j++) tiles.push(cB);
+  var grid = document.getElementById('fb-grid');
+  grid.className = 'fb-grid' + (fbBox==='32' ? ' fb-grid-jumbo' : '');
+  grid.innerHTML = tiles.map(function(c){ return '<div class="fb-cell" style="background:'+c+'"></div>'; }).join('');
+
+  document.getElementById('fb-slots-label').textContent = fbSlotsUsed() + ' / ' + box.slots + ' slots chosen';
+
+  // palette with steppers
+  document.getElementById('fb-palette').innerHTML = FB_FRUITS.map(function(f){
+    var cur = fbQty[f.id]||0;
+    var canAdd = (!f.max || cur < f.max) && (fbSlotsUsed() + f.slots <= box.slots);
+    var priceTxt = f.price>0 ? '+$'+f.price.toFixed(2) : 'Free';
+    var slotTxt = f.slots>1 ? f.slots+' slots' : '1 slot';
+    var maxTxt = f.max ? ' · max '+f.max : '';
+    return '<div class="fb-fruit">'
+      +'<span class="fb-sw" style="background:'+f.color+'"></span>'
+      +'<div class="fb-fruit-meta"><div class="fb-fruit-name">'+f.name+'</div>'
+        +'<div class="fb-fruit-sub">'+priceTxt+' · '+slotTxt+maxTxt+'</div></div>'
+      +'<div class="fb-step">'
+        +'<button class="fb-step-btn" onclick="fbStep(\''+f.id+'\',-1)"'+(cur<=0?' disabled':'')+'>&minus;</button>'
+        +'<span class="fb-step-num">'+cur+'</span>'
+        +'<button class="fb-step-btn" onclick="fbStep(\''+f.id+'\',1)"'+(canAdd?'':' disabled')+'>+</button>'
+      +'</div></div>';
+  }).join('');
+
+  var fillEl = document.getElementById('fb-filler-note');
+  if(fill.free > 0){
+    fillEl.style.display = 'block';
+    fillEl.innerHTML = 'Remaining '+fill.free+' slot'+(fill.free!==1?'s':'')+' filled free with '
+      +'<b style="color:'+cA+'">'+fill.a+' red apple'+(fill.a!==1?'s':'')+'</b> &amp; '
+      +'<b style="color:'+cB+'">'+fill.b+' orange'+(fill.b!==1?'s':'')+'</b>.';
+  } else {
+    fillEl.style.display = 'none';
+  }
+
+  document.getElementById('fb-total').textContent = '$'+fbTotal().toFixed(2);
+}
+
+function fbSummaryText(){
+  var parts = [];
+  FB_FRUITS.forEach(function(f){ var q = fbQty[f.id]||0; if(q>0) parts.push(q+'× '+f.name); });
+  var fill = fbFiller();
+  if(fill.free > 0) parts.push('fill: '+fill.a+' red apple + '+fill.b+' orange');
+  return parts.join(', ');
+}
+
+function fbAddToCart(){
+  var box = FB_BOXES[fbBox];
+  var sig = 'fb|'+fbBox+'|'+FB_FRUITS.map(function(f){ return f.id+':'+(fbQty[f.id]||0); }).join(',');
+  if(typeof playCashier === 'function') playCashier();
+  var exist = cart.find(function(i){ return i.id==='fruitbox-'+fbBox && i.addonSig===sig; });
+  if(exist){ exist.qty++; }
+  else {
+    cart.push({
+      id: 'fruitbox-'+fbBox,
+      name: box.name,
+      size: box.slots+'-slot custom',
+      label: box.name,
+      price: +fbTotal().toFixed(2),
+      qty: 1,
+      note: fbSummaryText(),
+      addons: [],
+      addonSig: sig
+    });
+  }
+  updateCartBadge();
+  showToast(box.name+' added to cart!');
+  fbQty = {};           // reset for the next build
+  fbRender();
+  goTab('menu');
+}
+
 function openShipping(){
   closeDrawer();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -5097,10 +5324,13 @@ async function computeDelivery(){
 
 // Update the total (and delivery line) whenever the cart or mode changes
 function updateCartTotals(){
-  const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const isDelivery = collectMode==='delivery';
   const fee = isDelivery ? deliveryFee : 0;
-  const { discountedSub, disc, rate } = checkoutDiscount(sub, isDelivery);
+  // Personalised fruit boxes are excluded from member & self-collect discounts.
+  const isNoDisc = i => String(i.id||'').indexOf('fruitbox-')===0;
+  const nonDiscSub = cart.reduce((s,i)=> s + (isNoDisc(i) ? i.price*i.qty : 0), 0);
+  const discSub    = cart.reduce((s,i)=> s + (isNoDisc(i) ? 0 : i.price*i.qty), 0);
+  const { discountedSub, disc, rate } = checkoutDiscount(discSub, isDelivery);
   const feeRow = document.getElementById('delivery-fee-row');
   if(feeRow){
     feeRow.style.display = isDelivery ? 'flex' : 'none';
@@ -5120,7 +5350,7 @@ function updateCartTotals(){
     if(dv) dv.textContent = '-$'+disc.toFixed(2);
   }
   const tv = document.getElementById('cart-total-val');
-  if(tv) tv.textContent = '$'+(discountedSub + fee + PLATFORM_FEE).toFixed(2);
+  if(tv) tv.textContent = '$'+(discountedSub + nonDiscSub + fee + PLATFORM_FEE).toFixed(2);
 }
 
 document.addEventListener('click', function(e){

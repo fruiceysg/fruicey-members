@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
@@ -879,13 +878,6 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 
 /* LOGIN */
 .login-star{position:fixed;bottom:-240px;right:-380px;width:900px;height:900px;pointer-events:none;transform:rotate(40deg);opacity:0.5;z-index:0}
-.scan-qr-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;margin-bottom:14px}
-.qr-scanner-modal{display:none;position:fixed;inset:0;background:#000;z-index:9999;flex-direction:column;align-items:center;justify-content:center}
-.qr-scanner-modal.open{display:flex}
-.qr-scanner-video{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
-.qr-scanner-frame{position:relative;z-index:2;width:240px;height:240px;border:3px solid var(--green);border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
-.qr-scanner-hint{position:relative;z-index:2;color:#fff;font-size:14px;margin-top:20px;text-align:center;padding:0 24px}
-.qr-scanner-close{position:absolute;top:20px;right:20px;z-index:3;background:rgba(255,255,255,.2);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer}
 
 /* ═══ TABLET / DESKTOP — full width, no cap, no side margins ═══ */
 @media (min-width:520px){
@@ -2389,7 +2381,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div id="stamp-grid-mini" class="stamp-grid-mini"></div>
       <div class="prog-bar"><div class="prog-fill" id="stamp-prog" style="width:0%"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>Progress</span><span id="stamp-prog-label">0 / 9</span></div>
-      <button class="scan-qr-btn" onclick="startStampScanApp()" style="margin-top:14px;margin-bottom:0">Scan QR to Get Stamp</button>
     </div>
 
     <!-- Spin wheel section -->
@@ -5580,78 +5571,6 @@ function cleanCollect(s){
 }
 
 // ── REWARDS (stamp card embedded) ────────────────────────────
-// ── CAMERA QR SCANNER ──────────────────────────────────────────
-let qrStream = null, qrScanRAF = null;
-
-async function openQRScanner(onResult){
-  const modal = document.getElementById('qr-scanner-modal');
-  const video = document.getElementById('qr-scanner-video');
-  modal.classList.add('open');
-  try{
-    qrStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    video.srcObject = qrStream;
-    await video.play();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', {willReadFrequently:true});
-    function tick(){
-      if(!qrStream) return; // scanner was closed
-      if(video.readyState === video.HAVE_ENOUGH_DATA){
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
-        if(code && code.data){
-          closeQRScanner();
-          onResult(code.data);
-          return;
-        }
-      }
-      qrScanRAF = requestAnimationFrame(tick);
-    }
-    tick();
-  }catch(e){
-    closeQRScanner();
-    showToast('Camera access denied or unavailable');
-  }
-}
-
-function closeQRScanner(){
-  const modal = document.getElementById('qr-scanner-modal');
-  modal.classList.remove('open');
-  if(qrScanRAF){ cancelAnimationFrame(qrScanRAF); qrScanRAF=null; }
-  if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream=null; }
-}
-
-function startStampScanApp(){
-  openQRScanner(function(decoded){
-    let token, phone;
-    try{
-      const url = new URL(decoded);
-      token = url.searchParams.get('stamp');
-      phone = url.searchParams.get('phone');
-    }catch(e){}
-    if(!token || !phone){ showToast('That QR code is not recognised'); return; }
-    redeemStampScanApp(token, phone);
-  });
-}
-
-async function redeemStampScanApp(token, phone){
-  document.getElementById('rewards-card').style.display='none';
-  document.getElementById('rewards-loader').style.display='block';
-  try{
-    const res = await apiPost({action:'redeemStampToken', stampToken:token, phone:np(phone)});
-    document.getElementById('rewards-loader').style.display='none';
-    if(res.error === 'already_used'){ showToast('QR already used.'); loadRewards(); return; }
-    if(res.error === 'expired')     { showToast('QR expired. Ask for a new one.'); loadRewards(); return; }
-    if(res.error)                   { showToast('Error: '+res.error); loadRewards(); return; }
-    if(res.success){
-      await loadRewards();
-      showToast(res.completed ? 'Card complete! Spin the wheel for your reward!' : 'Stamp added! You now have '+res.stamps+' stamps.');
-    }
-  }catch(e){ document.getElementById('rewards-loader').style.display='none'; showToast('Connection error.'); }
-}
-
 async function loadRewards(){
   if(!currentUser) return;
   document.getElementById('rewards-card').style.display='none';
@@ -6838,13 +6757,6 @@ document.addEventListener('DOMContentLoaded', function(){
       <button onclick="closeOrderReceipt()" class="btn btn-secondary" style="width:100%">Close</button>
     </div>
   </div>
-</div>
-<!-- QR CAMERA SCANNER MODAL -->
-<div class="qr-scanner-modal" id="qr-scanner-modal">
-  <button class="qr-scanner-close" onclick="closeQRScanner()">✕</button>
-  <video class="qr-scanner-video" id="qr-scanner-video" playsinline autoplay muted></video>
-  <div class="qr-scanner-frame"></div>
-  <div class="qr-scanner-hint">Point your camera at the QR code shown by our crew</div>
 </div>
 
 <!-- ADD CREDIT MODAL -->

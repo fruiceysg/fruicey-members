@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Fruicey Stamp Card</title>
@@ -166,12 +165,6 @@ input:focus{border-color:#1c4d3a}
 .btn:active{opacity:.85;transform:scale(.98)}
 .err{color:#1c4d3a;font-size:12px;margin-top:8px;display:none;font-weight:500}
 .ok{color:#1c4d3a;font-size:12px;margin-top:8px;display:none;font-weight:500}
-.scan-notice{
-  background:#f0faf4;border:1.5px solid #c8e6c9;
-  border-radius:10px;padding:12px 14px;
-  font-size:12px;color:#2e7d32;text-align:center;
-  margin-bottom:14px;line-height:1.5;
-}
 .cbrow{display:flex;align-items:flex-start;gap:8px;margin-top:10px}
 .cbrow input[type=checkbox]{width:auto;flex-shrink:0;margin-top:2px}
 
@@ -194,13 +187,6 @@ input:focus{border-color:#1c4d3a}
 .wheel-result-desc{font-size:13px;opacity:.9}
 .wheel-result-note{font-size:11px;margin-top:10px;opacity:.7;border-top:1px solid rgba(255,255,255,.3);padding-top:8px}
 
-.scan-qr-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#1c4d3a;color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin:12px 0}
-.qr-scanner-modal{display:none;position:fixed;inset:0;background:#000;z-index:9999;flex-direction:column;align-items:center;justify-content:center}
-.qr-scanner-modal.open{display:flex}
-.qr-scanner-video{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
-.qr-scanner-frame{position:relative;z-index:2;width:240px;height:240px;border:3px solid #1c4d3a;border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
-.qr-scanner-hint{position:relative;z-index:2;color:#fff;font-size:14px;margin-top:20px;text-align:center;padding:0 24px}
-.qr-scanner-close{position:absolute;top:20px;right:20px;z-index:3;background:rgba(255,255,255,.2);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer}
 #app-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f7;z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease}
 #app-loader.hide{opacity:0;pointer-events:none}
 #app-loader .loader-spinner{transform:translateY(-60px)}
@@ -276,10 +262,6 @@ input:focus{border-color:#1c4d3a}
     <div class="err" id="lk-err"></div>
     <button class="btn btn-primary" id="lk-btn">View my rewards pass</button>
     <button class="btn btn-secondary" style="margin-top:8px" onclick="showScr('scr-signup')">Sign up for a rewards pass</button>
-  </div>
-
-  <div class="scan-notice">
-     <strong>Getting a stamp?</strong> Ask our crew for the QR code after your purchase and scan it!
   </div>
 
   <div class="tc-section">
@@ -415,8 +397,6 @@ input:focus{border-color:#1c4d3a}
       <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
     </div>
     <div id="stamp-status-msg" style="display:none;text-align:center;font-size:13px;font-weight:600;border-radius:10px;padding:10px 12px;margin-bottom:12px"></div>
-
-    <button class="scan-qr-btn" id="scan-qr-btn" onclick="startStampScan()">Scan QR to Get Stamp</button>
 
   </div>
 
@@ -677,7 +657,7 @@ function renderCard(member){
   // ── Pot of Gold button (opens a pop-out with all prizes + full history) ──
   var potBtn = document.getElementById('pog-open-btn');
   if(!potBtn){
-    var anchorEl = document.getElementById('scan-qr-btn') || document.getElementById('stamp-grid');
+    var anchorEl = document.getElementById('stamp-grid');
     if(anchorEl){
       potBtn = document.createElement('button');
       potBtn.id = 'pog-open-btn';
@@ -760,61 +740,7 @@ async function redeemStampAndRefresh(token, phone){
   }
 }
 
-// ── CAMERA QR SCANNER ──────────────────────────────────────────
-let qrStream = null, qrScanRAF = null;
-
-async function openQRScanner(onResult){
-  const modal = document.getElementById('qr-scanner-modal');
-  const video = document.getElementById('qr-scanner-video');
-  modal.classList.add('open');
-  try{
-    qrStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    video.srcObject = qrStream;
-    await video.play();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', {willReadFrequently:true});
-    function tick(){
-      if(!qrStream) return; // scanner was closed
-      if(video.readyState === video.HAVE_ENOUGH_DATA){
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
-        if(code && code.data){
-          closeQRScanner();
-          onResult(code.data);
-          return;
-        }
-      }
-      qrScanRAF = requestAnimationFrame(tick);
-    }
-    tick();
-  }catch(e){
-    closeQRScanner();
-    showToast('Camera access denied or unavailable');
-  }
-}
-
-function closeQRScanner(){
-  const modal = document.getElementById('qr-scanner-modal');
-  modal.classList.remove('open');
-  if(qrScanRAF){ cancelAnimationFrame(qrScanRAF); qrScanRAF=null; }
-  if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream=null; }
-}
-
-function startStampScan(){
-  openQRScanner(function(decoded){
-    let token, phone;
-    try{
-      const url = new URL(decoded);
-      token = url.searchParams.get('stamp');
-      phone = url.searchParams.get('phone');
-    }catch(e){}
-    if(!token || !phone){ showToast('That QR code is not recognised'); return; }
-    redeemStampAndRefresh(token, phone);
-  });
-}document.getElementById('spin-btn').addEventListener('click', spinWheel);
+document.getElementById('spin-btn').addEventListener('click', spinWheel);
 const redeemCardBtn = document.getElementById('wheel-redeem-btn');
 if(redeemCardBtn) redeemCardBtn.addEventListener('click', onWheelDone);
 
@@ -1173,13 +1099,6 @@ function showWheel(){
 
 
 </script>
-<!-- QR CAMERA SCANNER MODAL -->
-<div class="qr-scanner-modal" id="qr-scanner-modal">
-  <button class="qr-scanner-close" onclick="closeQRScanner()">✕</button>
-  <video class="qr-scanner-video" id="qr-scanner-video" playsinline autoplay muted></video>
-  <div class="qr-scanner-frame"></div>
-  <div class="qr-scanner-hint">Point your camera at the QR code shown by our crew</div>
-</div>
 
 </body>
 </html>

@@ -1762,7 +1762,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
   <div class="fb-footer">
     <div class="fb-footer-price"><span>Total</span><b id="fb-total">$24.00</b></div>
-    <button class="fb-add-btn" onclick="fbAddToCart()">Add to cart</button>
+    <button class="fb-add-btn" onclick="fbAddToCart()">Proceed to checkout</button>
   </div>
 </div>
 
@@ -2739,7 +2739,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <div class="acc-section-label">Membership Perks</div>
   <div class="perks-section">
     <div class="perks-row" id="tier-perks-cards"></div>
-    <div class="perks-tc">Membership tiers, rewards, and member &amp; self-collect discounts are excluded for subscriptions, personalised fruit boxes, corporate and bulk orders. Tiers are earned by monthly spend and reset each calendar month. The free birthday-month menu product is subject to availability, valid during your birthday month only, and cannot be exchanged for cash or other items.</div>
+    <div class="perks-tc">Member and self-collect discounts don't apply to subscriptions, personalised fruit boxes, corporate or bulk orders. Personalised fruit box purchases still count towards your monthly tier spend. Tiers are earned by monthly spend and reset each calendar month. The free birthday-month menu product is subject to availability, valid during your birthday month only, and cannot be exchanged for cash or other items.</div>
   </div>
   </div>
 </div>
@@ -3783,13 +3783,22 @@ const FB_FRUITS = [
 ];
 const FB_FILLER_A = 'red-apple', FB_FILLER_B = 'orange'; // leftover slots split half/half
 // Recommended presses (5, no pre-order). 1-2 bottles share a 3-slot block; each block = $1 off.
-const FB_PRESS = [
-  {id:'ip01', name:'Energy'},
-  {id:'np03', name:'Vita C'},
-  {id:'lp01', name:'Neuro'},
-  {id:'wp01', name:'Radiance'},
-  {id:'wp05', name:'Glow'}
-];
+// Eligible presses = every press product except pre-order ones; recommend a random 5 per visit.
+const FB_PRESS_CATS = ['Immunity Press','Nutritional Press','Longevity Press','Wellness Press'];
+const FB_PRESS_POOL = [];
+FB_PRESS_CATS.forEach(function(cat){
+  (CATALOGUE[cat]||[]).forEach(function(p){
+    if(typeof PREORDER_IDS!=='undefined' && PREORDER_IDS.has(p.id)) return;
+    var price = (p.sizes && p.sizes[0]) ? p.sizes[0].p : 0;   // first size (Bottled for Immunity)
+    FB_PRESS_POOL.push({id:p.id, name:p.name, price:price});
+  });
+});
+let FB_PRESS = FB_PRESS_POOL.slice(0,5);
+function fbPickPresses(){
+  var pool = FB_PRESS_POOL.slice();
+  for(var i=pool.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
+  FB_PRESS = pool.slice(0, 5);
+}
 const FB_PRESS_COLOR = '#0d8a72';
 let fbBox = '16';
 let fbQty = {};   // fruitId -> pieces chosen
@@ -3802,8 +3811,9 @@ function fbPressBottles(){ return FB_PRESS.reduce(function(n,p){ return n + (fbP
 function fbPressBlocks(){ return Math.ceil(fbPressBottles()/2); }   // 1-2 bottles per block
 function fbPressSlots(){ return fbPressBlocks()*3; }                // 3 slots per block
 function fbPressDiscount(){ return fbPressBlocks()*1; }             // $1 off per block
+function fbPressPrice(){ return FB_PRESS.reduce(function(n,p){ return n + (fbPress[p.id]||0)*p.price; }, 0); }
 function fbUsed(){ return fbSlotsUsed() + fbPressSlots(); }
-function fbTotal(){ return FB_BOXES[fbBox].base + fbTopups() - fbPressDiscount(); }
+function fbTotal(){ return FB_BOXES[fbBox].base + fbTopups() + fbPressPrice() - fbPressDiscount(); }
 function fbFiller(){ var free = FB_BOXES[fbBox].slots - fbUsed(); var a = Math.ceil(free/2); return { free:free, a:a, b:free-a }; }
 
 function openFruitBox(){
@@ -3814,6 +3824,7 @@ function openFruitBox(){
   document.body.classList.remove('home-active');
   document.documentElement.style.background = '';
   currentScreen = 'fruitbox';
+  if(fbPressBottles() === 0){ fbPress = {}; fbPickPresses(); }   // fresh random 5 (keep set mid-build)
   fbRender();
   window.scrollTo(0,0);
 }
@@ -3926,7 +3937,7 @@ function fbRender(){
     return '<div class="fb-fruit">'
       +'<span class="fb-sw" style="background:'+FB_PRESS_COLOR+'">'+img+'</span>'
       +'<div class="fb-fruit-meta"><div class="fb-fruit-name">'+p.name+' Press</div>'
-        +'<div class="fb-fruit-sub">cold-pressed juice</div></div>'
+        +'<div class="fb-fruit-sub">cold-pressed juice · +$'+p.price.toFixed(2)+'</div></div>'
       +'<div class="fb-step">'
         +'<button class="fb-step-btn" onclick="fbPressStep(\''+p.id+'\',-1)"'+(cur<=0?' disabled':'')+'>&minus;</button>'
         +'<span class="fb-step-num">'+cur+'</span>'
@@ -3937,7 +3948,7 @@ function fbRender(){
   if(pbEl){
     var blocks = fbPressBlocks(), bottles = fbPressBottles();
     pbEl.style.display = blocks>0 ? 'block' : 'none';
-    if(blocks>0) pbEl.innerHTML = bottles+' bottle'+(bottles!==1?'s':'')+' · '+blocks+' block'+(blocks!==1?'s':'')+' ('+fbPressSlots()+' slots) · <b>&minus;$'+fbPressDiscount().toFixed(2)+'</b>';
+    if(blocks>0) pbEl.innerHTML = bottles+' bottle'+(bottles!==1?'s':'')+' · $'+fbPressPrice().toFixed(2)+' &minus; $'+fbPressDiscount().toFixed(2)+' off ('+blocks+' block'+(blocks!==1?'s':'')+', '+fbPressSlots()+' slots)';
   }
   if(fill.free > 0){
     fillEl.style.display = 'block';
@@ -3966,11 +3977,15 @@ function fbSummaryText(){
 
 function fbReset(){ fbQty = {}; fbPress = {}; fbRender(); }
 
+function fbCartHasMenu(){ return cart.some(function(i){ return String(i.id||'').indexOf('fruitbox-')!==0; }); }
+function fbCartHasBox(){ return cart.some(function(i){ return String(i.id||'').indexOf('fruitbox-')===0; }); }
+
 function fbAddToCart(){
+  if(fbCartHasMenu()){ showToast('You have menu items in your cart — please check those out first, then order your fruit box separately.'); return; }
   var box = FB_BOXES[fbBox];
   var sig = 'fb|'+fbBox
     +'|'+FB_FRUITS.map(function(f){ return f.id+':'+(fbQty[f.id]||0); }).join(',')
-    +'|'+FB_PRESS.map(function(p){ return p.id+':'+(fbPress[p.id]||0); }).join(',');
+    +'|'+Object.keys(fbPress).filter(function(id){ return (fbPress[id]||0)>0; }).sort().map(function(id){ return id+':'+fbPress[id]; }).join(',');
   if(typeof playCashier === 'function') playCashier();
   var exist = cart.find(function(i){ return i.id==='fruitbox-'+fbBox && i.addonSig===sig; });
   if(exist){ exist.qty++; }
@@ -3988,10 +4003,9 @@ function fbAddToCart(){
     });
   }
   updateCartBadge();
-  showToast(box.name+' added to cart!');
   fbQty = {}; fbPress = {};   // reset for the next build
   fbRender();
-  goTab('menu');
+  openCart();                 // straight to checkout (self-collect / delivery / pay)
 }
 
 function openShipping(){
@@ -4480,6 +4494,7 @@ function addSizeToCart(pid, size, price, el){
   const addonSig = addons.map(a=>a.name).sort().join('|');
   let label = prod.name + (size ? ' ('+size+')' : '');
   if(addons.length) label += ' + ' + addons.map(a=>a.name).join(', ');
+  if(fbCartHasBox()){ showToast('Please check out your fruit box first, then add menu items separately.'); return; }
   playCashier();
   const exist = cart.find(i=>i.id===pid && i.size===size && (i.note||'')===note && (i.addonSig||'')===addonSig);
   if(exist){ exist.qty++; } else { cart.push({id:pid, name:prod.name, size, label, price:finalPrice, qty:1, note, addons, addonSig}); }
@@ -4809,6 +4824,7 @@ function refreshBowlAdd(){
 
 // Commit exactly one configured bowl, then reset so the next one is built from scratch
 function addBowlToCart(){
+  if(fbCartHasBox()){ showToast('Please check out your fruit box first, then add menu items separately.'); return; }
   if(!currentUser){ openLogin(); return; }
   if(!pdSelectedSize){ return; }
   if(blendNeeded() && !pdSelectedBlend){ return; }
@@ -5553,9 +5569,12 @@ async function checkout(){
 
   const notes = document.getElementById('order-notes').value.trim();
   const sub   = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const isNoDisc = i => String(i.id||'').indexOf('fruitbox-')===0;   // fruit boxes: no member/self-collect discount
+  const nonDiscSub = cart.reduce((s,i)=> s + (isNoDisc(i) ? i.price*i.qty : 0), 0);
+  const discSub = sub - nonDiscSub;
   const fee   = isDelivery ? deliveryFee : 0;
-  const { discountedSub, disc } = checkoutDiscount(sub, isDelivery);   // self-collect 10% then tier %, nearest 10c
-  const grand = +(discountedSub + fee + PLATFORM_FEE).toFixed(2);
+  const { discountedSub, disc } = checkoutDiscount(discSub, isDelivery);   // self-collect 10% then tier %, nearest 10c
+  const grand = +(discountedSub + nonDiscSub + fee + PLATFORM_FEE).toFixed(2);
   // Show the "Creating order" overlay now that all validation has passed.
   const coEarly = document.getElementById('creating-order-overlay');
   if(coEarly) coEarly.classList.add('show');

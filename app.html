@@ -353,9 +353,10 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .fb-box-price{font-size:15px;font-weight:700;color:var(--text)}
 .fb-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
 .fb-slots-label{font-family:var(--font);font-size:16px;color:var(--green);text-align:center;margin-bottom:12px}
-.fb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:280px;margin:0 auto}
+.fb-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-flow:dense;gap:6px;max-width:280px;margin:0 auto}
 .fb-grid-jumbo{max-width:300px;gap:5px}
 .fb-cell{position:relative;aspect-ratio:1/1;border-radius:7px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.09);transition:background .2s}
+.fb-cell-3{grid-column:span 3;aspect-ratio:auto}
 .fb-cell img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .fb-filler-note{font-size:12px;color:var(--text2);text-align:center;margin-top:14px;line-height:1.5}
 .fb-palette-title{font-family:var(--font);font-size:18px;color:var(--green);margin-bottom:6px}
@@ -3758,7 +3759,7 @@ const FB_FRUITS = [
   { id:'green-grapes',      name:'Green grapes (125g)', price:2,    slots:1, color:'#aed581' },
   { id:'strawberry',        name:'Strawberry (125g)',   price:5,    slots:1, color:'#e91e63' },
   { id:'white-dragonfruit', name:'White dragonfruit',   price:2,    slots:2, color:'#f8bbd0' },
-  { id:'banana',            name:'Banana',              price:1.50, slots:3, color:'#fdd835', max:2 }
+  { id:'banana',            name:'Banana',              price:1.50, slots:3, unit:2, color:'#fdd835' }
 ];
 const FB_FILLER_A = 'red-apple', FB_FILLER_B = 'orange'; // leftover slots split half/half
 let fbBox = '16';
@@ -3813,18 +3814,24 @@ function fbRender(){
   document.querySelectorAll('.fb-box-opt').forEach(function(el){ el.classList.toggle('active', el.dataset.box === fbBox); });
 
   // grid: chosen fruits first (each piece paints its slots), then the free filler
-  var tiles = [];
+  var cells = [];
+  var cellImg = function(color, id, wide){
+    return '<div class="fb-cell'+(wide?' fb-cell-3':'')+'" style="background:'+color+'"><img src="fruit-'+id+'.jpg" alt="" loading="lazy" onerror="this.style.display=\'none\'"></div>';
+  };
   FB_FRUITS.forEach(function(f){
     var pieces = fbQty[f.id]||0;
-    for(var p=0;p<pieces;p++){ for(var s=0;s<f.slots;s++) tiles.push({color:f.color, id:f.id}); }
+    for(var p=0;p<pieces;p++){
+      if(f.id==='banana'){ cells.push(cellImg(f.color, f.id, true)); }   // 3 slots as one row of 3
+      else { for(var s=0;s<f.slots;s++) cells.push(cellImg(f.color, f.id, false)); }
+    }
   });
   var fill = fbFiller();
   var cA = fbFruit(FB_FILLER_A).color, cB = fbFruit(FB_FILLER_B).color;
-  for(var i=0;i<fill.a;i++) tiles.push({color:cA, id:FB_FILLER_A});
-  for(var j=0;j<fill.b;j++) tiles.push({color:cB, id:FB_FILLER_B});
+  for(var i=0;i<fill.a;i++) cells.push(cellImg(cA, FB_FILLER_A, false));
+  for(var j=0;j<fill.b;j++) cells.push(cellImg(cB, FB_FILLER_B, false));
   var grid = document.getElementById('fb-grid');
   grid.className = 'fb-grid' + (fbBox==='32' ? ' fb-grid-jumbo' : '');
-  grid.innerHTML = tiles.map(function(t){ return '<div class="fb-cell" style="background:'+t.color+'"><img src="fruit-'+t.id+'.jpg" alt="" loading="lazy" onerror="this.style.display=\'none\'"></div>'; }).join('');
+  grid.innerHTML = cells.join('');
 
   document.getElementById('fb-slots-label').textContent = fbSlotsUsed() + ' / ' + box.slots + ' slots chosen';
 
@@ -3834,14 +3841,14 @@ function fbRender(){
     var canAdd = (!f.max || cur < f.max) && (fbSlotsUsed() + f.slots <= box.slots);
     var priceTxt = f.price>0 ? '+$'+f.price.toFixed(2) : 'Free';
     var slotTxt = f.slots>1 ? f.slots+' slots' : '1 slot';
-    var maxTxt = f.max ? ' · max '+f.max : '';
+    var unitTxt = (f.unit && f.unit>1) ? (' per '+f.unit+' pcs') : '';
     return '<div class="fb-fruit">'
       +'<span class="fb-sw" style="background:'+f.color+'"><img class="fb-img" src="fruit-'+f.id+'.jpg" alt="" loading="lazy" onerror="this.style.display=\'none\'"></span>'
       +'<div class="fb-fruit-meta"><div class="fb-fruit-name">'+f.name+'</div>'
-        +'<div class="fb-fruit-sub">'+priceTxt+' · '+slotTxt+maxTxt+'</div></div>'
+        +'<div class="fb-fruit-sub">'+priceTxt+unitTxt+' · '+slotTxt+'</div></div>'
       +'<div class="fb-step">'
         +'<button class="fb-step-btn" onclick="fbStep(\''+f.id+'\',-1)"'+(cur<=0?' disabled':'')+'>&minus;</button>'
-        +'<span class="fb-step-num">'+cur+'</span>'
+        +'<span class="fb-step-num">'+(cur*(f.unit||1))+'</span>'
         +'<button class="fb-step-btn" onclick="fbStep(\''+f.id+'\',1)"'+(canAdd?'':' disabled')+'>+</button>'
       +'</div></div>';
   }).join('');
@@ -3861,7 +3868,7 @@ function fbRender(){
 
 function fbSummaryText(){
   var parts = [];
-  FB_FRUITS.forEach(function(f){ var q = fbQty[f.id]||0; if(q>0) parts.push(q+'× '+f.name); });
+  FB_FRUITS.forEach(function(f){ var q = fbQty[f.id]||0; if(q>0) parts.push((q*(f.unit||1))+'× '+f.name); });
   var fill = fbFiller();
   if(fill.free > 0) parts.push('fill: '+fill.a+' red apple + '+fill.b+' orange');
   return parts.join(', ');

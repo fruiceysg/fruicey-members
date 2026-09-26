@@ -356,6 +356,7 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .fb-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-flow:dense;gap:6px;max-width:280px;margin:0 auto}
 .fb-grid-jumbo{max-width:300px;gap:5px}
 .fb-cell{position:relative;aspect-ratio:1/1;border-radius:7px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.09);transition:background .2s}
+.fb-cell-2{grid-column:span 2;aspect-ratio:auto}
 .fb-cell-3{grid-column:span 3;aspect-ratio:auto}
 .fb-cell img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .fb-filler-note{font-size:12px;color:var(--text2);text-align:center;margin-top:14px;line-height:1.5}
@@ -3815,20 +3816,20 @@ function fbRender(){
 
   // grid: chosen fruits first (each piece paints its slots), then the free filler
   var cells = [];
-  var cellImg = function(color, id, wide){
-    return '<div class="fb-cell'+(wide?' fb-cell-3':'')+'" style="background:'+color+'"><img src="fruit-'+id+'.jpg" alt="" loading="lazy" onerror="this.style.display=\'none\'"></div>';
+  var cellImg = function(color, id, span){
+    return '<div class="fb-cell'+(span>1?' fb-cell-'+span:'')+'" style="background:'+color+'"><img src="fruit-'+id+'.jpg" alt="" loading="lazy" onerror="this.style.display=\'none\'"></div>';
   };
   FB_FRUITS.forEach(function(f){
     var pieces = fbQty[f.id]||0;
     for(var p=0;p<pieces;p++){
-      if(f.id==='banana'){ cells.push(cellImg(f.color, f.id, true)); }   // 3 slots as one row of 3
-      else { for(var s=0;s<f.slots;s++) cells.push(cellImg(f.color, f.id, false)); }
+      if(f.slots>1){ cells.push(cellImg(f.color, f.id, f.slots)); }   // multi-slot fruit = one wide tile
+      else { cells.push(cellImg(f.color, f.id, 1)); }
     }
   });
   var fill = fbFiller();
   var cA = fbFruit(FB_FILLER_A).color, cB = fbFruit(FB_FILLER_B).color;
-  for(var i=0;i<fill.a;i++) cells.push(cellImg(cA, FB_FILLER_A, false));
-  for(var j=0;j<fill.b;j++) cells.push(cellImg(cB, FB_FILLER_B, false));
+  for(var i=0;i<fill.a;i++) cells.push(cellImg(cA, FB_FILLER_A, 1));
+  for(var j=0;j<fill.b;j++) cells.push(cellImg(cB, FB_FILLER_B, 1));
   var grid = document.getElementById('fb-grid');
   grid.className = 'fb-grid' + (fbBox==='32' ? ' fb-grid-jumbo' : '');
   grid.innerHTML = cells.join('');

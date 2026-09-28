@@ -1878,8 +1878,8 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
     <nav class="drawer-links">
       <button class="drawer-link" onclick="closeDrawer();goTab('menu')"><i class="ti ti-cup"></i>Menu<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
+      <button class="drawer-link" onclick="openFruitBox()"><i class="ti ti-gift"></i>Fruit Boxes and Gifts<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openSubscriptions()"><i class="ti ti-calendar-repeat"></i>Subscriptions<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
-      <button class="drawer-link" onclick="openFruitBox()"><i class="ti ti-apple"></i>Fruit Boxes and Gifts<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openStory()"><i class="ti ti-book"></i>Story<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="goVibes()"><i class="ti ti-photo-heart"></i>Fruicey Community Vibes<span class="drawer-link-arrow ti ti-chevron-right"></span></button>
       <button class="drawer-link" onclick="openLocationsReviews()"><i class="ti ti-map-pin"></i>Location and Reviews<span class="drawer-link-arrow ti ti-external-link"></span></button>
@@ -5377,7 +5377,7 @@ function renderTimeSlots(){
   // any of them, the earliest collection/delivery day is TOMORROW — today is not offered.
   const hasPreorder = cart.some(function(i){ return PREORDER_IDS.has(i.id); });
   const boxOnly = (typeof fbCartHasBox === 'function') && fbCartHasBox();
-  const startDay = (hasPreorder || boxOnly) ? 1 : 0;   // fruit box / pre-order: not same-day
+  const startDay = boxOnly ? 2 : (hasPreorder ? 1 : 0);   // fruit box: from two days after; pre-order: not same-day
 
   // Next 7 days (skip Sundays) as compact date cards; a fruit box = following day only
   const dateContainer = document.getElementById('date-slots-container');

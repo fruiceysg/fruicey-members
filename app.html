@@ -390,7 +390,7 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .fb-tab{flex:1;background:none;border:none;padding:13px 8px;font-family:var(--font);font-size:15px;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s}
 .fb-tab.active{color:var(--green);border-bottom-color:var(--green)}
 .fb-gift{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-.fb-gift-img{width:100%;height:170px;object-fit:cover;border-radius:10px;flex-shrink:0;background:var(--green-light);margin-bottom:12px}
+.fb-gift-img{width:100%;height:auto;border-radius:10px;flex-shrink:0;background:var(--green-light);margin-bottom:12px}
 .fb-gift-info{min-width:0}
 .fb-gift-name{font-family:var(--font);font-size:20px;color:var(--green);margin-bottom:2px}
 .fb-gift-price{font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px}
@@ -5376,9 +5376,10 @@ function renderTimeSlots(){
   // Pre-order items (Ca, Mg, Oral, Cardio) are made fresh on the day, so if the cart contains
   // any of them, the earliest collection/delivery day is TOMORROW — today is not offered.
   const hasPreorder = cart.some(function(i){ return PREORDER_IDS.has(i.id); });
-  const startDay = hasPreorder ? 1 : 0;
+  const boxOnly = (typeof fbCartHasBox === 'function') && fbCartHasBox();
+  const startDay = (hasPreorder || boxOnly) ? 1 : 0;   // fruit box / pre-order: not same-day
 
-  // Next 7 days (skip Sundays) as compact date cards
+  // Next 7 days (skip Sundays) as compact date cards; a fruit box = following day only
   const dateContainer = document.getElementById('date-slots-container');
   const dates = [];
   for(let d=startDay; d<7; d++){
@@ -5388,6 +5389,7 @@ function renderTimeSlots(){
     const val = ymdLocal(dt);       // local date (avoids UTC off-by-one)
     const top = d===0 ? 'Today' : d===1 ? 'Tomorrow' : dayNames[dt.getDay()];
     dates.push({val, top, num: dt.getDate()});
+    if(boxOnly) break;              // fruit box: only the following (next available) day
   }
 
   // If a previously-picked date is now invalid (e.g. it was "today" before a pre-order item was

@@ -3950,6 +3950,7 @@ function fbRender(){
     pbEl.style.display = blocks>0 ? 'block' : 'none';
     if(blocks>0) pbEl.innerHTML = bottles+' bottle'+(bottles!==1?'s':'')+' · $'+fbPressPrice().toFixed(2)+' &minus; $'+fbPressDiscount().toFixed(2)+' off ('+blocks+' block'+(blocks!==1?'s':'')+', '+fbPressSlots()+' slots)';
   }
+  var fillEl = document.getElementById('fb-filler-note');
   if(fill.free > 0){
     fillEl.style.display = 'block';
     fillEl.innerHTML = 'Remaining '+fill.free+' slot'+(fill.free!==1?'s':'')+' filled free with '

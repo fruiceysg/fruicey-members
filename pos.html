@@ -1045,7 +1045,7 @@ let cart = [], currentMember = null, memberDiscount = 0, currentCat = 'Shakes & 
 const ONLINE_PLATFORMS = ['GrabFood','FoodPanda','Online Shop'];
 // Products that do NOT earn a rewards stamp. Custom Fruit (juCF) is excluded; Custom Bowl (sb00)
 // and Custom Juice (ju00) DO earn stamps like normal menu items.
-const NO_STAMP_IDS = ['juCF','fruitbox-16','fruitbox-32'];
+const NO_STAMP_IDS = ['juCF']; // fruitbox- ids are excluded via prefix check below
 let stockStatus = {};
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg // id -> true/false
 
@@ -1729,7 +1729,7 @@ async function updateAppOrderStatus(orderId, newStatus){
               let stampItems = [];
               try{ stampItems = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
               // One stamp per product, EXCEPT Custom Fruit (juCF) which does not earn stamps.
-              const stampQty = stampItems.reduce(function(s,i){ return NO_STAMP_IDS.indexOf(i.id)!==-1 ? s : s + (parseInt(i.qty)||1); }, 0);
+              const stampQty = stampItems.reduce(function(s,i){ return (NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) ? s : s + (parseInt(i.qty)||1); }, 0);
               if(stampQty > 0){
                 const r = await apiPost({ action:'addStampsForSale', phone: np(o.phone), qty: stampQty, rcptNo: 'app_'+orderId });
                 if(r && r.success){
@@ -2601,7 +2601,7 @@ async function checkout(){
         }).catch(()=>{});
 
         // One stamp per product tendered, EXCEPT Custom Fruit (juCF) which does not earn stamps.
-        const stampQty = cart.reduce(function(s,i){ return NO_STAMP_IDS.indexOf(i.id)!==-1 ? s : s + (parseInt(i.qty)||1); }, 0);
+        const stampQty = cart.reduce(function(s,i){ return (NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) ? s : s + (parseInt(i.qty)||1); }, 0);
         if(stampQty > 0){
           await apiPost({
             action:'addStampsForSale',

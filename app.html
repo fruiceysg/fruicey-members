@@ -3895,6 +3895,7 @@ var FB_GIFTS = {
   'gift-platter':'Contents: Watermelon, Rockmelon, Pineapple, Orange, Kiwi, Green and Red Grapes, Strawberries and Blueberries.'
 };
 function fbGiftCheckout(id, name, price){
+  if(!currentUser){ openLogin(); return; }
   if(fbCartHasMenu()){ showToast('You have menu items in your cart — please check those out first, then order this separately.'); return; }
   var itemId = 'fruitbox-'+id;
   if(typeof playCashier === 'function') playCashier();
@@ -4066,6 +4067,7 @@ function fbCartHasMenu(){ return cart.some(function(i){ return String(i.id||'').
 function fbCartHasBox(){ return cart.some(function(i){ return String(i.id||'').indexOf('fruitbox-')===0; }); }
 
 function fbAddToCart(){
+  if(!currentUser){ openLogin(); return; }
   if(fbCartHasMenu()){ showToast('You have menu items in your cart — please check those out first, then order your fruit box separately.'); return; }
   var box = FB_BOXES[fbBox];
   var sig = 'fb|'+fbBox
@@ -4149,6 +4151,7 @@ function exitScreenUp(screenId){
   }, {passive:true});
 })();
 function subscribeWhatsApp(packName){
+  if(!currentUser){ openLogin(); return; }
   const msg = encodeURIComponent('Hi Wilson, I\u2019d like to subscribe to the '+packName+' pack. Please send me the PayNow details.');
   window.open('https://wa.me/'+WA+'?text='+msg, '_blank');
 }

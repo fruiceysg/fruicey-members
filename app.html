@@ -260,6 +260,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
   .feature-wrap.feat1{position:relative;left:0}
   .feature-wrap.feat2{position:relative;left:0}
   .feat-cta{font-size:16px;padding:14px 28px}
+  .feat9-btns .feat-cta{font-size:16px;padding:14px 28px}
   .home-features{max-width:1100px}
 }
 @media (min-width:1200px){
@@ -4197,6 +4198,20 @@ function exitScreenUp(screenId){
     if(atBottomOnStart && atPageBottom() && dy > 0){
       overpull = dy;
       if(overpull > 90){ exitScreenUp(id); }      // threshold -> exit
+    }
+  }, {passive:true});
+  // Desktop equivalent: wheel/trackpad over-scroll past the bottom -> exit to Home
+  var wheelAccum = 0, wheelTimer = null;
+  window.addEventListener('wheel', function(e){
+    var id = activeId();
+    if(!id || _exitingScreen){ wheelAccum = 0; return; }
+    if(atPageBottom() && e.deltaY > 0){
+      wheelAccum += e.deltaY;
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(function(){ wheelAccum = 0; }, 350);
+      if(wheelAccum > 240){ wheelAccum = 0; exitScreenUp(id); }
+    } else {
+      wheelAccum = 0;
     }
   }, {passive:true});
 })();

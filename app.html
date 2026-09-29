@@ -223,6 +223,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat3 .feat-cta:active{transform:translateY(-50%) scale(.96)}
 .feat8 .feat-cta{background:#fff;color:#9bd1b7;left:6%;bottom:9%}
 .feat9 .feat-cta{left:-24px;top:18%;bottom:auto;transform:translateY(-50%);padding:8px 30px;min-width:230px;justify-content:flex-end}
+.feat9 .feat-cta.feat9-inquire{top:33%;min-width:150px;background:#fff;color:var(--green-dark)}
 
 /* feature7: two buttons side by side on the right */
 .feat7-btns{position:absolute;right:2%;bottom:9%;top:auto;transform:none;display:flex;flex-direction:row;gap:8px;align-items:center;z-index:6}
@@ -232,8 +233,6 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat7-btn-soon{border-style:dashed;opacity:.8}
 /* feature5: single Inquire button (bottom-right) */
 .feature-wrap.feat5{overflow:hidden}
-.feat5-inquire{background:#fff;color:var(--green-dark);border:none;left:auto;right:-112px;top:6%;bottom:auto;transform:none;width:220px;justify-content:flex-start;padding-left:22px}
-.feat5-inquire:active{transform:scale(.96)}
 @media (min-width:900px){
   .feat7-btn{font-size:16px;padding:14px 26px}
   .feat7-btns{gap:14px}
@@ -1397,12 +1396,12 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 
   <div class="top-banner-box feature-wrap feat5 feat5-joinabove">
     <img src="feature5.jpg" alt="Fruicey feature 5" loading="eager">
-    <button class="feat-cta feat5-inquire" onclick="window.location.href='mailto:wilson@fruicey.sg?subject=Enquiry'">Inquire</button>
   </div>
 
   <div class="top-banner-box feature-wrap feat9">
     <img src="feature9.jpg" alt="Fruicey feature 9" loading="eager">
     <button class="feat-cta feat9-btn" onclick="openFruitBox()">Fruit Boxes &amp; Gifts</button>
+    <button class="feat-cta feat9-inquire" onclick="window.location.href='mailto:wilson@fruicey.sg?subject=Enquiry'">Inquire</button>
   </div>
 
   <div class="top-banner-box partners-box">

@@ -29,7 +29,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 #app-loader .loader-spinner{transform:translateY(-60px)}
 .tab-loader .loader-spinner{transform:translateY(-40px)}
 #app-loader.hide{opacity:0;pointer-events:none}
-.loader-spinner{width:auto;height:auto;border:none;border-radius:0;animation:none;display:inline-block;font-family:var(--font);font-size:26px;color:var(--green);letter-spacing:.5px}
+.loader-spinner{width:auto;height:auto;border:none;border-radius:0;animation:none;display:inline-block;font-family:'BabyDoll','Comic Sans MS',cursive;font-size:26px;color:var(--green);letter-spacing:.5px}
 .loader-spinner span{display:inline-block;opacity:0;animation:harvestLetter 2.2s infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes harvestLetter{0%{opacity:0}20%,70%{opacity:1}90%,100%{opacity:0}}
@@ -53,7 +53,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 /* HEADER */
 .app-header{background:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;min-height:var(--header-h);box-sizing:border-box}
 .app-header img{height:46px;cursor:pointer}
-.app-header-title{font-family:var(--font);font-size:24px;color:var(--green)}
+.app-header-title{font-family:var(--font);font-size:20px;color:var(--green)}
 .header-right{margin-left:auto;font-size:12px;color:var(--text3);margin-right:44px}
 
 /* CARDS */
@@ -998,7 +998,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   .site-header{padding:14px 24px}
   .site-header img.site-logo{height:62px}
   .app-header img{height:62px}
-  .app-header-title{font-size:28px}
+  .app-header-title{font-size:24px}
   .site-menu-btn i{font-size:30px}
   .drawer-link{font-size:18px;padding:16px 24px}
   .home-footer{font-size:19px;padding:40px 16px 48px}
@@ -2572,7 +2572,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div><div class="babydoll" style="font-size:18px;color:var(--green)" id="stamp-name"></div><div style="font-size:12px;color:var(--text3)" id="stamp-count"></div></div>
         <div style="font-size:11px;color:var(--text3)" id="stamp-completed"></div>
       </div>
-      <div class="babydoll" style="font-size:15px;color:var(--text2);margin-bottom:8px;text-align:center">Fruicey Stamp Card</div>
+      <div class="babydoll" style="font-size:15px;color:var(--text2);margin-bottom:8px;text-align:center;font-family:'BabyDoll','Comic Sans MS',cursive">Fruicey Stamp Card</div>
       <div id="stamp-grid-mini" class="stamp-grid-mini"></div>
       <div class="prog-bar"><div class="prog-fill" id="stamp-prog" style="width:0%"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>Progress</span><span id="stamp-prog-label">0 / 9</span></div>

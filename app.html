@@ -344,6 +344,7 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 /* PERSONALISED FRUIT BOX */
 .fb-body{padding:16px 16px 110px}
 .fb-intro{font-size:13px;color:var(--text2);line-height:1.6;margin:4px 4px 16px;text-align:center}
+.fb-hero-img{width:100%;height:auto;border-radius:12px;display:block;margin:4px 0 16px}
 .fb-box-row{display:flex;gap:12px;margin-bottom:16px}
 .fb-box-opt{flex:1;background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--body);transition:all .15s}
 .fb-box-opt.active{border-color:var(--green)}
@@ -1741,7 +1742,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
   <div class="fb-body">
     <div id="fb-tab-personalised">
-    <p class="fb-intro">Build your own Fruicey box, just the way you like it! Pick a size, then load it up with your favourite fruits &mdash; the slots light up and the price updates live as you go. Any space left over is topped up free with a half red apple, half orange mix.</p>
+    <img class="fb-hero-img" src="fruitbox-hero.jpg" alt="Fruicey Fruit Box" loading="lazy" onerror="this.style.display='none'">
 
     <div class="fb-box-row">
       <button class="fb-box-opt active" data-box="16" onclick="fbSetBox('16')">
@@ -7202,20 +7203,20 @@ document.addEventListener('DOMContentLoaded', function(){
   var body = document.querySelector('#scr-fruitbox .fb-body');
   if(!body) return;
   var FB_TABS = ['personalised','gifts'];
-  var touchStartX = 0;
+  var fbStartX = 0;
 
   body.addEventListener('touchstart', function(e){
-    touchStartX = e.changedTouches[0].screenX;
+    fbStartX = e.changedTouches[0].screenX;
   }, {passive:true});
 
   body.addEventListener('touchend', function(e){
-    var diff = touchStartX - e.changedTouches[0].screenX;
+    var diff = fbStartX - e.changedTouches[0].screenX;
     if(Math.abs(diff) < 60) return;
     var idx = FB_TABS.indexOf(fbTab);
     if(diff > 0 && idx < FB_TABS.length - 1){
-      fbSetTab(FB_TABS[idx + 1]);        // swipe left → Gifts
+      fbSetTab(FB_TABS[idx + 1]);
     } else if(diff < 0 && idx > 0){
-      fbSetTab(FB_TABS[idx - 1]);        // swipe right → Personalised Box
+      fbSetTab(FB_TABS[idx - 1]);
     }
   }, {passive:true});
 });

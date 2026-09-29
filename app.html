@@ -7196,6 +7196,29 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }, {passive:true});
 });
+
+// ── SWIPE BETWEEN FRUIT BOX / GIFTS TABS ─────────────────────
+document.addEventListener('DOMContentLoaded', function(){
+  var body = document.querySelector('#scr-fruitbox .fb-body');
+  if(!body) return;
+  var FB_TABS = ['personalised','gifts'];
+  var touchStartX = 0;
+
+  body.addEventListener('touchstart', function(e){
+    touchStartX = e.changedTouches[0].screenX;
+  }, {passive:true});
+
+  body.addEventListener('touchend', function(e){
+    var diff = touchStartX - e.changedTouches[0].screenX;
+    if(Math.abs(diff) < 60) return;
+    var idx = FB_TABS.indexOf(fbTab);
+    if(diff > 0 && idx < FB_TABS.length - 1){
+      fbSetTab(FB_TABS[idx + 1]);        // swipe left → Gifts
+    } else if(diff < 0 && idx > 0){
+      fbSetTab(FB_TABS[idx - 1]);        // swipe right → Personalised Box
+    }
+  }, {passive:true});
+});
 </script>
 
 <!-- ORDER RECEIPT MODAL -->

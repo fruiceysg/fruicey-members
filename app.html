@@ -405,6 +405,9 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .fb-gift-dots{display:flex;justify-content:center;gap:7px;margin-top:8px}
 .fb-gift-dot{width:8px;height:8px;border-radius:50%;border:none;background:#d5d5d5;padding:0;cursor:pointer;transition:background .15s,transform .15s}
 .fb-gift-dot.active{background:var(--green);transform:scale(1.2)}
+.fb-cell img[src$="fruit-banana.jpg"],.fb-cell img[src$="fruit-mango.jpg"],.fb-cell img[src$="fruit-white-dragonfruit.jpg"]{top:50%;left:50%;right:auto;bottom:auto;width:64%;height:64%;transform:translate(-50%,-50%);object-fit:contain}
+.fb-sw img[src$="fruit-banana.jpg"],.fb-sw img[src$="fruit-mango.jpg"],.fb-sw img[src$="fruit-white-dragonfruit.jpg"]{top:50%;left:50%;right:auto;bottom:auto;width:66%;height:66%;transform:translate(-50%,-50%);object-fit:contain}
+.fb-seasonal-note{font-size:11.5px;color:var(--text3);line-height:1.5;text-align:center;font-style:italic;margin:18px 4px 4px}
 .fb-footer-price{display:flex;flex-direction:column;line-height:1.1}
 .fb-footer-price span{font-size:11px;color:var(--text3)}
 .fb-footer-price b{font-family:var(--font);font-size:22px;color:var(--green)}
@@ -1788,6 +1791,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <button class="fb-secondary" onclick="fbReset()">Reset</button>
       <button class="fb-secondary" onclick="goTab('home')">Back to home</button>
     </div>
+    <p class="fb-seasonal-note">As all fresh fruits, flowers, fillers &amp; foliage are seasonal, they are subjected to changes based on availability.</p>
     </div><!-- /#fb-tab-personalised -->
 
     <div id="fb-tab-gifts" style="display:none">
@@ -1833,9 +1837,12 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         <div class="fb-gift-info">
           <div class="fb-gift-name">Rainbow Of Love</div>
           <div class="fb-gift-price">$128.00</div>
+          <p class="fb-gift-desc">Introducing Rainbow of Love Box, a delightful treasure trove of flavours and colours that will mesmerise your senses! Each bite is a harmonious symphony of sweetness and satisfaction, taking your taste buds on a whimsical journey.</p>
+          <p class="fb-gift-contents"><b>Box Contents:</b> Bed of rainbow colour baby breath, adorned with juicy strawberries, exotic lychees, indulgent Ferrero Rochers, and a heavenly hazelnut chocolate dip.</p>
           <button class="fb-add-btn fb-gift-btn" onclick="fbGiftCheckout('gift-rainbowoflove','Rainbow Of Love',128.00)">Proceed to checkout</button>
         </div>
       </div>
+      <p class="fb-seasonal-note">As all fresh fruits, flowers, fillers &amp; foliage are seasonal, they are subjected to changes based on availability.</p>
     </div>
   </div>
   <div class="fb-footer">
@@ -3926,7 +3933,7 @@ function fbSetTab(tab){
 var FB_GIFTS = {
   'gift-readybox':'Contents: 1 White Dragon Fruit, 1 Packham Pear, 1 Kiwi, 1 Green Apple, 1 Orange, 1 Red Apple, 1 Avocado, 2 Banana, 125g Strawberries, 250g Red Grapes, 250g Green Grapes.',
   'gift-platter':'Contents: Watermelon, Rockmelon, Pineapple, Orange, Kiwi, Green and Red Grapes, Strawberries and Blueberries.',
-  'gift-rainbowoflove':''
+  'gift-rainbowoflove':'Contents: Bed of rainbow colour baby breath, adorned with juicy strawberries, exotic lychees, indulgent Ferrero Rochers, and a heavenly hazelnut chocolate dip.'
 };
 function fbGiftCheckout(id, name, price){
   if(!currentUser){ openLogin(); return; }

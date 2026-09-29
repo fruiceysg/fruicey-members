@@ -947,7 +947,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 }
 
 /* TOAST */
-.toast{position:fixed;bottom:calc(var(--nav)+16px);left:50%;transform:translateX(-50%);background:var(--green-dark);color:#fff;padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;font-family:var(--font);box-shadow:0 6px 20px rgba(28,77,58,.32)}
+.toast{position:fixed;bottom:calc(var(--nav)+16px);left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;font-family:var(--font)}
 .toast.show{opacity:1}
 
 /* LOGIN */
@@ -3606,7 +3606,7 @@ function showTabLoader(containerId){
 function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2500); }
 function acaiSoon(e){
   if(typeof playBubble==='function') playBubble();
-  showToast('Build Your Acai Bowl is coming soon!');
+  showRewardPopup('Coming soon','Build Your Acai Bowl is on its way. Stay tuned!');
   if(e && e.currentTarget && e.currentTarget.animate){ e.currentTarget.animate([{transform:'rotate(0)'},{transform:'rotate(-4deg)'},{transform:'rotate(4deg)'},{transform:'rotate(0)'}],{duration:320,easing:'ease-in-out'}); }
 }
 

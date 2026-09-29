@@ -228,6 +228,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat7-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border:1.5px solid #6796ce;border-radius:999px;background:#fff;color:#6796ce;font-family:var(--body);font-weight:700;font-size:11px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22);white-space:nowrap;transition:transform .12s,box-shadow .12s}
 .feat7-btn:hover{box-shadow:0 6px 18px rgba(0,0,0,.28)}
 .feat7-btn:active{transform:scale(.96)}
+.feat7-btn-soon{border-style:dashed;opacity:.8}
 /* feature5: single Inquire button (bottom-right) */
 .feature-wrap.feat5{overflow:hidden}
 .feat5-inquire{background:#fff;color:var(--green-dark);border:none;left:auto;right:-112px;top:6%;bottom:auto;transform:none;width:220px;justify-content:flex-start;padding-left:22px}
@@ -946,7 +947,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 }
 
 /* TOAST */
-.toast{position:fixed;bottom:calc(var(--nav)+16px);left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;font-family:var(--font)}
+.toast{position:fixed;bottom:calc(var(--nav)+16px);left:50%;transform:translateX(-50%);background:var(--green-dark);color:#fff;padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap;font-family:var(--font);box-shadow:0 6px 20px rgba(28,77,58,.32)}
 .toast.show{opacity:1}
 
 /* LOGIN */
@@ -1354,7 +1355,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
     <img src="feature7.jpg" alt="Fruicey feature 7" loading="eager">
     <div class="feat7-btns">
       <button class="feat7-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/profilecalculator.html','_blank')">Explore your Nutri-Profile</button>
-      <button class="feat7-btn" onclick="window.open('https://fruiceysg.github.io/fruiceycalculator/acaibowlcalculator.html','_blank')">Build Your Acai Bowl</button>
+      <button class="feat7-btn feat7-btn-soon" onclick="acaiSoon(event)">Build Your Acai Bowl</button>
     </div>
   </div>
 
@@ -3603,6 +3604,11 @@ function showTabLoader(containerId){
 }
 
 function showToast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2500); }
+function acaiSoon(e){
+  if(typeof playBubble==='function') playBubble();
+  showToast('Build Your Acai Bowl is coming soon!');
+  if(e && e.currentTarget && e.currentTarget.animate){ e.currentTarget.animate([{transform:'rotate(0)'},{transform:'rotate(-4deg)'},{transform:'rotate(4deg)'},{transform:'rotate(0)'}],{duration:320,easing:'ease-in-out'}); }
+}
 
 // ── LOGIN / REGISTER ──────────────────────────────────────────
 function openLogin(){ document.getElementById('login-modal').classList.add('open'); }

@@ -3894,6 +3894,17 @@ function fbPickPresses(){
   for(var i=pool.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
   FB_PRESS = pool.slice(0, 5);
 }
+function fbPressInfo(pid){
+  var p = (typeof PRODUCT_MAP!=='undefined') ? PRODUCT_MAP[pid] : null;
+  var name = (p && p.name) ? (p.name + ' Press') : 'Press';
+  var infoId = (typeof IMG_INFO!=='undefined' && IMG_INFO[pid]) ? IMG_INFO[pid]
+             : ((typeof IMG!=='undefined' && IMG[pid]) ? IMG[pid] : '');
+  var body = infoId
+    ? '<img src="https://lh3.googleusercontent.com/d/'+infoId+'=w1000" alt="" style="width:100%;max-height:68vh;object-fit:contain;border-radius:12px;display:block" onerror="this.style.display=\'none\'">'
+    : 'Product info coming soon.';
+  if(typeof playBubble==='function') playBubble();
+  showRewardPopup(name, body);
+}
 const FB_PRESS_COLOR = '#0d8a72';
 let fbBox = '16';
 let fbTab = 'gifts';
@@ -4072,7 +4083,7 @@ function fbRender(){
     var img = (typeof IMG!=='undefined' && IMG[p.id]) ? '<img class="fb-img" src="https://lh3.googleusercontent.com/d/'+IMG[p.id]+'=w120" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '';
     return '<div class="fb-fruit">'
       +'<span class="fb-sw" style="background:'+FB_PRESS_COLOR+'">'+img+'</span>'
-      +'<div class="fb-fruit-meta"><div class="fb-fruit-name">'+p.name+' Press</div>'
+      +'<div class="fb-fruit-meta" onclick="fbPressInfo(\''+p.id+'\')" style="cursor:pointer"><div class="fb-fruit-name">'+p.name+' Press <i class="ti ti-info-circle" style="font-size:13px;opacity:.55;vertical-align:-1px"></i></div>'
         +'<div class="fb-fruit-sub">cold-pressed juice · +$'+p.price.toFixed(2)+'</div></div>'
       +'<div class="fb-step">'
         +'<button class="fb-step-btn" onclick="fbPressStep(\''+p.id+'\',-1)"'+(cur<=0?' disabled':'')+'>&minus;</button>'

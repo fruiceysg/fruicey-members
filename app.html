@@ -4745,6 +4745,7 @@ function renderBowlSuggestions(){
   const picks = pool.slice(0,4);
   list.innerHTML = picks.map(function(item){
     const p = item.p;
+    const isPress = FB_PRESS_CATS.indexOf(item.cat) >= 0;
     const fileId = IMG[p.id];
     const img = fileId
       ? '<img class="pd-suggest-img" src="https://lh3.googleusercontent.com/d/'+fileId+'=w160" alt="" loading="lazy">'
@@ -4754,7 +4755,7 @@ function renderBowlSuggestions(){
     return '<div class="pd-suggest-row">'
       + img
       + '<div class="pd-suggest-info">'
-        + '<div class="pd-suggest-name">'+p.name+'</div>'
+        + '<div class="pd-suggest-name">'+p.name+(isPress ? ' <i class="ti ti-info-circle" onclick="event.stopPropagation();fbPressInfo(\''+p.id+'\')" style="font-size:13px;opacity:.55;cursor:pointer;vertical-align:-1px"></i>' : '')+'</div>'
         + (desc ? '<div class="pd-suggest-desc">'+desc+'</div>' : '')
         + (price ? '<div class="pd-suggest-price">'+price+'</div>' : '')
       + '</div>'

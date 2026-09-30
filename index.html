@@ -690,6 +690,24 @@ body:has(.cart-sheet.open) #fullscreen-label{display:none!important}
 .date-card-num{font-size:17px;font-weight:700;color:var(--text)}
 .date-card.selected{border-color:var(--green);border-width:2px}
 .date-card.selected .date-card-top,.date-card.selected .date-card-num{color:var(--green-dark)}
+.date-card-more .date-card-num{font-size:15px}
+.cal-sheet{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.cal-sheet.open{display:flex}
+.cal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.42)}
+.cal-card{position:relative;background:#fff;border-radius:18px;padding:16px 14px;width:100%;max-width:320px;box-shadow:0 14px 44px rgba(0,0,0,.28)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-title{font-family:var(--font);font-size:18px;color:var(--green-dark);font-weight:700}
+.cal-nav{border:none;background:var(--green-light);color:var(--green-dark);width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cal-nav:disabled{opacity:.3;cursor:default}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-wd{text-align:center;font-size:11px;font-weight:700;color:var(--text3);padding:2px 0}
+.cal-day{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:14px;font-weight:600;color:var(--text);background:#fff;border:1.5px solid transparent;font-family:var(--body)}
+button.cal-day{cursor:pointer}
+.cal-day.avail:hover{border-color:var(--green)}
+button.cal-day:active{transform:scale(.94)}
+.cal-day.muted{color:#cfcfcf;background:transparent}
+.cal-day.selected{background:var(--green);color:#fff;border-color:var(--green)}
+.cal-note{text-align:center;font-size:11px;color:var(--text3);margin-top:12px}
 .time-pill{flex:0 0 auto;padding:9px 14px;border:1.5px solid var(--border);border-radius:20px;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap;font-family:var(--body)}
 .time-pill.selected{border-color:var(--green);border-width:2px;color:var(--green-dark)}
 .del-input{width:100%;padding:9px 10px;border:1.5px solid #eee;border-radius:8px;font-family:var(--body);font-size:13px;margin-bottom:8px}
@@ -1991,6 +2009,21 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <h3>Open on your phone</h3>
     <p>Stamps are earned and redeemed in store, so the Rewards Pass is made for your phone. Open <b>fruicey.sg</b> there to collect stamps and spin the prize wheel.</p>
     <button class="btn btn-primary" onclick="closeRewardsDesktopNote()">Got it</button>
+  </div>
+</div>
+
+<!-- Themed calendar for "Other dates" (7-day cards cover the near term) -->
+<div class="cal-sheet" id="cal-sheet">
+  <div class="cal-backdrop" onclick="closeDatePicker()"></div>
+  <div class="cal-card">
+    <div class="cal-head">
+      <button type="button" class="cal-nav" id="cal-prev" onclick="calNav(-1)"><i class="ti ti-chevron-left"></i></button>
+      <div class="cal-title" id="cal-title"></div>
+      <button type="button" class="cal-nav" id="cal-next" onclick="calNav(1)"><i class="ti ti-chevron-right"></i></button>
+    </div>
+    <div class="cal-grid" id="cal-weekdays"></div>
+    <div class="cal-grid" id="cal-days"></div>
+    <div class="cal-note">Sundays closed</div>
   </div>
 </div>
 
@@ -3398,6 +3431,7 @@ let currentCat    = '';
 let collectMode   = 'pickup';
 let collectTime   = '';
 let collectDate   = '';
+let _calMinStr = '', _calMaxStr = '', _calY = 0, _calM = 0;
 let currentScreen = 'home';
 let hasSpun       = false;
 let currentAngle  = 0;
@@ -5479,32 +5513,97 @@ function renderTimeSlots(){
   const boxOnly = (typeof fbCartHasBox === 'function') && fbCartHasBox();
   const startDay = boxOnly ? 2 : (hasPreorder ? 1 : 0);   // fruit box: from two days after; pre-order: not same-day
 
-  // Next 7 days (skip Sundays) as compact date cards; a fruit box = following day only
+  // Quick cards: up to 7 valid (non-Sunday) days from the lead-time start. Beyond that -> "Other dates" calendar.
   const dateContainer = document.getElementById('date-slots-container');
   const dates = [];
-  for(let d=startDay; d<7; d++){
-    const dt = new Date();
-    dt.setDate(dt.getDate() + d);
-    if(dt.getDay() === 0) continue; // skip Sunday
-    const val = ymdLocal(dt);       // local date (avoids UTC off-by-one)
+  for(let d=startDay; dates.length<7 && d<startDay+21; d++){
+    const dt = new Date(); dt.setDate(dt.getDate() + d);
+    if(dt.getDay() === 0) continue;                          // Sunday closed
     const top = d===0 ? 'Today' : d===1 ? 'Tomorrow' : dayNames[dt.getDay()];
-    dates.push({val, top, num: dt.getDate()});
-    if(boxOnly) break;              // fruit box: only the following (next available) day
+    dates.push({ val: ymdLocal(dt), top: top, num: dt.getDate() });
   }
 
-  // If a previously-picked date is now invalid (e.g. it was "today" before a pre-order item was
-  // added), reset to the earliest allowed date.
-  if(collectDate && !dates.some(function(x){ return x.val===collectDate; })){ collectDate = ''; }
+  // Calendar range for "Other dates": earliest = today + lead; latest = end of NEXT month.
+  const _first = new Date(); _first.setDate(_first.getDate() + startDay);
+  _calMinStr = ymdLocal(_first);
+  const _tdy = new Date();
+  _calMaxStr = ymdLocal(new Date(_tdy.getFullYear(), _tdy.getMonth()+2, 0));   // end of next month (from today)
+
+  // Keep the current pick if it's a card OR a valid calendar-only date; else reset to the first card.
+  const inCards   = collectDate && dates.some(function(x){ return x.val===collectDate; });
+  const otherPick = (collectDate && !inCards && _dateSelectable(collectDate)) ? collectDate : '';
+  if(collectDate && !inCards && !otherPick) collectDate = '';
   if(!collectDate && dates.length) collectDate = dates[0].val;
 
-  dateContainer.innerHTML = dates.map(d =>
-    '<button type="button" class="date-card'+(collectDate===d.val?' selected':'')+'" data-date="'+d.val+'">'
-    + '<span class="date-card-top">'+d.top+'</span>'
-    + '<span class="date-card-num">'+d.num+'</span>'
-    + '</button>'
-  ).join('');
+  let _html = dates.map(function(d){
+    return '<button type="button" class="date-card'+(collectDate===d.val?' selected':'')+'" data-date="'+d.val+'">'
+      + '<span class="date-card-top">'+d.top+'</span>'
+      + '<span class="date-card-num">'+d.num+'</span></button>';
+  }).join('');
+  if(otherPick){
+    const _od = new Date(otherPick + 'T00:00:00');
+    _html += '<button type="button" class="date-card date-card-more selected" onclick="openDatePicker()">'
+      + '<span class="date-card-top">'+dayNames[_od.getDay()]+'</span>'
+      + '<span class="date-card-num">'+_od.getDate()+'</span></button>';
+  } else {
+    _html += '<button type="button" class="date-card date-card-more" onclick="openDatePicker()">'
+      + '<span class="date-card-top">Other</span>'
+      + '<span class="date-card-num"><i class="ti ti-calendar"></i></span></button>';
+  }
+  dateContainer.innerHTML = _html;
 
   renderTimePills();
+}
+
+// ── "Other dates" themed calendar (min = today+lead, max = end of next month, Sundays closed) ──
+function _dateSelectable(iso){
+  if(!iso || iso < _calMinStr || iso > _calMaxStr) return false;
+  return new Date(iso + 'T00:00:00').getDay() !== 0;   // Sunday closed
+}
+function _ym(y,m){ return y*12 + m; }
+function openDatePicker(){
+  var base = (collectDate && collectDate >= _calMinStr && collectDate <= _calMaxStr)
+    ? new Date(collectDate + 'T00:00:00') : new Date(_calMinStr + 'T00:00:00');
+  _calY = base.getFullYear(); _calM = base.getMonth();
+  renderCal();
+  document.getElementById('cal-sheet').classList.add('open');
+}
+function closeDatePicker(){ document.getElementById('cal-sheet').classList.remove('open'); }
+function calNav(dir){
+  var mn = new Date(_calMinStr+'T00:00:00'), mx = new Date(_calMaxStr+'T00:00:00');
+  var target = _ym(_calY,_calM) + dir;
+  if(target < _ym(mn.getFullYear(),mn.getMonth()) || target > _ym(mx.getFullYear(),mx.getMonth())) return;
+  _calM += dir;
+  if(_calM < 0){ _calM = 11; _calY--; } else if(_calM > 11){ _calM = 0; _calY++; }
+  renderCal();
+}
+function renderCal(){
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-title').textContent = months[_calM] + ' ' + _calY;
+  document.getElementById('cal-weekdays').innerHTML = ['S','M','T','W','T','F','S'].map(function(w){ return '<div class="cal-wd">'+w+'</div>'; }).join('');
+  var mn = new Date(_calMinStr+'T00:00:00'), mx = new Date(_calMaxStr+'T00:00:00');
+  document.getElementById('cal-prev').disabled = (_ym(_calY,_calM) <= _ym(mn.getFullYear(),mn.getMonth()));
+  document.getElementById('cal-next').disabled = (_ym(_calY,_calM) >= _ym(mx.getFullYear(),mx.getMonth()));
+  var firstDow = new Date(_calY,_calM,1).getDay();
+  var daysInMonth = new Date(_calY,_calM+1,0).getDate();
+  var cells = '';
+  for(var i=0;i<firstDow;i++) cells += '<div class="cal-day muted"></div>';
+  for(var day=1; day<=daysInMonth; day++){
+    var iso = ymdLocal(new Date(_calY,_calM,day));
+    if(_dateSelectable(iso)){
+      cells += '<button type="button" class="cal-day avail'+(iso===collectDate?' selected':'')+'" onclick="calPick(\''+iso+'\')">'+day+'</button>';
+    } else {
+      cells += '<div class="cal-day muted">'+day+'</div>';
+    }
+  }
+  document.getElementById('cal-days').innerHTML = cells;
+}
+function calPick(iso){
+  if(!_dateSelectable(iso)) return;
+  collectDate = iso;
+  closeDatePicker();
+  renderTimeSlots();
+  var dc=document.getElementById('date-slots-container'); if(dc) dc.classList.remove('field-error');
 }
 
 // Render the time pills for the selected date; for "today" only future times are shown
@@ -5691,10 +5790,8 @@ document.addEventListener('click', function(e){
   const dateSlot = e.target.closest('[data-date]');
   if(dateSlot){
     collectDate = dateSlot.dataset.date;
-    document.querySelectorAll('[data-date]').forEach(t=>t.classList.remove('selected'));
-    dateSlot.classList.add('selected');
     const dc=document.getElementById('date-slots-container'); if(dc) dc.classList.remove('field-error');
-    renderTimePills();   // today shows only future times; other days show all
+    renderTimeSlots();   // rebuild cards (resets the "Other" card) + time pills
     return;
   }
   const timeSlot = e.target.closest('[data-time]');

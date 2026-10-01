@@ -2914,6 +2914,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div class="modal-title">Welcome back</div>
       <div class="field"><label>Phone number</label><input type="tel" id="l-phone" placeholder=""></div>
       <div class="field"><label>Password</label><input type="password" id="l-pass" placeholder="Your password"></div>
+      <div style="text-align:right;margin:-6px 0 2px"><a href="javascript:void(0)" onclick="showLoginTab('reset')" style="font-size:12.5px;color:var(--green);font-weight:600;text-decoration:none">Forgot password?</a></div>
       <div class="err" id="l-err"></div>
       <button class="btn btn-primary" id="login-btn" style="margin-top:8px">Log in</button>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="closeLogin()">Cancel</button>
@@ -2941,6 +2942,26 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div class="err" id="r-err"></div>
       <button class="btn btn-primary" id="register-btn" style="margin-top:8px">Create account</button>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="closeLogin()">Cancel</button>
+    </div>
+
+    <div id="lpanel-reset" style="display:none">
+      <div class="modal-title">Reset password</div>
+      <div id="reset-step1">
+        <p style="font-size:13px;color:var(--text2);line-height:1.5;margin:0 0 14px">Enter your phone number and we'll email a reset code to the address on your account.</p>
+        <div class="field"><label>Phone number</label><input type="tel" id="rp-phone" placeholder=""></div>
+        <div class="err" id="rp-err1"></div>
+        <button class="btn btn-primary" id="rp-send-btn" style="margin-top:8px" onclick="doRequestReset()">Send code</button>
+        <button class="btn btn-secondary" style="margin-top:8px" onclick="showLoginTab('login')">Back to log in</button>
+      </div>
+      <div id="reset-step2" style="display:none">
+        <p style="font-size:13px;color:var(--text2);line-height:1.5;margin:0 0 14px">If an account exists for that number, a reset code was emailed to it. Enter the code and your new password below.</p>
+        <div class="field"><label>Reset code</label><input type="text" id="rp-code" inputmode="numeric" maxlength="6" placeholder="6-digit code"></div>
+        <div class="field"><label>New password</label><input type="password" id="rp-new" placeholder="Min. 6 characters"></div>
+        <div class="field"><label>Confirm password</label><input type="password" id="rp-new2" placeholder="Repeat password"></div>
+        <div class="err" id="rp-err2"></div>
+        <button class="btn btn-primary" id="rp-reset-btn" style="margin-top:8px" onclick="doResetPassword()">Reset password</button>
+        <button class="btn btn-secondary" style="margin-top:8px" onclick="showLoginTab('login')">Back to log in</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3658,9 +3679,46 @@ function openLogin(){ document.getElementById('login-modal').classList.add('open
 function closeLogin(){ document.getElementById('login-modal').classList.remove('open'); }
 function showLoginTab(t){
   document.querySelectorAll('.ltab').forEach(el=>el.classList.remove('active'));
-  document.getElementById('ltab-'+t).classList.add('active');
+  const _tab = document.getElementById('ltab-'+t); if(_tab) _tab.classList.add('active');
   document.getElementById('lpanel-login').style.display = t==='login'?'block':'none';
   document.getElementById('lpanel-register').style.display = t==='register'?'block':'none';
+  const _rp = document.getElementById('lpanel-reset');
+  if(_rp){ _rp.style.display = t==='reset'?'block':'none'; if(t==='reset') showResetStep(1); }
+}
+function showResetStep(n){
+  document.getElementById('reset-step1').style.display = n===1?'block':'none';
+  document.getElementById('reset-step2').style.display = n===2?'block':'none';
+}
+async function doRequestReset(){
+  const phone=(document.getElementById('rp-phone').value||'').trim();
+  const err=document.getElementById('rp-err1'); err.style.display='none';
+  if(!phone){ err.textContent='Enter your phone number.'; err.style.display='block'; return; }
+  const btn=document.getElementById('rp-send-btn'); btn.disabled=true; const t0=btn.textContent; btn.textContent='Sending\u2026';
+  try{ await apiPost({action:'requestPasswordReset', phone:np(phone)}); }catch(e){}
+  btn.disabled=false; btn.textContent=t0;
+  showResetStep(2);
+}
+async function doResetPassword(){
+  const phone=(document.getElementById('rp-phone').value||'').trim();
+  const code=(document.getElementById('rp-code').value||'').trim();
+  const pw=document.getElementById('rp-new').value||'';
+  const pw2=document.getElementById('rp-new2').value||'';
+  const err=document.getElementById('rp-err2'); err.style.display='none';
+  if(code.length<4){ err.textContent='Enter the code from your email.'; err.style.display='block'; return; }
+  if(pw.length<6){ err.textContent='Password must be at least 6 characters.'; err.style.display='block'; return; }
+  if(pw!==pw2){ err.textContent='Passwords do not match.'; err.style.display='block'; return; }
+  const btn=document.getElementById('rp-reset-btn'); btn.disabled=true; const t0=btn.textContent; btn.textContent='Resetting\u2026';
+  let res={};
+  try{ res=await apiPost({action:'resetPassword', phone:np(phone), code:code, password:pw}); }catch(e){ res={error:'network'}; }
+  btn.disabled=false; btn.textContent=t0;
+  if(res && res.success){
+    showToast('Password reset! Please log in.');
+    document.getElementById('l-phone').value=phone;
+    document.getElementById('l-pass').value='';
+    showLoginTab('login');
+  } else if(res && res.error==='bad_code'){ err.textContent='Invalid or expired code.'; err.style.display='block'; }
+  else if(res && res.error==='too_many'){ err.textContent='Too many attempts \u2014 please wait a bit.'; err.style.display='block'; }
+  else { err.textContent='Could not reset. Please try again.'; err.style.display='block'; }
 }
 
 document.addEventListener('DOMContentLoaded', function(){

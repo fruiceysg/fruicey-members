@@ -798,7 +798,7 @@ button.cal-day:active{transform:scale(.94)}
 .order-collect{font-size:11px;color:var(--text3)}
 
 /* REWARDS (embedded stamp card) */
-.stamp-card-mini{background:rgba(255,255,255,.92);border-radius:var(--r);padding:16px;margin:10px 16px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.stamp-card-mini{background:rgba(255,255,255,.92);border-radius:var(--r);padding:16px;margin:10px 16px;box-shadow:0 1px 6px rgba(0,0,0,.06);position:relative}
 .stamp-grid-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
 .stamp-slot-mini{aspect-ratio:1;border-radius:50%;border:2.5px dashed #ddd;display:flex;align-items:center;justify-content:center;background:#fafafa;overflow:hidden}
 .stamp-slot-mini.stamped{border:2.5px solid var(--green);background:#fff}
@@ -992,7 +992,6 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   .drawer-panel{left:calc(50% - var(--app-w)/2)}
   #fullscreen-btn{right:calc(50% - var(--app-w)/2 + 6px)!important}
   .acc-logout-fixed{right:calc(50% - var(--app-w)/2 + 54px)!important}
-  .pog-float{right:calc(50% - var(--app-w)/2 + 56px)!important}
   #fullscreen-label{right:calc(50% - var(--app-w)/2 + 6px)!important}
   /* Scale content up */
   .product-grid{grid-template-columns:repeat(3,1fr);gap:14px;padding:14px 20px}
@@ -1040,7 +1039,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 .reward-popup-msg{font-size:14px;color:#555;line-height:1.6;margin-bottom:18px}
 .reward-popup-btn{width:100%;padding:12px;border:none;border-radius:25px;font-family:var(--font);font-size:16px;color:#fff;background:linear-gradient(135deg,var(--green),var(--green-dark));cursor:pointer;box-shadow:0 4px 12px rgba(28,77,58,.35)}
 .pog-open-btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:9px;width:fit-content;max-width:100%;margin:6px auto 16px;padding:10px 22px;border:none;border-radius:22px;background:linear-gradient(135deg,#f6c945,#e0a91e);cursor:pointer;box-shadow:0 4px 14px rgba(224,169,30,.5);animation:pog-glow 2.4s ease-in-out infinite}
-.pog-float{position:fixed!important;top:calc(var(--header-h) + 10px);right:54px;z-index:998;margin:0!important;padding:5px 11px;border-radius:16px;gap:6px}
+.pog-float{position:absolute;top:10px;right:10px;z-index:5;margin:0!important;padding:5px 11px;border-radius:16px;gap:6px}
 .pog-float .pog-label{font-size:13px}
 .pog-float .pog-art{width:22px;height:22px}
 .pog-float .pog-badge{position:absolute;top:2px;right:4px;min-width:14px;height:14px;font-size:9px;padding:0 3px;border-radius:7px;z-index:6}
@@ -2604,9 +2603,8 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <!-- Stamp card -->
   <div id="rewards-card" style="display:none">
     <div class="stamp-card-mini card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div><div class="babydoll" style="font-size:18px;color:var(--green)" id="stamp-name"></div><div style="font-size:12px;color:var(--text3)" id="stamp-count"></div></div>
-        <div style="font-size:11px;color:var(--text3)" id="stamp-completed"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-right:118px">
+        <div><div class="babydoll" style="font-size:18px;color:var(--green)" id="stamp-name"></div><div style="font-size:12px;color:var(--text3)" id="stamp-count"></div><div style="font-size:11px;color:var(--text3)" id="stamp-completed"></div></div>
       </div>
       <div class="babydoll" style="font-size:15px;color:var(--text2);margin-bottom:8px;text-align:center;font-family:'BabyDoll','Comic Sans MS',cursive">Fruicey Stamp Card</div>
       <div id="stamp-grid-mini" class="stamp-grid-mini"></div>
@@ -6467,7 +6465,7 @@ function renderStampCard(m){
   // ── Pot of Gold button (opens a pop-out with all prizes + full history) ──
   let potBtn = document.getElementById('pog-open-btn');
   if(!potBtn){
-    const ba = document.body;
+    const ba = document.querySelector('#rewards-card .stamp-card-mini') || document.body;
     if(ba){
       potBtn = document.createElement('button');
       potBtn.id = 'pog-open-btn';

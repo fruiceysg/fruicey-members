@@ -6940,7 +6940,6 @@ function logout(){
   stopNotif();
   sessionStorage.removeItem('fruicey_user');
   authToken=''; sessionStorage.removeItem('fruicey_token');
-  try{ localStorage.removeItem('fx_app_bio'); localStorage.removeItem('fx_app_sess'); }catch(e){}
   updateCartBadge();
   goTab('home');
   showToast('Logged out.');

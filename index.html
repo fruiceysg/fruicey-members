@@ -1006,7 +1006,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   .home-footer{font-size:17px;padding:34px 16px 40px}
 }
 @media (min-width:900px){
-  :root{--nav:80px;--header-h:91px}
+  :root{--nav:80px;--header-h:68px}
   /* Cart bar as a compact pill on the right (desktop only) */
   .cart-badge{left:auto;right:24px;bottom:calc(var(--nav) + 12px);width:auto;border-radius:26px;padding:12px 22px;gap:16px;box-shadow:0 6px 20px rgba(28,77,58,.45)}
   .product-grid{grid-template-columns:repeat(4,1fr);gap:16px;padding:16px 24px}
@@ -1017,23 +1017,20 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   .order-card{margin:16px 24px}
   .nav-tab i{font-size:34px}
   .nav-tab span{font-size:13px}
-  .site-header{padding:14px 24px}
-  .site-header img.site-logo{height:62px}
-  .app-header img{height:62px}
+  .site-header{padding:10px 24px}
+  .site-header img.site-logo{height:50px}
+  .app-header img{height:50px}
   .app-header-title{font-size:24px}
   .site-menu-btn i{font-size:30px}
   .drawer-link{font-size:18px;padding:16px 24px}
   .home-footer{font-size:19px;padding:40px 16px 48px}
   .btn{font-size:17px;padding:15px}
-  /* ── Desktop: bottom tabs become a right-side vertical nav (Home on top) ── */
-  .bottom-nav{flex-direction:column;justify-content:flex-start;top:0;bottom:0;left:auto;right:0;transform:none;width:var(--nav);height:100vh;max-width:none;border-top:none;border-left:1px solid var(--border);box-shadow:-2px 0 12px rgba(0,0,0,.06);padding-top:calc(var(--header-h) + 14px);gap:4px}
+  /* ── Desktop: bottom tabs become a LEFT-side vertical nav, starting below the canopy ── */
+  .bottom-nav{flex-direction:column;justify-content:flex-start;top:0;bottom:0;left:0;right:auto;transform:none;width:var(--nav);height:100vh;max-width:none;border-top:none;border-right:1px solid var(--border);box-shadow:2px 0 12px rgba(0,0,0,.06);padding-top:calc(var(--header-h) + 114px);gap:4px}
   .nav-tab{flex:0 0 auto;width:100%;padding:14px 4px}
-  body{padding-bottom:0!important;padding-right:var(--nav)}
+  body{padding-bottom:0!important;padding-left:var(--nav)}
   .screen{min-height:100vh}
-  .fb-footer{bottom:0;right:var(--nav)}
-  .cart-badge{right:calc(var(--nav) + 24px)!important}
-  #fullscreen-btn,#fullscreen-label{right:calc(var(--nav) + 6px)!important}
-  .acc-logout-fixed{right:calc(var(--nav) + 54px)!important}
+  .fb-footer{bottom:0;left:var(--nav);right:0}
 }
 @media (min-width:1300px){
   .product-grid{grid-template-columns:repeat(5,1fr);gap:18px;padding:18px 28px}

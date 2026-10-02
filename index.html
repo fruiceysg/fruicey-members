@@ -1030,12 +1030,32 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   .bottom-nav{flex-direction:column;justify-content:flex-start;top:calc(var(--header-h) + 110px);bottom:0;left:0;right:auto;transform:none;width:var(--nav);height:auto;max-width:none;border-top:none;border-right:1px solid var(--border);box-shadow:2px 0 12px rgba(0,0,0,.06);padding-top:8px;gap:4px}
   .nav-tab{flex:0 0 auto;width:100%;padding:14px 4px}
   .nav-burger{display:flex}
+  /* Burger pages (fruit boxes, subscriptions, story, delivery): hide the left nav + go full width */
+  body:has(#scr-fruitbox.active) .bottom-nav,
+  body:has(#scr-subscriptions.active) .bottom-nav,
+  body:has(#scr-story.active) .bottom-nav,
+  body:has(#scr-shipping.active) .bottom-nav{display:none}
+  body:has(#scr-fruitbox.active),
+  body:has(#scr-subscriptions.active),
+  body:has(#scr-story.active),
+  body:has(#scr-shipping.active){padding-left:0}
+  body:has(#scr-fruitbox.active) .fb-footer{left:0}
   body{padding-bottom:0!important;padding-left:var(--nav)}
   .screen{min-height:100vh}
   .fb-footer{bottom:0;left:var(--nav);right:0}
   #fq-embed{bottom:16px}
   /* header + canopy span full width so the nav background tucks underneath them */
   .home-topbar .site-header,.home-topbar .app-header,.home-topbar .canopy{margin-left:calc(-1 * var(--nav));width:calc(100% + var(--nav))}
+  /* Burger pages (fruit boxes, subscriptions, story, delivery): hide the left nav, go full-width */
+  body:has(#scr-subscriptions.active) .bottom-nav,
+  body:has(#scr-story.active) .bottom-nav,
+  body:has(#scr-shipping.active) .bottom-nav,
+  body:has(#scr-fruitbox.active) .bottom-nav{display:none}
+  body:has(#scr-subscriptions.active),
+  body:has(#scr-story.active),
+  body:has(#scr-shipping.active),
+  body:has(#scr-fruitbox.active){padding-left:0}
+  body:has(#scr-fruitbox.active) .fb-footer{left:0}
 }
 @media (min-width:1200px){ .bottom-nav{top:calc(var(--header-h) + 130px)} }
 @media (min-width:1300px){

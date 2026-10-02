@@ -43,6 +43,7 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .nav-tab.active{color:var(--green)}
 .nav-tab i{font-size:30px}
 .nav-tab span{font-size:11px;font-weight:500}
+.nav-burger{display:none}
 
 /* SCREENS */
 .screen{display:none;min-height:calc(100vh - var(--nav));position:relative;z-index:1}
@@ -1028,12 +1029,13 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   /* ── Desktop: bottom tabs become a LEFT-side vertical nav, starting below the canopy ── */
   .bottom-nav{flex-direction:column;justify-content:flex-start;top:calc(var(--header-h) + 110px);bottom:0;left:0;right:auto;transform:none;width:var(--nav);height:auto;max-width:none;border-top:none;border-right:1px solid var(--border);box-shadow:2px 0 12px rgba(0,0,0,.06);padding-top:8px;gap:4px}
   .nav-tab{flex:0 0 auto;width:100%;padding:14px 4px}
+  .nav-burger{display:flex}
   body{padding-bottom:0!important;padding-left:var(--nav)}
   .screen{min-height:100vh}
   .fb-footer{bottom:0;left:var(--nav);right:0}
   #fq-embed{bottom:16px}
   /* header + canopy span full width so the nav background tucks underneath them */
-  .site-header,.home-topbar,.canopy{margin-left:calc(-1 * var(--nav));width:calc(100% + var(--nav))}
+  .home-topbar .site-header,.home-topbar .app-header,.home-topbar .canopy{margin-left:calc(-1 * var(--nav));width:calc(100% + var(--nav))}
 }
 @media (min-width:1200px){ .bottom-nav{top:calc(var(--header-h) + 130px)} }
 @media (min-width:1300px){
@@ -1102,6 +1104,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <button class="nav-tab" id="nav-orders"  onclick="goTab('orders')">  <i class="ti ti-receipt"></i> <span>Orders</span></button>
   <button class="nav-tab" id="nav-rewards" onclick="goTab('rewards')"> <i class="ti ti-star"></i>    <span>Rewards</span></button>
   <button class="nav-tab" id="nav-account" onclick="goTab('account')"> <i class="ti ti-user"></i>    <span>Account</span></button>
+  <button class="nav-tab nav-burger" onclick="openDrawer()" aria-label="More"><i class="ti ti-menu-2"></i><span>More</span></button>
 </nav>
 
 <!-- ═══ HOME ═══ -->

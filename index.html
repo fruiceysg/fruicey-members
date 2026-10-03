@@ -395,6 +395,11 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .fb-step-num{min-width:18px;text-align:center;font-size:15px;font-weight:600}
 .fb-footer{position:fixed;left:0;right:0;bottom:var(--nav);background:#fff;border-top:1px solid var(--border);padding:12px 16px;display:none;align-items:center;gap:14px;z-index:140}
 .fb-tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border)}
+/* Desktop: narrow Fruit Box into a centered column to match Story/Subscriptions/Shipping */
+@media (min-width:900px){
+  #scr-fruitbox .fb-tabs,
+  #scr-fruitbox .fb-body{max-width:680px;margin-left:auto;margin-right:auto}
+}
 .fb-tab{flex:1;background:none;border:none;padding:13px 8px;font-family:var(--font);font-size:13.5px;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s}
 .fb-tab.active{color:var(--green);border-bottom-color:var(--green)}
 .fb-gift{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}

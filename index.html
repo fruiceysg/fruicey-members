@@ -4537,7 +4537,12 @@ function exitScreenUp(screenId){
   function nearBottom(){ return (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 70); }
   function updateExitHint(){
     if(!_hint) _hint = document.getElementById('exit-hint');
-    if(_hint) _hint.classList.toggle('show', !!activeId() && nearBottom());
+    var show = !!activeId() && nearBottom();
+    if(show && currentScreen === 'fruitbox'){
+      var f = document.querySelector('#scr-fruitbox .fb-footer');
+      if(f && getComputedStyle(f).display !== 'none') show = false;  // don't cover the checkout bar
+    }
+    if(_hint) _hint.classList.toggle('show', show);
   }
   ['scroll','touchmove','touchend','resize'].forEach(function(ev){
     window.addEventListener(ev, updateExitHint, {passive:true});
@@ -4545,6 +4550,8 @@ function exitScreenUp(screenId){
   document.querySelectorAll('.screen').forEach(function(s){
     new MutationObserver(updateExitHint).observe(s, {attributes:true, attributeFilter:['class']});
   });
+  var _fbFooter = document.querySelector('#scr-fruitbox .fb-footer');
+  if(_fbFooter) new MutationObserver(updateExitHint).observe(_fbFooter, {attributes:true, attributeFilter:['style','class']});
 })();
 function subscribeWhatsApp(packName){
   if(!currentUser){ openLogin(); return; }

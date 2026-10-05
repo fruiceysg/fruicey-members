@@ -490,6 +490,14 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .sub-dot.active{background:var(--green);transform:scale(1.25)}
 .sub-slide-tap{cursor:pointer}
 .sub-slide-tap:active{filter:brightness(.97)}
+/* Scroll-up-to-exit hint (subscriptions, fruit box, personalised box, story, shipping) */
+#exit-hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:none;align-items:center;gap:6px;background:rgba(28,77,58,.5);color:#fff;padding:7px 15px;border-radius:999px;font-family:var(--body);font-size:12.5px;letter-spacing:.3px;white-space:nowrap;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:95;pointer-events:none;animation:exitHintBlink 2.6s ease-in-out infinite}
+#exit-hint i{font-size:16px;line-height:1}
+@keyframes exitHintBlink{0%,100%{opacity:.22}50%{opacity:.82}}
+body:has(#scr-subscriptions.active) #exit-hint,
+body:has(#scr-story.active) #exit-hint,
+body:has(#scr-shipping.active) #exit-hint,
+body:has(#scr-fruitbox.active) #exit-hint{display:flex}
 .sub-tap-badge{position:absolute;top:26px;right:12px;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;background:#5099cc;color:#fff;font-family:var(--font);font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none;z-index:2}
 .sub-tap-badge i{font-size:15px}
 /* Desktop: scale tap-to-buy badge down to match the smaller subscription page */
@@ -4132,6 +4140,11 @@ function openSubscriptions(){
   document.body.classList.remove('home-active');
   document.documentElement.style.background = '';
   buildSubscriptionPacks();
+  // Reset every pack's carousel back to its first slide on each visit
+  document.querySelectorAll('#scr-subscriptions .sub-track').forEach(function(t){ t.scrollLeft = 0; });
+  document.querySelectorAll('#scr-subscriptions .sub-dots').forEach(function(dots){
+    dots.querySelectorAll('.sub-dot').forEach(function(d,k){ d.classList.toggle('active', k===0); });
+  });
   currentScreen = 'subscriptions';
   window.scrollTo(0,0);
 }
@@ -7859,5 +7872,6 @@ document.addEventListener('DOMContentLoaded', function(){
 <button id="fullscreen-btn" onclick="toggleFullscreen()" style="position:fixed;top:8px;right:6px;z-index:999;width:42px;padding:0;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--green);display:flex;align-items:center;justify-content:center;text-shadow:0 1px 3px rgba(255,255,255,.9)" title="Fullscreen"><i class="ti ti-maximize"></i></button>
 <div id="fullscreen-label" style="position:fixed;top:32px;right:6px;z-index:999;width:42px;text-align:center;font-size:9px;font-weight:600;color:var(--green);pointer-events:none;text-shadow:0 1px 3px rgba(255,255,255,.9)">Full screen</div>
 
+<div id="exit-hint" aria-hidden="true"><i class="ti ti-chevrons-up"></i><span>Scroll up to exit</span></div>
 </body>
 </html>

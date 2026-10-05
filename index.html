@@ -4529,14 +4529,18 @@ function exitScreenUp(screenId){
       wheelAccum = 0;
     }
   }, {passive:true});
-  // Reveal the "scroll up to exit" hint only when at the bottom of a pull-screen
+  // Reveal the "scroll up to exit" hint when near the bottom of a pull-screen.
+  // Uses a generous threshold so it fires reliably on mobile (where the address
+  // bar resizes the viewport and scroll positions are fractional).
   var _hint = null;
+  function nearBottom(){ return (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 70); }
   function updateExitHint(){
     if(!_hint) _hint = document.getElementById('exit-hint');
-    if(_hint) _hint.classList.toggle('show', !!activeId() && atPageBottom());
+    if(_hint) _hint.classList.toggle('show', !!activeId() && nearBottom());
   }
-  window.addEventListener('scroll', updateExitHint, {passive:true});
-  window.addEventListener('resize', updateExitHint);
+  ['scroll','touchmove','touchend','resize'].forEach(function(ev){
+    window.addEventListener(ev, updateExitHint, {passive:true});
+  });
   document.querySelectorAll('.screen').forEach(function(s){
     new MutationObserver(updateExitHint).observe(s, {attributes:true, attributeFilter:['class']});
   });

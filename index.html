@@ -491,13 +491,10 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .sub-slide-tap{cursor:pointer}
 .sub-slide-tap:active{filter:brightness(.97)}
 /* Scroll-up-to-exit hint (subscriptions, fruit box, personalised box, story, shipping) */
-#exit-hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:none;align-items:center;gap:6px;background:rgba(28,77,58,.5);color:#fff;padding:7px 15px;border-radius:999px;font-family:var(--body);font-size:12.5px;letter-spacing:.3px;white-space:nowrap;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:95;pointer-events:none;animation:exitHintBlink 2.6s ease-in-out infinite}
-#exit-hint i{font-size:16px;line-height:1}
-@keyframes exitHintBlink{0%,100%{opacity:.22}50%{opacity:.82}}
-body:has(#scr-subscriptions.active) #exit-hint,
-body:has(#scr-story.active) #exit-hint,
-body:has(#scr-shipping.active) #exit-hint,
-body:has(#scr-fruitbox.active) #exit-hint{display:flex}
+#exit-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:none;align-items:center;gap:7px;background:rgba(28,77,58,.55);color:#fff;padding:8px 16px;border-radius:999px;font-family:var(--body);font-size:13px;letter-spacing:.3px;white-space:nowrap;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:95;pointer-events:none;animation:exitHintBlink 2.4s ease-in-out infinite}
+#exit-hint.show{display:flex}
+#exit-hint svg{width:18px;height:18px;display:block;flex:none}
+@keyframes exitHintBlink{0%,100%{opacity:.4}50%{opacity:1}}
 .sub-tap-badge{position:absolute;top:26px;right:12px;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;background:#5099cc;color:#fff;font-family:var(--font);font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none;z-index:2}
 .sub-tap-badge i{font-size:15px}
 /* Desktop: scale tap-to-buy badge down to match the smaller subscription page */
@@ -4532,6 +4529,17 @@ function exitScreenUp(screenId){
       wheelAccum = 0;
     }
   }, {passive:true});
+  // Reveal the "scroll up to exit" hint only when at the bottom of a pull-screen
+  var _hint = null;
+  function updateExitHint(){
+    if(!_hint) _hint = document.getElementById('exit-hint');
+    if(_hint) _hint.classList.toggle('show', !!activeId() && atPageBottom());
+  }
+  window.addEventListener('scroll', updateExitHint, {passive:true});
+  window.addEventListener('resize', updateExitHint);
+  document.querySelectorAll('.screen').forEach(function(s){
+    new MutationObserver(updateExitHint).observe(s, {attributes:true, attributeFilter:['class']});
+  });
 })();
 function subscribeWhatsApp(packName){
   if(!currentUser){ openLogin(); return; }
@@ -7872,6 +7880,6 @@ document.addEventListener('DOMContentLoaded', function(){
 <button id="fullscreen-btn" onclick="toggleFullscreen()" style="position:fixed;top:8px;right:6px;z-index:999;width:42px;padding:0;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--green);display:flex;align-items:center;justify-content:center;text-shadow:0 1px 3px rgba(255,255,255,.9)" title="Fullscreen"><i class="ti ti-maximize"></i></button>
 <div id="fullscreen-label" style="position:fixed;top:32px;right:6px;z-index:999;width:42px;text-align:center;font-size:9px;font-weight:600;color:var(--green);pointer-events:none;text-shadow:0 1px 3px rgba(255,255,255,.9)">Full screen</div>
 
-<div id="exit-hint" aria-hidden="true"><i class="ti ti-chevrons-up"></i><span>Scroll up to exit</span></div>
+<div id="exit-hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13l6-6 6 6"/><path d="M6 18l6-6 6 6"/></svg><span>Scroll up to exit</span></div>
 </body>
 </html>

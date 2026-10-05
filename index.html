@@ -448,7 +448,7 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 @media (min-width:900px){
   #scr-fruitbox .fb-tabs,
   #scr-fruitbox .fb-body{max-width:680px;margin-left:auto;margin-right:auto}
-  body:has(#scr-fruitbox.active) .fb-footer{left:0;right:0;width:auto;max-width:680px;margin-left:auto;margin-right:auto;transform:none}
+  #scr-fruitbox .fb-footer{left:50%;right:auto;transform:translateX(-50%);width:100%;max-width:680px;margin:0}
 }
 .fb-tab{flex:1;background:none;border:none;padding:13px 8px;font-family:var(--font);font-size:13.5px;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s}
 .fb-tab.active{color:var(--green);border-bottom-color:var(--green)}
@@ -1104,7 +1104,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   body:has(#scr-subscriptions.active),
   body:has(#scr-story.active),
   body:has(#scr-shipping.active){padding-left:0}
-  body:has(#scr-fruitbox.active) .fb-footer{left:0}
+  body:has(#scr-fruitbox.active) .fb-footer{left:50%}
   body{padding-bottom:0!important;padding-left:var(--nav)}
   .screen{min-height:100vh}
   .fb-footer{bottom:0;left:var(--nav);right:0}
@@ -1120,7 +1120,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   body:has(#scr-story.active),
   body:has(#scr-shipping.active),
   body:has(#scr-fruitbox.active){padding-left:0}
-  body:has(#scr-fruitbox.active) .fb-footer{left:0}
+  body:has(#scr-fruitbox.active) .fb-footer{left:50%}
 }
 @media (min-width:1200px){ .bottom-nav{top:calc(var(--header-h) + 130px)} }
 @media (min-width:1300px){
@@ -4537,12 +4537,18 @@ function exitScreenUp(screenId){
   function nearBottom(){ return (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 70); }
   function updateExitHint(){
     if(!_hint) _hint = document.getElementById('exit-hint');
+    if(!_hint) return;
     var show = !!activeId() && nearBottom();
+    // On Fruit Box, lift the hint just above the checkout bar when it's showing
+    var lifted = '';
     if(show && currentScreen === 'fruitbox'){
       var f = document.querySelector('#scr-fruitbox .fb-footer');
-      if(f && getComputedStyle(f).display !== 'none') show = false;  // don't cover the checkout bar
+      if(f && getComputedStyle(f).display !== 'none'){
+        lifted = (window.innerHeight - f.getBoundingClientRect().top + 12) + 'px';
+      }
     }
-    if(_hint) _hint.classList.toggle('show', show);
+    _hint.style.bottom = lifted;   // '' falls back to the CSS position
+    _hint.classList.toggle('show', show);
   }
   ['scroll','touchmove','touchend','resize'].forEach(function(ev){
     window.addEventListener(ev, updateExitHint, {passive:true});

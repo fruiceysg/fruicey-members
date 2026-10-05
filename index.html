@@ -491,7 +491,7 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .sub-slide-tap{cursor:pointer}
 .sub-slide-tap:active{filter:brightness(.97)}
 /* Scroll-up-to-exit hint (subscriptions, fruit box, personalised box, story, shipping) */
-#exit-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:none;align-items:center;gap:7px;background:rgba(28,77,58,.55);color:#fff;padding:8px 16px;border-radius:999px;font-family:var(--body);font-size:13px;letter-spacing:.3px;white-space:nowrap;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:95;pointer-events:none;animation:exitHintBlink 2.4s ease-in-out infinite}
+#exit-hint{position:fixed;left:50%;bottom:calc(var(--nav) + 14px);transform:translateX(-50%);display:none;align-items:center;gap:7px;background:rgba(28,77,58,.55);color:#fff;padding:8px 16px;border-radius:999px;font-family:var(--body);font-size:13px;letter-spacing:.3px;white-space:nowrap;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:95;pointer-events:none;animation:exitHintBlink 2.4s ease-in-out infinite}
 #exit-hint.show{display:flex}
 #exit-hint svg{width:18px;height:18px;display:block;flex:none}
 @keyframes exitHintBlink{0%,100%{opacity:.4}50%{opacity:1}}
@@ -1099,6 +1099,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   body:has(#scr-subscriptions.active) .bottom-nav,
   body:has(#scr-story.active) .bottom-nav,
   body:has(#scr-shipping.active) .bottom-nav{display:none}
+  #exit-hint{bottom:18px}
   body:has(#scr-fruitbox.active),
   body:has(#scr-subscriptions.active),
   body:has(#scr-story.active),

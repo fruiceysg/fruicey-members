@@ -4516,18 +4516,24 @@ function exitScreenUp(screenId){
       if(overpull > 90){ exitScreenUp(id); }      // threshold -> exit
     }
   }, {passive:true});
-  // Desktop equivalent: wheel/trackpad over-scroll past the bottom -> exit to Home
-  var wheelAccum = 0, wheelTimer = null;
+  // Desktop: over-scroll past the bottom to exit, but require TWO separate scroll
+  // bursts (scroll once at the bottom, pause, then scroll again) so a single flick
+  // or momentum scroll doesn't exit by accident.
+  var wheelBursts = 0, wheelInBurst = false, burstGapTimer = null, burstForgetTimer = null, burstDelta = 0;
   window.addEventListener('wheel', function(e){
     var id = activeId();
-    if(!id || _exitingScreen){ wheelAccum = 0; return; }
+    if(!id || _exitingScreen) return;
     if(atPageBottom() && e.deltaY > 0){
-      wheelAccum += e.deltaY;
-      clearTimeout(wheelTimer);
-      wheelTimer = setTimeout(function(){ wheelAccum = 0; }, 350);
-      if(wheelAccum > 240){ wheelAccum = 0; exitScreenUp(id); }
-    } else {
-      wheelAccum = 0;
+      burstDelta += e.deltaY;
+      clearTimeout(burstGapTimer);
+      burstGapTimer = setTimeout(function(){ wheelInBurst = false; burstDelta = 0; }, 260); // a burst ends after a short pause
+      if(!wheelInBurst && burstDelta > 120){            // enough travel = one deliberate scroll
+        wheelInBurst = true;
+        wheelBursts++;
+        clearTimeout(burstForgetTimer);
+        burstForgetTimer = setTimeout(function(){ wheelBursts = 0; }, 1400); // forget the first scroll if idle
+        if(wheelBursts >= 2){ wheelBursts = 0; wheelInBurst = false; exitScreenUp(id); }
+      }
     }
   }, {passive:true});
   // Reveal the "scroll up to exit" hint when near the bottom of a pull-screen.

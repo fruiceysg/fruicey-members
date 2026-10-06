@@ -4810,7 +4810,7 @@ function stopStockPoll(){
 // Refresh immediately when the customer returns to the app while on the Menu
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState !== 'visible') return;
-  if(currentScreen === 'menu') fetchStock();
+  fetchStock();   // re-check stock on every return to foreground, so the menu is current when opened
   if(currentUser && _notifTimer) notifPoll();   // catch up on order status right after returning
 });
 

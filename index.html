@@ -3934,6 +3934,7 @@ function updateAccountBioUI(){
 }
 
 document.addEventListener('DOMContentLoaded', function(){
+  loadProducts();   // pull the live menu from Firestore (falls back to the built-in menu)
   // Login
   document.getElementById('login-btn').addEventListener('click', async function(){
     const phone = np(document.getElementById('l-phone').value.trim());
@@ -4848,6 +4849,41 @@ async function seedProducts(){
   if(n > 0) await batch.commit();
   console.log('\u2713 Seeded ' + written + ' products into Firestore.');
   return written;
+}
+
+// Live menu: rebuild the catalogue from Firestore `products`, IN PLACE so every existing
+// reference (CATALOGUE/CATS/PRODUCT_MAP/IMG/…) stays valid. Returns false and changes nothing
+// if there's no data — so the hardcoded menu is the automatic fallback.
+function applyFirestoreProducts(docs){
+  if(!docs || !docs.length) return false;
+  docs = docs.slice().sort(function(a,b){ return (a.order||0)-(b.order||0); });
+  Object.keys(CATALOGUE).forEach(function(k){ delete CATALOGUE[k]; });
+  docs.forEach(function(d){
+    const c = d.category || 'Other';
+    if(!CATALOGUE[c]) CATALOGUE[c] = [];
+    const item = {id:d.id, name:d.name, sizes:d.sizes||[]};
+    if(d.cal != null) item.cal = d.cal;
+    CATALOGUE[c].push(item);
+    if(d.img) IMG[d.id] = d.img;
+    if(d.imgInfo) IMG_INFO[d.id] = d.imgInfo;
+    if(d.desc) PRODUCT_DESC[d.id] = d.desc;
+  });
+  CATS.length = 0; Object.keys(CATALOGUE).forEach(function(c){ CATS.push(c); });
+  Object.keys(PRODUCT_MAP).forEach(function(k){ delete PRODUCT_MAP[k]; });
+  Object.values(CATALOGUE).forEach(function(prods){ prods.forEach(function(p){ PRODUCT_MAP[p.id]=p; }); });
+  return true;
+}
+
+let _productsLoaded = false;
+function loadProducts(){
+  if(!window.fdb || _productsLoaded) return Promise.resolve();
+  return fdb.collection('products').get().then(function(snap){
+    const docs = []; snap.forEach(function(d){ docs.push(d.data()); });
+    if(applyFirestoreProducts(docs)){
+      _productsLoaded = true;
+      if(currentScreen === 'menu'){ renderCatPills(); renderProducts(); }
+    }
+  }).catch(function(e){ console.warn('Menu load from Firestore failed — using built-in menu.', e); });
 }
 // Refresh immediately when the customer returns to the app while on the Menu
 document.addEventListener('visibilitychange', function(){

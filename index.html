@@ -548,6 +548,7 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .product-info-btn:active{background:rgba(0,0,0,.08);color:rgba(0,0,0,.5);border-color:rgba(0,0,0,.4)}
 .product-body{padding:8px 10px 12px;text-align:center;margin-top:auto}
 .product-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.3;min-height:34px;display:flex;align-items:center;justify-content:center;font-family:var(--body)}
+.product-desc{font-size:10px;line-height:1.3;color:var(--text2);margin:0 4px 6px;text-align:center;font-family:var(--body)}
 .product-cal{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;font-family:var(--body)}
 .product-price{font-size:12px;font-weight:700;color:var(--green-dark);font-family:var(--body)}
 .sold-out-badge{position:absolute;top:10px;left:10px;background:#e74c3c;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;z-index:6;letter-spacing:.3px}
@@ -3271,7 +3272,10 @@ const CATALOGUE = {
     {id:'sb03',name:'Nostalgic Acai',       cal:374, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:8.70},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:12.00},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:9.30},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:13.10}]},
     {id:'sb04',name:'Berry Acai',           cal:428, sizes:[{l:'Dessert Size Smoothie - Unsweetened Smoothie Pulps',p:8.70},{l:'Meal Size Smoothie - Unsweetened Smoothie Pulps',p:12.00},{l:'Dessert Size Sorbet - Tasty Sorbet Swirls',p:9.30},{l:'Meal Size Sorbet - Tasty Sorbet Swirls',p:13.10}]},
     {id:'sb05',name:'Double Rainbowl Acai', cal:445, sizes:[{l:'Unsweetened Smoothie Pulps',p:12.00},{l:'Tasty Sorbet Swirls',p:13.10}]},
-    {id:'sb06',name:'Galaxy Dream Acai',    cal:610, sizes:[{l:'Unsweetened Smoothie Pulps',p:10.90},{l:'Tasty Sorbet Swirls',p:12.00}]}
+    {id:'sb06',name:'Galaxy Dream Acai',    cal:610, sizes:[{l:'Unsweetened Smoothie Pulps',p:10.90},{l:'Tasty Sorbet Swirls',p:12.00}]},
+    {id:'sb07',name:'Alkalising',           sizes:[{l:'',p:9.10}]},
+    {id:'sb08',name:'Tropicana',            sizes:[{l:'',p:9.10}]},
+    {id:'sb09',name:'Berry Blast',          sizes:[{l:'',p:9.10}]}
   ],
   'Shakes & Smoothies': [
     {id:'ss01',name:'Coco Chacha',              sizes:[{l:'M',p:6.00},{l:'L',p:7.10}]},
@@ -3388,6 +3392,9 @@ const IMG = {
   'sb04': '1sg9sWzxl7DiI07PlqoDRzdyuzVrAwZCx',
   'sb05': '1zXMh842wtNo4kRdtB5gipSXWBpvjtzWf',
   'sb06': '1lORJug8RmCLz-Z-vxJVTDFLhKX93Y323',
+  'sb07': '1iKCHqb4NyTAACE3SdmReuKg4VFMHwMdz',
+  'sb08': '1uWu9DQap68l65JttWhlBNSe0On0AZQk6',
+  'sb09': '1ZG6gNHvXinUtlY-uUZYK1J25ElVCBvEq',
   'ss01': '17YkHCMVu19I7VQhog89hVXlHk5BdxaYz',
   'ss02': '1Xu_6vvg9YFaIPn0Z3qBa6X_pYMFpzdib',
   'ss03': '12qdesxvUUndyRoOtKAFoUqoRDr6IEF_g',
@@ -4725,6 +4732,9 @@ const PRODUCT_DESC = {
   'sb04': 'Acai with Blueberry, Strawberry, Raw Cacao with Sprinkles of Coconut flakes and Drizzles of Chocolate.',
   'sb05': 'Acai with Mango, Kiwi, Banana, Blueberry, Strawberry, Granola, Sprinkles of Black Sesame and Coconut flakes.',
   'sb06': 'Acai with Banana, Strawberry, Blueberry, Chia seeds, Granola, Cookie Butter with Sprinkle of Coconut flakes.',
+  'sb07': 'Matcha, Spirulina, Kiwi, Banana, Blueberry, Pumpkin seeds, Coconut flakes.',
+  'sb08': 'Orange Sorbet, Mango, Kiwi, Passionfruit, Granola, Coconut flakes.',
+  'sb09': 'Raspberry Sorbet, Blueberry, Strawberry, Banana, Granola, Coconut flakes.',
   'ss01': 'Coconut, Taro, Sago pearls',
   'ss02': 'Strawberry, Mango, Pineapple, Soda',
   'ss03': 'Coconut, Wintermelon, Cucumber, Mint',
@@ -4801,6 +4811,22 @@ function renderCatPills(){
   if(active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
 }
 
+// "No options" products: single size, no pop-up — tapping the card adds straight to the cart.
+const SIMPLE_IDS = new Set(['sb07','sb08','sb09']);
+function addSimpleBowl(pid){
+  if(!currentUser){ openLogin(); return; }
+  if(stockStatus[pid] === false) return;
+  const p = PRODUCT_MAP[pid];
+  if(!p || !p.sizes || !p.sizes.length) return;
+  const s = p.sizes[0];
+  const size = s.l || '';
+  const price = Number(s.p) || 0;
+  const idx = cart.findIndex(function(i){ return i.id===pid && i.size===size && !i.blend && !i.press && !i.protein && !i.note && !i.addonSig; });
+  if(idx >= 0){ cart[idx].qty++; }
+  else { cart.push({id:pid, name:p.name, size:size, label:p.name, price:price, qty:1, note:'', addons:[]}); }
+  saveCart(); updateCartBadge();
+  showToast(p.name + ' added to cart');
+}
 function renderProducts(){
   const prods = CATALOGUE[currentCat];
   const grid  = document.getElementById('product-grid');
@@ -4869,6 +4895,12 @@ function renderProducts(){
     name.className = 'product-name';
     name.textContent = p.name;
     body.appendChild(name);
+    if(SIMPLE_IDS.has(p.id) && PRODUCT_DESC[p.id]){
+      const sdesc = document.createElement('div');
+      sdesc.className = 'product-desc';
+      sdesc.textContent = PRODUCT_DESC[p.id];
+      body.appendChild(sdesc);
+    }
     if(p.cal){
       const cal = document.createElement('div');
       cal.className = 'product-cal';
@@ -4882,7 +4914,9 @@ function renderProducts(){
     body.appendChild(price);
     card.appendChild(body);
     if(isAvail){
-      if(hoverId && !desktopHover){
+      if(SIMPLE_IDS.has(p.id)){
+        card.onclick = function(){ addSimpleBowl(p.id); };   // Option B: tap adds straight to cart
+      } else if(hoverId && !desktopHover){
         // Mobile: 1st tap flips to the 2nd image, 2nd tap opens the pop-up
         card.onclick = function(){
           if(card.classList.contains('flipped')){ openProductDetail(p.id); return; }

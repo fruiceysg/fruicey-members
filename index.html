@@ -4821,6 +4821,34 @@ function startStockPoll(){
 function stopStockPoll(){
   if(__stockUnsub){ __stockUnsub(); __stockUnsub = null; }
 }
+
+// One-time: copy the current (hardcoded) catalogue into Firestore `products`, so the menu
+// becomes editable there. Run ONCE from the browser console:  seedProducts()
+async function seedProducts(){
+  if(!window.fdb){ console.log('Firebase not loaded — cannot seed.'); return; }
+  let order = 0, written = 0, batch = fdb.batch(), n = 0;
+  for(const cat of CATS){
+    for(const p of (CATALOGUE[cat]||[])){
+      const doc = {
+        id: String(p.id),
+        category: cat,
+        name: p.name,
+        sizes: p.sizes || [],
+        desc: (typeof PRODUCT_DESC!=='undefined' && PRODUCT_DESC[p.id]) || '',
+        img:  (typeof IMG!=='undefined' && IMG[p.id]) || '',
+        imgInfo: (typeof IMG_INFO!=='undefined' && IMG_INFO[p.id]) || '',
+        order: order++
+      };
+      if(p.cal != null) doc.cal = p.cal;
+      batch.set(fdb.collection('products').doc(String(p.id)), doc);
+      n++; written++;
+      if(n >= 400){ await batch.commit(); batch = fdb.batch(); n = 0; }
+    }
+  }
+  if(n > 0) await batch.commit();
+  console.log('\u2713 Seeded ' + written + ' products into Firestore.');
+  return written;
+}
 // Refresh immediately when the customer returns to the app while on the Menu
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState !== 'visible') return;

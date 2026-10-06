@@ -8,12 +8,31 @@
 <!-- Firebase (Firestore) — live backend with offline support, running alongside Apps Script during migration -->
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-auth-compat.js"></script>
 <script>
   try {
     firebase.initializeApp({apiKey:"AIzaSyDaN4A6bVBHeASGjGiY0V4-cXFNAR7mmmg",authDomain:"fruicey-3c572.firebaseapp.com",projectId:"fruicey-3c572",storageBucket:"fruicey-3c572.firebasestorage.app",messagingSenderId:"662366892533",appId:"1:662366892533:web:32324e1e873b948aa4f0bc"});
     window.fdb = firebase.firestore();
+    window.fauth = firebase.auth();
     window.fdb.enablePersistence().catch(function(){});   // POS keeps working offline; queued writes sync on reconnect
   } catch(e) { console.warn('Firebase SDK not loaded:', e); }
+
+  // Staff Firebase sign-in (so the POS can read the live orders feed under the security rules).
+  // Fixed staff account; the password is whatever is typed at POS login. Best-effort: if it fails
+  // (e.g. Firebase staff password not yet aligned with the POS password), the POS still works fully
+  // via Apps Script — only the live Firestore orders listener stays idle until sign-in succeeds.
+  window.fbStaffSignIn = function(password){
+    if(!window.fauth) return Promise.resolve();
+    return fauth.signInWithEmailAndPassword('staff@fruicey.app', password)
+      .then(function(){ if(typeof startOrdersListener==='function') startOrdersListener(); })
+      .catch(function(e){ console.warn('Firebase staff sign-in (non-blocking) failed:', e && e.code); });
+  };
+  // On reload, Firebase keeps its own session — if staff is already signed in, start the listener.
+  if(window.fauth){
+    fauth.onAuthStateChanged(function(u){
+      if(u && typeof startOrdersListener==='function') startOrdersListener();
+    });
+  }
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>*{box-sizing:border-box;margin:0;padding:0}
@@ -620,6 +639,7 @@ async function doLogin(){
   sessionStorage.setItem('fruicey_staff', JSON.stringify(loggedInStaff));
   sessionStorage.setItem('fruicey_staff_token', staffToken);
   try{ localStorage.setItem('fruicey_staff', JSON.stringify(loggedInStaff)); localStorage.setItem('fruicey_staff_token', staffToken); }catch(e){}
+  fbStaffSignIn(pass);   // also sign into Firebase as staff for the live orders feed (non-blocking)
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('pos-app').style.display = 'flex';
   document.getElementById('staff-name').textContent = account.name;
@@ -1540,6 +1560,36 @@ async function pollNewAppOrders(){
   }catch(e){ /* silent — will retry on next interval */ }
 }
 
+// ── LIVE ORDERS LISTENER (Firestore) — instant new-order alarm, no 20s lag ──
+// Runs once staff is signed into Firebase. Shares _seenOrderIds with the Apps Script poll, so
+// whichever sees an order first alerts and the other never double-alarms. The poll stays on as an
+// automatic fallback: if Firebase staff sign-in ever fails, orders still come through (just slower).
+let _ordersUnsub = null;
+let _ordersListenerBaselined = false;
+function startOrdersListener(){
+  if(!window.fdb || _ordersUnsub) return;
+  _ordersUnsub = fdb.collection('orders').onSnapshot(function(snap){
+    if(!_ordersListenerBaselined){
+      // First snapshot = orders that already exist; record as seen, don't alarm.
+      snap.forEach(function(d){ _seenOrderIds.add(d.id); });
+      _seenOrderIdsInitialized = true;   // share the baseline with the poll
+      _ordersListenerBaselined = true;
+      return;
+    }
+    var fresh = [];
+    snap.docChanges().forEach(function(ch){
+      if(ch.type === 'added' && !_seenOrderIds.has(ch.doc.id)){
+        _seenOrderIds.add(ch.doc.id);
+        fresh.push(Object.assign({id:ch.doc.id}, ch.doc.data()));
+      }
+    });
+    if(fresh.length){
+      _latestNewOrderId = fresh[0].id;
+      showNewOrderAlert(fresh.length, fresh[0]);   // handles list refresh if already on Orders tab
+    }
+  }, function(e){ console.warn('Orders listener error', e && e.code); });
+}
+
 // ── Tab alert: flash the browser tab title + beep when a new order arrives ──
 let _titleFlashTimer = null;
 const _origTitle = document.title;
@@ -1713,6 +1763,9 @@ async function updateAppOrderStatus(orderId, newStatus){
   const prevStatus = prev ? prev.status : null;
   if(prev){ prev.status = newStatus; }
   if(typeof renderAppOrders === 'function') renderAppOrders(window._appOrders||[]);
+  // Mirror the status to Firestore so the live order feed reflects it (best-effort; the sale+stamp
+  // recording below is unchanged and remains the source of truth via Apps Script).
+  if(window.fdb){ fdb.collection('orders').doc(String(orderId)).set({status:newStatus}, {merge:true}).catch(function(){}); }
 
   try{
     const res = await apiPost({action:'updateOrderStatus', id:orderId, status:newStatus});

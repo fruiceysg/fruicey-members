@@ -414,6 +414,13 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .fb-carton{max-width:300px;margin:0 auto;padding:2px;border-radius:8px;background:#8a5528;overflow:hidden}
 .fb-box-cap{font-family:var(--font);font-size:13px;color:var(--green-dark);text-align:center;margin:2px 0 8px}
 .fb-box-cap+.fb-carton{margin-bottom:16px}
+/* Jumbo box: the two 16-slot cartons as a swipeable carousel (one shown at a time) */
+.fb-jumbo-car{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.fb-jumbo-car::-webkit-scrollbar{display:none}
+.fb-jumbo-slide{flex:0 0 100%;scroll-snap-align:center;min-width:0}
+.fb-jumbo-dots{display:flex;justify-content:center;gap:7px;margin:12px 0 2px}
+.fb-jumbo-dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:background .2s,width .2s}
+.fb-jumbo-dot.active{background:var(--green);width:18px;border-radius:4px}
 .fb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
 .fb-cell{position:relative;aspect-ratio:1/1;overflow:hidden;transition:background .2s}
 .fb-cell-2{grid-column:span 2;aspect-ratio:auto}
@@ -4359,8 +4366,17 @@ function fbRender(){
   if(fbBox==='32'){
     var boxA=[], boxB=[], acc=0;
     cells.forEach(function(c){ (acc<16 ? boxA : boxB).push(c); acc += c.w; });
-    host.innerHTML = '<div class="fb-box-cap">Box 1 of 2</div>'+carton(boxA)
-                   + '<div class="fb-box-cap">Box 2 of 2</div>'+carton(boxB);
+    host.innerHTML =
+        '<div class="fb-jumbo-car" id="fb-jumbo-car">'
+      +   '<div class="fb-jumbo-slide"><div class="fb-box-cap">Box 1 of 2</div>'+carton(boxA)+'</div>'
+      +   '<div class="fb-jumbo-slide"><div class="fb-box-cap">Box 2 of 2</div>'+carton(boxB)+'</div>'
+      + '</div>'
+      + '<div class="fb-jumbo-dots"><span class="fb-jumbo-dot" id="fb-jdot0"></span><span class="fb-jumbo-dot" id="fb-jdot1"></span></div>';
+    var car = document.getElementById('fb-jumbo-car');
+    var setJDots = function(pg){ var a=document.getElementById('fb-jdot0'), b=document.getElementById('fb-jdot1'); if(a)a.classList.toggle('active',pg===0); if(b)b.classList.toggle('active',pg===1); };
+    // Fruit adds rebuild this area — restore the box the user was viewing so it doesn't jump back to Box 1
+    requestAnimationFrame(function(){ var pg=window.fbJumboPage||0; car.scrollLeft = pg*car.clientWidth; setJDots(pg); });
+    car.addEventListener('scroll', function(){ var pg=Math.round(car.scrollLeft/Math.max(1,car.clientWidth)); if(pg!==(window.fbJumboPage||0)){ window.fbJumboPage=pg; setJDots(pg); } }, {passive:true});
   } else {
     host.innerHTML = carton(cells);
   }

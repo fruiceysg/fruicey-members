@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Fruicey POS</title>
+<!-- Firebase (Firestore) — live backend with offline support, running alongside Apps Script during migration -->
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  try {
+    firebase.initializeApp({apiKey:"AIzaSyDaN4A6bVBHeASGjGiY0V4-cXFNAR7mmmg",authDomain:"fruicey-3c572.firebaseapp.com",projectId:"fruicey-3c572",storageBucket:"fruicey-3c572.firebasestorage.app",messagingSenderId:"662366892533",appId:"1:662366892533:web:32324e1e873b948aa4f0bc"});
+    window.fdb = firebase.firestore();
+    window.fdb.enablePersistence().catch(function(){});   // POS keeps working offline; queued writes sync on reconnect
+  } catch(e) { console.warn('Firebase SDK not loaded:', e); }
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>*{box-sizing:border-box;margin:0;padding:0}
 :root{--pink:#E91E8C;--green:#8fcea1;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--r:8px}
@@ -1053,6 +1063,10 @@ const ONLINE_PLATFORMS = ['GrabFood','FoodPanda','Online Shop'];
 // and Custom Juice (ju00) DO earn stamps like normal menu items.
 const NO_STAMP_IDS = ['juCF']; // fruitbox- ids are excluded via prefix check below
 let stockStatus = {};
+// Stock toggles not yet confirmed by the backend — kept & retried so the POS and the online
+// store can't silently disagree after a dropped connection.
+let _stockPending = {};
+let _stockRetryTimer = null;
 const PREORDER_IDS = new Set(['np07','np08']); // Calcium Ca, Magnesium Mg // id -> true/false
 
 // ── HELPER: Batch-update juice image IDs ──────────────────────────────────────
@@ -2189,6 +2203,12 @@ function renderProducts(){
     stockBtn.dataset.toggle = isAvailable ? 'false' : 'true';
     stockBtn.textContent = isAvailable ? 'Mark Out of Stock' : '✓ Mark Available';
     stockBtn.style.cssText = 'width:100%;padding:4px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:600;font-family:var(--font);border:1px solid ' + (isAvailable?'#e0e0e0':'#e74c3c') + ';background:' + (isAvailable?'#fafafa':'#fff0f0') + ';color:' + (isAvailable?'#aaa':'#e74c3c');
+    if(p.id in _stockPending){   // change not yet saved to the backend
+      stockBtn.textContent = '\u21BB Not synced — retrying';
+      stockBtn.style.border = '1px solid #e67e22';
+      stockBtn.style.background = '#fff6ec';
+      stockBtn.style.color = '#e67e22';
+    }
     wrap.appendChild(stockBtn);
 
     grid.appendChild(wrap);
@@ -3168,32 +3188,61 @@ if(checkLogin()){
 
 
 // ── STOCK ────────────────────────────────────────────────────
+let __posStockUnsub = null;
 async function loadStock(){
-  try{
-    const res = await apiGet({action:'getStock'});
-    if(res.stock){
-      // Initialize fresh stock status object
-      stockStatus = {};
-      
-      // Ensure all values are proper booleans
-      Object.keys(res.stock).forEach(id => {
-        const val = res.stock[id];
-        // Parse any representation (true, 'true', false, 'false') to boolean
-        stockStatus[id] = (val === true || val === 'true');
-      });
-    }
-  }catch(e){ console.log('Could not load stock'); }
-  renderProducts();
+  if(!window.fdb){ renderProducts(); return; }        // Firebase SDK unavailable — skip live stock
+  if(__posStockUnsub){ renderProducts(); return; }   // live listener already running
+  // Live listener on Firestore — shared truth with the customer app; updates instantly, works offline.
+  __posStockUnsub = fdb.collection('stock').onSnapshot(function(snap){
+    stockStatus = {};
+    snap.forEach(function(d){ stockStatus[d.id] = (d.data().available === true); });
+    renderProducts();
+  }, function(e){ console.log('Stock listener error', e); });
 }
 
 async function toggleStock(pid, available){
-  stockStatus[pid] = available;
-  renderProducts(); // instant UI update
-  try{
-    await apiPost({action:'updateStock', id:pid, available});
-    showToast((available ? 'Back in stock' : 'Marked out of stock') + ': ' + (PRODUCT_MAP[pid]||{name:pid}).name);
-  }catch(e){ showToast('Could not update stock'); }
+  stockStatus[pid] = available;      // optimistic: flip the POS screen now
+  _stockPending[pid] = available;    // mark unsynced until the Sheet fallback confirms
+  renderProducts();
+  // Firestore — the live path the customer app listens to (queues offline, syncs on reconnect)
+  try{ await fdb.collection('stock').doc(String(pid)).set({ available: available, updatedAt: new Date().toISOString() }, {merge:true}); }catch(e){}
+  // Google Sheet — unchanged fallback + retry safety net, keeps the old system in sync
+  flushStockPending(pid, false);
 }
+// Push pending stock change(s) to the backend. On success the item is confirmed and cleared;
+// on failure it stays queued so the retry loop (and reconnect/foreground) tries again.
+async function flushStockPending(onlyPid, silent){
+  const ids = onlyPid ? [onlyPid] : Object.keys(_stockPending);
+  for(const pid of ids){
+    if(!(pid in _stockPending)) continue;
+    const want = _stockPending[pid];
+    try{
+      const res = await apiPost({action:'updateStock', id:pid, available:want});
+      if(res && res.error){ throw new Error(res.error); }
+      if(_stockPending[pid] === want){ delete _stockPending[pid]; }   // confirmed saved
+      showToast((want ? 'Back in stock' : 'Marked out of stock') + ': ' + (PRODUCT_MAP[pid]||{name:pid}).name);
+    }catch(e){
+      if(!silent) showToast('Stock change not saved — will retry automatically');
+    }
+  }
+  renderProducts();        // refresh the "unsynced" marker on the buttons
+  ensureStockRetry();
+}
+// Keep a retry ticking while anything is unsynced; stop once the queue clears.
+function ensureStockRetry(){
+  const pending = Object.keys(_stockPending).length > 0;
+  if(pending && !_stockRetryTimer){
+    _stockRetryTimer = setInterval(function(){
+      if(Object.keys(_stockPending).length === 0){ clearInterval(_stockRetryTimer); _stockRetryTimer = null; return; }
+      flushStockPending(null, true);
+    }, 10000);
+  } else if(!pending && _stockRetryTimer){
+    clearInterval(_stockRetryTimer); _stockRetryTimer = null;
+  }
+}
+// Also retry the moment connectivity returns or the POS is brought back on-screen.
+window.addEventListener('online', function(){ if(Object.keys(_stockPending).length) flushStockPending(null, true); });
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible' && Object.keys(_stockPending).length) flushStockPending(null, true); });
 function initPOSListeners(){
 // Double-click a product card to mark it out of stock
 document.getElementById('product-grid').addEventListener('dblclick', function(e){

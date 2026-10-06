@@ -617,6 +617,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 // Staff accounts + passwords now live server-side (Code.gs → posLogin). Nothing sensitive here.
 let loggedInStaff = null;
 let staffToken = '';
+let __posStockUnsub = null;   // stock listener handle — declared up here so session-restore's early loadStock() call can't hit a temporal-dead-zone error
 
 function checkLogin(){
   const saved = sessionStorage.getItem('fruicey_staff');
@@ -3241,7 +3242,6 @@ if(checkLogin()){
 
 
 // ── STOCK ────────────────────────────────────────────────────
-let __posStockUnsub = null;
 async function loadStock(){
   if(!window.fdb){ renderProducts(); return; }        // Firebase SDK unavailable — skip live stock
   if(__posStockUnsub){ renderProducts(); return; }   // live listener already running

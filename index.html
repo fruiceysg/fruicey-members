@@ -4900,14 +4900,28 @@ async function seedProducts(){
 // Live menu: rebuild the catalogue from Firestore `products`, IN PLACE so every existing
 // reference (CATALOGUE/CATS/PRODUCT_MAP/IMG/…) stays valid. Returns false and changes nothing
 // if there's no data — so the hardcoded menu is the automatic fallback.
+// Make sizes safe no matter how they were entered in Firestore. Accepts a real array (the correct
+// form) and also tolerates a size list typed as a text string, so one mis-typed field can never
+// crash the whole menu. Returns a clean array of {l, p} (app price); [] if it can't be understood.
+function _coerceSizes(raw){
+  let arr = raw;
+  if(typeof raw === 'string'){
+    try{ arr = JSON.parse(raw.replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":')); }
+    catch(e){ arr = []; }
+  }
+  if(!Array.isArray(arr)) return [];
+  return arr.map(function(s){ s = s || {}; return {l:(s.l!=null?String(s.l):''), p:Number(s.p!=null?s.p:(s.posP!=null?s.posP:0))}; });
+}
 function applyFirestoreProducts(docs){
   if(!docs || !docs.length) return false;
-  docs = docs.slice().sort(function(a,b){ return (a.order||0)-(b.order||0); });
+  docs = docs.slice().sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); });
   Object.keys(CATALOGUE).forEach(function(k){ delete CATALOGUE[k]; });
   docs.forEach(function(d){
     const c = d.category || 'Other';
+    const sizes = _coerceSizes(d.sizes);
+    if(!sizes.length) return;   // malformed / empty sizes → skip this product rather than break the menu
     if(!CATALOGUE[c]) CATALOGUE[c] = [];
-    const item = {id:d.id, name:d.name, sizes:d.sizes||[]};
+    const item = {id:d.id, name:d.name, sizes:sizes};
     if(d.cal != null) item.cal = d.cal;
     CATALOGUE[c].push(item);
     if(d.img) IMG[d.id] = d.img;
@@ -4973,6 +4987,7 @@ function renderProducts(){
   const grid  = document.getElementById('product-grid');
   grid.innerHTML = '';
   prods.forEach((p, i) => {
+    if(!Array.isArray(p.sizes) || !p.sizes.length) return;   // safety: never render a product with no valid sizes
     const card = document.createElement('div');
     card.className = 'product-card card-fade-in';
     card.style.position = 'relative';

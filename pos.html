@@ -2315,16 +2315,23 @@ function mergeFirestoreNewProducts(){
       if(!d || !d.id) return;
       if(PRODUCT_MAP[d.id]) return;                 // already hardcoded → leave untouched
       const cat = d.category || 'Other';
-      // Map each size into the POS shape {l: short label, rec: recorded name, p: POS price}.
-      // POS-specific fields (posP / posL / rec) win; otherwise fall back to the app fields (p / l).
-      const sizes = (d.sizes||[]).map(function(s){
+      // Accept sizes as a real array (correct) or tolerate a list typed as a text string, so one
+      // mis-typed field can't break the merge. Map into the POS shape {l, rec, p (POS price)}.
+      let rawSizes = d.sizes;
+      if(typeof rawSizes === 'string'){
+        try{ rawSizes = JSON.parse(rawSizes.replace(/([{,]\s*)([A-Za-z_]\w*)\s*:/g, '$1"$2":')); }
+        catch(e){ rawSizes = []; }
+      }
+      if(!Array.isArray(rawSizes)) rawSizes = [];
+      const sizes = rawSizes.map(function(s){
+        s = s || {};
         return {
           l:   (s.posL != null ? s.posL : (s.l || '')),
           rec: (s.rec  != null ? s.rec  : ''),
           p:   (s.posP != null ? Number(s.posP) : Number(s.p || 0))
         };
       });
-      if(!sizes.length) sizes.push({l:'', rec:'', p:(d.posP!=null?Number(d.posP):Number(d.p||0))});
+      if(!sizes.length) return;                     // malformed / empty sizes → skip rather than add a broken item
       const item = {id:d.id, name:d.name||d.id, sizes:sizes};
       if(!CATALOGUE[cat]){
         CATALOGUE[cat] = [];

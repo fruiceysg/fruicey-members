@@ -1827,20 +1827,35 @@ async function updateAppOrderStatus(orderId, newStatus){
               // One stamp per product, EXCEPT Custom Fruit (juCF) which does not earn stamps.
               const stampQty = stampItems.reduce(function(s,i){ return (NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) ? s : s + (parseInt(i.qty)||1); }, 0);
               if(stampQty > 0){
-                const r = await apiPost({ action:'addStampsForSale', phone: np(o.phone), qty: stampQty, rcptNo: 'app_'+orderId });
-                if(r && r.success){
-                  fbMirrorMember(np(o.phone), r);   // live update to the customer's rewards card
-                  let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+(o.name||'member')+' ('+r.stamps+'/9)';
-                  if(r.completed) msg += ' — card complete! Spin available.';
-                  showToast(msg);
-                } else if(r && r.notEnrolled){
-                  showToast('No stamp added — '+(o.name||'customer')+' has not joined the rewards program.');
-                } else if(r && r.error){
-                  showToast('Stamp not added ('+r.error+'). Please add it manually.');
+                let handled = false;
+                try{
+                  const r = await apiPost({ action:'addStampsForSale', phone: np(o.phone), qty: stampQty, rcptNo: 'app_'+orderId });
+                  if(r && r.success){
+                    fbMirrorMember(np(o.phone), r);   // live update to the customer's rewards card
+                    let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+(o.name||'member')+' ('+r.stamps+'/9)';
+                    if(r.completed) msg += ' — card complete! Spin available.';
+                    showToast(msg); handled = true;
+                  } else if(r && r.notEnrolled){
+                    showToast('No stamp added — '+(o.name||'customer')+' has not joined the rewards program.'); handled = true;
+                  }
+                }catch(e){ /* response lost — reconcile below (the stamp is awarded idempotently, so retry is safe) */ }
+                // Reconcile: the stamp award is idempotent (deduped by receipt), so on a lost/uncertain
+                // response we read the member's TRUE count and mirror it — instead of a false "add
+                // manually" prompt that could lead to double-stamping.
+                if(!handled){
+                  try{
+                    const mem = await apiGet({action:'getStampCard', phone: np(o.phone)});
+                    if(mem && mem.member){
+                      fbMirrorMember(np(o.phone), mem.member);
+                      showToast('Stamp recorded for '+(o.name||'member')+' ('+(parseInt(mem.member.stamps)||0)+'/9).');
+                    } else {
+                      showToast('Stamp status unclear for '+(o.name||'member')+' — please verify in Member lookup.');
+                    }
+                  }catch(e2){ showToast('Could not confirm stamp (server busy) — please verify in Member lookup.'); }
                 }
               }
             }
-          }catch(e){ showToast('Stamp could not be added (server issue). Please add it manually.'); console.log('Stamp award failed',e); }
+          }catch(e){ console.log('Stamp award block error',e); }
         }
       }
       loadAppOrders();

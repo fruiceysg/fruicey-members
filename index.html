@@ -6681,13 +6681,39 @@ async function loadRewards(){
   document.getElementById('rewards-card').style.display='none';
   document.getElementById('rewards-signup').style.display='none';
   document.getElementById('rewards-loader').style.display='block';
+  startMemberListener(np(currentUser.phone));   // live "stamp earned" refresh while the card is open
   try{
     const res = await apiGet({action:'getStampCard', phone:np(currentUser.phone)});
     document.getElementById('rewards-loader').style.display='none';
     if(res.member){ stampMember=res.member; renderStampCard(res.member); document.getElementById('rewards-signup').style.display='none'; document.getElementById('rewards-card').style.display='block'; }
     else { document.getElementById('rewards-signup').style.display='block'; document.getElementById('rewards-card').style.display='none'; }
-  }catch(e){ document.getElementById('rewards-loader').style.display='none'; showToast('Could not load rewards.'); }
+  }catch(e){
+    document.getElementById('rewards-loader').style.display='none';
+    // Apps Script unreachable — fall back to the last-known card from Firestore so the screen isn't blank.
+    let shown=false;
+    if(window.fdb){
+      try{ const d = await fdb.collection('members').doc(String(np(currentUser.phone))).get();
+           if(d.exists){ stampMember=d.data(); renderStampCard(stampMember); document.getElementById('rewards-signup').style.display='none'; document.getElementById('rewards-card').style.display='block'; shown=true; } }catch(e2){}
+    }
+    if(!shown) showToast('Could not load rewards.');
+  }
 }
+
+// Live member listener: when the POS awards a stamp (mirrored to Firestore), refresh the card from
+// the authoritative source so it updates live while the customer is watching. Firestore is used only
+// as a change signal + offline fallback — never as the displayed source of truth — so a spin or
+// redemption can never show a stale "full card".
+let _memberUnsub = null, _memberBaselined = false;
+function startMemberListener(phone){
+  if(!window.fdb || _memberUnsub) return;
+  _memberBaselined = false;
+  _memberUnsub = fdb.collection('members').doc(String(phone)).onSnapshot(function(){
+    if(!_memberBaselined){ _memberBaselined = true; return; }   // ignore the initial snapshot
+    var scr = document.getElementById('scr-rewards');
+    if(currentUser && scr && scr.classList.contains('active')) loadRewards();   // a stamp changed → refresh authoritative
+  }, function(){});
+}
+function stopMemberListener(){ if(_memberUnsub){ _memberUnsub(); _memberUnsub=null; _memberBaselined=false; } }
 
 let lastCarryPopupKey='';
 function showRewardPopup(title,msg){
@@ -7254,6 +7280,7 @@ function logout(){
   sessionStorage.removeItem('fruicey_user');
   authToken=''; sessionStorage.removeItem('fruicey_token');
   fbSignOut();   // end the Firebase session too
+  stopMemberListener();
   updateCartBadge();
   goTab('home');
   showToast('Logged out.');

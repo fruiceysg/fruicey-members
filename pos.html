@@ -1561,6 +1561,17 @@ async function pollNewAppOrders(){
   }catch(e){ /* silent — will retry on next interval */ }
 }
 
+// Mirror a member's updated stamp totals to Firestore after an award, so the customer's rewards
+// card updates live. Best-effort; Apps Script remains the source of truth (staff-only write).
+function fbMirrorMember(phone, r){
+  if(!window.fdb || !phone || !r) return;
+  var upd = { updatedAt: new Date().toISOString() };
+  if(r.stamps != null) upd.stamps = parseInt(r.stamps)||0;
+  if(r.pendingStamps != null) upd.pendingStamps = parseInt(r.pendingStamps)||0;
+  if(r.cardsCompleted != null) upd.cardsCompleted = parseInt(r.cardsCompleted)||0;
+  try{ fdb.collection('members').doc(String(phone)).set(upd, {merge:true}); }catch(e){}
+}
+
 // ── LIVE ORDERS LISTENER (Firestore) — instant new-order alarm, no 20s lag ──
 // Runs once staff is signed into Firebase. Shares _seenOrderIds with the Apps Script poll, so
 // whichever sees an order first alerts and the other never double-alarms. The poll stays on as an
@@ -1818,6 +1829,7 @@ async function updateAppOrderStatus(orderId, newStatus){
               if(stampQty > 0){
                 const r = await apiPost({ action:'addStampsForSale', phone: np(o.phone), qty: stampQty, rcptNo: 'app_'+orderId });
                 if(r && r.success){
+                  fbMirrorMember(np(o.phone), r);   // live update to the customer's rewards card
                   let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+(o.name||'member')+' ('+r.stamps+'/9)';
                   if(r.completed) msg += ' — card complete! Spin available.';
                   showToast(msg);
@@ -2701,6 +2713,7 @@ async function checkout(){
             rcptNo: sale.rcptNo
           }).then(function(r){
             if(r && r.success){
+              fbMirrorMember(np(currentMember.phone), r);   // live update to the customer's rewards card
               let msg = stampQty+' stamp'+(stampQty>1?'s':'')+' added to '+currentMember.first+' ('+r.stamps+'/9)';
               if(r.completed) msg += ' — card complete! Spin available.';
               showToast(msg);

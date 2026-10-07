@@ -2338,7 +2338,13 @@ function mergeFirestoreNewProducts(){
         if(!CAT_COLORS[cat]) CAT_COLORS[cat] = '#7f88b3';
         if(!CAT_ICONS[cat])  CAT_ICONS[cat]  = 'ti-bowl';
       }
-      CATALOGUE[cat].push(item);
+      // Insert before any trailing "Custom" entries (Custom Bowl / Custom Juice / Custom Fruit),
+      // which should always stay at the bottom of their category.
+      const list = CATALOGUE[cat];
+      const CUSTOM_LAST = {sb00:1, ju00:1, juCF:1};
+      let idx = list.length;
+      while(idx > 0 && CUSTOM_LAST[list[idx-1].id]) idx--;
+      list.splice(idx, 0, item);
       PRODUCT_MAP[d.id] = item;
       if(d.img) IMG[d.id] = d.img;
       added++;

@@ -4913,6 +4913,7 @@ function applyFirestoreProducts(docs){
     if(d.img) IMG[d.id] = d.img;
     if(d.imgInfo) IMG_INFO[d.id] = d.imgInfo;
     if(d.desc) PRODUCT_DESC[d.id] = d.desc;
+    if(d.simple && typeof SIMPLE_IDS !== 'undefined') SIMPLE_IDS.add(d.id);   // new single-size bowl → tap-to-cart like sb07/08/09
   });
   CATS.length = 0; Object.keys(CATALOGUE).forEach(function(c){ CATS.push(c); });
   Object.keys(PRODUCT_MAP).forEach(function(k){ delete PRODUCT_MAP[k]; });

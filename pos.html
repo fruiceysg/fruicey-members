@@ -647,6 +647,7 @@ async function doLogin(){
   updateClock();
   renderCats();
   loadStock();
+  mergeFirestoreNewProducts();   // pull in any new products added in Firestore (non-blocking)
   renderCart();
   initPOSListeners();
   loadSalesFromSheets().catch(()=>{});
@@ -659,7 +660,7 @@ function _enterPOSFromSession(){
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('pos-app').style.display = 'flex';
   document.getElementById('staff-name').textContent = (loggedInStaff && loggedInStaff.name) || '';
-  updateClock(); renderCats(); loadStock(); renderCart(); initPOSListeners();
+  updateClock(); renderCats(); loadStock(); mergeFirestoreNewProducts(); renderCart(); initPOSListeners();
   loadSalesFromSheets().catch(()=>{});
   startNewOrderPolling();
 }
@@ -2294,6 +2295,50 @@ function renderProducts(){
 
     grid.appendChild(wrap);
   });
+}
+
+// ── NEW PRODUCTS FROM FIRESTORE (hybrid) ──────────────────────────────
+// Every existing product stays hardcoded in CATALOGUE above (proven POS prices + recorded names).
+// This ADDITIONALLY pulls in any product added to the Firestore `products` collection whose id is
+// NOT already hardcoded — so a new item added once in Firestore shows up in BOTH the app and the POS.
+// Existing products are never read from or overwritten by Firestore, so live prices can't change.
+// Best-effort: if Firestore is unreachable, the POS simply runs on the hardcoded menu.
+let _fsNewProductsMerged = false;
+function mergeFirestoreNewProducts(){
+  if(!window.fdb || _fsNewProductsMerged) return Promise.resolve();
+  return fdb.collection('products').get().then(function(snap){
+    const incoming = [];
+    snap.forEach(function(d){ incoming.push(d.data()); });
+    incoming.sort(function(a,b){ return (a.order||0)-(b.order||0); });
+    let added = 0;
+    incoming.forEach(function(d){
+      if(!d || !d.id) return;
+      if(PRODUCT_MAP[d.id]) return;                 // already hardcoded → leave untouched
+      const cat = d.category || 'Other';
+      // Map each size into the POS shape {l: short label, rec: recorded name, p: POS price}.
+      // POS-specific fields (posP / posL / rec) win; otherwise fall back to the app fields (p / l).
+      const sizes = (d.sizes||[]).map(function(s){
+        return {
+          l:   (s.posL != null ? s.posL : (s.l || '')),
+          rec: (s.rec  != null ? s.rec  : ''),
+          p:   (s.posP != null ? Number(s.posP) : Number(s.p || 0))
+        };
+      });
+      if(!sizes.length) sizes.push({l:'', rec:'', p:(d.posP!=null?Number(d.posP):Number(d.p||0))});
+      const item = {id:d.id, name:d.name||d.id, sizes:sizes};
+      if(!CATALOGUE[cat]){
+        CATALOGUE[cat] = [];
+        if(!CAT_COLORS[cat]) CAT_COLORS[cat] = '#7f88b3';
+        if(!CAT_ICONS[cat])  CAT_ICONS[cat]  = 'ti-bowl';
+      }
+      CATALOGUE[cat].push(item);
+      PRODUCT_MAP[d.id] = item;
+      if(d.img) IMG[d.id] = d.img;
+      added++;
+    });
+    _fsNewProductsMerged = true;
+    if(added > 0){ renderCats(); renderProducts(); }
+  }).catch(function(e){ console.warn('New-product merge from Firestore skipped:', e && (e.code||e.message)); });
 }
 
 // ── EVENT DELEGATION (fixes onclick in sandbox) ───────────────────────

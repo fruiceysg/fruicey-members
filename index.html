@@ -1027,6 +1027,34 @@ button.cal-day:active{transform:scale(.94)}
 .acc-credit-btn.primary{background:var(--green);color:#fff}
 .acc-credit-btn.ghost{background:rgba(120,120,128,.12);color:var(--green-dark)}
 .acc-credit-btn:active{transform:scale(.97);opacity:.9}
+/* ── Fruicey Dex ─────────────────────────────────────────────────────── */
+.acc-dex-sub{font-size:11px;font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0}
+.acc-dex{display:flex;flex-direction:column;gap:16px;margin-bottom:6px}
+.dex-progress{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.dex-progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;gap:10px}
+.dex-progress-title{font-family:var(--font);font-size:16px}
+.dex-progress-count{font-size:14px;font-weight:700;white-space:nowrap}
+.dex-bar{height:8px;background:rgba(255,255,255,.28);border-radius:99px;overflow:hidden}
+.dex-bar-fill{height:100%;background:#fff;border-radius:99px;width:0;transition:width .8s cubic-bezier(.16,1,.3,1)}
+.dex-cat-head{display:flex;justify-content:space-between;align-items:center;margin:0 2px 7px}
+.dex-cat-name{font-family:var(--font);font-size:15px;color:var(--text)}
+.dex-cat-count{font-size:12px;font-weight:700;color:var(--text3)}
+.dex-row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.dex-row::-webkit-scrollbar{display:none}
+.dex-tile{flex:0 0 auto;width:78px;text-align:center;cursor:pointer;scroll-snap-align:start;background:none;border:none;padding:0;font-family:var(--body)}
+.dex-tile:active{transform:scale(.95)}
+.dex-thumb{width:70px;height:70px;border-radius:16px;background:#f3f5f3;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;margin:0 auto}
+.dex-tile.locked .dex-thumb{background:#ecefec}
+.dex-thumb img{width:100%;height:100%;object-fit:contain;padding:5px}
+.dex-tile.locked .dex-thumb img{filter:grayscale(1) brightness(.5);opacity:.22}
+.dex-initial{font-family:var(--font);font-size:26px;color:var(--green-dark)}
+.dex-tile.locked .dex-initial{color:#c2c7c2}
+.dex-q{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:26px;font-weight:800;color:#bfc4bf}
+.dex-check{position:absolute;top:-5px;right:-5px;width:21px;height:21px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.dex-tile-name{font-size:10.5px;line-height:1.2;margin-top:6px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dex-tile.locked .dex-tile-name{color:#bfc4bf}
+.dex-tile-date{font-size:9px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dex-empty{color:#bbb;font-size:13px;text-align:center;padding:1.5rem}
 
 .acc-logout-fixed{position:fixed;top:8px;z-index:999;width:42px;padding:0;background:none;border:none;cursor:pointer;color:#e74c3c;display:none;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:2px;text-shadow:0 1px 3px rgba(255,255,255,.9);right:54px}
 .acc-logout-fixed i{font-size:22px}
@@ -3022,6 +3050,9 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
     </div>
   </div>
+
+  <div class="acc-section-label">Fruicey Dex <span class="acc-dex-sub">— bowls &amp; drinks you've tried</span></div>
+  <div id="acc-dex" class="acc-dex"></div>
 
   <div class="acc-section-label">My Details</div>
   <div class="acc-group">
@@ -7405,7 +7436,97 @@ async function loadAccount(){
     else { bdayRow.style.display='none'; }
   }
   loadUserCredit();
+  loadDex();
   if(typeof updateAccountBioUI==='function') updateAccountBioUI();
+}
+
+// ── Fruicey Dex ──────────────────────────────────────────────────────────────
+// A "Pokédex" of products the member has tried, derived from their order history
+// (app orders + in-store purchases). Tried = full colour; not-yet-tried = greyed silhouette.
+var DEX_EXCLUDE = new Set(['sb00','ju00','juCF']);   // custom / build-your-own items aren't collectible
+function _dexTs(v){
+  if(v == null || v === '') return Infinity;
+  if(typeof v === 'number'){ return v > 25000 ? Math.round((v - 25569) * 86400 * 1000) : v; }
+  var t = Date.parse(v); return isNaN(t) ? Infinity : t;
+}
+function _dexParseItems(x){ try{ return typeof x === 'string' ? JSON.parse(x) : (x || []); }catch(e){ return []; } }
+
+async function loadDex(){
+  var box = document.getElementById('acc-dex');
+  if(!box || !currentUser) return;
+  box.innerHTML = '<div class="tab-loader"><div class="loader-spinner"></div></div>';
+  if(typeof fillHarvest === 'function') fillHarvest(box);
+
+  var nameMap = {};
+  Object.keys(CATALOGUE).forEach(function(c){ CATALOGUE[c].forEach(function(p){ nameMap[(p.name||'').trim().toLowerCase()] = p.id; }); });
+  function resolvePid(id, name){
+    if(id && PRODUCT_MAP[id] && !DEX_EXCLUDE.has(id)) return id;
+    if(name){ var pid = nameMap[String(name).trim().toLowerCase()]; if(pid && !DEX_EXCLUDE.has(pid)) return pid; }
+    return null;
+  }
+  var tried = {};   // pid -> earliest date value seen
+  function note(id, name, dateVal){
+    var pid = resolvePid(id, name);
+    if(!pid) return;
+    if(!(pid in tried) || _dexTs(dateVal) < _dexTs(tried[pid])) tried[pid] = dateVal;
+  }
+  try{
+    var res = await apiGet({action:'getOrdersScreen', phone:np(currentUser.phone)});
+    ((res && res.orders) || []).forEach(function(o){ _dexParseItems(o.items).forEach(function(i){ note(i.id, i.name || i.label, o.createdAt); }); });
+    ((res && res.sales)  || []).forEach(function(s){ _dexParseItems(s.items).forEach(function(i){ note(i.id, i.name || i.label, s.date); }); });
+  }catch(e){ /* render with whatever we have (possibly nothing) */ }
+  renderDex(tried);
+}
+
+function renderDex(tried){
+  var box = document.getElementById('acc-dex');
+  if(!box) return;
+  var cats = Object.keys(CATALOGUE);
+  var total = 0, got = 0;
+  cats.forEach(function(c){ CATALOGUE[c].forEach(function(p){ if(DEX_EXCLUDE.has(p.id)) return; total++; if(p.id in tried) got++; }); });
+  var pct = total ? Math.round(got / total * 100) : 0;
+
+  var title = (total > 0 && got >= total) ? 'Dex complete! 🎉' : (got === 0 ? 'Start your collection' : 'Your collection');
+  var html = '<div class="dex-progress"><div class="dex-progress-top">'
+    + '<div class="dex-progress-title">' + title + '</div>'
+    + '<div class="dex-progress-count">' + got + ' / ' + total + '</div></div>'
+    + '<div class="dex-bar"><div class="dex-bar-fill" id="dex-bar-fill"></div></div></div>';
+
+  cats.forEach(function(c){
+    var prods = CATALOGUE[c].filter(function(p){ return !DEX_EXCLUDE.has(p.id); });
+    if(!prods.length) return;
+    var cgot = prods.filter(function(p){ return p.id in tried; }).length;
+    html += '<div class="dex-cat"><div class="dex-cat-head">'
+      + '<span class="dex-cat-name">' + c + '</span>'
+      + '<span class="dex-cat-count">' + cgot + '/' + prods.length + '</span></div><div class="dex-row">';
+    prods.forEach(function(p){
+      var isT = p.id in tried;
+      var img = IMG[p.id];
+      var thumb = img
+        ? '<img src="https://lh3.googleusercontent.com/d/' + img + '=w200" alt="" loading="lazy">'
+        : '<span class="dex-initial">' + ((p.name || '?')[0] || '?') + '</span>';
+      var overlay = isT ? '<span class="dex-check"><i class="ti ti-check"></i></span>' : '<span class="dex-q">?</span>';
+      var nameTxt = isT ? (p.name || '') : '???';
+      var dateLine = (isT && tried[p.id]) ? '<div class="dex-tile-date">' + formatDT(tried[p.id]) + '</div>' : '';
+      html += '<button type="button" class="dex-tile' + (isT ? '' : ' locked') + '" onclick="openDexProduct(\'' + p.id + '\')">'
+        + '<div class="dex-thumb">' + thumb + overlay + '</div>'
+        + '<div class="dex-tile-name">' + nameTxt + '</div>' + dateLine
+        + '</button>';
+    });
+    html += '</div></div>';
+  });
+
+  box.innerHTML = html;
+  requestAnimationFrame(function(){ var f = document.getElementById('dex-bar-fill'); if(f) f.style.width = pct + '%'; });
+}
+
+// Tapping a Dex tile opens that product's info card (set its category first so it renders correctly).
+function openDexProduct(pid){
+  if(!PRODUCT_MAP[pid]) return;
+  var cat = null;
+  Object.keys(CATALOGUE).forEach(function(c){ if(CATALOGUE[c].some(function(x){ return x.id === pid; })) cat = c; });
+  if(cat) currentCat = cat;
+  if(typeof openProductDetail === 'function') openProductDetail(pid);
 }
 
 function logout(){

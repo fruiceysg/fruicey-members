@@ -7551,7 +7551,7 @@ function renderDexBody(tried){
     if(!prods.length) return;
     var cgot = prods.filter(function(p){ return p.id in tried; }).length;
     html += '<div class="dex-cat"><div class="dex-cat-head">'
-      + '<span class="dex-cat-name">' + c + '</span>'
+      + '<span class="dex-cat-name" style="color:' + (CAT_COLORS[c] || 'var(--green-dark)') + '">' + c + '</span>'
       + '<span class="dex-cat-count">' + cgot + '/' + prods.length + '</span></div><div class="dex-row">';
     prods.forEach(function(p){
       var isT = p.id in tried;
@@ -7559,8 +7559,8 @@ function renderDexBody(tried){
       var thumb = img
         ? '<img src="https://lh3.googleusercontent.com/d/' + img + '=w200" alt="" loading="lazy">'
         : '<span class="dex-initial">' + ((p.name || '?')[0] || '?') + '</span>';
-      var overlay = isT ? '<span class="dex-check"><i class="ti ti-check"></i></span>' : '<span class="dex-q">?</span>';
-      var nameTxt = isT ? (p.name || '') : '???';
+      var overlay = isT ? '<span class="dex-check"><i class="ti ti-check"></i></span>' : '';
+      var nameTxt = isT ? (p.name || '') : '';
       var dateLine = (isT && tried[p.id]) ? '<div class="dex-tile-date">' + formatDT(tried[p.id]) + '</div>' : '';
       html += '<button type="button" class="dex-tile' + (isT ? '' : ' locked') + '" onclick="openDexProduct(\'' + p.id + '\')">'
         + '<div class="dex-thumb">' + thumb + overlay + '</div>'

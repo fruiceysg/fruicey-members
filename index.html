@@ -1028,8 +1028,21 @@ button.cal-day:active{transform:scale(.94)}
 .acc-credit-btn.ghost{background:rgba(120,120,128,.12);color:var(--green-dark)}
 .acc-credit-btn:active{transform:scale(.97);opacity:.9}
 /* ── Fruicey Dex ─────────────────────────────────────────────────────── */
-.acc-dex-sub{font-size:11px;font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0}
-.acc-dex{display:flex;flex-direction:column;gap:16px;margin-bottom:6px}
+/* Account-tab button that opens the Dex popup */
+.dex-open-btn{display:flex;align-items:center;gap:14px;width:100%;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;border:none;border-radius:14px;padding:16px;cursor:pointer;font-family:var(--body);text-align:left;box-shadow:0 1px 2px rgba(0,0,0,.05);transition:transform .12s,opacity .15s}
+.dex-open-btn:active{transform:scale(.99);opacity:.95}
+.dex-open-left{flex:1;min-width:0}
+.dex-open-title{font-family:var(--font);font-size:19px;letter-spacing:.5px}
+.dex-open-sub{font-size:12px;opacity:.85;margin:1px 0 9px}
+.dex-open-bar{background:rgba(255,255,255,.28)}
+.dex-open-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.dex-open-count{font-family:var(--font);font-size:17px;font-weight:700;white-space:nowrap}
+.dex-open-right .ti{font-size:20px;opacity:.9}
+/* Dex popup head */
+.dex-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.dex-modal-title{font-family:var(--font);font-size:22px;color:var(--green-dark);letter-spacing:.5px}
+.dex-modal-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.dex-modal-body{display:flex;flex-direction:column;gap:16px}
 .dex-progress{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
 .dex-progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;gap:10px}
 .dex-progress-title{font-family:var(--font);font-size:16px}
@@ -1085,12 +1098,14 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   #order-receipt-modal,
   #add-credit-modal,
   #credit-history-modal,
+  #dex-modal,
   #product-info-modal{align-items:center;justify-content:center}
   #login-modal .modal-box,
   #paynow-modal .modal-box,
   #order-receipt-modal .modal-box,
   #add-credit-modal .modal-box,
-  #credit-history-modal .modal-box{width:440px;max-width:92vw;border-radius:20px;max-height:88vh}
+  #credit-history-modal .modal-box,
+  #dex-modal .modal-box{width:440px;max-width:92vw;border-radius:20px;max-height:88vh}
   #login-modal .modal-handle,
   #paynow-modal .modal-handle,
   #order-receipt-modal .modal-handle,
@@ -3051,8 +3066,14 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
   </div>
 
-  <div class="acc-section-label">Fruicey Dex <span class="acc-dex-sub">— bowls &amp; drinks you've tried</span></div>
-  <div id="acc-dex" class="acc-dex"></div>
+  <button type="button" id="dex-open-btn" class="dex-open-btn" onclick="openDexModal()">
+    <div class="dex-open-left">
+      <div class="dex-open-title">FRUICEY DEX</div>
+      <div class="dex-open-sub">Products you've tried</div>
+      <div class="dex-bar dex-open-bar"><div class="dex-bar-fill" id="dex-btn-bar"></div></div>
+    </div>
+    <div class="dex-open-right"><span class="dex-open-count" id="dex-btn-count">&ndash;</span><i class="ti ti-chevron-right"></i></div>
+  </button>
 
   <div class="acc-section-label">My Details</div>
   <div class="acc-group">
@@ -3077,6 +3098,20 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 
 <!-- Account log-out (fixed, left of fullscreen; only shows on Account tab) -->
 <button class="acc-logout-fixed" onclick="logout()" title="Log out"><i class="ti ti-logout"></i><span>Log out</span></button>
+
+<!-- Fruicey Dex popup -->
+<div class="modal-bg" id="dex-modal" onclick="if(event.target===this)closeDexModal()">
+  <div class="modal-box dex-modal-box">
+    <div class="dex-modal-head">
+      <div>
+        <div class="dex-modal-title">FRUICEY DEX</div>
+        <div class="dex-modal-sub">Products you've tried</div>
+      </div>
+      <button class="pd-close" onclick="closeDexModal()" aria-label="Close">&times;</button>
+    </div>
+    <div id="dex-modal-body" class="dex-modal-body"></div>
+  </div>
+</div>
 
 <!-- Creating Order overlay -->
 <div id="creating-order-overlay">
@@ -4890,6 +4925,7 @@ function closeLeaveWarn(){ var m=document.getElementById('leave-sheet'); if(m) m
     var ov = [
       ['leave-sheet', closeLeaveWarn],
       ['product-detail-modal', closeProductDetail],
+      ['dex-modal', closeDexModal],
       ['clearcart-sheet', closeClearCart],
       ['login-modal', closeLogin],
       ['cart-sheet', closeCart],
@@ -7451,12 +7487,10 @@ function _dexTs(v){
 }
 function _dexParseItems(x){ try{ return typeof x === 'string' ? JSON.parse(x) : (x || []); }catch(e){ return []; } }
 
-async function loadDex(){
-  var box = document.getElementById('acc-dex');
-  if(!box || !currentUser) return;
-  box.innerHTML = '<div class="tab-loader"><div class="loader-spinner"></div></div>';
-  if(typeof fillHarvest === 'function') fillHarvest(box);
+var _dexTried = null;   // pid -> earliest date value seen (null until loaded)
 
+async function loadDex(){
+  if(!currentUser) return;
   var nameMap = {};
   Object.keys(CATALOGUE).forEach(function(c){ CATALOGUE[c].forEach(function(p){ nameMap[(p.name||'').trim().toLowerCase()] = p.id; }); });
   function resolvePid(id, name){
@@ -7464,7 +7498,7 @@ async function loadDex(){
     if(name){ var pid = nameMap[String(name).trim().toLowerCase()]; if(pid && !DEX_EXCLUDE.has(pid)) return pid; }
     return null;
   }
-  var tried = {};   // pid -> earliest date value seen
+  var tried = {};
   function note(id, name, dateVal){
     var pid = resolvePid(id, name);
     if(!pid) return;
@@ -7474,22 +7508,42 @@ async function loadDex(){
     var res = await apiGet({action:'getOrdersScreen', phone:np(currentUser.phone)});
     ((res && res.orders) || []).forEach(function(o){ _dexParseItems(o.items).forEach(function(i){ note(i.id, i.name || i.label, o.createdAt); }); });
     ((res && res.sales)  || []).forEach(function(s){ _dexParseItems(s.items).forEach(function(i){ note(i.id, i.name || i.label, s.date); }); });
-  }catch(e){ /* render with whatever we have (possibly nothing) */ }
-  renderDex(tried);
+  }catch(e){ /* keep whatever we have (possibly nothing) */ }
+  _dexTried = tried;
+  updateDexButton();
+  var modal = document.getElementById('dex-modal');
+  if(modal && modal.classList.contains('open')) renderDexBody(tried);   // refresh if already open
 }
 
-function renderDex(tried){
-  var box = document.getElementById('acc-dex');
+function _dexTotals(tried){
+  var total = 0, got = 0;
+  Object.keys(CATALOGUE).forEach(function(c){ CATALOGUE[c].forEach(function(p){ if(DEX_EXCLUDE.has(p.id)) return; total++; if(tried && (p.id in tried)) got++; }); });
+  return {total:total, got:got};
+}
+function updateDexButton(){
+  var t = _dexTotals(_dexTried || {});
+  var cEl = document.getElementById('dex-btn-count'); if(cEl) cEl.textContent = t.got + ' / ' + t.total;
+  var bar = document.getElementById('dex-btn-bar'); if(bar) bar.style.width = (t.total ? Math.round(t.got / t.total * 100) : 0) + '%';
+}
+
+function openDexModal(){
+  var modal = document.getElementById('dex-modal'); if(!modal) return;
+  renderDexBody(_dexTried || {});
+  modal.classList.add('open');
+  if(_dexTried === null) loadDex();   // not loaded yet → fetch, then it re-renders the open modal
+}
+function closeDexModal(){ var m = document.getElementById('dex-modal'); if(m) m.classList.remove('open'); }
+
+function renderDexBody(tried){
+  var box = document.getElementById('dex-modal-body');
   if(!box) return;
   var cats = Object.keys(CATALOGUE);
-  var total = 0, got = 0;
-  cats.forEach(function(c){ CATALOGUE[c].forEach(function(p){ if(DEX_EXCLUDE.has(p.id)) return; total++; if(p.id in tried) got++; }); });
-  var pct = total ? Math.round(got / total * 100) : 0;
-
-  var title = (total > 0 && got >= total) ? 'Dex complete! 🎉' : (got === 0 ? 'Start your collection' : 'Your collection');
+  var t = _dexTotals(tried);
+  var pct = t.total ? Math.round(t.got / t.total * 100) : 0;
+  var title = (t.total > 0 && t.got >= t.total) ? 'Dex complete!' : (t.got === 0 ? 'Start your collection' : 'Your collection');
   var html = '<div class="dex-progress"><div class="dex-progress-top">'
     + '<div class="dex-progress-title">' + title + '</div>'
-    + '<div class="dex-progress-count">' + got + ' / ' + total + '</div></div>'
+    + '<div class="dex-progress-count">' + t.got + ' / ' + t.total + '</div></div>'
     + '<div class="dex-bar"><div class="dex-bar-fill" id="dex-bar-fill"></div></div></div>';
 
   cats.forEach(function(c){
@@ -7520,9 +7574,10 @@ function renderDex(tried){
   requestAnimationFrame(function(){ var f = document.getElementById('dex-bar-fill'); if(f) f.style.width = pct + '%'; });
 }
 
-// Tapping a Dex tile opens that product's info card (set its category first so it renders correctly).
+// Tapping a Dex tile closes the popup and opens that product's info card.
 function openDexProduct(pid){
   if(!PRODUCT_MAP[pid]) return;
+  closeDexModal();
   var cat = null;
   Object.keys(CATALOGUE).forEach(function(c){ if(CATALOGUE[c].some(function(x){ return x.id === pid; })) cat = c; });
   if(cat) currentCat = cat;

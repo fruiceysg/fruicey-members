@@ -2999,6 +2999,26 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 
   <!-- Profile card -->
   <div class="acc-wrap">
+
+  <div class="acc-section-label">Fruicey Credit</div>
+  <div class="acc-credit-card">
+    <div class="acc-credit-label">Available balance</div>
+    <div class="acc-credit-amount" id="acc-credit-balance">$0.00</div>
+    <div class="acc-credit-actions">
+      <button class="acc-credit-btn primary" onclick="openAddCredit()"><i class="ti ti-plus"></i>Add Credit</button>
+      <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
+    </div>
+  </div>
+
+  <button type="button" id="dex-open-btn" class="dex-open-btn" onclick="openDexModal()">
+    <div class="dex-open-left">
+      <div class="dex-open-title">FRUICEY DEX</div>
+      <div class="dex-open-sub">Products you've tried</div>
+      <div class="dex-bar dex-open-bar"><div class="dex-bar-fill" id="dex-btn-bar"></div></div>
+    </div>
+    <div class="dex-open-right"><span class="dex-open-count" id="dex-btn-count">&ndash;</span><i class="ti ti-chevron-right"></i></div>
+  </button>
+
   <div class="acc-profile-card">
     <div class="acc-profile-top">
       <!-- Full-width swipeable tier carousel -->
@@ -3055,25 +3075,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 
   <button type="button" class="review-share-btn" style="margin:8px auto 20px" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
-
-  <div class="acc-section-label">Fruicey Credit</div>
-  <div class="acc-credit-card">
-    <div class="acc-credit-label">Available balance</div>
-    <div class="acc-credit-amount" id="acc-credit-balance">$0.00</div>
-    <div class="acc-credit-actions">
-      <button class="acc-credit-btn primary" onclick="openAddCredit()"><i class="ti ti-plus"></i>Add Credit</button>
-      <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
-    </div>
-  </div>
-
-  <button type="button" id="dex-open-btn" class="dex-open-btn" onclick="openDexModal()">
-    <div class="dex-open-left">
-      <div class="dex-open-title">FRUICEY DEX</div>
-      <div class="dex-open-sub">Products you've tried</div>
-      <div class="dex-bar dex-open-bar"><div class="dex-bar-fill" id="dex-btn-bar"></div></div>
-    </div>
-    <div class="dex-open-right"><span class="dex-open-count" id="dex-btn-count">&ndash;</span><i class="ti ti-chevron-right"></i></div>
-  </button>
 
   <div class="acc-section-label">My Details</div>
   <div class="acc-group">

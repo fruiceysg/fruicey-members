@@ -356,7 +356,12 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .feat8 img.reveal-right.in{opacity:1;transform:translateX(0)}
 .feature-wrap.feat3{overflow:hidden}
 .feature-wrap.feat8{overflow:hidden}
+/* Generic image reveal: images on the home tab + burger pages fade/rise in as they scroll into
+   view, giving a top-to-bottom flow. Menu grid and functional tabs are left untouched. */
+.img-reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.16,1,.3,1)}
+.img-reveal.in{opacity:1;transform:translateY(0)}
 @media (prefers-reduced-motion:reduce){
+  .img-reveal{opacity:1!important;transform:none!important;transition:none}
   .reveal{opacity:1!important;transform:none!important;transition:none}
 }
 
@@ -3815,6 +3820,7 @@ function initReveal(){
     entries.forEach(function(e){ if(e.isIntersecting){ _revealTarget(e.target).classList.add('in'); } });
   }, {threshold:0.12, rootMargin:'0px 0px -6% 0px'});
   els.forEach(function(el){ revealIO.observe(el); });
+  revealImagesIn('scr-home');   // other home images flow in top-to-bottom too
 }
 function replayReveal(){
   if(!revealIO){ return; }
@@ -3823,6 +3829,35 @@ function replayReveal(){
   var home = document.getElementById('scr-home');
   if(home){ void home.offsetHeight; }   // force reflow so the transition restarts
   els.forEach(function(el){ revealIO.observe(el); });
+}
+
+// ── Generic image reveal (home tab + burger pages) ───────────────────────────
+// Each eligible image fades/rises in when it scrolls into view; images entering together are
+// staggered by vertical position so they flow in top-to-bottom. One-time per image.
+var imgRevealIO = null;
+function _initImgRevealIO(){
+  if(imgRevealIO || !('IntersectionObserver' in window)) return;
+  imgRevealIO = new IntersectionObserver(function(entries){
+    var vis = entries.filter(function(e){ return e.isIntersecting; });
+    vis.sort(function(a,b){ return a.boundingClientRect.top - b.boundingClientRect.top; });
+    vis.forEach(function(e, i){
+      e.target.style.transitionDelay = Math.min(i, 8) * 70 + 'ms';
+      e.target.classList.add('in');
+      imgRevealIO.unobserve(e.target);
+    });
+  }, {threshold:0.08, rootMargin:'0px 0px -5% 0px'});
+}
+function revealImagesIn(screenId){
+  var scr = document.getElementById(screenId);
+  if(!scr) return;
+  _initImgRevealIO();
+  scr.querySelectorAll('img').forEach(function(im){
+    if(im.classList.contains('img-reveal')) return;                         // already set up
+    if(im.closest('.feat1,.feat2,.feat3,.feat6,.feat8')) return;            // handled by the feature reveal
+    if(im.closest('.home-topbar,.home-reviews')) return;                    // skip sticky header/canopy + horizontal reviews carousel
+    im.classList.add('img-reveal');
+    if(imgRevealIO) imgRevealIO.observe(im); else im.classList.add('in');   // no IO support → just show
+  });
 }
 
 // Fill any .loader-spinner with staggered letter spans: h a r v e s t i n g . . .
@@ -4203,6 +4238,7 @@ function openStory(){
   document.documentElement.style.background = '';
   currentScreen = 'story';
   window.scrollTo(0,0);
+  revealImagesIn('scr-story');
 }
 function openSubscriptions(){
   closeDrawer();
@@ -4219,6 +4255,7 @@ function openSubscriptions(){
   });
   currentScreen = 'subscriptions';
   window.scrollTo(0,0);
+  revealImagesIn('scr-subscriptions');
 }
 // ═══ PERSONALISED FRUIT BOX ══════════════════════════════════
 const FB_BOXES = {
@@ -4314,6 +4351,7 @@ function openFruitBox(){
   fbRender();
   fbSetTab('gifts');
   window.scrollTo(0,0);
+  revealImagesIn('scr-fruitbox');
 }
 
 function fbSetTab(tab){
@@ -4555,6 +4593,7 @@ function openShipping(){
   document.documentElement.style.background = '';
   currentScreen = 'shipping';
   window.scrollTo(0,0);
+  revealImagesIn('scr-shipping');
 }
 // Slide the current screen up and off, then return home
 var _exitingScreen = false;

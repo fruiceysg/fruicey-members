@@ -3835,15 +3835,20 @@ var IMG_QUEUE_MAX = 3;   // how many images may download at once; they still STA
 function queueImagesIn(screenId){
   var scr = document.getElementById(screenId);
   if(!scr) return;
+  var vis = [], hid = [];
   scr.querySelectorAll('img').forEach(function(im){
     if(im.dataset.qdone || im.dataset.qsrc !== undefined) return;   // already queued or loaded via queue
     if(im.closest('.home-topbar,.home-reviews')) return;            // leave sticky header + reviews on normal loading
     var real = im.getAttribute('src');
     if(!real) return;
+    var visible = im.offsetParent !== null;                          // false for images inside a hidden tab (display:none)
     im.dataset.qsrc = real;
     im.removeAttribute('src');                                       // cancel the parallel request; the queue re-requests in order
-    _imgQueue.push(im);
+    (visible ? vis : hid).push(im);
   });
+  // Load the images on the tab the user is actually looking at first, then the hidden tabs' images.
+  _imgQueue.push.apply(_imgQueue, vis);
+  _imgQueue.push.apply(_imgQueue, hid);
   _runImgQueue();
 }
 function _runImgQueue(){

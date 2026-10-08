@@ -3796,15 +3796,15 @@ function goMenuCat(cat){
 var revealIO = null;
 function _revealEls(){ return document.querySelectorAll('#scr-home .feat1, #scr-home .feat2, #scr-home .feat3, #scr-home .feat6, #scr-home .feat8'); }
 function _revealTarget(el){
-  // feat3/feat8 animate their inner image (wrapper clips the slide); others animate themselves
-  if(el.classList.contains('feat3') || el.classList.contains('feat8')){ return el.querySelector('img') || el; }
+  // feat3 animates its inner image (wrapper clips the slide); others animate themselves
+  if(el.classList.contains('feat3')){ return el.querySelector('img') || el; }
   return el;
 }
 function initReveal(){
   var els = _revealEls();
   els.forEach(function(el){
-    if(el.classList.contains('feat3') || el.classList.contains('feat8')){ var im=el.querySelector('img'); if(im) im.classList.add('reveal-right'); }
-    else el.classList.add('reveal');
+    if(el.classList.contains('feat3')){ var im=el.querySelector('img'); if(im) im.classList.add('reveal-right'); }
+    else el.classList.add('reveal');   // feat8 now fades + rises like feat6
   });
   if(!('IntersectionObserver' in window)){ els.forEach(function(el){ _revealTarget(el).classList.add('in'); }); return; }
   revealIO = new IntersectionObserver(function(entries){

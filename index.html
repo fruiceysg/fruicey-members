@@ -3812,9 +3812,36 @@ function initReveal(){
   });
   if(!('IntersectionObserver' in window)){ els.forEach(function(el){ _revealTarget(el).classList.add('in'); }); return; }
   revealIO = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){ if(e.isIntersecting){ _revealTarget(e.target).classList.add('in'); } });
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      var el = e.target;
+      var target = _revealTarget(el);
+      var img = el.querySelector('img');
+      // Play the reveal only once the image is actually loaded, so the animation is never
+      // "spent" on an empty box while the picture is still downloading. If the image is still
+      // waiting in the load queue, load it now (jump the queue) so the reveal isn't held up.
+      if(!img || (img.complete && img.naturalWidth > 0)){
+        target.classList.add('in');
+      } else {
+        _prioritizeImgLoad(img);
+        var on = function(){ img.removeEventListener('load', on); img.removeEventListener('error', on); target.classList.add('in'); };
+        img.addEventListener('load', on);
+        img.addEventListener('error', on);
+      }
+      revealIO.unobserve(el);   // reveal is one-time (replayReveal re-observes if needed)
+    });
   }, {threshold:0.12, rootMargin:'0px 0px -6% 0px'});
   els.forEach(function(el){ revealIO.observe(el); });
+}
+// Pull an image out of the top-to-bottom queue and load it immediately (used when an animated
+// banner scrolls into view, so its reveal plays on the loaded image without waiting its turn).
+function _prioritizeImgLoad(img){
+  if(img && img.dataset && img.dataset.qsrc !== undefined){
+    var src = img.dataset.qsrc;
+    img.dataset.qdone = '1';
+    delete img.dataset.qsrc;   // the queue will skip this one when it reaches it
+    img.src = src;
+  }
 }
 function replayReveal(){
   if(!revealIO){ return; }

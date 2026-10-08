@@ -3830,6 +3830,30 @@ function replayReveal(){
 // downward instead of every image racing the network at once. This changes only the LOADING
 // order — no animation is added. The sticky header/canopy and the horizontal reviews carousel
 // are left on the browser's normal loading.
+// Wait until the first few home images (the above-the-fold banners, which the queue loads first)
+// have finished loading, then run the callback. Falls back to a timeout so the splash never hangs.
+function whenHomeHeroReady(cb){
+  var done = false;
+  var finish = function(){ if(done) return; done = true; try{ cb(); }catch(e){ console.warn(e); } };
+  var scr = document.getElementById('scr-home');
+  if(!scr){ finish(); return; }
+  var heroes = [];
+  scr.querySelectorAll('img').forEach(function(im){
+    if(heroes.length >= 3) return;                       // first 3 content images ≈ the first screen
+    if(im.closest('.home-topbar,.home-reviews')) return; // sticky header + reviews don't gate the entrance
+    heroes.push(im);
+  });
+  if(!heroes.length){ finish(); return; }
+  var pending = heroes.length;
+  heroes.forEach(function(im){
+    if(im.complete && im.naturalWidth > 0){ if(--pending === 0) finish(); return; }
+    var on = function(){ im.removeEventListener('load', on); im.removeEventListener('error', on); if(--pending === 0) finish(); };
+    im.addEventListener('load', on);
+    im.addEventListener('error', on);
+  });
+  setTimeout(finish, 3500);   // safety cap: never hold the splash longer than this
+}
+
 var _imgQueue = [], _imgQueueActive = 0;
 var IMG_QUEUE_MAX = 3;   // how many images may download at once; they still START in top-to-bottom order
 function queueImagesIn(screenId){
@@ -4105,14 +4129,19 @@ document.addEventListener('DOMContentLoaded', function(){
   document.body.classList.add('home-active');
   document.documentElement.style.background = '#f1f1f1';
   initHomeScreen();
-  initReveal();
-  queueImagesIn('scr-home');   // load home images top-to-bottom, in order
+  queueImagesIn('scr-home');   // start loading home images top-to-bottom, in order
   initFeatureButtons();
   initProductDetailSwipe();
   initCartSwipe();
-  // Hide loader
-  const loader = document.getElementById('app-loader');
-  if(loader){ loader.classList.add('hide'); setTimeout(()=>loader.remove(), 500); }
+  // First impression: keep the "harvesting…" splash up until the first screen's images have loaded,
+  // THEN set up the reveal and drop the splash — so the page animates in cleanly on a cold cache
+  // instead of the animation firing on half-loaded, collapsing boxes. A safety timeout guarantees
+  // the splash never hangs if an image is slow or missing.
+  whenHomeHeroReady(function(){
+    initReveal();              // set up + play the scroll-reveal now that the hero images are ready
+    const loader = document.getElementById('app-loader');
+    if(loader){ loader.classList.add('hide'); setTimeout(function(){ loader.remove(); }, 500); }
+  });
 });
 
 // ── HOME ──────────────────────────────────────────────────────

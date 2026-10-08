@@ -946,7 +946,7 @@ button.cal-day:active{transform:scale(.94)}
 /* ── Account tab — Apple-style sleek ── */
 .acc-wrap{max-width:640px;margin:0 auto;padding:8px 16px 24px}
 /* Profile: centered avatar, quiet typography */
-.acc-profile-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 10px 0;background:none;box-shadow:none;color:inherit}
+.acc-profile-card{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 10px 0;margin-top:30px;background:none;box-shadow:none;color:inherit}
 .acc-profile-card::before,.acc-profile-card::after{display:none}
 .acc-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));display:flex;align-items:center;justify-content:center;font-family:var(--font);font-size:34px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 8px 22px rgba(28,77,58,.22)}
 /* TIER CAROUSEL: full-width swipeable cards */
@@ -957,10 +957,10 @@ button.cal-day:active{transform:scale(.94)}
 /* passed tier: greyscale */
 .tier-slide.passed .tier-slide-img{filter:grayscale(1) brightness(.82);opacity:.5}
 /* locked tier: hide the card, show a sleek locked panel (surprise) */
-.tier-lock{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--green-dark));color:rgba(255,255,255,.9);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.tier-lock{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:16px;background:#fff;color:var(--green-dark);border:1px solid #ececec;box-shadow:0 8px 24px rgba(0,0,0,.12)}
 .tier-slide.locked .tier-slide-img{visibility:hidden}
 .tier-slide.locked .tier-lock{display:flex}
-.tier-lock-lbl{font-family:var(--font);font-size:18px;letter-spacing:1px;color:#fff;opacity:.95}
+.tier-lock-lbl{font-family:var(--font);font-size:18px;letter-spacing:1px;color:var(--green-dark);opacity:.95}
 .tier-dots{display:flex;justify-content:center;gap:7px;margin:12px 0 2px}
 .tier-dot{width:8px;height:8px;border-radius:50%;background:#d5d5d5;cursor:pointer;transition:all .25s}
 .tier-dot.active{background:var(--green);width:22px;border-radius:5px}

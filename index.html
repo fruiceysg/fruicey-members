@@ -3830,7 +3830,8 @@ function replayReveal(){
 // downward instead of every image racing the network at once. This changes only the LOADING
 // order — no animation is added. The sticky header/canopy and the horizontal reviews carousel
 // are left on the browser's normal loading.
-var _imgQueue = [], _imgQueueBusy = false;
+var _imgQueue = [], _imgQueueActive = 0;
+var IMG_QUEUE_MAX = 3;   // how many images may download at once; they still START in top-to-bottom order
 function queueImagesIn(screenId){
   var scr = document.getElementById(screenId);
   if(!scr) return;
@@ -3846,23 +3847,26 @@ function queueImagesIn(screenId){
   _runImgQueue();
 }
 function _runImgQueue(){
-  if(_imgQueueBusy) return;
-  var im = _imgQueue.shift();
-  if(!im) return;
-  if(!im.isConnected || im.dataset.qsrc === undefined){ _runImgQueue(); return; }
-  _imgQueueBusy = true;
-  var prevOnload = im.onload, prevOnerror = im.onerror;
-  var next = function(ev){
-    if(typeof prevOnload === 'function' && ev && ev.type === 'load') try{ prevOnload.call(im, ev); }catch(e){}
-    if(typeof prevOnerror === 'function' && ev && ev.type === 'error') try{ prevOnerror.call(im, ev); }catch(e){}
-    im.dataset.qdone = '1';
-    delete im.dataset.qsrc;
-    _imgQueueBusy = false;
-    _runImgQueue();
-  };
-  im.addEventListener('load',  next, {once:true});
-  im.addEventListener('error', next, {once:true});
-  im.src = im.dataset.qsrc;
+  while(_imgQueueActive < IMG_QUEUE_MAX){
+    var im = _imgQueue.shift();
+    if(!im) return;
+    if(!im.isConnected || im.dataset.qsrc === undefined) continue;   // skip stale entries
+    _imgQueueActive++;
+    (function(im){
+      var prevOnload = im.onload, prevOnerror = im.onerror;
+      var next = function(ev){
+        if(typeof prevOnload === 'function' && ev && ev.type === 'load') try{ prevOnload.call(im, ev); }catch(e){}
+        if(typeof prevOnerror === 'function' && ev && ev.type === 'error') try{ prevOnerror.call(im, ev); }catch(e){}
+        im.dataset.qdone = '1';
+        delete im.dataset.qsrc;
+        _imgQueueActive--;
+        _runImgQueue();
+      };
+      im.addEventListener('load',  next, {once:true});
+      im.addEventListener('error', next, {once:true});
+      im.src = im.dataset.qsrc;
+    })(im);
+  }
 }
 
 // Fill any .loader-spinner with staggered letter spans: h a r v e s t i n g . . .

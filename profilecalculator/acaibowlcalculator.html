@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acai Bowl Customizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Darumadrop+One&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; font-family: 'Darumadrop One', Arial, sans-serif; }
+        body { margin: 0; padding: 0; background: transparent; }
+        .container { max-width: 600px; margin: 0; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 30px; }
+        .title { font-size: 18px; font-weight: 700; color: #1f2937; margin-bottom: 25px; text-align: center; line-height: 1.3; }
+        .section-title { font-size: 16px; font-weight: 600; color: #374151; margin-top: 20px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        label { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; display: block; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; font-family: 'Darumadrop One', Arial, sans-serif; }
+        input:focus, select:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+        .items-list { margin-bottom: 15px; }
+        .item-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+        .item-row select { flex: 1; margin: 0; }
+        .item-row input { width: 70px; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; min-width: 60px; flex-shrink: 0; }
+        .item-row button { padding: 8px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .item-row button:hover { background: #dc2626; }
+        .btn-add { display: inline-block; padding: 10px 16px; background: #8ecda0; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: 'Darumadrop One', Arial, sans-serif; margin-top: 8px; }
+        .btn-add:hover { background: #7abc8e; }
+        .totals { margin-top: 25px; padding-top: 20px; border-top: 2px solid #e5e7eb; }
+        .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 15px; background: #f3f4f6; border-radius: 8px; }
+        .total-label { font-size: 14px; font-weight: 600; color: #374151; }
+        .total-value { font-size: 24px; font-weight: 700; color: #1f2937; }
+        .note-box { background: #fef3c7; border: 2px solid #fbbf24; border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 13px; color: #92400e; }
+        .recaptcha-box { display: flex; justify-content: center; margin: 20px 0; transform: scale(0.9); transform-origin: 0 0; }
+        .btn-submit { width: 100%; padding: 16px; background: linear-gradient(to right, #7f87b2, #6796ce, #85b2d1, #99d1b3, #efd876, #dea04e, #dc8580); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Darumadrop One', Arial, sans-serif; margin-top: 20px; }
+        .btn-submit:hover { transform: scale(1.02); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 15px; padding: 30px; max-width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        .modal-icon { font-size: 50px; margin-bottom: 15px; }
+        .modal-title { font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 10px; }
+        .modal-text { color: #6b7280; margin-bottom: 20px; font-size: 14px; }
+        .btn-close { padding: 10px 24px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Darumadrop One', Arial, sans-serif; }
+        .btn-close:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Build Your Acai Bowl - Powered by Fruicey's Nutrition Engine</div>
+        <div class="form-group">
+            <label>Select Acai Bowl Size</label>
+            <select id="bowlSize" onchange="calculate()">
+                <option value="">Choose a size...</option>
+                <option value="dessert">Dessert Size - $4.50 (168 kcal)</option>
+                <option value="meal">Meal Size - $5.50 (336 kcal)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Choose Acai Blend</label>
+            <select id="blend" onchange="calculate()">
+                <option value="">Choose a blend...</option>
+                <option value="classic">Classic Unsweetened Acai Smoothie</option>
+                <option value="original_yogurt">Classic Acai Smoothie with Original Yogurt - +$1.20 (+100 kcal)</option>
+                <option value="mix_berries_yogurt">Classic Acai Smoothie with Mix Berries Yogurt - +$1.20 (+95 kcal)</option>
+                <option value="mango_puree">Classic Acai Smoothie with Fresh Mango Puree - +$1.50 (+25 kcal)</option>
+                <option value="avocado_puree">Classic Acai Smoothie with Fresh Avocado Puree - +$2.00 (+80 kcal)</option>
+            </select>
+        </div>
+        <div class="section-title">Pick Your Fruits</div>
+        <div class="items-list" id="fruits"></div>
+        <button class="btn-add" onclick="addFruit()">+ Add Fruit</button>
+        <div class="section-title">Drop Your Toppings</div>
+        <div class="items-list" id="toppings"></div>
+        <button class="btn-add" onclick="addTopping()">+ Add Topping</button>
+        <div class="section-title">Add-on Drizzles</div>
+        <div class="items-list" id="drizzles"></div>
+        <button class="btn-add" onclick="addDrizzle()">+ Add Drizzle</button>
+        <div class="totals">
+            <div class="total-row">
+                <span class="total-label">Total Calories:</span>
+                <span class="total-value" id="totalCals">0 kcal</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Total Price:</span>
+                <span class="total-value" id="totalPrice">$0.00</span>
+            </div>
+            <div class="note-box">
+                <strong>Note:</strong> Minimum order is $10. For custom orders below $10, please contact us.
+            </div>
+        </div>
+        <div class="section-title">Your Information</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="fullName">
+            </div>
+            <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" id="email">
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Phone Number *</label>
+                <input type="tel" id="phone">
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="address">
+            </div>
+        </div>
+        <div class="recaptcha-box">
+            <div class="g-recaptcha" data-sitekey="6LeI2QcsAAAAAG_nGCJwG2dHbCHyMxRR48CGOVXu"></div>
+        </div>
+        <button class="btn-submit" id="submitBtn" onclick="submitOrder()">Submit Your Order</button>
+    </div>
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">✅</div>
+            <div class="modal-title">Thank You for Your Order!</div>
+            <div class="modal-text">Your order is in processing and we will contact you for payment shortly.</div>
+            <button class="btn-close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script>
+        const bowls = { dessert: {price: 4.50, cal: 168}, meal: {price: 5.50, cal: 336} };
+        const blends = { classic: {price: 0, cal: 0}, original_yogurt: {price: 1.20, cal: 100}, mix_berries_yogurt: {price: 1.20, cal: 95}, mango_puree: {price: 1.50, cal: 25}, avocado_puree: {price: 2.00, cal: 80} };
+        const fruits = { half_apple: {name: "1/2 Red Apple", cal: 26, price: 1.00}, whole_apple: {name: "Whole Red Apple", cal: 52, price: 1.50}, quarter_banana: {name: "1/4 Banana", cal: 22, price: 0.50}, half_banana: {name: "1/2 Banana", cal: 45, price: 1.00}, whole_banana: {name: "Whole Banana", cal: 89, price: 1.50}, third_kiwi: {name: "1/3 Kiwi", cal: 20, price: 0.80}, half_kiwi: {name: "1/2 Kiwi", cal: 30, price: 1.50}, whole_kiwi: {name: "Whole Kiwi", cal: 61, price: 2.00}, strawberry: {name: "Strawberry (12g)", cal: 4, price: 0.80}, blueberry: {name: "Blueberry (10g)", cal: 6, price: 0.50}, mango: {name: "Mango (50g)", cal: 30, price: 0.50}, watermelon_4: {name: "4 Watermelon Ball", cal: 15, price: 0.70}, watermelon_6: {name: "6 Watermelon Ball", cal: 23, price: 1.00}, grapes: {name: "Green Grapes (40g)", cal: 28, price: 0.50} };
+        const toppings = { granola: {name: "Granolas (1.5 tbsp)", cal: 52, price: 0.50}, cacao: {name: "Raw Cacao (1/2 tbsp)", cal: 12, price: 1.00}, chia: {name: "Chia Seeds (1 tsp)", cal: 8, price: 0.20}, pumpkin: {name: "Pumpkin Seeds (1 tbsp)", cal: 28, price: 0.30}, coconut: {name: "Coconut Flakes (pinch)", cal: 10, price: 0.10}, none: {name: "No Toppings", cal: 0, price: 0} };
+        const drizzles = { none: {name: "No Drizzles", cal: 0, price: 0}, honey: {name: "Honey (1 tsp)", cal: 21, price: 0.50}, peanut_butter: {name: "Smooth Peanut Butter (1/2 tbsp)", cal: 48, price: 0.50}, oreo: {name: "Oreo Crushies (1 tbsp)", cal: 53, price: 0.80}, biscoff: {name: "Biscoff Crunchies (1 tbsp)", cal: 35, price: 1.00}, nutella: {name: "Nutella (1 tbsp)", cal: 100, price: 1.00}, choco: {name: "Ghirardelli Chocolate (1/2 tbsp)", cal: 25, price: 0.80}, caramel: {name: "Ghirardelli Caramel (1/2 tbsp)", cal: 30, price: 0.80} };
+        let fruitId = 0, toppingId = 0, drizzleId = 0;
+        function addFruit() {
+            fruitId++;
+            const html = `<div class="item-row" id="fruit${fruitId}"><select onchange="calculate()"><option value="">Choose fruit...</option>${Object.entries(fruits).map(([k,v]) => `<option value="fruit-${k}">${v.name} - $${v.price.toFixed(2)}</option>`).join('')}</select><button onclick="document.getElementById('fruit${fruitId}').remove(); calculate();">Remove</button></div>`;
+            document.getElementById('fruits').insertAdjacentHTML('beforeend', html);
+        }
+        function addTopping() {
+            toppingId++;
+            const html = `<div class="item-row" id="topping${toppingId}"><select onchange="calculate()"><option value="">Choose topping...</option>${Object.entries(toppings).map(([k,v]) => `<option value="topping-${k}">${v.name} - $${v.price.toFixed(2)}</option>`).join('')}</select><button onclick="document.getElementById('topping${toppingId}').remove(); calculate();">Remove</button></div>`;
+            document.getElementById('toppings').insertAdjacentHTML('beforeend', html);
+        }
+        function addDrizzle() {
+            drizzleId++;
+            const html = `<div class="item-row" id="drizzle${drizzleId}"><select onchange="calculate()"><option value="">Choose drizzle...</option>${Object.entries(drizzles).map(([k,v]) => `<option value="drizzle-${k}">${v.name} - $${v.price.toFixed(2)}</option>`).join('')}</select><button onclick="document.getElementById('drizzle${drizzleId}').remove(); calculate();">Remove</button></div>`;
+            document.getElementById('drizzles').insertAdjacentHTML('beforeend', html);
+        }
+        function calculate() {
+            let totalCal = 0, totalPrice = 0;
+            const bowl = document.getElementById('bowlSize').value;
+            if (bowl && bowls[bowl]) { totalCal += bowls[bowl].cal; totalPrice += bowls[bowl].price; }
+            const blend = document.getElementById('blend').value;
+            if (blend && blends[blend]) { totalCal += blends[blend].cal; totalPrice += blends[blend].price; }
+            document.querySelectorAll('#fruits .item-row select').forEach(sel => { if (sel.value) { const key = sel.value.replace('fruit-', ''); if (fruits[key]) { totalCal += fruits[key].cal; totalPrice += fruits[key].price; } } });
+            document.querySelectorAll('#toppings .item-row select').forEach(sel => { if (sel.value && sel.value !== 'topping-none') { const key = sel.value.replace('topping-', ''); if (toppings[key]) { totalCal += toppings[key].cal; totalPrice += toppings[key].price; } } });
+            document.querySelectorAll('#drizzles .item-row select').forEach(sel => { if (sel.value && sel.value !== 'drizzle-none') { const key = sel.value.replace('drizzle-', ''); if (drizzles[key]) { totalCal += drizzles[key].cal; totalPrice += drizzles[key].price; } } });
+            document.getElementById('totalCals').textContent = Math.round(totalCal) + ' kcal';
+            document.getElementById('totalPrice').textContent = '$' + totalPrice.toFixed(2);
+        }
+        function submitOrder() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value;
+            const bowlSize = document.getElementById('bowlSize').value;
+            const totalPrice = parseFloat(document.getElementById('totalPrice').textContent);
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!fullName) { alert('Please enter your Full Name.'); return; }
+            if (!email) { alert('Please enter your Email Address.'); return; }
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) { alert('Please enter a valid Email Address.'); return; }
+            if (!phone) { alert('Please enter your Phone Number.'); return; }
+            const phoneDigits = phone.replace(/\D/g, '');
+            if (phoneDigits.length < 8) { alert('Please enter a valid Phone Number (minimum 8 digits).'); return; }
+            if (!bowlSize) { alert('Please select an Acai Bowl size.'); return; }
+            if (totalPrice < 10) { alert('Minimum order is $10. For custom orders below $10, please contact us.'); return; }
+            if (!recaptchaResponse) { alert('Please complete the reCAPTCHA verification.'); return; }
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+            let fruitsList = '', toppingsList = '', drizzlesList = '';
+            document.querySelectorAll('#fruits .item-row select').forEach(sel => { if (sel.value) { const key = sel.value.replace('fruit-', ''); fruitsList += fruits[key].name + ', '; } });
+            document.querySelectorAll('#toppings .item-row select').forEach(sel => { if (sel.value && sel.value !== 'topping-none') { const key = sel.value.replace('topping-', ''); toppingsList += toppings[key].name + ', '; } });
+            document.querySelectorAll('#drizzles .item-row select').forEach(sel => { if (sel.value && sel.value !== 'drizzle-none') { const key = sel.value.replace('drizzle-', ''); drizzlesList += drizzles[key].name + ', '; } });
+            const orderSummary = 'NEW ACAI BOWL ORDER\n===================\nCUSTOMER: ' + fullName + '\nEmail: ' + email + ' | Phone: ' + phone + '\nAddress: ' + (address || 'N/A') + '\n\nORDER:\nBowl: Dessert/Meal\nBlend: ' + (document.getElementById('blend').value ? document.getElementById('blend').options[document.getElementById('blend').selectedIndex].text : 'None') + '\nFruits: ' + (fruitsList || 'None') + '\nToppings: ' + (toppingsList || 'None') + '\nDrizzles: ' + (drizzlesList || 'None') + '\n\nTOTAL: ' + document.getElementById('totalPrice').textContent + ' | ' + document.getElementById('totalCals').textContent + '\nDate: ' + new Date().toLocaleString();
+            fetch('https://formsubmit.co/wilson@fruicey.sg', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ name: fullName, email: email, phone: phone, subject: 'New Acai Bowl Order from ' + fullName, message: orderSummary, _captcha: 'false' }) }).then(response => { if (response.ok) { document.getElementById('successModal').classList.add('show'); } else { alert('Error submitting order. Please email wilson@fruicey.sg directly.'); } }).catch(error => { alert('Error submitting order. Please email wilson@fruicey.sg directly.'); }).finally(() => { btn.disabled = false; btn.textContent = 'Submit Your Order'; });
+        }
+        function closeModal() { document.getElementById('successModal').classList.remove('show'); }
+        addFruit(); addTopping(); addDrizzle();
+    </script>
+</body>
+</html>

@@ -32,6 +32,11 @@
         .calories-box.needed .calories-box-value { color: #ea580c; }
         .calories-box-subtitle { font-size: 11px; color: #6b7280; margin-top: 4px; }
         .hidden { display: none; }
+        .footer-bar { text-align: center; padding: 20px 16px 28px; }
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 26px; border-radius: 999px; background: #8fcea1; color: #14492f; text-decoration: none; font-family: var(--font); font-size: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.15); transition: transform .12s, box-shadow .15s; }
+        .back-btn:hover { box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+        .back-btn:active { transform: scale(.97); }
+        .method-note { max-width: 520px; margin: 14px auto 0; font-family: var(--body); font-size: 11px; color: #6b7280; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -73,11 +78,9 @@
             <div class="form-group">
                 <label>Activity Level</label>
                 <select id="activity" onchange="calc()">
-                    <option value="sedentary">Sedentary (little or no exercise)</option>
-                    <option value="light">Light (exercise 1-3 days/week)</option>
-                    <option value="moderate">Moderate (exercise 3-5 days/week)</option>
-                    <option value="active">Active (exercise 6-7 days/week)</option>
-                    <option value="very_active">Very Active (intense exercise daily)</option>
+                    <option value="low">Low active — mostly sitting, little regular exercise</option>
+                    <option value="moderate">Moderate active — on your feet, or a few hours/week of walking, cycling or gardening</option>
+                    <option value="very">Very active — intense exercise most days, or physically demanding work</option>
                 </select>
             </div>
 
@@ -103,6 +106,11 @@
         </div>
     </div>
 
+    <div class="footer-bar">
+        <a class="back-btn" href="https://fruicey.sg">&#8592; Back to Fruicey</a>
+        <div class="method-note">Estimated using the Oxford (Henry, 2005) BMR equation and FAO/WHO/UNU activity levels — the basis of Singapore Health Promotion Board energy recommendations. A healthy-eating guide only, not medical advice.</div>
+    </div>
+
     <script>
         function calc() {
             const gender = document.getElementById('gender').value;
@@ -113,22 +121,23 @@
             const intake = parseFloat(document.getElementById('intake').value) || 0;
 
             if (age && height && weight) {
+                // Basal metabolic rate — Oxford equation (Henry, 2005), the method Singapore's
+                // Health Promotion Board uses. weight in kg, height in cm, result in kcal/day.
                 let bmr;
                 if (gender === 'male') {
-                    bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+                    if (age < 30)      bmr = 14.4 * weight + 3.13 * height + 113;
+                    else if (age < 60) bmr = 11.4 * weight + 5.41 * height - 137;
+                    else               bmr = 11.4 * weight + 5.41 * height - 256;
                 } else {
-                    bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+                    if (age < 30)      bmr = 10.4 * weight + 6.15 * height - 282;
+                    else if (age < 60) bmr = 8.18 * weight + 5.02 * height - 11.6;
+                    else               bmr = 8.52 * weight + 4.21 * height + 10.7;
                 }
 
-                const multipliers = {
-                    sedentary: 1.2,
-                    light: 1.375,
-                    moderate: 1.55,
-                    active: 1.725,
-                    very_active: 1.9
-                };
+                // Physical Activity Level (FAO/WHO/UNU 2004 — basis of Singapore's energy RDAs)
+                const pal = { low: 1.53, moderate: 1.76, very: 2.25 };
 
-                const tdee = Math.round(bmr * multipliers[activity]);
+                const tdee = Math.round(bmr * (pal[activity] || 1.53));
                 
                 document.getElementById('recommended').textContent = tdee + ' kcal';
                 document.getElementById('results').classList.remove('hidden');

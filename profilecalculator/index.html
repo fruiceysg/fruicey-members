@@ -107,11 +107,24 @@
     </div>
 
     <div class="footer-bar">
-        <a class="back-btn" href="https://fruicey.sg">&#8592; Back to Fruicey</a>
-        <div class="method-note">Estimated using the Oxford (Henry, 2005) BMR equation and FAO/WHO/UNU activity levels — the basis of Singapore Health Promotion Board energy recommendations. A healthy-eating guide only, not medical advice.</div>
+        <a class="back-btn" href="https://fruicey.sg" onclick="goBack(event)">&#8592; Back to Fruicey</a>
+        <div class="method-note"><strong>Disclaimer:</strong> These calculations are based on the Singapore Health Promotion Board (HPB) energy guidelines, using the Oxford (Henry, 2005) basal metabolic rate equation and FAO/WHO/UNU physical-activity levels. Results are an estimate for general healthy-eating guidance only and may differ from HPB's published averages. They are not medical or dietetic advice — please consult a doctor or dietitian for personalised recommendations.</div>
     </div>
 
     <script>
+        // Back: if this page was opened in a new tab by the app, just close it (returns to the app
+        // tab that's still open) instead of loading a second Fruicey. Fall back to navigating if the
+        // tab can't be closed (e.g. the page was opened directly, not by the app).
+        function goBack(e) {
+            e.preventDefault();
+            if (window.opener && !window.opener.closed) {
+                window.close();
+                setTimeout(function () { window.location.href = 'https://fruicey.sg'; }, 200);
+            } else {
+                window.location.href = 'https://fruicey.sg';
+            }
+        }
+
         function calc() {
             const gender = document.getElementById('gender').value;
             const age = parseFloat(document.getElementById('age').value);

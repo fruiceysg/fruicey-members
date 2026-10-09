@@ -974,7 +974,7 @@ button.cal-day:active{transform:scale(.94)}
 .tt-fill{position:absolute;top:0;left:0;height:100%;border-radius:999px;background:linear-gradient(90deg,#4a9d78,var(--green-dark));box-shadow:0 1px 5px rgba(28,77,58,.3);transition:width .7s cubic-bezier(.2,.8,.2,1)}
 .tt-milestone{position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;background:#fff;border:2.5px solid #d5d5da;z-index:1;transition:border-color .3s}
 .tt-milestone.reached{border-color:var(--green-dark)}
-.tt-star{position:absolute;top:50%;transform:translate(-50%,-50%);color:#99d1b4;font-size:32px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));transition:left .7s cubic-bezier(.2,.8,.2,1);z-index:3;pointer-events:none}
+.tt-star{position:absolute;top:50%;transform:translate(-50%,-50%);color:#99d1b4;font-size:42px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));transition:left .7s cubic-bezier(.2,.8,.2,1);z-index:3;pointer-events:none}
 .tt-mlabel{position:absolute;top:40px;transform:translateX(-50%);text-align:center;font-size:9.5px;color:var(--text3);line-height:1.25;white-space:nowrap}
 .tt-mlabel b{display:block;font-size:10px;color:var(--text2);font-weight:700}
 .tt-mlabel.reached b{color:var(--green-dark)}
@@ -3022,6 +3022,9 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="dex-open-right"><span class="dex-open-count" id="dex-btn-count">&ndash;</span><i class="ti ti-chevron-right"></i></div>
   </button>
 
+  <div class="acc-section-label">My Fruicey Journey</div>
+  <button type="button" class="review-share-btn" style="margin:4px auto 0" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
+
   <div class="acc-profile-card">
     <div class="acc-profile-top">
       <!-- Full-width swipeable tier carousel -->
@@ -3076,8 +3079,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div id="tier-hint" class="tier-hint"></div>
     </div>
   </div>
-
-  <button type="button" class="review-share-btn" style="margin:8px auto 20px" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
 
   <div class="acc-section-label">My Details</div>
   <div class="acc-group">

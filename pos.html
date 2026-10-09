@@ -70,6 +70,22 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .cart-hdr{padding:10px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .cart-hdr-title{font-size:14px;font-weight:700;color:#111}
 .clear-btn{padding:4px 10px;font-size:11px;border-radius:5px;border:1px solid #e0e0e0;background:none;cursor:pointer;color:#888;font-family:var(--font)}
+.cart-hdr-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cart-hdr-actions{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.hold-btn{border-color:#e0b43a;color:#a67c00}
+.held-btn{border-color:#8fcea1;color:#4a9d78;font-weight:700}
+.held-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1200;align-items:center;justify-content:center;padding:16px}
+.held-modal.open{display:flex}
+.held-box{background:#fff;border-radius:14px;width:420px;max-width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.held-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #eee;font-family:var(--font);font-size:16px;font-weight:700;color:#111}
+.held-close{border:none;background:none;font-size:24px;line-height:1;color:#999;cursor:pointer;padding:0 4px}
+.held-list{overflow-y:auto;padding:8px}
+.held-row{display:flex;align-items:center;gap:10px;padding:10px 10px;border-bottom:1px solid #f2f2f2}
+.held-info{flex:1;min-width:0}
+.held-when{font-size:13px;font-weight:700;color:#111}
+.held-meta{font-size:12px;color:#888;margin-top:2px}
+.held-resume{padding:7px 14px;border-radius:7px;border:none;background:#8fcea1;color:#fff;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0}
+.held-del{padding:7px 9px;border-radius:7px;border:1px solid #f0d0d0;background:#fff;color:#e74c3c;cursor:pointer;flex-shrink:0;display:flex;align-items:center}
 .cart-items{flex:1;overflow-y:auto}
 .cart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:2rem;color:#bbb;text-align:center}
 .cart-row{display:flex;align-items:center;gap:5px;padding:8px 10px;border-bottom:.5px solid #f5f5f5}
@@ -281,7 +297,11 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       <div class="cart-panel">
       <div class="cart-hdr">
         <span class="cart-hdr-title">Current Order</span>
-        <button class="clear-btn" id="clear-cart-btn">Clear all</button>
+        <div class="cart-hdr-actions">
+          <button class="clear-btn held-btn" id="held-list-btn" style="display:none" onclick="openHeldModal()">Held <span id="held-count">0</span></button>
+          <button class="clear-btn hold-btn" id="hold-cart-btn" onclick="holdOrder()">Hold</button>
+          <button class="clear-btn" id="clear-cart-btn">Clear all</button>
+        </div>
       </div>
       <div class="cart-items" id="cart-items"></div>
       <div class="cart-footer">
@@ -302,6 +322,14 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       </div>
     </div>
   </div>
+  </div>
+
+  <!-- HELD ORDERS MODAL -->
+  <div class="held-modal" id="held-modal" onclick="if(event.target===this)closeHeldModal()">
+    <div class="held-box">
+      <div class="held-head"><span>Held Orders</span><button class="held-close" onclick="closeHeldModal()" aria-label="Close">&times;</button></div>
+      <div class="held-list" id="held-list"></div>
+    </div>
   </div>
 
   <!-- RECEIPT MODAL -->
@@ -2616,7 +2644,98 @@ function clearCart(){
   document.getElementById('member-phone').value='';
   clearMemberDisplay();
   document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('pay-active'));
+  if(typeof resetCreditState==='function') resetCreditState();
   renderCart();
+}
+
+// ── HOLD / RESUME TRANSACTIONS ───────────────────────────────────────
+// Park the current order so a new customer can be served, then resume it later. Held orders are
+// saved on this device (localStorage) so a refresh or crash won't lose them.
+let heldOrders = [];
+function _loadHeld(){
+  try{ heldOrders = JSON.parse(localStorage.getItem('fruicey_pos_held')||'[]'); }catch(e){ heldOrders = []; }
+  if(!Array.isArray(heldOrders)) heldOrders = [];
+  _updateHeldBtn();
+}
+function _saveHeld(){
+  try{ localStorage.setItem('fruicey_pos_held', JSON.stringify(heldOrders)); }catch(e){}
+  _updateHeldBtn();
+}
+function _updateHeldBtn(){
+  var b=document.getElementById('held-list-btn'), c=document.getElementById('held-count');
+  if(c) c.textContent = heldOrders.length;
+  if(b) b.style.display = heldOrders.length ? '' : 'none';
+}
+function _snapshotCurrent(){
+  return {
+    id: 'H'+Date.now()+Math.random().toString(36).slice(2,6),
+    cart: JSON.parse(JSON.stringify(cart)),
+    member: currentMember,
+    discount: memberDiscount,
+    ts: Date.now(),
+    label: (currentMember && currentMember.first) ? currentMember.first : ''
+  };
+}
+function _clearTill(){
+  cart=[]; currentMember=null; memberDiscount=0; paymentMethod='';
+  var mp=document.getElementById('member-phone'); if(mp) mp.value='';
+  clearMemberDisplay();
+  document.querySelectorAll('.pay-btn').forEach(function(b){ b.classList.remove('pay-active'); b.classList.remove('selected'); });
+  if(typeof resetCreditState==='function') resetCreditState();
+}
+function holdOrder(){
+  if(!cart.length){ showToast('Nothing to hold'); return; }
+  heldOrders.push(_snapshotCurrent());
+  _clearTill();
+  _saveHeld();
+  renderCart();
+  showToast('Order held — '+heldOrders.length+' on hold');
+}
+function openHeldModal(){ renderHeldList(); var m=document.getElementById('held-modal'); if(m) m.classList.add('open'); }
+function closeHeldModal(){ var m=document.getElementById('held-modal'); if(m) m.classList.remove('open'); }
+function renderHeldList(){
+  var el=document.getElementById('held-list'); if(!el) return;
+  if(!heldOrders.length){ el.innerHTML='<div style="text-align:center;color:#bbb;padding:24px;font-size:13px">No held orders</div>'; return; }
+  el.innerHTML = heldOrders.slice().reverse().map(function(h){
+    var qty = (h.cart||[]).reduce(function(s,i){ return s+(parseInt(i.qty)||1); },0);
+    var total = (h.cart||[]).reduce(function(s,i){ return s+((parseFloat(i.price)||0)*(parseInt(i.qty)||1)); },0);
+    var tm=''; try{ tm = new Date(h.ts).toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'}); }catch(e){}
+    var who = h.label ? ' · '+h.label : '';
+    return '<div class="held-row">'
+      + '<div class="held-info"><div class="held-when">'+tm+who+'</div>'
+      + '<div class="held-meta">'+qty+' item'+(qty!==1?'s':'')+' · $'+total.toFixed(2)+'</div></div>'
+      + '<button class="held-resume" onclick="resumeHeld(\''+h.id+'\')">Resume</button>'
+      + '<button class="held-del" onclick="deleteHeld(\''+h.id+'\')" aria-label="Delete"><i class="ti ti-trash"></i></button>'
+      + '</div>';
+  }).join('');
+}
+function resumeHeld(id){
+  var idx = heldOrders.findIndex(function(h){ return h.id===id; });
+  if(idx<0) return;
+  if(cart.length){
+    if(!confirm('You have an order in progress. Hold it and open the selected one?')) return;
+    heldOrders.push(_snapshotCurrent());   // park current so nothing is lost (appended, selected index unchanged)
+  }
+  var h = heldOrders.splice(idx,1)[0];
+  cart = Array.isArray(h.cart) ? h.cart : [];
+  currentMember = h.member || null;
+  memberDiscount = h.discount || 0;
+  paymentMethod = '';
+  document.querySelectorAll('.pay-btn').forEach(function(b){ b.classList.remove('pay-active'); b.classList.remove('selected'); });
+  if(typeof resetCreditState==='function') resetCreditState();
+  var mp=document.getElementById('member-phone'); if(mp) mp.value = currentMember ? (currentMember.phone||'') : '';
+  if(currentMember) showMemberDisplay(currentMember); else clearMemberDisplay();
+  _saveHeld();
+  renderCart();
+  closeHeldModal();
+  showToast('Order resumed');
+}
+function deleteHeld(id){
+  if(!confirm('Delete this held order?')) return;
+  heldOrders = heldOrders.filter(function(h){ return h.id!==id; });
+  _saveHeld();
+  renderHeldList();
+  if(!heldOrders.length) closeHeldModal();
 }
 
 // ── CREDIT PAYMENT ──────────────────────────────────────────────────
@@ -3402,6 +3521,7 @@ document.getElementById('product-grid').addEventListener('dblclick', function(e)
 document.getElementById('lookup-btn').addEventListener('click', lookupMember);
 document.getElementById('clear-member-btn').addEventListener('click', clearMember);
 document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
+_loadHeld();   // restore any parked orders and update the Held button
 document.getElementById('checkout-btn').addEventListener('click', checkout);
 document.getElementById('close-receipt-btn').addEventListener('click', closeReceipt);
 document.getElementById('new-order-btn').addEventListener('click', closeReceipt);

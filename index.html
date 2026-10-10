@@ -1006,6 +1006,35 @@ button.cal-day:active{transform:scale(.94)}
 
 /* Section label, iOS-style */
 .acc-section-label{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin:22px 4px 7px}
+/* ── My Progress (device-only tracker) ── */
+.prog-sub{font-size:11px;font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0}
+.prog-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.prog-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prog-fg{display:flex;flex-direction:column;gap:4px}
+.prog-fg-wide{grid-column:1/-1}
+.prog-fg label{font-size:11px;font-weight:600;color:var(--text3)}
+.prog-fg input,.prog-fg select{padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-family:var(--body);font-size:13px;background:#fff;color:var(--text)}
+.prog-fg input:focus,.prog-fg select:focus{outline:none;border-color:var(--green)}
+.prog-targets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.prog-target{background:var(--green-light);border-radius:11px;padding:12px;text-align:center}
+.prog-target-lbl{font-size:11px;color:var(--green-dark);font-weight:600}
+.prog-target-val{font-family:var(--font);font-size:22px;color:var(--green-dark);margin-top:3px}
+.prog-wl{margin-top:16px}
+.prog-wl-head{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:7px}
+.prog-wl-add{display:flex;gap:8px}
+.prog-wl-add input{flex:1;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-family:var(--body);font-size:13px}
+.prog-btn{padding:9px 16px;border-radius:9px;border:none;background:var(--green);color:#fff;font-family:var(--font);font-size:13px;cursor:pointer;white-space:nowrap}
+.prog-btn.ghost{background:rgba(120,120,128,.12);color:var(--green-dark);display:inline-flex;align-items:center;gap:6px}
+.prog-spark{margin:12px 0 2px}
+.prog-wl-list{display:flex;flex-direction:column}
+.prog-wl-row{display:flex;align-items:center;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #f2f2f2;font-size:13px}
+.prog-wl-row .d{color:var(--text3);font-size:12px}
+.prog-wl-row .w{font-weight:700;color:var(--text)}
+.prog-wl-row .delta{font-size:11px;margin-left:6px}
+.prog-wl-row .x{border:none;background:none;color:#ccc;cursor:pointer;font-size:16px;line-height:1;margin-left:6px}
+.prog-actions{margin-top:14px}
+.prog-note{margin-top:12px;font-size:11px;color:var(--text3);line-height:1.5;display:flex;gap:6px;align-items:flex-start}
+.prog-note .ti{flex-shrink:0;margin-top:1px;font-size:14px}
 /* Inset grouped list (like iOS Settings) */
 .acc-group{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .acc-item{display:flex;align-items:center;gap:12px;padding:13px 16px;position:relative}
@@ -3080,6 +3109,65 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div id="tier-tracker" class="tier-tracker"></div>
       <div id="tier-hint" class="tier-hint"></div>
     </div>
+  </div>
+
+  <div class="acc-section-label">My Progress <span class="prog-sub">&mdash; nutrition &amp; fitness tracker</span></div>
+  <div class="prog-card">
+    <div class="prog-form">
+      <div class="prog-fg">
+        <label>Gender</label>
+        <select id="prog-gender" onchange="saveProgress();calcProgress()"><option value="female">Female</option><option value="male">Male</option></select>
+      </div>
+      <div class="prog-fg">
+        <label>Age</label>
+        <input type="number" id="prog-age" inputmode="numeric" placeholder="30" oninput="saveProgress();calcProgress()">
+      </div>
+      <div class="prog-fg">
+        <label>Height (cm)</label>
+        <input type="number" id="prog-height" inputmode="numeric" placeholder="165" oninput="saveProgress();calcProgress()">
+      </div>
+      <div class="prog-fg">
+        <label>Weight (kg)</label>
+        <input type="number" id="prog-weight" inputmode="decimal" placeholder="65" oninput="saveProgress();calcProgress()">
+      </div>
+      <div class="prog-fg prog-fg-wide">
+        <label>Activity level</label>
+        <select id="prog-activity" onchange="saveProgress();calcProgress()">
+          <option value="low">Low active &mdash; mostly sitting</option>
+          <option value="moderate">Moderate active</option>
+          <option value="very">Very active</option>
+        </select>
+      </div>
+      <div class="prog-fg prog-fg-wide">
+        <label>Goal</label>
+        <select id="prog-goal" onchange="saveProgress();calcProgress()">
+          <option value="maintain">Maintain weight</option>
+          <option value="lose">Lose fat</option>
+          <option value="gain">Build muscle</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="prog-targets" id="prog-targets" style="display:none">
+      <div class="prog-target"><div class="prog-target-lbl">Daily calories</div><div class="prog-target-val" id="prog-cal">&mdash;</div></div>
+      <div class="prog-target"><div class="prog-target-lbl">Protein / day</div><div class="prog-target-val" id="prog-protein">&mdash;</div></div>
+    </div>
+
+    <div class="prog-wl">
+      <div class="prog-wl-head">Weight log</div>
+      <div class="prog-wl-add">
+        <input type="number" id="prog-wl-input" inputmode="decimal" placeholder="Today's weight (kg)">
+        <button type="button" class="prog-btn" onclick="addWeightEntry()">Add</button>
+      </div>
+      <div id="prog-spark" class="prog-spark"></div>
+      <div id="prog-wl-list" class="prog-wl-list"></div>
+    </div>
+
+    <div class="prog-actions">
+      <button type="button" class="prog-btn ghost" onclick="downloadProgress()"><i class="ti ti-download"></i> Download my data</button>
+    </div>
+
+    <div class="prog-note"><i class="ti ti-device-mobile"></i><span>Your progress is saved only on this device/browser &mdash; clearing your browser data or switching phones will erase it. Tap &ldquo;Download my data&rdquo; to keep a backup. Targets follow the HPB / Oxford method and are a healthy-living guide, not medical advice.</span></div>
   </div>
 
   <div class="acc-section-label">My Details</div>
@@ -7480,6 +7568,7 @@ async function loadAccount(){
   }
   loadUserCredit();
   loadDex();
+  loadProgress();
   if(typeof updateAccountBioUI==='function') updateAccountBioUI();
 }
 
@@ -7589,6 +7678,103 @@ function openDexProduct(pid){
   Object.keys(CATALOGUE).forEach(function(c){ if(CATALOGUE[c].some(function(x){ return x.id === pid; })) cat = c; });
   if(cat) currentCat = cat;
   if(typeof openProductDetail === 'function') openProductDetail(pid);
+}
+
+// ── MY PROGRESS (device-only tracker) ────────────────────────────────────────
+// All data lives in this browser's localStorage, keyed per member. Nothing is sent to any server.
+var _progLog = [];
+function _progKey(){ return 'fruicey_progress_' + (currentUser ? np(currentUser.phone) : 'guest'); }
+function _progData(){ try{ return JSON.parse(localStorage.getItem(_progKey())||'{}') || {}; }catch(e){ return {}; } }
+function loadProgress(){
+  if(!document.getElementById('prog-weight')) return;
+  var d = _progData();
+  var set=function(id,v){ var el=document.getElementById(id); if(el && v!=null && v!=='') el.value=v; };
+  set('prog-gender', d.gender||'female');
+  set('prog-age', d.age);
+  set('prog-height', d.height);
+  set('prog-weight', d.weight);
+  set('prog-activity', d.activity||'low');
+  set('prog-goal', d.goal||'maintain');
+  _progLog = Array.isArray(d.log) ? d.log : [];
+  renderWeightLog();
+  calcProgress();
+}
+function saveProgress(){
+  if(!currentUser) return;
+  var g=function(id){ var el=document.getElementById(id); return el?el.value:''; };
+  var d={ gender:g('prog-gender'), age:g('prog-age'), height:g('prog-height'), weight:g('prog-weight'), activity:g('prog-activity'), goal:g('prog-goal'), log:_progLog };
+  try{ localStorage.setItem(_progKey(), JSON.stringify(d)); }catch(e){}
+}
+function _progHenryBMR(gender, age, h, w){
+  if(gender==='male'){
+    if(age<30) return 14.4*w+3.13*h+113;
+    if(age<60) return 11.4*w+5.41*h-137;
+    return 11.4*w+5.41*h-256;
+  }
+  if(age<30) return 10.4*w+6.15*h-282;
+  if(age<60) return 8.18*w+5.02*h-11.6;
+  return 8.52*w+4.21*h+10.7;
+}
+function calcProgress(){
+  var ageEl=document.getElementById('prog-age'); if(!ageEl) return;
+  var age=parseFloat(ageEl.value), h=parseFloat(document.getElementById('prog-height').value), w=parseFloat(document.getElementById('prog-weight').value);
+  var gender=document.getElementById('prog-gender').value, activity=document.getElementById('prog-activity').value, goal=document.getElementById('prog-goal').value;
+  var box=document.getElementById('prog-targets');
+  if(!(age && h && w)){ if(box) box.style.display='none'; return; }
+  var pal={low:1.53,moderate:1.76,very:2.25}[activity]||1.53;
+  var tdee=_progHenryBMR(gender,age,h,w)*pal;
+  var adj={maintain:0,lose:-500,gain:350}[goal]||0;
+  var cal=Math.max(1200, Math.round((tdee+adj)/10)*10);
+  var ppk={maintain:1.6,lose:2.0,gain:1.8}[goal]||1.6;
+  document.getElementById('prog-cal').textContent = cal + ' kcal';
+  document.getElementById('prog-protein').textContent = Math.round(w*ppk) + ' g';
+  if(box) box.style.display='grid';
+}
+function addWeightEntry(){
+  var el=document.getElementById('prog-wl-input'); var w=parseFloat(el.value);
+  if(!w || w<=0){ showToast('Enter a weight'); return; }
+  var t=new Date(); var d=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  _progLog = _progLog.filter(function(e){ return e.d!==d; });   // one entry per day
+  _progLog.push({d:d, w:w});
+  _progLog.sort(function(a,b){ return a.d<b.d?-1:1; });
+  el.value='';
+  var wf=document.getElementById('prog-weight'); if(wf){ wf.value=w; }   // keep current weight in sync
+  saveProgress(); renderWeightLog(); calcProgress();
+}
+function removeWeightEntry(d){
+  _progLog = _progLog.filter(function(e){ return e.d!==d; });
+  saveProgress(); renderWeightLog();
+}
+function renderWeightLog(){
+  var list=document.getElementById('prog-wl-list'), spark=document.getElementById('prog-spark');
+  if(!list) return;
+  if(!_progLog.length){ list.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">No entries yet — add your weight to start tracking.</div>'; if(spark) spark.innerHTML=''; return; }
+  if(spark){
+    var pts=_progLog.slice(-12);
+    if(pts.length>=2){
+      var ws=pts.map(function(e){return e.w;}), mn=Math.min.apply(null,ws), mx=Math.max.apply(null,ws), rng=(mx-mn)||1, W=280, H=44, pad=5, step=(W-pad*2)/(pts.length-1);
+      var dpath=pts.map(function(e,i){ var x=pad+i*step, y=H-pad-((e.w-mn)/rng)*(H-pad*2); return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1); }).join(' ');
+      spark.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="44" preserveAspectRatio="none"><path d="'+dpath+'" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+    } else { spark.innerHTML=''; }
+  }
+  list.innerHTML = _progLog.slice().reverse().map(function(e,i,arr){
+    var prev=arr[i+1], delta='';
+    if(prev){ var dv=Math.round((e.w-prev.w)*10)/10, col=dv>0?'#e67e22':(dv<0?'#2e9e5b':'#aaa'), sign=dv>0?'+':''; delta='<span class="delta" style="color:'+col+'">'+sign+dv+'</span>'; }
+    return '<div class="prog-wl-row"><span class="d">'+e.d+'</span><span><span class="w">'+e.w+' kg</span>'+delta+'<button class="x" onclick="removeWeightEntry(\''+e.d+'\')" aria-label="Remove">&times;</button></span></div>';
+  }).join('');
+}
+function downloadProgress(){
+  var d=_progData();
+  var name=(currentUser && ((currentUser.first||'')+' '+(currentUser.last||'')).trim()) || 'member';
+  var payload={ exportedAt:new Date().toISOString(), member:name, profile:{gender:d.gender,age:d.age,height:d.height,weight:d.weight,activity:d.activity,goal:d.goal}, weightLog:_progLog };
+  try{
+    var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download='fruicey-progress-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    showToast('Your data has been downloaded');
+  }catch(e){ showToast('Could not export on this device'); }
 }
 
 function logout(){

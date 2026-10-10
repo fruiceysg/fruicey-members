@@ -3111,7 +3111,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
   </div>
 
-  <div class="acc-section-label">My Progress <span class="prog-sub">&mdash; nutrition &amp; fitness tracker</span></div>
+  <div class="acc-section-label">My Nutri Progress <span class="prog-sub">&mdash; nutrition &amp; fitness tracker</span></div>
   <div class="prog-card">
     <div class="prog-form">
       <div class="prog-fg">
@@ -3164,10 +3164,10 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
 
     <div class="prog-actions">
-      <button type="button" class="prog-btn ghost" onclick="downloadProgress()"><i class="ti ti-download"></i> Download my data</button>
+      <button type="button" class="prog-btn ghost" onclick="downloadProgress()"><i class="ti ti-file-type-pdf"></i> Download as PDF</button>
     </div>
 
-    <div class="prog-note"><i class="ti ti-device-mobile"></i><span>Your progress is saved only on this device/browser &mdash; clearing your browser data or switching phones will erase it. Tap &ldquo;Download my data&rdquo; to keep a backup. Targets follow the HPB / Oxford method and are a healthy-living guide, not medical advice.</span></div>
+    <div class="prog-note"><i class="ti ti-device-mobile"></i><span>Your progress is saved only on this device/browser &mdash; clearing your browser data or switching phones will erase it. Tap &ldquo;Download as PDF&rdquo; to keep a backup. The daily-calorie baseline uses the HPB / Oxford (Henry) method; the goal adjustments and protein targets are general fitness guidelines, not HPB figures. A healthy-living guide, not medical advice.</span></div>
   </div>
 
   <div class="acc-section-label">My Details</div>
@@ -7763,18 +7763,78 @@ function renderWeightLog(){
     return '<div class="prog-wl-row"><span class="d">'+e.d+'</span><span><span class="w">'+e.w+' kg</span>'+delta+'<button class="x" onclick="removeWeightEntry(\''+e.d+'\')" aria-label="Remove">&times;</button></span></div>';
   }).join('');
 }
+function _loadJsPDF(cb){
+  if(window.jspdf && window.jspdf.jsPDF){ cb(); return; }
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  s.onload=function(){ cb(); };
+  s.onerror=function(){ showToast('Could not load the PDF tool — check your connection'); };
+  document.head.appendChild(s);
+}
 function downloadProgress(){
+  showToast('Preparing your PDF…');
+  _loadJsPDF(function(){
+    try{ _buildProgressPDF(); }catch(e){ showToast('Could not create the PDF'); }
+  });
+}
+function _buildProgressPDF(){
   var d=_progData();
-  var name=(currentUser && ((currentUser.first||'')+' '+(currentUser.last||'')).trim()) || 'member';
-  var payload={ exportedAt:new Date().toISOString(), member:name, profile:{gender:d.gender,age:d.age,height:d.height,weight:d.weight,activity:d.activity,goal:d.goal}, weightLog:_progLog };
-  try{
-    var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a'); a.href=url; a.download='fruicey-progress-'+new Date().toISOString().slice(0,10)+'.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-    showToast('Your data has been downloaded');
-  }catch(e){ showToast('Could not export on this device'); }
+  var name=(currentUser && ((currentUser.first||'')+' '+(currentUser.last||'')).trim()) || 'Member';
+  var doc=new window.jspdf.jsPDF({unit:'pt', format:'a4'});
+  var W=doc.internal.pageSize.getWidth(), m=48, y=58;
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(28,77,58);
+  doc.text('Fruicey — My Nutri Progress', m, y); y+=10;
+  doc.setDrawColor(143,206,161); doc.setLineWidth(2); doc.line(m, y, W-m, y); y+=26;
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
+  doc.text('Member: '+name, m, y); doc.text('Date: '+new Date().toLocaleDateString('en-SG'), W-m, y, {align:'right'}); y+=28;
+
+  var goalMap={maintain:'Maintain weight',lose:'Lose fat',gain:'Build muscle'};
+  var actMap={low:'Low active',moderate:'Moderate active',very:'Very active'};
+  var cap=function(s){ s=s||''; return s.charAt(0).toUpperCase()+s.slice(1); };
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Profile', m, y); y+=18;
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
+  [['Gender', d.gender?cap(d.gender):'-'],
+   ['Age', d.age?d.age+' yrs':'-'],
+   ['Height', d.height?d.height+' cm':'-'],
+   ['Weight', d.weight?d.weight+' kg':'-'],
+   ['Activity', actMap[d.activity]||'-'],
+   ['Goal', goalMap[d.goal]||'-']
+  ].forEach(function(r){ doc.text(r[0]+':', m, y); doc.text(String(r[1]), m+120, y); y+=16; });
+  y+=12;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Daily Targets', m, y); y+=18;
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
+  var calEl=document.getElementById('prog-cal'), pEl=document.getElementById('prog-protein');
+  doc.text('Daily calories:', m, y); doc.text(calEl?calEl.textContent:'-', m+120, y); y+=16;
+  doc.text('Protein / day:', m, y); doc.text(pEl?pEl.textContent:'-', m+120, y); y+=28;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Weight Log', m, y); y+=18;
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  if(!_progLog.length){ doc.setTextColor(60,60,60); doc.text('No entries yet.', m, y); y+=16; }
+  else {
+    doc.setTextColor(130,130,130);
+    doc.text('Date', m, y); doc.text('Weight', m+170, y); doc.text('Change', m+280, y); y+=6;
+    doc.setDrawColor(220,220,220); doc.setLineWidth(.5); doc.line(m, y, W-m, y); y+=15;
+    doc.setTextColor(60,60,60);
+    var prev=null;
+    _progLog.forEach(function(e){
+      if(y>780){ doc.addPage(); y=58; }
+      var delta = prev!=null ? Math.round((e.w-prev)*10)/10 : null;
+      var ds = delta==null ? '—' : ((delta>0?'+':'')+delta+' kg');
+      doc.text(String(e.d), m, y); doc.text(e.w+' kg', m+170, y); doc.text(ds, m+280, y);
+      prev=e.w; y+=16;
+    });
+  }
+  y+=24;
+  if(y>720){ doc.addPage(); y=58; }
+  doc.setFontSize(9); doc.setTextColor(140,140,140);
+  var disc='The daily-calorie baseline uses the HPB / Oxford (Henry) method; the goal adjustments and protein targets are general fitness guidelines, not HPB figures. This is a healthy-living guide, not medical advice.';
+  var lines=doc.splitTextToSize(disc, W-m*2);
+  doc.text(lines, m, y); y+=lines.length*12+14;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(28,77,58);
+  doc.text('Refreshing Ideas, Fruicey Powered', m, y);
+  doc.save('fruicey-nutri-progress-'+new Date().toISOString().slice(0,10)+'.pdf');
+  showToast('Your progress PDF has been downloaded');
 }
 
 function logout(){

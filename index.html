@@ -6214,15 +6214,14 @@ function initProductDetailSwipe(){
 
 // Slide-down-to-exit for the account quick-access popups (wallet / nutri / account).
 function initAccModalSwipe(){
-  [['wallet-modal',closeWalletModal],['nutri-modal',closeNutriModal],['account-modal',closeAccountModal],['dex-modal',closeDexModal]].forEach(function(pair){
+  [['wallet-modal',closeWalletModal],['nutri-modal',closeNutriModal],['account-modal',closeAccountModal]].forEach(function(pair){
     var m = document.getElementById(pair[0]);
     if(!m) return;
     var box = m.querySelector('.modal-box');
-    var scroller = box.querySelector('.dex-modal-body') || box;   // dex body scrolls, not the box
     var close = pair[1];
     var startY=0, curY=0, dragging=false;
     box.addEventListener('touchstart', function(e){
-      if(scroller.scrollTop > 0) return;      // let inner content scroll first
+      if(box.scrollTop > 0) return;           // let inner content scroll first
       startY = curY = e.touches[0].clientY; dragging = true;
       box.style.transition = 'none';
     }, {passive:true});

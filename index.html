@@ -1014,7 +1014,9 @@ button.cal-day:active{transform:scale(.94)}
 .acc-tile-ico svg{width:24px;height:24px}
 .acc-tile-lbl{font-size:11px;font-weight:600;color:var(--text2);text-align:center;line-height:1.2}
 .acc-modal-sub{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin:16px 2px 7px}
-#wallet-modal .modal-box,#nutri-modal .modal-box,#account-modal .modal-box{max-height:88dvh}
+.acc-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.acc-modal-head .pd-close{margin-top:-2px}
+#wallet-modal .modal-box,#nutri-modal .modal-box,#account-modal .modal-box{max-height:88dvh;overflow-y:auto}
 /* ── My Progress (device-only tracker) ── */
 .prog-sub{font-size:11px;font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0}
 .prog-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
@@ -3069,22 +3071,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </button>
   </div>
 
-  <!-- Wallet popup -->
-  <div class="modal-bg" id="wallet-modal" onclick="if(event.target===this)closeWalletModal()">
-    <div class="modal-box">
-      <div class="modal-handle"></div>
-      <div class="modal-title">Wallet</div>
-      <div class="acc-credit-card">
-        <div class="acc-credit-label">Available balance</div>
-        <div class="acc-credit-amount" id="acc-credit-balance">$0.00</div>
-        <div class="acc-credit-actions">
-          <button class="acc-credit-btn primary" onclick="openAddCredit()"><i class="ti ti-plus"></i>Add Credit</button>
-          <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="acc-section-label">My Fruicey Journey</div>
   <button type="button" class="review-share-btn" style="margin:4px auto 0" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
 
@@ -3143,11 +3129,58 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
   </div>
 
-  <!-- Nutri-Log popup -->
-  <div class="modal-bg" id="nutri-modal" onclick="if(event.target===this)closeNutriModal()">
-    <div class="modal-box">
+  <div class="acc-section-label">Membership Perks</div>
+  <div class="perks-section">
+    <div class="perks-row" id="tier-perks-cards"></div>
+    <div class="perks-tc">Member and self-collect discounts don't apply to subscriptions, personalised fruit boxes, corporate or bulk orders. Personalised fruit box purchases still count towards your monthly tier spend. Tiers are earned by monthly spend and reset each calendar month. The free birthday-month menu product is subject to availability, valid during your birthday month only, and cannot be exchanged for cash or other items.</div>
+  </div>
+  </div>
+</div>
+
+<!-- Account log-out (fixed, left of fullscreen; only shows on Account tab) -->
+<button class="acc-logout-fixed" onclick="logout()" title="Log out"><i class="ti ti-logout"></i><span>Log out</span></button>
+
+<!-- Fruicey Dex popup -->
+<div class="modal-bg" id="dex-modal" onclick="if(event.target===this)closeDexModal()">
+  <div class="modal-box dex-modal-box">
+    <div class="dex-modal-head">
+      <div>
+        <div class="dex-modal-title">FRUICEY DEX</div>
+        <div class="dex-modal-sub">Products you've tried</div>
+      </div>
+      <button class="pd-close" onclick="closeDexModal()" aria-label="Close">&times;</button>
+    </div>
+    <div id="dex-modal-body" class="dex-modal-body"></div>
+  </div>
+</div>
+
+<!-- Wallet popup -->
+<div class="modal-bg acc-modal" id="wallet-modal" onclick="if(event.target===this)closeWalletModal()">
+  <div class="modal-box">
     <div class="modal-handle"></div>
-    <div class="modal-title">Nutri-Log <span class="prog-sub">&mdash; nutrition &amp; fitness tracker</span></div>
+    <div class="acc-modal-head">
+      <div class="modal-title" style="margin:0">Wallet</div>
+      <button class="pd-close" onclick="closeWalletModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="acc-credit-card">
+      <div class="acc-credit-label">Available balance</div>
+      <div class="acc-credit-amount" id="acc-credit-balance">$0.00</div>
+      <div class="acc-credit-actions">
+        <button class="acc-credit-btn primary" onclick="openAddCredit()"><i class="ti ti-plus"></i>Add Credit</button>
+        <button class="acc-credit-btn ghost" onclick="openCreditHistory()"><i class="ti ti-history"></i>History</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Nutri-Log popup -->
+<div class="modal-bg acc-modal" id="nutri-modal" onclick="if(event.target===this)closeNutriModal()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="acc-modal-head">
+      <div class="modal-title" style="margin:0">Nutri-Log <span class="prog-sub">&mdash; nutrition &amp; fitness tracker</span></div>
+      <button class="pd-close" onclick="closeNutriModal()" aria-label="Close">&times;</button>
+    </div>
     <div class="prog-card" style="box-shadow:none;padding:0">
     <div class="prog-form">
       <div class="prog-fg">
@@ -3205,50 +3238,28 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 
     <div class="prog-note"><i class="ti ti-device-mobile"></i><span>Your progress is saved only on this device/browser &mdash; clearing your browser data or switching phones will erase it. Tap &ldquo;Download as PDF&rdquo; to keep a backup. The daily-calorie baseline uses the HPB / Oxford (Henry) method; the goal adjustments and protein targets are general fitness guidelines, not HPB figures. A healthy-living guide, not medical advice.</span></div>
     </div>
-    </div>
-  </div>
-
-  <!-- Account popup (My Details + Sign-in) -->
-  <div class="modal-bg" id="account-modal" onclick="if(event.target===this)closeAccountModal()">
-    <div class="modal-box">
-      <div class="modal-handle"></div>
-      <div class="modal-title">Account</div>
-      <div class="acc-modal-sub">My Details</div>
-      <div class="acc-group">
-        <div class="acc-item"><div class="acc-item-ico mail"><i class="ti ti-mail"></i></div><div class="acc-item-label">Email</div><div class="acc-item-val" id="acc-email"></div></div>
-        <div class="acc-item"><div class="acc-item-ico phone"><i class="ti ti-phone"></i></div><div class="acc-item-label">Phone</div><div class="acc-item-val" id="acc-phone2"></div></div>
-        <div class="acc-item" id="acc-bday-row" style="display:none"><div class="acc-item-ico cake"><i class="ti ti-cake"></i></div><div class="acc-item-label">Birthday</div><div class="acc-item-val" id="acc-bday"></div></div>
-      </div>
-      <div class="acc-modal-sub" id="acc-signin-sub" style="display:none">Sign-in</div>
-      <div class="acc-group" id="acc-bio-group" style="display:none">
-        <button class="acc-bio-action" id="acc-bio-setup" onclick="appBioEnrollUI()" style="display:none"><i class="ti ti-fingerprint"></i><span>Set up fingerprint / Face ID login</span></button>
-        <button class="acc-bio-action" id="acc-bio-remove" onclick="appBioRemove()" style="display:none"><i class="ti ti-fingerprint-off"></i><span>Turn off fingerprint login</span></button>
-      </div>
-    </div>
-  </div>
-
-  <div class="acc-section-label">Membership Perks</div>
-  <div class="perks-section">
-    <div class="perks-row" id="tier-perks-cards"></div>
-    <div class="perks-tc">Member and self-collect discounts don't apply to subscriptions, personalised fruit boxes, corporate or bulk orders. Personalised fruit box purchases still count towards your monthly tier spend. Tiers are earned by monthly spend and reset each calendar month. The free birthday-month menu product is subject to availability, valid during your birthday month only, and cannot be exchanged for cash or other items.</div>
-  </div>
   </div>
 </div>
 
-<!-- Account log-out (fixed, left of fullscreen; only shows on Account tab) -->
-<button class="acc-logout-fixed" onclick="logout()" title="Log out"><i class="ti ti-logout"></i><span>Log out</span></button>
-
-<!-- Fruicey Dex popup -->
-<div class="modal-bg" id="dex-modal" onclick="if(event.target===this)closeDexModal()">
-  <div class="modal-box dex-modal-box">
-    <div class="dex-modal-head">
-      <div>
-        <div class="dex-modal-title">FRUICEY DEX</div>
-        <div class="dex-modal-sub">Products you've tried</div>
-      </div>
-      <button class="pd-close" onclick="closeDexModal()" aria-label="Close">&times;</button>
+<!-- Account popup (My Details + Sign-in) -->
+<div class="modal-bg acc-modal" id="account-modal" onclick="if(event.target===this)closeAccountModal()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="acc-modal-head">
+      <div class="modal-title" style="margin:0">Account</div>
+      <button class="pd-close" onclick="closeAccountModal()" aria-label="Close">&times;</button>
     </div>
-    <div id="dex-modal-body" class="dex-modal-body"></div>
+    <div class="acc-modal-sub">My Details</div>
+    <div class="acc-group">
+      <div class="acc-item"><div class="acc-item-ico mail"><i class="ti ti-mail"></i></div><div class="acc-item-label">Email</div><div class="acc-item-val" id="acc-email"></div></div>
+      <div class="acc-item"><div class="acc-item-ico phone"><i class="ti ti-phone"></i></div><div class="acc-item-label">Phone</div><div class="acc-item-val" id="acc-phone2"></div></div>
+      <div class="acc-item" id="acc-bday-row" style="display:none"><div class="acc-item-ico cake"><i class="ti ti-cake"></i></div><div class="acc-item-label">Birthday</div><div class="acc-item-val" id="acc-bday"></div></div>
+    </div>
+    <div class="acc-modal-sub" id="acc-signin-sub" style="display:none">Sign-in</div>
+    <div class="acc-group" id="acc-bio-group" style="display:none">
+      <button class="acc-bio-action" id="acc-bio-setup" onclick="appBioEnrollUI()" style="display:none"><i class="ti ti-fingerprint"></i><span>Set up fingerprint / Face ID login</span></button>
+      <button class="acc-bio-action" id="acc-bio-remove" onclick="appBioRemove()" style="display:none"><i class="ti ti-fingerprint-off"></i><span>Turn off fingerprint login</span></button>
+    </div>
   </div>
 </div>
 
@@ -4367,6 +4378,7 @@ document.addEventListener('DOMContentLoaded', function(){
   initFeatureButtons();
   initProductDetailSwipe();
   initCartSwipe();
+  initAccModalSwipe();
   // First impression: keep the "harvesting…" splash up until the first screen's images have loaded,
   // THEN set up the reveal and drop the splash — so the page animates in cleanly on a cold cache
   // instead of the animation firing on half-loaded, collapsing boxes. A safety timeout guarantees
@@ -6201,6 +6213,37 @@ function initProductDetailSwipe(){
   });
 }
 
+// Slide-down-to-exit for the account quick-access popups (wallet / nutri / account).
+function initAccModalSwipe(){
+  [['wallet-modal',closeWalletModal],['nutri-modal',closeNutriModal],['account-modal',closeAccountModal]].forEach(function(pair){
+    var m = document.getElementById(pair[0]);
+    if(!m) return;
+    var box = m.querySelector('.modal-box');
+    var close = pair[1];
+    var startY=0, curY=0, dragging=false;
+    box.addEventListener('touchstart', function(e){
+      if(box.scrollTop > 0) return;           // let inner content scroll first
+      startY = curY = e.touches[0].clientY; dragging = true;
+      box.style.transition = 'none';
+    }, {passive:true});
+    box.addEventListener('touchmove', function(e){
+      if(!dragging) return;
+      curY = e.touches[0].clientY;
+      var dy = curY - startY;
+      if(dy > 0){ e.preventDefault(); box.style.transform = 'translateY('+dy+'px)'; }
+      else { box.style.transform = 'translateY(0)'; }
+    }, {passive:false});
+    box.addEventListener('touchend', function(){
+      if(!dragging) return;
+      dragging = false;
+      box.style.transition = '';
+      if(curY - startY > 90){ close(); }
+      else { box.style.transform = 'translateY(0)'; }
+      setTimeout(function(){ box.style.transform=''; }, 320);
+    });
+  });
+}
+
 // Event delegation for menu
 document.addEventListener('click', function(e){
   const catPill = e.target.closest('.cat-pill');
@@ -7720,11 +7763,12 @@ function renderDexBody(tried){
 }
 
 // Account quick-access popups
-function openWalletModal(){ var m=document.getElementById('wallet-modal'); if(m) m.classList.add('open'); }
+function _resetAccModalBox(m){ var b=m&&m.querySelector('.modal-box'); if(b){ b.style.transform=''; b.scrollTop=0; } }
+function openWalletModal(){ var m=document.getElementById('wallet-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeWalletModal(){ var m=document.getElementById('wallet-modal'); if(m) m.classList.remove('open'); }
-function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m) m.classList.add('open'); if(typeof calcProgress==='function') calcProgress(); }
+function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } if(typeof calcProgress==='function') calcProgress(); }
 function closeNutriModal(){ var m=document.getElementById('nutri-modal'); if(m) m.classList.remove('open'); }
-function openAccountModal(){ var m=document.getElementById('account-modal'); if(m) m.classList.add('open'); }
+function openAccountModal(){ var m=document.getElementById('account-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeAccountModal(){ var m=document.getElementById('account-modal'); if(m) m.classList.remove('open'); }
 
 // Tapping a Dex tile closes the popup and opens that product's info card.

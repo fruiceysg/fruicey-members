@@ -1035,9 +1035,20 @@ button.cal-day:active{transform:scale(.94)}
 .prog-range{display:inline-flex;background:rgba(120,120,128,.1);border-radius:8px;padding:2px}
 .prog-range-btn{border:none;background:none;font-family:var(--body);font-size:11px;font-weight:600;color:var(--text3);padding:4px 11px;border-radius:6px;cursor:pointer}
 .prog-range-btn.active{background:#fff;color:var(--green-dark);box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.prog-cal-chart{margin:12px 0 4px;position:relative}
-.prog-cal-chart .cc-bar{transition:height .25s ease,y .25s ease}
-.prog-cal-summary{font-size:11.5px;color:var(--text3);line-height:1.5;display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
+.prog-vit-sub{font-size:11.5px;color:var(--text3);margin:2px 0 10px;line-height:1.4}
+.prog-vit-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.prog-vit-chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:6px 11px;cursor:pointer;font-family:var(--body);font-size:12px;color:var(--text2);transition:background .15s,color .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
+.prog-vit-chip .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.prog-vit-chip.on{color:#fff;border-color:transparent}
+.prog-vit-chip.on .dot{background:#fff!important}
+.prog-vit-chart{margin:4px 0 2px}
+.prog-vit-row{display:flex;align-items:center;gap:9px;margin:10px 0}
+.prog-vit-row .lbl{width:94px;flex:none;font-size:11.5px;color:var(--text2);line-height:1.2}
+.prog-vit-row .lbl small{display:block;color:var(--text3);font-size:10px}
+.prog-vit-track{flex:1;height:10px;background:rgba(120,120,128,.12);border-radius:6px;overflow:hidden}
+.prog-vit-fill{height:100%;border-radius:6px;transition:width .35s ease}
+.prog-vit-row .pct{width:42px;flex:none;text-align:right;font-size:11px;color:var(--text3);font-family:var(--font)}
+.prog-cal-summary{font-size:11.5px;color:var(--text3);line-height:1.5;display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
 .prog-cal-summary b{color:var(--green-dark);font-family:var(--font);font-weight:400}
 .prog-wl-add{display:flex;gap:8px}
 .prog-wl-add input{flex:1;padding:9px 10px;border:1px solid var(--border);border-radius:9px;font-family:var(--body);font-size:13px}
@@ -3240,18 +3251,16 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 
     <div class="prog-wl">
       <div class="prog-wl-head">
-        <span>Calorie intake</span>
-        <div class="prog-range" id="prog-cal-range">
-          <button type="button" class="prog-range-btn active" data-r="7" onclick="setCalRange(7)">Week</button>
-          <button type="button" class="prog-range-btn" data-r="30" onclick="setCalRange(30)">Month</button>
+        <span>Vitamins &amp; nutrients</span>
+        <div class="prog-range" id="prog-vit-range">
+          <button type="button" class="prog-range-btn active" data-r="7" onclick="setVitRange(7)">Week</button>
+          <button type="button" class="prog-range-btn" data-r="30" onclick="setVitRange(30)">Month</button>
         </div>
       </div>
-      <div class="prog-wl-add">
-        <input type="number" id="prog-cal-input" inputmode="numeric" placeholder="Today's calories eaten (kcal)">
-        <button type="button" class="prog-btn" onclick="addCalEntry()">Add</button>
-      </div>
-      <div id="prog-cal-chart" class="prog-cal-chart"></div>
-      <div id="prog-cal-summary" class="prog-cal-summary"></div>
+      <div class="prog-vit-sub">Tap what you had today &mdash; juices, bowls &amp; meals that cover each:</div>
+      <div id="prog-vit-chips" class="prog-vit-chips"></div>
+      <div id="prog-vit-chart" class="prog-vit-chart"></div>
+      <div id="prog-vit-summary" class="prog-cal-summary"></div>
     </div>
 
     <div class="prog-actions">
@@ -7806,8 +7815,16 @@ function openDexProduct(pid){
 // ── MY PROGRESS (device-only tracker) ────────────────────────────────────────
 // All data lives in this browser's localStorage, keyed per member. Nothing is sent to any server.
 var _progLog = [];
-var _calLog = [];
-var _calRange = 7;
+var _vitLog = {};          // { 'YYYY-MM-DD': ['C','B', ...] }
+var _vitRange = 7;
+var VITS = [
+  {k:'C',  name:'Vitamin C',  tag:'Immunity',        col:'#f5a623'},
+  {k:'B',  name:'B Vitamins', tag:'Energy',          col:'#e67e22'},
+  {k:'A',  name:'Vitamin A',  tag:'Skin & Vision',   col:'#e056a0'},
+  {k:'FE', name:'Iron',       tag:'Blood & Energy',  col:'#c0392b'},
+  {k:'D',  name:'Vitamin D',  tag:'Bones & Mood',    col:'#8e7cc3'},
+  {k:'FB', name:'Fibre',      tag:'Digestion',       col:'#2e9e5b'}
+];
 function _progKey(){ return 'fruicey_progress_' + (currentUser ? np(currentUser.phone) : 'guest'); }
 function _progData(){ try{ return JSON.parse(localStorage.getItem(_progKey())||'{}') || {}; }catch(e){ return {}; } }
 function loadProgress(){
@@ -7821,15 +7838,16 @@ function loadProgress(){
   set('prog-activity', d.activity||'low');
   set('prog-goal', d.goal||'maintain');
   _progLog = Array.isArray(d.log) ? d.log : [];
-  _calLog = Array.isArray(d.clog) ? d.clog : [];
+  _vitLog = (d.vlog && typeof d.vlog==='object') ? d.vlog : {};
   renderWeightLog();
   calcProgress();
-  renderCalChart();
+  renderVitToday();
+  renderVitChart();
 }
 function saveProgress(){
   if(!currentUser) return;
   var g=function(id){ var el=document.getElementById(id); return el?el.value:''; };
-  var d={ gender:g('prog-gender'), age:g('prog-age'), height:g('prog-height'), weight:g('prog-weight'), activity:g('prog-activity'), goal:g('prog-goal'), log:_progLog, clog:_calLog };
+  var d={ gender:g('prog-gender'), age:g('prog-age'), height:g('prog-height'), weight:g('prog-weight'), activity:g('prog-activity'), goal:g('prog-goal'), log:_progLog, vlog:_vitLog };
   try{ localStorage.setItem(_progKey(), JSON.stringify(d)); }catch(e){}
 }
 function _progHenryBMR(gender, age, h, w){
@@ -7856,10 +7874,7 @@ function calcProgress(){
   document.getElementById('prog-cal').textContent = cal + ' kcal';
   document.getElementById('prog-protein').textContent = Math.round(w*ppk) + ' g';
   if(box) box.style.display='grid';
-  _progTargetCal = cal;
-  renderCalChart();
 }
-var _progTargetCal = null;
 function addWeightEntry(){
   var el=document.getElementById('prog-wl-input'); var w=parseFloat(el.value);
   if(!w || w<=0){ showToast('Enter a weight'); return; }
@@ -7894,78 +7909,69 @@ function renderWeightLog(){
   }).join('');
 }
 function _todayStr(){ var t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
-function addCalEntry(){
-  var el=document.getElementById('prog-cal-input'); var c=parseInt(el.value,10);
-  if(!c || c<=0){ showToast('Enter calories eaten'); return; }
+function _vitName(k){ for(var i=0;i<VITS.length;i++){ if(VITS[i].k===k) return VITS[i].name; } return k; }
+// Tap a nutrient on/off for today.
+function toggleVit(k){
+  if(!currentUser){ openLogin(); return; }
   var d=_todayStr();
-  _calLog = _calLog.filter(function(e){ return e.d!==d; });   // one entry per day (replaces today's)
-  _calLog.push({d:d, c:c});
-  _calLog.sort(function(a,b){ return a.d<b.d?-1:1; });
-  el.value='';
-  saveProgress(); renderCalChart();
-  showToast('Logged '+c+' kcal for today');
+  var set=Array.isArray(_vitLog[d]) ? _vitLog[d].slice() : [];
+  var i=set.indexOf(k);
+  if(i>=0) set.splice(i,1); else set.push(k);
+  if(set.length) _vitLog[d]=set; else delete _vitLog[d];
+  saveProgress(); renderVitToday(); renderVitChart();
 }
-function setCalRange(n){
-  _calRange=n;
-  var btns=document.querySelectorAll('#prog-cal-range .prog-range-btn');
-  btns.forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.r,10)===n); });
-  renderCalChart();
+function setVitRange(n){
+  _vitRange=n;
+  document.querySelectorAll('#prog-vit-range .prog-range-btn').forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.r,10)===n); });
+  renderVitChart();
 }
-// Builds the last N-day window ending today, filling missing days with null.
-function _calWindow(n){
-  var map={}; _calLog.forEach(function(e){ map[e.d]=e.c; });
+// Chips for today's intake.
+function renderVitToday(){
+  var wrap=document.getElementById('prog-vit-chips'); if(!wrap) return;
+  var today=_vitLog[_todayStr()]||[];
+  wrap.innerHTML=VITS.map(function(v){
+    var on=today.indexOf(v.k)>=0;
+    var style=on?('background:'+v.col+';'):'';
+    return '<button type="button" class="prog-vit-chip'+(on?' on':'')+'" style="'+style+'" onclick="toggleVit(\''+v.k+'\')">'
+      +'<span class="dot" style="background:'+v.col+'"></span>'+v.name+'</button>';
+  }).join('');
+}
+// Build the last N-day window ending today.
+function _vitWindow(n){
   var out=[], base=new Date(); base.setHours(0,0,0,0);
   for(var i=n-1;i>=0;i--){
     var dt=new Date(base); dt.setDate(base.getDate()-i);
-    var ds=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-    out.push({d:ds, c:(map[ds]!=null?map[ds]:null), dt:dt});
+    out.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'));
   }
   return out;
 }
-function renderCalChart(){
-  var wrap=document.getElementById('prog-cal-chart'), sum=document.getElementById('prog-cal-summary');
+// Coverage chart: % of days in range each nutrient was logged.
+function renderVitChart(){
+  var wrap=document.getElementById('prog-vit-chart'), sum=document.getElementById('prog-vit-summary');
   if(!wrap) return;
-  var n=_calRange, win=_calWindow(n);
-  var logged=win.filter(function(e){ return e.c!=null; });
-  var target=_progTargetCal;
-  if(!logged.length){
-    wrap.innerHTML='<div style="color:#bbb;font-size:12px;padding:10px 0">No calories logged yet — add today’s intake to start the chart.</div>';
+  var n=_vitRange, days=_vitWindow(n);
+  var anyDays=days.filter(function(ds){ return Array.isArray(_vitLog[ds]) && _vitLog[ds].length; }).length;
+  if(!anyDays){
+    wrap.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">Nothing logged yet &mdash; tap the nutrients you had today to start tracking.</div>';
     if(sum) sum.innerHTML=''; return;
   }
-  var vals=logged.map(function(e){ return e.c; });
-  var maxV=Math.max.apply(null, vals);
-  var top=Math.max(maxV, target||0)*1.12 || 1;   // headroom
-  var W=320, H=132, padB=16, padT=8, padL=4, padR=4;
-  var innerW=W-padL-padR, innerH=H-padT-padB;
-  var gap=n>14?1.5:3, bw=(innerW/n)-gap;
-  var bars='', i;
-  for(i=0;i<win.length;i++){
-    var e=win[i], x=padL+i*(innerW/n)+gap/2;
-    if(e.c==null) continue;
-    var h=Math.max(2,(e.c/top)*innerH), y=padT+innerH-h;
-    var over = target && e.c>target;
-    var col = over ? '#e67e22' : 'var(--green)';
-    bars+='<rect class="cc-bar" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+Math.max(1,bw).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="'+(bw>6?2:1)+'" fill="'+col+'"><title>'+e.d+': '+e.c+' kcal</title></rect>';
-  }
-  var tline='';
-  if(target){
-    var ty=padT+innerH-(target/top)*innerH;
-    tline='<line x1="'+padL+'" y1="'+ty.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+ty.toFixed(1)+'" stroke="#1c4d3a" stroke-width="1" stroke-dasharray="4 3" opacity=".55"/>'+
-          '<text x="'+(W-padR)+'" y="'+(ty-3).toFixed(1)+'" text-anchor="end" font-size="9" fill="#1c4d3a" opacity=".7">target '+target+'</text>';
-  }
-  // baseline + end labels
-  var base='<line x1="'+padL+'" y1="'+(padT+innerH)+'" x2="'+(W-padR)+'" y2="'+(padT+innerH)+'" stroke="#e4e4e4" stroke-width="1"/>';
-  var firstLbl=_shortDate(win[0].dt), lastLbl=_shortDate(win[win.length-1].dt);
-  var labels='<text x="'+padL+'" y="'+(H-4)+'" font-size="9" fill="#aaa">'+firstLbl+'</text>'+
-             '<text x="'+(W-padR)+'" y="'+(H-4)+'" text-anchor="end" font-size="9" fill="#aaa">'+lastLbl+'</text>';
-  wrap.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" preserveAspectRatio="none">'+base+tline+bars+labels+'</svg>';
-  // summary
-  var avg=Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length);
-  var html='<span>Logged <b>'+logged.length+'</b> / '+n+' days</span><span>Avg <b>'+avg+'</b> kcal/day</span>';
-  if(target){ var diff=avg-target; html+='<span>'+(diff>=0?'+':'')+diff+' vs target</span>'; }
+  var counts={}; VITS.forEach(function(v){ counts[v.k]=0; });
+  days.forEach(function(ds){ (_vitLog[ds]||[]).forEach(function(k){ if(counts[k]!=null) counts[k]++; }); });
+  wrap.innerHTML=VITS.map(function(v){
+    var c=counts[v.k], pct=Math.round(c/n*100);
+    return '<div class="prog-vit-row"><div class="lbl">'+v.name+'<small>'+v.tag+'</small></div>'
+      +'<div class="prog-vit-track"><div class="prog-vit-fill" style="width:'+pct+'%;background:'+v.col+'"></div></div>'
+      +'<div class="pct">'+pct+'%</div></div>';
+  }).join('');
+  // summary: strongest + weakest
+  var arr=VITS.map(function(v){ return {v:v, c:counts[v.k]}; });
+  var top=arr.slice().sort(function(a,b){ return b.c-a.c; })[0];
+  var low=arr.slice().sort(function(a,b){ return a.c-b.c; })[0];
+  var html='<span>Tracked <b>'+anyDays+'</b> / '+n+' days</span>';
+  if(top.c>0) html+='<span>Strongest: <b>'+top.v.tag+'</b> ('+top.c+'/'+n+')</span>';
+  if(low.c<top.c) html+='<span>Lowest: <b>'+low.v.tag+'</b> ('+low.c+'/'+n+')</span>';
   if(sum) sum.innerHTML=html;
 }
-function _shortDate(dt){ return dt.getDate()+'/'+(dt.getMonth()+1); }
 function _loadJsPDF(cb){
   if(window.jspdf && window.jspdf.jsPDF){ cb(); return; }
   var s=document.createElement('script');
@@ -8030,18 +8036,22 @@ function _buildProgressPDF(){
   }
   y+=20;
 
-  if(y>700){ doc.addPage(); y=58; }
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Calorie Intake Log', m, y); y+=18;
+  if(y>680){ doc.addPage(); y=58; }
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Vitamins & Nutrients Log', m, y); y+=18;
   doc.setFont('helvetica','normal'); doc.setFontSize(11);
-  if(!_calLog.length){ doc.setTextColor(60,60,60); doc.text('No entries yet.', m, y); y+=16; }
+  var vdates=Object.keys(_vitLog).filter(function(k){ return Array.isArray(_vitLog[k]) && _vitLog[k].length; }).sort();
+  if(!vdates.length){ doc.setTextColor(60,60,60); doc.text('No entries yet.', m, y); y+=16; }
   else {
     doc.setTextColor(130,130,130);
-    doc.text('Date', m, y); doc.text('Calories', m+170, y); y+=6;
+    doc.text('Date', m, y); doc.text('Nutrients logged', m+120, y); y+=6;
     doc.setDrawColor(220,220,220); doc.setLineWidth(.5); doc.line(m, y, W-m, y); y+=15;
     doc.setTextColor(60,60,60);
-    _calLog.forEach(function(e){
+    vdates.forEach(function(ds){
       if(y>780){ doc.addPage(); y=58; }
-      doc.text(String(e.d), m, y); doc.text(e.c+' kcal', m+170, y); y+=16;
+      var names=_vitLog[ds].map(_vitName).join(', ');
+      var wrapNames=doc.splitTextToSize(names, W-m-(m+120));
+      doc.text(ds, m, y); doc.text(wrapNames, m+120, y);
+      y+=16*Math.max(1, wrapNames.length);
     });
   }
   y+=24;

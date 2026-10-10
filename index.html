@@ -3058,7 +3058,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <span class="acc-tile-lbl">Wallet</span>
     </button>
     <button type="button" class="acc-tile" onclick="openDexModal()">
-      <span class="acc-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="8" rx="1.5"/><rect x="13" y="4" width="8" height="8" rx="1.5"/><rect x="3" y="14" width="8" height="6" rx="1.5"/><rect x="13" y="14" width="8" height="6" rx="1.5"/></svg></span>
+      <span class="acc-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.2l2.3 2.3 4.7-4.9"/></svg></span>
       <span class="acc-tile-lbl">Fruicey Dex</span>
     </button>
     <button type="button" class="acc-tile" onclick="openNutriModal()">
@@ -3071,8 +3071,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </button>
   </div>
 
-  <div class="acc-section-label">My Fruicey Journey</div>
-  <button type="button" class="review-share-btn" style="margin:4px auto 0" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
+  <button type="button" class="review-share-btn" style="margin:10px auto 0" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
 
   <div class="acc-profile-card">
     <div class="acc-profile-top">
@@ -6215,14 +6214,15 @@ function initProductDetailSwipe(){
 
 // Slide-down-to-exit for the account quick-access popups (wallet / nutri / account).
 function initAccModalSwipe(){
-  [['wallet-modal',closeWalletModal],['nutri-modal',closeNutriModal],['account-modal',closeAccountModal]].forEach(function(pair){
+  [['wallet-modal',closeWalletModal],['nutri-modal',closeNutriModal],['account-modal',closeAccountModal],['dex-modal',closeDexModal]].forEach(function(pair){
     var m = document.getElementById(pair[0]);
     if(!m) return;
     var box = m.querySelector('.modal-box');
+    var scroller = box.querySelector('.dex-modal-body') || box;   // dex body scrolls, not the box
     var close = pair[1];
     var startY=0, curY=0, dragging=false;
     box.addEventListener('touchstart', function(e){
-      if(box.scrollTop > 0) return;           // let inner content scroll first
+      if(scroller.scrollTop > 0) return;      // let inner content scroll first
       startY = curY = e.touches[0].clientY; dragging = true;
       box.style.transition = 'none';
     }, {passive:true});

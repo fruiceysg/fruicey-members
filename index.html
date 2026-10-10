@@ -1043,12 +1043,15 @@ button.cal-day:active{transform:scale(.94)}
 .prog-focus-rec{margin-top:10px;background:var(--green-light);border-radius:12px;padding:11px 13px;font-size:12px;color:var(--text);line-height:1.5;display:none}
 .prog-focus-rec.show{display:block}
 .prog-focus-rec h6{margin:0 0 5px;font-family:var(--font);font-size:12.5px;color:var(--green-dark);font-weight:400}
-.prog-focus-rec .rec-picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.prog-focus-rec .rec-pick{background:#fff;border-radius:999px;padding:4px 10px;font-size:11px;color:var(--green-dark);border:1px solid rgba(46,158,91,.25)}
+.prog-focus-rec .rec-picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.prog-focus-rec .rec-pick{display:inline-flex;align-items:center;gap:3px;background:#fff;border-radius:999px;padding:6px 10px;font-size:11.5px;color:var(--green-dark);border:1px solid rgba(46,158,91,.3);font-family:var(--body);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.prog-focus-rec .rec-pick:active{transform:scale(.96)}
+.prog-focus-rec .rec-pick .ti{font-size:13px;opacity:.6}
 .prog-vit-sub{font-size:11.5px;color:var(--text3);margin:2px 0 11px;line-height:1.45}
 .prog-vit-sub .ti{font-size:13px;vertical-align:-1px}
 .prog-vit-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
-.prog-vit-chip{display:inline-flex;align-items:center;gap:3px;border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:5px 7px 5px 11px;font-family:var(--body);font-size:12px;color:var(--text2);transition:background .15s,color .15s,border-color .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+.prog-vit-chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:7px 13px;font-family:var(--body);font-size:12px;color:var(--text2);cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+.prog-vit-chip:active{transform:scale(.96)}
 .prog-vit-chip .vit-main{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .prog-vit-chip .vit-main em{font-style:normal;opacity:.65;font-size:11px}
 .prog-vit-chip .dot{width:9px;height:9px;border-radius:50%;flex:none}
@@ -3229,17 +3232,19 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
 
     <div class="prog-wl">
+      <div class="prog-wl-head"><span id="prog-nut-head">Daily vitamins</span></div>
+      <div class="prog-vit-sub">Tap each one you had today &mdash; these are the key nutrients for your focus.</div>
+      <div id="prog-vit-chips" class="prog-vit-chips"></div>
+    </div>
+
+    <div class="prog-wl">
       <div class="prog-wl-head">
-        <span>Today's wellness</span>
+        <span>Your record</span>
         <div class="prog-range" id="prog-vit-range">
           <button type="button" class="prog-range-btn active" data-r="7" onclick="setVitRange(7)">Week</button>
           <button type="button" class="prog-range-btn" data-r="30" onclick="setVitRange(30)">Month</button>
         </div>
       </div>
-      <div class="prog-vit-sub">Tap each area you nourished today with a juice, bowl or meal. Tap <i class="ti ti-info-circle"></i> to learn what it supports &amp; which Fruicey picks help.</div>
-      <div id="prog-vit-chips" class="prog-vit-chips"></div>
-      <div id="prog-vit-info" class="prog-vit-info" style="display:none"></div>
-      <div class="prog-vit-record-head">Daily record &mdash; how often you nourished each</div>
       <div id="prog-vit-chart" class="prog-vit-chart"></div>
       <div id="prog-vit-summary" class="prog-cal-summary"></div>
     </div>
@@ -6138,10 +6143,13 @@ function closeProductDetail(){
   if(window.__pdResetZoom) window.__pdResetZoom();
   if(window.matchMedia('(min-width:900px)').matches){ box.style.opacity='0'; box.style.transform='scale(.92)'; }
   else { box.style.transform='translateY(100%)'; }
-  setTimeout(()=>{ m.classList.remove('open'); box.style.transform=''; box.style.opacity=''; document.getElementById('pd-img').src=''; }, 350);
+  setTimeout(()=>{ m.classList.remove('open'); box.style.transform=''; box.style.opacity=''; document.getElementById('pd-img').src='';
+    if(window._returnToNutri){ window._returnToNutri=false; if(typeof openNutriModal==='function') openNutriModal(); }
+  }, 350);
 }
 // Close after adding: the sheet bounces down toward the bottom cart bar, then the bar gives a little pop
 function closeProductDetailAfterAdd(){
+  window._returnToNutri = false;   // adding to cart: don't bounce back to the tracker
   const m = document.getElementById('product-detail-modal');
   const box = m.querySelector('.modal-box');
   if(window.__pdResetZoom) window.__pdResetZoom();
@@ -7778,7 +7786,7 @@ function renderDexBody(tried){
 function _resetAccModalBox(m){ var b=m&&m.querySelector('.modal-box'); if(b){ b.style.transform=''; b.scrollTop=0; } }
 function openWalletModal(){ var m=document.getElementById('wallet-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeWalletModal(){ var m=document.getElementById('wallet-modal'); if(m) m.classList.remove('open'); }
-function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } hideVitInfo(); renderFocusChips(); renderVitToday(); renderVitChart(); }
+function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } renderFocusChips(); renderNutChips(); renderVitChart(); }
 function closeNutriModal(){ var m=document.getElementById('nutri-modal'); if(m) m.classList.remove('open'); }
 function openAccountModal(){ var m=document.getElementById('account-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeAccountModal(){ var m=document.getElementById('account-modal'); if(m) m.classList.remove('open'); }
@@ -7798,46 +7806,58 @@ function openDexProduct(pid){
 var _vitLog = {};          // { 'YYYY-MM-DD': ['immunity','energy', ...] }
 var _vitRange = 7;
 var _focus = 'general';
-// Wellness areas, tied to Fruicey's own product ranges. `picks` are real menu items.
+// Nutrients tracked daily. Each focus draws from these.
+var NUTS = {
+  C:{name:'Vitamin C', col:'#f5a623'},
+  A:{name:'Vitamin A', col:'#e056a0'},
+  B:{name:'B Vitamins', col:'#e67e22'},
+  D:{name:'Vitamin D', col:'#8e7cc3'},
+  FE:{name:'Iron', col:'#c0392b'},
+  CA:{name:'Calcium', col:'#6d8b3c'},
+  MG:{name:'Magnesium', col:'#3b82a0'},
+  K:{name:'Potassium', col:'#b5651d'},
+  FB:{name:'Fibre', col:'#2e9e5b'},
+  OM:{name:'Omega-3', col:'#4b9e8f'},
+  ZN:{name:'Zinc', col:'#7a8b99'},
+  AOX:{name:'Antioxidants', col:'#9b59b6'},
+  PRO:{name:'Probiotics', col:'#2ec5a8'},
+  LUT:{name:'Lutein', col:'#d4a017'}
+};
+// Each focus: its daily key nutrients (nuts) + recommended Fruicey products (real ids).
 var VITS = [
-  {k:'immunity', name:'Immunity', col:'#f5a623',
-   fn:'Strengthens your body’s defences against bugs and keeps you resilient.',
-   nut:'Vitamin C, Vitamin A, Zinc',
-   picks:['Immunity Press — Defence','Nutritional Press — Vita C','Tropicana bowl','Orange Passion']},
-  {k:'energy', name:'Energy', col:'#e67e22',
-   fn:'Helps turn food into steady energy and fight everyday tiredness.',
-   nut:'B vitamins, Iron',
-   picks:['Immunity Press — Energy','Nutritional Press — Iron Fe','Recharge','Peanut Butter Banana']},
-  {k:'digestion', name:'Digestion', col:'#2e9e5b',
-   fn:'Supports a happy gut and smooth, comfortable digestion.',
-   nut:'Fibre, probiotics',
-   picks:['Nutritional Press — Dietary Fibre','Immunity Press — Cleanse','Apple Yakult','Kampung Spirit']},
-  {k:'mental', name:'Mental', col:'#8e7cc3',
-   fn:'Supports focus, a calm mood and a clear mind.',
-   nut:'B vitamins, healthy fats, Magnesium',
-   picks:['Longevity Press — Neuro','Longevity Press — Zen','Immunity Press — Calm','Lovacado']},
-  {k:'eye', name:'Eye', col:'#3b82a0',
-   fn:'Supports healthy vision and helps with tired, screen-strained eyes.',
-   nut:'Vitamin A, lutein',
-   picks:['Longevity Press — Vision','Nutritional Press — Vita A','Carrot Orange','Apple Beetroot Carrot']},
-  {k:'heart', name:'Heart', col:'#c0392b',
-   fn:'Supports circulation, healthy blood pressure and the heart.',
-   nut:'Potassium, Magnesium, antioxidants',
-   picks:['Longevity Press — Cardio','Nutritional Press — Potassium K','Apple Beetroot Carrot','Watermelon Lemonade']},
-  {k:'skin', name:'Skin', col:'#e056a0',
-   fn:'Supports a clear, glowing complexion and natural collagen.',
-   nut:'Vitamin C, Vitamin A, antioxidants',
-   picks:['Longevity Press — Derma','Wellness Press — Radiance','Berry Blast bowl','Berry Shiok']},
-  {k:'detox', name:'Detox', col:'#4b9e8f',
-   fn:'Helps flush, refresh and renew after heavy or rich days.',
-   nut:'Antioxidants, chlorophyll, fibre',
-   picks:['Immunity Press — Cleanse','Wellness Press — Verdure','Apple Celery Cucumber','Alkalising bowl']},
-  {k:'bones', name:'Bones', col:'#6d8b3c',
-   fn:'Supports strong bones, teeth and working muscles.',
-   nut:'Calcium, Vitamin D, Magnesium',
-   picks:['Nutritional Press — Calcium Ca','Nutritional Press — Magnesium Mg','Carrot Milk','Avocado Shake']}
+  {k:'immunity', name:'Immunity', col:'#f5a623', fn:'Strengthens your defences and keeps you resilient.',
+   nuts:['C','A','ZN'],
+   picks:[{id:'ip06',label:'Defence'},{id:'np03',label:'Vita C'},{id:'sb08',label:'Tropicana'},{id:'ju14',label:'Orange Passion'}]},
+  {k:'energy', name:'Energy', col:'#e67e22', fn:'Turns food into steady energy and fights tiredness.',
+   nuts:['B','FE'],
+   picks:[{id:'ip01',label:'Energy'},{id:'np05',label:'Iron Fe'},{id:'ss14',label:'Recharge'},{id:'ju07',label:'Peanut Butter Banana'}]},
+  {k:'digestion', name:'Digestion', col:'#2e9e5b', fn:'Supports a happy gut and smooth digestion.',
+   nuts:['FB','PRO'],
+   picks:[{id:'np04',label:'Dietary Fibre'},{id:'ip05',label:'Cleanse'},{id:'ju18',label:'Apple Yakult'},{id:'ss06',label:'Kampung Spirit'}]},
+  {k:'mental', name:'Mental', col:'#8e7cc3', fn:'Supports focus, a calm mood and a clear mind.',
+   nuts:['B','OM','MG'],
+   picks:[{id:'lp01',label:'Neuro'},{id:'lp03',label:'Zen'},{id:'ip04',label:'Calm'},{id:'ss09',label:'Lovacado'}]},
+  {k:'eye', name:'Eye', col:'#3b82a0', fn:'Supports healthy vision and tired, screen-strained eyes.',
+   nuts:['A','LUT'],
+   picks:[{id:'lp06',label:'Vision'},{id:'np01',label:'Vita A'},{id:'ju19',label:'Carrot Orange'},{id:'ju10',label:'Apple Beetroot Carrot'}]},
+  {k:'heart', name:'Heart', col:'#c0392b', fn:'Supports circulation, blood pressure and the heart.',
+   nuts:['K','MG','OM'],
+   picks:[{id:'lp05',label:'Cardio'},{id:'np06',label:'Potassium K'},{id:'ju10',label:'Apple Beetroot Carrot'},{id:'ju01',label:'Watermelon Lemonade'}]},
+  {k:'skin', name:'Skin', col:'#e056a0', fn:'Supports a clear, glowing complexion and collagen.',
+   nuts:['C','A','AOX'],
+   picks:[{id:'lp02',label:'Derma'},{id:'wp01',label:'Radiance'},{id:'sb09',label:'Berry Blast'},{id:'ss07',label:'Berry Shiok'}]},
+  {k:'detox', name:'Detox', col:'#4b9e8f', fn:'Helps flush, refresh and renew after rich days.',
+   nuts:['AOX','FB','MG'],
+   picks:[{id:'ip05',label:'Cleanse'},{id:'wp02',label:'Verdure'},{id:'ju11',label:'Apple Celery Cucumber'},{id:'sb07',label:'Alkalising'}]},
+  {k:'bones', name:'Bones', col:'#6d8b3c', fn:'Supports strong bones, teeth and muscles.',
+   nuts:['CA','D','MG'],
+   picks:[{id:'np07',label:'Calcium Ca'},{id:'np08',label:'Magnesium Mg'},{id:'ju20',label:'Carrot Milk'},{id:'ju22',label:'Avocado Shake'}]},
+  {k:'general', name:'General', col:'#2e9e5b', fn:'A balanced spread across all the key nutrients.',
+   nuts:['C','A','B','D','FE','CA','FB'],
+   picks:[{id:'sb01',label:'Rainbowl Acai'},{id:'ss02',label:'Follow That Rainbow'},{id:'ju16',label:'Apple Orange'},{id:'wp01',label:'Radiance'}]}
 ];
-function _vitByKey(k){ for(var i=0;i<VITS.length;i++){ if(VITS[i].k===k) return VITS[i]; } return null; }
+function _vitByKey(k){ for(var i=0;i<VITS.length;i++){ if(VITS[i].k===k) return VITS[i]; } return _vitByKey('general'); }
+function _curFocus(){ for(var i=0;i<VITS.length;i++){ if(VITS[i].k===_focus) return VITS[i]; } return VITS[VITS.length-1]; }
 function _progKey(){ return 'fruicey_progress_' + (currentUser ? np(currentUser.phone) : 'guest'); }
 function _progData(){ try{ return JSON.parse(localStorage.getItem(_progKey())||'{}') || {}; }catch(e){ return {}; } }
 function loadProgress(){
@@ -7846,7 +7866,7 @@ function loadProgress(){
   _focus = d.focus || 'general';
   _vitLog = (d.vlog && typeof d.vlog==='object') ? d.vlog : {};
   renderFocusChips();
-  renderVitToday();
+  renderNutChips();
   renderVitChart();
 }
 function saveProgress(){
@@ -7855,67 +7875,62 @@ function saveProgress(){
   try{ localStorage.setItem(_progKey(), JSON.stringify(d)); }catch(e){}
 }
 function _todayStr(){ var t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
-function _vitName(k){ for(var i=0;i<VITS.length;i++){ if(VITS[i].k===k) return VITS[i].name; } return k; }
-// Tap a wellness area on/off for today.
-function toggleVit(k){
+function _vitName(k){ return (NUTS[k] && NUTS[k].name) || k; }
+// Tap a nutrient on/off for today.
+function toggleNut(k){
   if(!currentUser){ openLogin(); return; }
   var d=_todayStr();
   var set=Array.isArray(_vitLog[d]) ? _vitLog[d].slice() : [];
   var i=set.indexOf(k);
   if(i>=0) set.splice(i,1); else set.push(k);
   if(set.length) _vitLog[d]=set; else delete _vitLog[d];
-  saveProgress(); renderVitToday(); renderVitChart();
+  saveProgress(); renderNutChips(); renderVitChart();
 }
 function setVitRange(n){
   _vitRange=n;
   document.querySelectorAll('#prog-vit-range .prog-range-btn').forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.r,10)===n); });
   renderVitChart();
 }
-// Focus chips: each wellness area + "General". Shows Fruicey product picks for the chosen focus.
+// Focus chips (single-select). The chosen focus drives the nutrient checklist, the record, and the product picks.
 function renderFocusChips(){
   var wrap=document.getElementById('prog-focus-chips'), rec=document.getElementById('prog-focus-rec');
   if(!wrap) return;
-  var chips=VITS.map(function(v){
-    return '<button type="button" class="prog-focus-chip'+(v.k===_focus?' on':'')+'" onclick="selectFocus(\''+v.k+'\')">'+v.name+'</button>';
-  });
-  chips.push('<button type="button" class="prog-focus-chip'+('general'===_focus?' on':'')+'" onclick="selectFocus(\'general\')">General</button>');
-  wrap.innerHTML=chips.join('');
-  if(!rec) return;
-  if(_focus==='general'){
-    rec.className='prog-focus-rec show';
-    rec.innerHTML='<h6>A balanced mix across every area</h6>Explore each Fruicey Press range &mdash; Immunity, Nutritional, Longevity &amp; Wellness &mdash; plus fresh juices, smoothies and superfood bowls.';
-  } else {
-    var v=_vitByKey(_focus); if(!v){ rec.className='prog-focus-rec'; return; }
-    rec.className='prog-focus-rec show';
-    rec.innerHTML='<h6>For '+v.name+': '+v.fn+'</h6><div style="color:var(--text3)">Key nutrients: '+v.nut+'</div>'
-      +'<div class="rec-picks">'+v.picks.map(function(p){ return '<span class="rec-pick">'+p+'</span>'; }).join('')+'</div>';
-  }
-}
-function selectFocus(k){ _focus=k; saveProgress(); renderFocusChips(); renderVitToday(); }
-// Chips for today — tappable toggle + info button; chips in the chosen focus get a highlight ring.
-function renderVitToday(){
-  var wrap=document.getElementById('prog-vit-chips'); if(!wrap) return;
-  var today=_vitLog[_todayStr()]||[];
   wrap.innerHTML=VITS.map(function(v){
-    var on=today.indexOf(v.k)>=0, isRec=(v.k===_focus);
-    var style=on?('background:'+v.col+';'):'';
-    return '<div class="prog-vit-chip'+(on?' on':'')+(isRec?' rec':'')+'" style="'+style+'">'
-      +'<span class="vit-main" onclick="toggleVit(\''+v.k+'\')"><span class="dot" style="background:'+v.col+'"></span>'+v.name+'</span>'
-      +'<button type="button" class="vit-i" onclick="showVitInfo(\''+v.k+'\')" aria-label="About '+v.name+'"><i class="ti ti-info-circle"></i></button>'
-      +'</div>';
+    return '<button type="button" class="prog-focus-chip'+(v.k===_focus?' on':'')+'" onclick="selectFocus(\''+v.k+'\')">'+v.name+'</button>';
+  }).join('');
+  if(!rec) return;
+  var f=_curFocus();
+  rec.className='prog-focus-rec show';
+  rec.innerHTML='<h6>'+f.fn+'</h6>'
+    +'<div style="color:var(--text3);margin-bottom:2px">Fruicey picks for '+f.name+' &mdash; tap to view:</div>'
+    +'<div class="rec-picks">'+f.picks.map(function(p){
+        return '<button type="button" class="rec-pick" onclick="openNutriProduct(\''+p.id+'\')">'+p.label+' <i class="ti ti-chevron-right"></i></button>';
+      }).join('')+'</div>';
+}
+function selectFocus(k){ _focus=k; saveProgress(); renderFocusChips(); renderNutChips(); renderVitChart(); }
+// Daily nutrient checklist for the chosen focus — tap each one you had today.
+function renderNutChips(){
+  var wrap=document.getElementById('prog-vit-chips'); if(!wrap) return;
+  var head=document.getElementById('prog-nut-head'); var f=_curFocus();
+  if(head) head.textContent='Daily vitamins for '+f.name;
+  var today=_vitLog[_todayStr()]||[];
+  wrap.innerHTML=f.nuts.map(function(k){
+    var nu=NUTS[k]; if(!nu) return '';
+    var on=today.indexOf(k)>=0, style=on?('background:'+nu.col+';'):'';
+    return '<button type="button" class="prog-vit-chip'+(on?' on':'')+'" style="'+style+'" onclick="toggleNut(\''+k+'\')">'
+      +'<span class="dot" style="background:'+nu.col+'"></span>'+nu.name+'</button>';
   }).join('');
 }
-// Education card for one wellness area — what it supports, key nutrients, and Fruicey picks.
-function showVitInfo(k){
-  var v=_vitByKey(k), box=document.getElementById('prog-vit-info'); if(!v||!box) return;
-  box.innerHTML='<button type="button" class="vi-close" onclick="hideVitInfo()" aria-label="Close">&times;</button>'
-    +'<h5><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+v.col+';margin-right:6px"></span>'+v.name+'</h5>'
-    +v.fn
-    +'<br><span style="color:var(--text3)">Key nutrients: '+v.nut+'</span>'
-    +'<span class="vi-amt">Fruicey picks: '+v.picks.join(' · ')+'</span>';
-  box.style.display='block';
+// Open a recommended product's page, then return to the tracker when it's closed.
+function openNutriProduct(pid){
+  if(!PRODUCT_MAP[pid]){ showToast('That item isn’t on the menu right now'); return; }
+  window._returnToNutri = true;
+  closeNutriModal();
+  var cat=null;
+  Object.keys(CATALOGUE).forEach(function(c){ if(CATALOGUE[c].some(function(x){ return x.id===pid; })) cat=c; });
+  if(cat) currentCat=cat;
+  if(typeof openProductDetail==='function') openProductDetail(pid);
 }
-function hideVitInfo(){ var b=document.getElementById('prog-vit-info'); if(b) b.style.display='none'; }
 // Build the last N-day window ending today.
 function _vitWindow(n){
   var out=[], base=new Date(); base.setHours(0,0,0,0);
@@ -7925,31 +7940,31 @@ function _vitWindow(n){
   }
   return out;
 }
-// Coverage chart: % of days in range each nutrient was logged.
+// Weekly/monthly record: % of days each of the focus's nutrients was logged.
 function renderVitChart(){
   var wrap=document.getElementById('prog-vit-chart'), sum=document.getElementById('prog-vit-summary');
   if(!wrap) return;
-  var n=_vitRange, days=_vitWindow(n);
+  var f=_curFocus(), n=_vitRange, days=_vitWindow(n);
   var anyDays=days.filter(function(ds){ return Array.isArray(_vitLog[ds]) && _vitLog[ds].length; }).length;
   if(!anyDays){
-    wrap.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">Nothing logged yet &mdash; tap the areas you nourished today to start tracking.</div>';
+    wrap.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">Nothing logged yet &mdash; tap the vitamins you had today to start your record.</div>';
     if(sum) sum.innerHTML=''; return;
   }
-  var counts={}; VITS.forEach(function(v){ counts[v.k]=0; });
+  var counts={}; f.nuts.forEach(function(k){ counts[k]=0; });
   days.forEach(function(ds){ (_vitLog[ds]||[]).forEach(function(k){ if(counts[k]!=null) counts[k]++; }); });
-  wrap.innerHTML=VITS.map(function(v){
-    var c=counts[v.k], pct=Math.round(c/n*100);
-    return '<div class="prog-vit-row"><div class="lbl">'+v.name+'</div>'
-      +'<div class="prog-vit-track"><div class="prog-vit-fill" style="width:'+pct+'%;background:'+v.col+'"></div></div>'
+  wrap.innerHTML=f.nuts.map(function(k){
+    var nu=NUTS[k]; if(!nu) return '';
+    var c=counts[k], pct=Math.round(c/n*100);
+    return '<div class="prog-vit-row"><div class="lbl">'+nu.name+'</div>'
+      +'<div class="prog-vit-track"><div class="prog-vit-fill" style="width:'+pct+'%;background:'+nu.col+'"></div></div>'
       +'<div class="pct">'+pct+'%</div></div>';
   }).join('');
-  // summary: strongest + weakest
-  var arr=VITS.map(function(v){ return {v:v, c:counts[v.k]}; });
+  var arr=f.nuts.map(function(k){ return {k:k, c:counts[k]}; });
   var top=arr.slice().sort(function(a,b){ return b.c-a.c; })[0];
   var low=arr.slice().sort(function(a,b){ return a.c-b.c; })[0];
   var html='<span>Tracked <b>'+anyDays+'</b> / '+n+' days</span>';
-  if(top.c>0) html+='<span>Strongest: <b>'+top.v.name+'</b> ('+top.c+'/'+n+')</span>';
-  if(low.c<top.c) html+='<span>Lowest: <b>'+low.v.name+'</b> ('+low.c+'/'+n+')</span>';
+  if(top && top.c>0) html+='<span>Strongest: <b>'+NUTS[top.k].name+'</b> ('+top.c+'/'+n+')</span>';
+  if(low && low.c<top.c) html+='<span>Lowest: <b>'+NUTS[low.k].name+'</b> ('+low.c+'/'+n+')</span>';
   if(sum) sum.innerHTML=html;
 }
 function _loadJsPDF(cb){
@@ -7977,19 +7992,19 @@ function _buildProgressPDF(){
   doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
   doc.text('Member: '+name, m, y); doc.text('Date: '+new Date().toLocaleDateString('en-SG'), W-m, y, {align:'right'}); y+=28;
 
-  var fv=_vitByKey(d.focus);
+  var fv=_vitByKey(d.focus||'general');
   doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Your Focus', m, y); y+=18;
   doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
-  doc.text('Wellness focus:', m, y); doc.text(fv?fv.name:'General wellness', m+130, y); y+=24;
+  doc.text('Wellness focus:', m, y); doc.text(fv.name, m+130, y); y+=24;
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Daily Record (last 7 days)', m, y); y+=18;
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text(fv.name+' nutrients (last 7 days)', m, y); y+=18;
   doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
   (function(){
-    var days=_vitWindow(7), counts={}; VITS.forEach(function(v){ counts[v.k]=0; });
+    var days=_vitWindow(7), counts={}; fv.nuts.forEach(function(k){ counts[k]=0; });
     days.forEach(function(ds){ (_vitLog[ds]||[]).forEach(function(k){ if(counts[k]!=null) counts[k]++; }); });
-    VITS.forEach(function(v){
+    fv.nuts.forEach(function(k){
       if(y>780){ doc.addPage(); y=58; }
-      doc.text(v.name, m, y); doc.text(counts[v.k]+' / 7 days', m+240, y); y+=16;
+      doc.text(NUTS[k].name, m, y); doc.text(counts[k]+' / 7 days', m+240, y); y+=16;
     });
   })();
   y+=20;

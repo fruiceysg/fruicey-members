@@ -1037,11 +1037,14 @@ button.cal-day:active{transform:scale(.94)}
 .prog-range-btn.active{background:#fff;color:var(--green-dark);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .vit-focus{margin-bottom:18px}
 .vit-focus-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
-.vit-gender{border:1px solid var(--border);border-radius:9px;padding:6px 9px;font-family:var(--body);font-size:12px;background:#fff;color:var(--text2)}
 .prog-focus-chips{display:flex;flex-wrap:wrap;gap:7px}
 .prog-focus-chip{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:6px 13px;font-family:var(--body);font-size:12px;color:var(--text2);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .prog-focus-chip.on{background:var(--green);color:#fff;border-color:transparent}
-.prog-focus-note{font-size:11.5px;color:var(--text3);margin-top:9px;line-height:1.4;min-height:1em}
+.prog-focus-rec{margin-top:10px;background:var(--green-light);border-radius:12px;padding:11px 13px;font-size:12px;color:var(--text);line-height:1.5;display:none}
+.prog-focus-rec.show{display:block}
+.prog-focus-rec h6{margin:0 0 5px;font-family:var(--font);font-size:12.5px;color:var(--green-dark);font-weight:400}
+.prog-focus-rec .rec-picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.prog-focus-rec .rec-pick{background:#fff;border-radius:999px;padding:4px 10px;font-size:11px;color:var(--green-dark);border:1px solid rgba(46,158,91,.25)}
 .prog-vit-sub{font-size:11.5px;color:var(--text3);margin:2px 0 11px;line-height:1.45}
 .prog-vit-sub .ti{font-size:13px;vertical-align:-1px}
 .prog-vit-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
@@ -3213,53 +3216,39 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   <div class="modal-box">
     <div class="modal-handle"></div>
     <div class="acc-modal-head">
-      <div class="modal-title" style="margin:0">Nutri-Log <span class="prog-sub">&mdash; vitamins &amp; wellness tracker</span></div>
+      <div class="modal-title" style="margin:0">Nutri-Log <span class="prog-sub">&mdash; your wellness tracker</span></div>
       <button class="pd-close" onclick="closeNutriModal()" aria-label="Close">&times;</button>
     </div>
     <div class="prog-card" style="box-shadow:none;padding:0">
     <div class="vit-focus">
       <div class="vit-focus-head">
         <div class="prog-wl-head" style="margin:0"><span>Your focus</span></div>
-        <select id="prog-gender" class="vit-gender" onchange="saveProgress();onVitProfileChange()">
-          <option value="female">Woman</option>
-          <option value="male">Man</option>
-        </select>
       </div>
       <div id="prog-focus-chips" class="prog-focus-chips"></div>
-      <div id="prog-focus-note" class="prog-focus-note"></div>
+      <div id="prog-focus-rec" class="prog-focus-rec"></div>
     </div>
 
     <div class="prog-wl">
       <div class="prog-wl-head">
-        <span>Today's vitamins</span>
+        <span>Today's wellness</span>
         <div class="prog-range" id="prog-vit-range">
           <button type="button" class="prog-range-btn active" data-r="7" onclick="setVitRange(7)">Week</button>
           <button type="button" class="prog-range-btn" data-r="30" onclick="setVitRange(30)">Month</button>
         </div>
       </div>
-      <div class="prog-vit-sub">Tap each nutrient you had today. Tap <i class="ti ti-info-circle"></i> to learn what it does &amp; your HPB daily need.</div>
+      <div class="prog-vit-sub">Tap each area you nourished today with a juice, bowl or meal. Tap <i class="ti ti-info-circle"></i> to learn what it supports &amp; which Fruicey picks help.</div>
       <div id="prog-vit-chips" class="prog-vit-chips"></div>
       <div id="prog-vit-info" class="prog-vit-info" style="display:none"></div>
-      <div class="prog-vit-record-head">Daily record &mdash; how often you hit each</div>
+      <div class="prog-vit-record-head">Daily record &mdash; how often you nourished each</div>
       <div id="prog-vit-chart" class="prog-vit-chart"></div>
       <div id="prog-vit-summary" class="prog-cal-summary"></div>
-    </div>
-
-    <div class="prog-wl">
-      <div class="prog-wl-head">Weight log <span class="prog-sub" style="font-weight:400">&mdash; optional</span></div>
-      <div class="prog-wl-add">
-        <input type="number" id="prog-wl-input" inputmode="decimal" placeholder="Today's weight (kg)">
-        <button type="button" class="prog-btn" onclick="addWeightEntry()">Add</button>
-      </div>
-      <div id="prog-spark" class="prog-spark"></div>
-      <div id="prog-wl-list" class="prog-wl-list"></div>
     </div>
 
     <div class="prog-actions">
       <button type="button" class="prog-btn ghost" onclick="downloadProgress()"><i class="ti ti-file-type-pdf"></i> Download as PDF</button>
     </div>
 
-    <div class="prog-note"><i class="ti ti-device-mobile"></i><span>Your progress is saved only on this device/browser &mdash; clearing your browser data or switching phones will erase it. Tap &ldquo;Download as PDF&rdquo; to keep a backup. Daily vitamin needs follow Singapore HPB Recommended Dietary Allowances for adults; individual needs vary. A healthy-living guide, not medical advice.</span></div>
+    <div class="prog-note"><i class="ti ti-device-mobile"></i><span>Your log is saved only on this device/browser &mdash; clearing your browser data or switching phones will erase it. Tap &ldquo;Download as PDF&rdquo; to keep a backup. Product picks are general wellness suggestions based on ingredients &mdash; a healthy-living guide, not medical advice.</span></div>
     </div>
   </div>
 </div>
@@ -7806,123 +7795,68 @@ function openDexProduct(pid){
 
 // ── MY PROGRESS (device-only tracker) ────────────────────────────────────────
 // All data lives in this browser's localStorage, keyed per member. Nothing is sent to any server.
-var _progLog = [];
-var _vitLog = {};          // { 'YYYY-MM-DD': ['C','B', ...] }
+var _vitLog = {};          // { 'YYYY-MM-DD': ['immunity','energy', ...] }
 var _vitRange = 7;
 var _focus = 'general';
-// HPB (Singapore) adult Recommended Dietary Allowances. amt() returns the display string by gender.
+// Wellness areas, tied to Fruicey's own product ranges. `picks` are real menu items.
 var VITS = [
-  {k:'C',  name:'Vitamin C',  tag:'Immunity',       col:'#f5a623',
-   amt:function(g){ return g==='male'?'105 mg':'85 mg'; },
-   fn:'Your front-line immune nutrient. Powers immune defences, builds collagen for firm skin, and neutralises free radicals.',
-   src:'Orange, kiwi, guava, strawberry, acerola, pineapple.'},
-  {k:'A',  name:'Vitamin A',  tag:'Skin & Vision',  col:'#e056a0',
-   amt:function(){ return '750 mcg'; },
-   fn:'Keeps skin and the linings that block germs healthy, and supports night vision.',
-   src:'Mango, carrot, pumpkin, papaya, dark leafy greens.'},
-  {k:'D',  name:'Vitamin D',  tag:'Bones & Mood',   col:'#8e7cc3',
-   amt:function(){ return '2.5 mcg'; },
-   fn:'Helps absorb calcium for strong bones, supports mood and immune response. Mostly made from sunlight.',
-   src:'Sunlight, mushrooms, eggs, fortified plant milk.'},
-  {k:'B',  name:'B Vitamins', tag:'Energy',         col:'#e67e22',
-   amt:function(){ return 'B-complex'; },
-   fn:'B1, B2, B3, B6, B12 and folate release energy from food and keep nerves healthy.',
-   src:'Banana, oats, wholegrains, leafy greens, beans.',
-   detail:'HPB daily (adult): B1 ~1.2 mg · B2 ~1.3–1.8 mg · B3 ~14–20 mg · B6 1.3 mg · B12 2.4 mcg.'},
-  {k:'FE', name:'Iron',       tag:'Energy & Blood', col:'#c0392b',
-   amt:function(g){ return g==='male'?'8 mg':'18 mg'; },
-   fn:'Carries oxygen around your body and fights tiredness. Pair with Vitamin C to absorb more.',
-   src:'Spinach, legumes, tofu, pumpkin seeds.'},
-  {k:'FOL',name:'Folate',     tag:'Detox & Renewal',col:'#2e9e5b',
-   amt:function(){ return '400 mcg'; },
-   fn:'Builds new cells and healthy blood — key for cell renewal and recovery.',
-   src:'Dark leafy greens, avocado, beans, citrus.'},
-  {k:'CA', name:'Calcium',    tag:'Bones & Muscle', col:'#3b82a0',
-   amt:function(){ return '800 mg'; },
-   fn:'Builds strong bones and teeth and helps muscles contract.',
-   src:'Leafy greens, tofu, fortified plant milk, sesame.'}
-];
-var FOCUSES = [
-  {k:'immunity', name:'Immunity',         note:'Nutrients that strengthen your body’s defences.', vits:['C','A','D']},
-  {k:'energy',   name:'Energy',           note:'Nutrients that turn food into steady daily energy.',  vits:['B','FE']},
-  {k:'detox',    name:'Detox & Skin',     note:'Antioxidants & renewal nutrients for clearer skin.',  vits:['C','A','FOL']},
-  {k:'general',  name:'General wellness', note:'A balanced spread across all key nutrients.',          vits:['C','A','D','B','FE','FOL','CA']}
+  {k:'immunity', name:'Immunity', col:'#f5a623',
+   fn:'Strengthens your body’s defences against bugs and keeps you resilient.',
+   nut:'Vitamin C, Vitamin A, Zinc',
+   picks:['Immunity Press — Defence','Nutritional Press — Vita C','Tropicana bowl','Orange Passion']},
+  {k:'energy', name:'Energy', col:'#e67e22',
+   fn:'Helps turn food into steady energy and fight everyday tiredness.',
+   nut:'B vitamins, Iron',
+   picks:['Immunity Press — Energy','Nutritional Press — Iron Fe','Recharge','Peanut Butter Banana']},
+  {k:'digestion', name:'Digestion', col:'#2e9e5b',
+   fn:'Supports a happy gut and smooth, comfortable digestion.',
+   nut:'Fibre, probiotics',
+   picks:['Nutritional Press — Dietary Fibre','Immunity Press — Cleanse','Apple Yakult','Kampung Spirit']},
+  {k:'mental', name:'Mental', col:'#8e7cc3',
+   fn:'Supports focus, a calm mood and a clear mind.',
+   nut:'B vitamins, healthy fats, Magnesium',
+   picks:['Longevity Press — Neuro','Longevity Press — Zen','Immunity Press — Calm','Lovacado']},
+  {k:'eye', name:'Eye', col:'#3b82a0',
+   fn:'Supports healthy vision and helps with tired, screen-strained eyes.',
+   nut:'Vitamin A, lutein',
+   picks:['Longevity Press — Vision','Nutritional Press — Vita A','Carrot Orange','Apple Beetroot Carrot']},
+  {k:'heart', name:'Heart', col:'#c0392b',
+   fn:'Supports circulation, healthy blood pressure and the heart.',
+   nut:'Potassium, Magnesium, antioxidants',
+   picks:['Longevity Press — Cardio','Nutritional Press — Potassium K','Apple Beetroot Carrot','Watermelon Lemonade']},
+  {k:'skin', name:'Skin', col:'#e056a0',
+   fn:'Supports a clear, glowing complexion and natural collagen.',
+   nut:'Vitamin C, Vitamin A, antioxidants',
+   picks:['Longevity Press — Derma','Wellness Press — Radiance','Berry Blast bowl','Berry Shiok']},
+  {k:'detox', name:'Detox', col:'#4b9e8f',
+   fn:'Helps flush, refresh and renew after heavy or rich days.',
+   nut:'Antioxidants, chlorophyll, fibre',
+   picks:['Immunity Press — Cleanse','Wellness Press — Verdure','Apple Celery Cucumber','Alkalising bowl']},
+  {k:'bones', name:'Bones', col:'#6d8b3c',
+   fn:'Supports strong bones, teeth and working muscles.',
+   nut:'Calcium, Vitamin D, Magnesium',
+   picks:['Nutritional Press — Calcium Ca','Nutritional Press — Magnesium Mg','Carrot Milk','Avocado Shake']}
 ];
 function _vitByKey(k){ for(var i=0;i<VITS.length;i++){ if(VITS[i].k===k) return VITS[i]; } return null; }
-function _focusByKey(k){ for(var i=0;i<FOCUSES.length;i++){ if(FOCUSES[i].k===k) return FOCUSES[i]; } return FOCUSES[3]; }
-function _curGender(){ var el=document.getElementById('prog-gender'); return el?el.value:'female'; }
 function _progKey(){ return 'fruicey_progress_' + (currentUser ? np(currentUser.phone) : 'guest'); }
 function _progData(){ try{ return JSON.parse(localStorage.getItem(_progKey())||'{}') || {}; }catch(e){ return {}; } }
 function loadProgress(){
   if(!document.getElementById('prog-vit-chips')) return;
   var d = _progData();
-  var set=function(id,v){ var el=document.getElementById(id); if(el && v!=null && v!=='') el.value=v; };
-  set('prog-gender', d.gender||'female');
   _focus = d.focus || 'general';
-  _progLog = Array.isArray(d.log) ? d.log : [];
   _vitLog = (d.vlog && typeof d.vlog==='object') ? d.vlog : {};
-  renderWeightLog();
   renderFocusChips();
   renderVitToday();
   renderVitChart();
 }
 function saveProgress(){
   if(!currentUser) return;
-  var g=function(id){ var el=document.getElementById(id); return el?el.value:''; };
-  var d={ gender:g('prog-gender'), focus:_focus, log:_progLog, vlog:_vitLog };
+  var d={ focus:_focus, vlog:_vitLog };
   try{ localStorage.setItem(_progKey(), JSON.stringify(d)); }catch(e){}
-}
-function calcProgress(){
-  var ageEl=document.getElementById('prog-age'); if(!ageEl) return;
-  var age=parseFloat(ageEl.value), h=parseFloat(document.getElementById('prog-height').value), w=parseFloat(document.getElementById('prog-weight').value);
-  var gender=document.getElementById('prog-gender').value, activity=document.getElementById('prog-activity').value, goal=document.getElementById('prog-goal').value;
-  var box=document.getElementById('prog-targets');
-  if(!(age && h && w)){ if(box) box.style.display='none'; return; }
-  var pal={low:1.53,moderate:1.76,very:2.25}[activity]||1.53;
-  var tdee=_progHenryBMR(gender,age,h,w)*pal;
-  var adj={maintain:0,lose:-500,gain:350}[goal]||0;
-  var cal=Math.max(1200, Math.round((tdee+adj)/10)*10);
-  var ppk={maintain:1.6,lose:2.0,gain:1.8}[goal]||1.6;
-  document.getElementById('prog-cal').textContent = cal + ' kcal';
-  document.getElementById('prog-protein').textContent = Math.round(w*ppk) + ' g';
-  if(box) box.style.display='grid';
-}
-function addWeightEntry(){
-  var el=document.getElementById('prog-wl-input'); var w=parseFloat(el.value);
-  if(!w || w<=0){ showToast('Enter a weight'); return; }
-  var t=new Date(); var d=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
-  _progLog = _progLog.filter(function(e){ return e.d!==d; });   // one entry per day
-  _progLog.push({d:d, w:w});
-  _progLog.sort(function(a,b){ return a.d<b.d?-1:1; });
-  el.value='';
-  var wf=document.getElementById('prog-weight'); if(wf){ wf.value=w; }   // keep current weight in sync
-  saveProgress(); renderWeightLog();
-}
-function removeWeightEntry(d){
-  _progLog = _progLog.filter(function(e){ return e.d!==d; });
-  saveProgress(); renderWeightLog();
-}
-function renderWeightLog(){
-  var list=document.getElementById('prog-wl-list'), spark=document.getElementById('prog-spark');
-  if(!list) return;
-  if(!_progLog.length){ list.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">No entries yet — add your weight to start tracking.</div>'; if(spark) spark.innerHTML=''; return; }
-  if(spark){
-    var pts=_progLog.slice(-12);
-    if(pts.length>=2){
-      var ws=pts.map(function(e){return e.w;}), mn=Math.min.apply(null,ws), mx=Math.max.apply(null,ws), rng=(mx-mn)||1, W=280, H=44, pad=5, step=(W-pad*2)/(pts.length-1);
-      var dpath=pts.map(function(e,i){ var x=pad+i*step, y=H-pad-((e.w-mn)/rng)*(H-pad*2); return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1); }).join(' ');
-      spark.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="44" preserveAspectRatio="none"><path d="'+dpath+'" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
-    } else { spark.innerHTML=''; }
-  }
-  list.innerHTML = _progLog.slice().reverse().map(function(e,i,arr){
-    var prev=arr[i+1], delta='';
-    if(prev){ var dv=Math.round((e.w-prev.w)*10)/10, col=dv>0?'#e67e22':(dv<0?'#2e9e5b':'#aaa'), sign=dv>0?'+':''; delta='<span class="delta" style="color:'+col+'">'+sign+dv+'</span>'; }
-    return '<div class="prog-wl-row"><span class="d">'+e.d+'</span><span><span class="w">'+e.w+' kg</span>'+delta+'<button class="x" onclick="removeWeightEntry(\''+e.d+'\')" aria-label="Remove">&times;</button></span></div>';
-  }).join('');
 }
 function _todayStr(){ var t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
 function _vitName(k){ for(var i=0;i<VITS.length;i++){ if(VITS[i].k===k) return VITS[i].name; } return k; }
-// Tap a nutrient on/off for today.
+// Tap a wellness area on/off for today.
 function toggleVit(k){
   if(!currentUser){ openLogin(); return; }
   var d=_todayStr();
@@ -7937,38 +7871,48 @@ function setVitRange(n){
   document.querySelectorAll('#prog-vit-range .prog-range-btn').forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.r,10)===n); });
   renderVitChart();
 }
-// Wellness focus chips (immunity / energy / detox / general).
+// Focus chips: each wellness area + "General". Shows Fruicey product picks for the chosen focus.
 function renderFocusChips(){
-  var wrap=document.getElementById('prog-focus-chips'), note=document.getElementById('prog-focus-note');
+  var wrap=document.getElementById('prog-focus-chips'), rec=document.getElementById('prog-focus-rec');
   if(!wrap) return;
-  wrap.innerHTML=FOCUSES.map(function(f){
-    return '<button type="button" class="prog-focus-chip'+(f.k===_focus?' on':'')+'" onclick="selectFocus(\''+f.k+'\')">'+f.name+'</button>';
-  }).join('');
-  if(note) note.textContent=_focusByKey(_focus).note;
+  var chips=VITS.map(function(v){
+    return '<button type="button" class="prog-focus-chip'+(v.k===_focus?' on':'')+'" onclick="selectFocus(\''+v.k+'\')">'+v.name+'</button>';
+  });
+  chips.push('<button type="button" class="prog-focus-chip'+('general'===_focus?' on':'')+'" onclick="selectFocus(\'general\')">General</button>');
+  wrap.innerHTML=chips.join('');
+  if(!rec) return;
+  if(_focus==='general'){
+    rec.className='prog-focus-rec show';
+    rec.innerHTML='<h6>A balanced mix across every area</h6>Explore each Fruicey Press range &mdash; Immunity, Nutritional, Longevity &amp; Wellness &mdash; plus fresh juices, smoothies and superfood bowls.';
+  } else {
+    var v=_vitByKey(_focus); if(!v){ rec.className='prog-focus-rec'; return; }
+    rec.className='prog-focus-rec show';
+    rec.innerHTML='<h6>For '+v.name+': '+v.fn+'</h6><div style="color:var(--text3)">Key nutrients: '+v.nut+'</div>'
+      +'<div class="rec-picks">'+v.picks.map(function(p){ return '<span class="rec-pick">'+p+'</span>'; }).join('')+'</div>';
+  }
 }
 function selectFocus(k){ _focus=k; saveProgress(); renderFocusChips(); renderVitToday(); }
-function onVitProfileChange(){ renderVitToday(); hideVitInfo(); }
-// Chips for today's intake — tappable toggle + info button + recommended ring for the chosen focus.
+// Chips for today — tappable toggle + info button; chips in the chosen focus get a highlight ring.
 function renderVitToday(){
   var wrap=document.getElementById('prog-vit-chips'); if(!wrap) return;
-  var today=_vitLog[_todayStr()]||[], g=_curGender(), rec=_focusByKey(_focus).vits;
+  var today=_vitLog[_todayStr()]||[];
   wrap.innerHTML=VITS.map(function(v){
-    var on=today.indexOf(v.k)>=0, isRec=rec.indexOf(v.k)>=0;
+    var on=today.indexOf(v.k)>=0, isRec=(v.k===_focus);
     var style=on?('background:'+v.col+';'):'';
     return '<div class="prog-vit-chip'+(on?' on':'')+(isRec?' rec':'')+'" style="'+style+'">'
-      +'<span class="vit-main" onclick="toggleVit(\''+v.k+'\')"><span class="dot" style="background:'+v.col+'"></span>'+v.name+' <em>'+v.amt(g)+'</em></span>'
+      +'<span class="vit-main" onclick="toggleVit(\''+v.k+'\')"><span class="dot" style="background:'+v.col+'"></span>'+v.name+'</span>'
       +'<button type="button" class="vit-i" onclick="showVitInfo(\''+v.k+'\')" aria-label="About '+v.name+'"><i class="ti ti-info-circle"></i></button>'
       +'</div>';
   }).join('');
 }
-// Education card for one nutrient.
+// Education card for one wellness area — what it supports, key nutrients, and Fruicey picks.
 function showVitInfo(k){
   var v=_vitByKey(k), box=document.getElementById('prog-vit-info'); if(!v||!box) return;
   box.innerHTML='<button type="button" class="vi-close" onclick="hideVitInfo()" aria-label="Close">&times;</button>'
-    +'<h5><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+v.col+';margin-right:6px"></span>'+v.name+' — '+v.tag+'</h5>'
-    +v.fn+(v.detail?(' '+v.detail):'')
-    +'<br><span style="color:var(--text3)">Fruicey sources: '+v.src+'</span>'
-    +'<span class="vi-amt">HPB daily need (adult): '+v.amt(_curGender())+'</span>';
+    +'<h5><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+v.col+';margin-right:6px"></span>'+v.name+'</h5>'
+    +v.fn
+    +'<br><span style="color:var(--text3)">Key nutrients: '+v.nut+'</span>'
+    +'<span class="vi-amt">Fruicey picks: '+v.picks.join(' · ')+'</span>';
   box.style.display='block';
 }
 function hideVitInfo(){ var b=document.getElementById('prog-vit-info'); if(b) b.style.display='none'; }
@@ -7988,14 +7932,14 @@ function renderVitChart(){
   var n=_vitRange, days=_vitWindow(n);
   var anyDays=days.filter(function(ds){ return Array.isArray(_vitLog[ds]) && _vitLog[ds].length; }).length;
   if(!anyDays){
-    wrap.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">Nothing logged yet &mdash; tap the nutrients you had today to start tracking.</div>';
+    wrap.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">Nothing logged yet &mdash; tap the areas you nourished today to start tracking.</div>';
     if(sum) sum.innerHTML=''; return;
   }
   var counts={}; VITS.forEach(function(v){ counts[v.k]=0; });
   days.forEach(function(ds){ (_vitLog[ds]||[]).forEach(function(k){ if(counts[k]!=null) counts[k]++; }); });
   wrap.innerHTML=VITS.map(function(v){
     var c=counts[v.k], pct=Math.round(c/n*100);
-    return '<div class="prog-vit-row"><div class="lbl">'+v.name+'<small>'+v.tag+'</small></div>'
+    return '<div class="prog-vit-row"><div class="lbl">'+v.name+'</div>'
       +'<div class="prog-vit-track"><div class="prog-vit-fill" style="width:'+pct+'%;background:'+v.col+'"></div></div>'
       +'<div class="pct">'+pct+'%</div></div>';
   }).join('');
@@ -8004,8 +7948,8 @@ function renderVitChart(){
   var top=arr.slice().sort(function(a,b){ return b.c-a.c; })[0];
   var low=arr.slice().sort(function(a,b){ return a.c-b.c; })[0];
   var html='<span>Tracked <b>'+anyDays+'</b> / '+n+' days</span>';
-  if(top.c>0) html+='<span>Strongest: <b>'+top.v.tag+'</b> ('+top.c+'/'+n+')</span>';
-  if(low.c<top.c) html+='<span>Lowest: <b>'+low.v.tag+'</b> ('+low.c+'/'+n+')</span>';
+  if(top.c>0) html+='<span>Strongest: <b>'+top.v.name+'</b> ('+top.c+'/'+n+')</span>';
+  if(low.c<top.c) html+='<span>Lowest: <b>'+low.v.name+'</b> ('+low.c+'/'+n+')</span>';
   if(sum) sum.innerHTML=html;
 }
 function _loadJsPDF(cb){
@@ -8033,12 +7977,10 @@ function _buildProgressPDF(){
   doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
   doc.text('Member: '+name, m, y); doc.text('Date: '+new Date().toLocaleDateString('en-SG'), W-m, y, {align:'right'}); y+=28;
 
-  var focusMap={immunity:'Immunity',energy:'Energy',detox:'Detox & Skin',general:'General wellness'};
-  var cap=function(s){ s=s||''; return s.charAt(0).toUpperCase()+s.slice(1); };
+  var fv=_vitByKey(d.focus);
   doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Your Focus', m, y); y+=18;
   doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
-  doc.text('Wellness focus:', m, y); doc.text(focusMap[d.focus]||'General wellness', m+130, y); y+=16;
-  doc.text('Profile:', m, y); doc.text(d.gender?cap(d.gender)+' (adult)':'Adult', m+130, y); y+=24;
+  doc.text('Wellness focus:', m, y); doc.text(fv?fv.name:'General wellness', m+130, y); y+=24;
 
   doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Daily Record (last 7 days)', m, y); y+=18;
   doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
@@ -8047,39 +7989,19 @@ function _buildProgressPDF(){
     days.forEach(function(ds){ (_vitLog[ds]||[]).forEach(function(k){ if(counts[k]!=null) counts[k]++; }); });
     VITS.forEach(function(v){
       if(y>780){ doc.addPage(); y=58; }
-      doc.text(v.name+' ('+v.tag+')', m, y); doc.text(counts[v.k]+' / 7 days', m+240, y); y+=16;
+      doc.text(v.name, m, y); doc.text(counts[v.k]+' / 7 days', m+240, y); y+=16;
     });
   })();
-  y+=16;
-
-  if(y>700){ doc.addPage(); y=58; }
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Weight Log', m, y); y+=18;
-  doc.setFont('helvetica','normal'); doc.setFontSize(11);
-  if(!_progLog.length){ doc.setTextColor(60,60,60); doc.text('No entries yet.', m, y); y+=16; }
-  else {
-    doc.setTextColor(130,130,130);
-    doc.text('Date', m, y); doc.text('Weight', m+170, y); doc.text('Change', m+280, y); y+=6;
-    doc.setDrawColor(220,220,220); doc.setLineWidth(.5); doc.line(m, y, W-m, y); y+=15;
-    doc.setTextColor(60,60,60);
-    var prev=null;
-    _progLog.forEach(function(e){
-      if(y>780){ doc.addPage(); y=58; }
-      var delta = prev!=null ? Math.round((e.w-prev)*10)/10 : null;
-      var ds = delta==null ? '—' : ((delta>0?'+':'')+delta+' kg');
-      doc.text(String(e.d), m, y); doc.text(e.w+' kg', m+170, y); doc.text(ds, m+280, y);
-      prev=e.w; y+=16;
-    });
-  }
   y+=20;
 
   if(y>680){ doc.addPage(); y=58; }
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Vitamins & Nutrients Log', m, y); y+=18;
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Wellness Log', m, y); y+=18;
   doc.setFont('helvetica','normal'); doc.setFontSize(11);
   var vdates=Object.keys(_vitLog).filter(function(k){ return Array.isArray(_vitLog[k]) && _vitLog[k].length; }).sort();
   if(!vdates.length){ doc.setTextColor(60,60,60); doc.text('No entries yet.', m, y); y+=16; }
   else {
     doc.setTextColor(130,130,130);
-    doc.text('Date', m, y); doc.text('Nutrients logged', m+120, y); y+=6;
+    doc.text('Date', m, y); doc.text('Areas nourished', m+120, y); y+=6;
     doc.setDrawColor(220,220,220); doc.setLineWidth(.5); doc.line(m, y, W-m, y); y+=15;
     doc.setTextColor(60,60,60);
     vdates.forEach(function(ds){
@@ -8093,7 +8015,7 @@ function _buildProgressPDF(){
   y+=24;
   if(y>720){ doc.addPage(); y=58; }
   doc.setFontSize(9); doc.setTextColor(140,140,140);
-  var disc='Daily vitamin needs follow Singapore HPB Recommended Dietary Allowances for adults; individual needs vary. This is a healthy-living guide, not medical advice.';
+  var disc='Product picks are general wellness suggestions based on ingredients, not medical advice. A healthy-living guide only.';
   var lines=doc.splitTextToSize(disc, W-m*2);
   doc.text(lines, m, y); y+=lines.length*12+14;
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(28,77,58);

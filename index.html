@@ -1076,6 +1076,9 @@ button.cal-day:active{transform:scale(.94)}
 .qa-msg b{font-family:var(--font);font-weight:400}
 .prog-vit-list2{display:flex;flex-direction:column;margin-top:2px}
 .nut-group{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:16px 0 4px}
+.nut-reset{border:1px solid var(--border);background:#fff;border-radius:999px;padding:4px 11px;font-family:var(--body);font-size:11px;color:var(--text3);cursor:pointer;display:inline-flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent}
+.nut-reset:active{transform:scale(.96)}
+.nut-reset .ti{font-size:13px}
 .nut-head-l{display:flex;flex-direction:column;gap:1px;min-width:0}
 .nut-desc{font-size:10.5px;color:var(--text3);font-family:var(--body);line-height:1.25}
 .nut-row{border-bottom:1px solid #f2f2f2;padding:9px 2px}
@@ -3260,7 +3263,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
 
     <div class="prog-wl">
-      <div class="prog-wl-head"><span>Vitamins this week</span></div>
+      <div class="prog-wl-head"><span>Vitamins this week</span><button type="button" class="nut-reset" onclick="resetVitToday()"><i class="ti ti-refresh"></i> Reset today</button></div>
       <div class="prog-vit-sub">Log how much of each you had today &mdash; tap a Fruicey pick or common food to auto-fill, or type an amount. Daily needs are adult guidelines; dots are your last 7 days (filled = target met). &dagger; general reference, not an HPB figure.</div>
       <div id="prog-quickadd" class="prog-quickadd"></div>
       <div id="prog-vit-list" class="prog-vit-list2"></div>
@@ -7996,6 +7999,15 @@ function clearVitToday(k){
   var d=_todayStr(), day=_dayObj(d);
   if(day[k]!=null){ delete day[k]; if(Object.keys(day).length) _vitLog[d]=day; else delete _vitLog[d]; saveProgress(); renderVitWeek(); }
 }
+// Clear everything logged today in one tap (earlier days are kept).
+function resetVitToday(){
+  var d=_todayStr();
+  if(!_vitLog[d] || !Object.keys(_dayObj(d)).length){ showToast('Nothing logged today yet'); return; }
+  if(!confirm('Clear everything you logged today? Earlier days are kept.')) return;
+  delete _vitLog[d]; saveProgress(); renderVitWeek();
+  var msg=document.getElementById('qa-msg'); if(msg) msg.classList.remove('show');
+  showToast('Today’s log cleared');
+}
 // Add a whole nutrient map (a product or food serving) to today's totals at once.
 function quickAddNutr(nutr, label){
   if(!currentUser){ openLogin(); return; }
@@ -8037,8 +8049,8 @@ function renderQuickAdd(){
   var foodOpts='<option value="">+ Add a common food…</option>'+FOODS.map(function(f,i){ return '<option value="'+i+'">'+f.name+'</option>'; }).join('');
   el.innerHTML='<div class="qa-head">Quick add &mdash; auto-fills today’s amounts</div>'
     +'<div class="qa-selects">'
-      +(_fqList.length?'<select class="qa-sel" onchange="if(this.value!==\'\'){quickAddFruicey(+this.value);this.value=\'\';}">'+fruOpts+'</select>':'')
-      +'<select class="qa-sel" onchange="if(this.value!==\'\'){quickAddFood(+this.value);this.value=\'\';}">'+foodOpts+'</select>'
+      +(_fqList.length?'<select class="qa-sel" onchange="if(this.value!==\'\'){quickAddFruicey(+this.value);this.value=\'\';this.blur();}">'+fruOpts+'</select>':'')
+      +'<select class="qa-sel" onchange="if(this.value!==\'\'){quickAddFood(+this.value);this.value=\'\';this.blur();}">'+foodOpts+'</select>'
     +'</div>'
     +'<div id="qa-msg" class="qa-msg"></div>';
 }

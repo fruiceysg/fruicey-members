@@ -1066,8 +1066,18 @@ button.cal-day:active{transform:scale(.94)}
 .prog-vit-info .vi-close{position:absolute;top:7px;right:9px;border:none;background:none;font-size:17px;color:var(--text3);cursor:pointer;line-height:1}
 .prog-vit-record-head{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:14px 0 2px}
 .prog-vit-chart{margin:4px 0 2px}
+.prog-quickadd{margin:2px 0 6px;background:var(--green-light);border-radius:12px;padding:11px 12px}
+.qa-head{font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px}
+.qa-row{display:flex;align-items:flex-start;gap:8px;margin-top:8px}
+.qa-lbl{flex:none;width:72px;font-size:10.5px;color:var(--text3);font-family:var(--body);padding-top:5px}
+.qa-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.qa-chip{background:#fff;border:1px solid rgba(46,158,91,.3);border-radius:999px;padding:5px 10px;font-size:11.5px;color:var(--text2);font-family:var(--body);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.qa-chip.fru{border-color:var(--green);color:var(--green-dark)}
+.qa-chip:active{transform:scale(.96)}
 .prog-vit-list2{display:flex;flex-direction:column;margin-top:2px}
 .nut-group{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:16px 0 4px}
+.nut-head-l{display:flex;flex-direction:column;gap:1px;min-width:0}
+.nut-desc{font-size:10.5px;color:var(--text3);font-family:var(--body);line-height:1.25}
 .nut-row{border-bottom:1px solid #f2f2f2;padding:9px 2px}
 .nut-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .nut-name{font-size:13px;font-family:var(--font);color:var(--text)}
@@ -3251,7 +3261,8 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 
     <div class="prog-wl">
       <div class="prog-wl-head"><span>Vitamins this week</span></div>
-      <div class="prog-vit-sub">Log how much of each you had today &mdash; from a Fruicey drink or any food. The daily need beside each is the adult guideline; dots are your last 7 days (filled = target met). &dagger; general reference, not an HPB figure.</div>
+      <div class="prog-vit-sub">Log how much of each you had today &mdash; tap a Fruicey pick or common food to auto-fill, or type an amount. Daily needs are adult guidelines; dots are your last 7 days (filled = target met). &dagger; general reference, not an HPB figure.</div>
+      <div id="prog-quickadd" class="prog-quickadd"></div>
       <div id="prog-vit-list" class="prog-vit-list2"></div>
     </div>
 
@@ -7794,7 +7805,7 @@ function renderDexBody(tried){
 function _resetAccModalBox(m){ var b=m&&m.querySelector('.modal-box'); if(b){ b.style.transform=''; b.scrollTop=0; } }
 function openWalletModal(){ var m=document.getElementById('wallet-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeWalletModal(){ var m=document.getElementById('wallet-modal'); if(m) m.classList.remove('open'); }
-function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } renderFocusChips(); renderVitWeek(); }
+function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } renderFocusChips(); renderQuickAdd(); renderVitWeek(); }
 function closeNutriModal(){ var m=document.getElementById('nutri-modal'); if(m) m.classList.remove('open'); }
 function openAccountModal(){ var m=document.getElementById('account-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeAccountModal(){ var m=document.getElementById('account-modal'); if(m) m.classList.remove('open'); }
@@ -7833,21 +7844,45 @@ var NUTS = {
 // Nutrients in the weekly record. rda = numeric daily target (in `unit`); label = how it's shown.
 // hpb:true → figure from Singapore HPB; hpb:false → general adult reference (marked with †).
 var VITAMINS = [
-  {k:'A',  name:'Vitamin A',   unit:'mcg', rda:750,  label:'750 mcg',    hpb:true,  group:'vitamin', col:'#e056a0'},
-  {k:'B1', name:'Vitamin B1',  unit:'mg',  rda:1.1,  label:'1.1 mg',     hpb:true,  group:'vitamin', col:'#e67e22'},
-  {k:'B2', name:'Vitamin B2',  unit:'mg',  rda:1.3,  label:'1.3 mg',     hpb:true,  group:'vitamin', col:'#e8893a'},
-  {k:'B3', name:'Vitamin B3',  unit:'mg',  rda:16,   label:'16 mg',      hpb:true,  group:'vitamin', col:'#d98324'},
-  {k:'B6', name:'Vitamin B6',  unit:'mg',  rda:1.3,  label:'1.3 mg',     hpb:true,  group:'vitamin', col:'#c77d2e'},
-  {k:'B9', name:'Folate (B9)', unit:'mcg', rda:400,  label:'400 mcg',    hpb:true,  group:'vitamin', col:'#2e9e5b'},
-  {k:'B12',name:'Vitamin B12', unit:'mcg', rda:2.4,  label:'2.4 mcg',    hpb:true,  group:'vitamin', col:'#b5651d'},
-  {k:'C',  name:'Vitamin C',   unit:'mg',  rda:90,   label:'85–105 mg', hpb:true, group:'vitamin', col:'#f5a623'},
-  {k:'D',  name:'Vitamin D',   unit:'mcg', rda:2.5,  label:'2.5 mcg',    hpb:true,  group:'vitamin', col:'#8e7cc3'},
-  {k:'CA', name:'Calcium',     unit:'mg',  rda:800,  label:'800 mg',     hpb:true,  group:'mineral', col:'#6d8b3c'},
-  {k:'FE', name:'Iron',        unit:'mg',  rda:8,    label:'8–18 mg', hpb:true, group:'mineral', col:'#c0392b'},
-  {k:'K',  name:'Potassium',   unit:'mg',  rda:3500, label:'3500 mg',    hpb:false, group:'mineral', col:'#b5651d'},
-  {k:'MG', name:'Magnesium',   unit:'mg',  rda:330,  label:'330 mg',     hpb:false, group:'mineral', col:'#3b82a0'},
-  {k:'ZN', name:'Zinc',        unit:'mg',  rda:8,    label:'8 mg',       hpb:false, group:'mineral', col:'#7a8b99'},
-  {k:'FB', name:'Dietary Fibre',unit:'g',  rda:25,   label:'25 g',       hpb:false, group:'mineral', col:'#2ec5a8'}
+  {k:'A',  name:'Vitamin A',   unit:'mcg', rda:750,  label:'750 mcg',    hpb:true,  group:'vitamin', col:'#e056a0', desc:'Skin, eyes &amp; immune defence'},
+  {k:'B1', name:'Vitamin B1',  unit:'mg',  rda:1.1,  label:'1.1 mg',     hpb:true,  group:'vitamin', col:'#e67e22', desc:'Turns carbs into energy'},
+  {k:'B2', name:'Vitamin B2',  unit:'mg',  rda:1.3,  label:'1.3 mg',     hpb:true,  group:'vitamin', col:'#e8893a', desc:'Energy release &amp; healthy skin'},
+  {k:'B3', name:'Vitamin B3',  unit:'mg',  rda:16,   label:'16 mg',      hpb:true,  group:'vitamin', col:'#d98324', desc:'Energy metabolism &amp; nerves'},
+  {k:'B6', name:'Vitamin B6',  unit:'mg',  rda:1.3,  label:'1.3 mg',     hpb:true,  group:'vitamin', col:'#c77d2e', desc:'Protein use, brain &amp; mood'},
+  {k:'B9', name:'Folate (B9)', unit:'mcg', rda:400,  label:'400 mcg',    hpb:true,  group:'vitamin', col:'#2e9e5b', desc:'Cell growth &amp; healthy blood'},
+  {k:'B12',name:'Vitamin B12', unit:'mcg', rda:2.4,  label:'2.4 mcg',    hpb:true,  group:'vitamin', col:'#b5651d', desc:'Nerves &amp; red blood cells'},
+  {k:'C',  name:'Vitamin C',   unit:'mg',  rda:90,   label:'85–105 mg', hpb:true, group:'vitamin', col:'#f5a623', desc:'Immunity, collagen &amp; antioxidant'},
+  {k:'D',  name:'Vitamin D',   unit:'mcg', rda:2.5,  label:'2.5 mcg',    hpb:true,  group:'vitamin', col:'#8e7cc3', desc:'Bone strength, mood &amp; immunity'},
+  {k:'CA', name:'Calcium',     unit:'mg',  rda:800,  label:'800 mg',     hpb:true,  group:'mineral', col:'#6d8b3c', desc:'Strong bones, teeth &amp; muscles'},
+  {k:'FE', name:'Iron',        unit:'mg',  rda:8,    label:'8–18 mg', hpb:true, group:'mineral', col:'#c0392b', desc:'Carries oxygen, fights fatigue'},
+  {k:'K',  name:'Potassium',   unit:'mg',  rda:3500, label:'3500 mg',    hpb:false, group:'mineral', col:'#b5651d', desc:'Fluid balance &amp; blood pressure'},
+  {k:'MG', name:'Magnesium',   unit:'mg',  rda:330,  label:'330 mg',     hpb:false, group:'mineral', col:'#3b82a0', desc:'Muscle, nerve &amp; energy function'},
+  {k:'ZN', name:'Zinc',        unit:'mg',  rda:8,    label:'8 mg',       hpb:false, group:'mineral', col:'#7a8b99', desc:'Immune defence &amp; healing'},
+  {k:'FB', name:'Dietary Fibre',unit:'g',  rda:25,   label:'25 g',       hpb:false, group:'mineral', col:'#2ec5a8', desc:'Digestion &amp; gut health'}
+];
+// Starter nutrient figures per Fruicey product (APPROX — editable; a Firestore `nutrients` field on a product overrides these).
+var FRUICEY_NUTRI = {
+  np01:{A:750}, np02:{B9:400}, np03:{C:90}, np04:{FB:8}, np05:{FE:8},
+  np06:{K:1000}, np07:{CA:300}, np08:{MG:120},
+  ju13:{C:60}, ju14:{C:70,A:40}, ju19:{A:400,C:25}, ju10:{A:300,K:450},
+  sb08:{C:90,A:50}, sb09:{C:40}, ip06:{C:60,A:30}
+};
+// Common foods (approx per typical serving) — from everyday HPB-promoted choices.
+var FOODS = [
+  {name:'Orange',        nutr:{C:70,B9:40}},
+  {name:'Banana',        nutr:{K:420,B6:0.4}},
+  {name:'Kiwi',          nutr:{C:65,K:200}},
+  {name:'Carrot',        nutr:{A:510}},
+  {name:'Spinach (ckd)', nutr:{FE:6,B9:260,A:470,MG:80}},
+  {name:'Broccoli',      nutr:{C:80,B9:100,FB:2.4}},
+  {name:'Cup of milk',   nutr:{CA:300,D:2.5,B12:1.2}},
+  {name:'Egg',           nutr:{B12:0.6,D:1,A:80}},
+  {name:'Salmon (100g)', nutr:{D:13,B12:3}},
+  {name:'Tofu (100g)',   nutr:{CA:200,FE:2,MG:58}},
+  {name:'Wholemeal bread', nutr:{FB:4,B3:3}},
+  {name:'Almonds (28g)', nutr:{MG:76,ZN:0.9,FB:3.5}},
+  {name:'Chicken (100g)',nutr:{B3:12,B6:0.5,ZN:1}},
+  {name:'Yogurt (cup)',  nutr:{CA:250,B12:1.3}}
 ];
 function _vitaminByKey(k){ for(var i=0;i<VITAMINS.length;i++){ if(VITAMINS[i].k===k) return VITAMINS[i]; } return null; }
 // Each focus: its daily key nutrients (nuts) + recommended Fruicey products (real ids).
@@ -7893,6 +7928,7 @@ function loadProgress(){
   _focus = d.focus || 'general';
   _vitLog = (d.vlog && typeof d.vlog==='object') ? d.vlog : {};
   renderFocusChips();
+  renderQuickAdd();
   renderVitWeek();
 }
 function saveProgress(){
@@ -7919,6 +7955,38 @@ function addVit(k){
 function clearVitToday(k){
   var d=_todayStr(), day=_dayObj(d);
   if(day[k]!=null){ delete day[k]; if(Object.keys(day).length) _vitLog[d]=day; else delete _vitLog[d]; saveProgress(); renderVitWeek(); }
+}
+// Add a whole nutrient map (a product or food serving) to today's totals at once.
+function quickAddNutr(nutr, label){
+  if(!currentUser){ openLogin(); return; }
+  var d=_todayStr(), day=_dayObj(d), added=[];
+  Object.keys(nutr||{}).forEach(function(k){
+    if(_vitaminByKey(k)){ day[k]=Math.round(((day[k]||0)+nutr[k])*100)/100; added.push(_vitaminByKey(k).name); }
+  });
+  if(!added.length){ showToast('No nutrient data for '+label); return; }
+  _vitLog[d]=day; saveProgress(); renderVitWeek();
+  showToast('Added '+label+' → '+added.slice(0,3).join(', ')+(added.length>3?'…':''));
+}
+// Fruicey products that carry nutrient figures AND are on the current menu (sold).
+var _fqList=[];
+function _fruiceyNutriList(){
+  var out=[], seen={};
+  Object.keys(FRUICEY_NUTRI).forEach(function(id){ if(PRODUCT_MAP[id]){ out.push({name:PRODUCT_MAP[id].name, nutr:FRUICEY_NUTRI[id]}); seen[id]=1; } });
+  Object.keys(PRODUCT_MAP).forEach(function(id){ var p=PRODUCT_MAP[id]; if(p && p.nutrients && !seen[id]) out.push({name:p.name, nutr:p.nutrients}); });
+  return out;
+}
+function quickAddFruicey(i){ var p=_fqList[i]; if(p) quickAddNutr(p.nutr, p.name); }
+function quickAddFood(i){ var f=FOODS[i]; if(f) quickAddNutr(f.nutr, f.name); }
+function renderQuickAdd(){
+  var el=document.getElementById('prog-quickadd'); if(!el) return;
+  _fqList=_fruiceyNutriList();
+  var fru = _fqList.length ? ('<div class="qa-row"><span class="qa-lbl">Fruicey picks</span><div class="qa-chips">'
+      + _fqList.map(function(p,i){ return '<button type="button" class="qa-chip fru" onclick="quickAddFruicey('+i+')">+ '+p.name+'</button>'; }).join('')
+      + '</div></div>') : '';
+  var food = '<div class="qa-row"><span class="qa-lbl">Common foods</span><div class="qa-chips">'
+      + FOODS.map(function(f,i){ return '<button type="button" class="qa-chip" onclick="quickAddFood('+i+')">+ '+f.name+'</button>'; }).join('')
+      + '</div></div>';
+  el.innerHTML='<div class="qa-head">Quick add &mdash; fills today’s amounts automatically (approximate)</div>'+fru+food;
 }
 // Focus chips (single-select) — a lens for Fruicey product picks only; it does not change the record below.
 function renderFocusChips(){
@@ -7970,7 +8038,7 @@ function renderVitWeek(){
       return '<span class="vwk-dot'+(ds===today?' today':'')+'" style="'+st+'"></span>';
     }).join('');
     html+='<div class="nut-row">'
-      +'<div class="nut-top"><span class="nut-name">'+v.name+'</span><span class="nut-target">'+v.label+(v.hpb?'':' &dagger;')+' / day</span></div>'
+      +'<div class="nut-top"><span class="nut-head-l"><span class="nut-name">'+v.name+'</span><span class="nut-desc">'+(v.desc||'')+'</span></span><span class="nut-target">'+v.label+(v.hpb?'':' &dagger;')+' / day</span></div>'
       +'<div class="nut-mid">'
         +'<input id="nut-inp-'+v.k+'" class="nut-inp" type="number" inputmode="decimal" min="0" placeholder="add '+v.unit+'" onkeydown="if(event.key===\'Enter\')addVit(\''+v.k+'\')">'
         +'<button type="button" class="nut-add" onclick="addVit(\''+v.k+'\')">Add</button>'

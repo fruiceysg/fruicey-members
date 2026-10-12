@@ -231,9 +231,9 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div style="margin-bottom:12px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
             <i class="ti ti-user-circle" style="color:#ccc;font-size:20px;flex-shrink:0"></i>
-            <div style="flex:1;padding:10px 12px;background:#f9f9f9;border:1.5px solid #e0e0e0;border-radius:8px;font-size:18px;font-weight:600;letter-spacing:2px;min-height:42px">
-              <span id="member-phone-val"></span><span style="color:#ccc">|</span>
-            </div>
+            <input type="tel" id="member-phone-input" inputmode="numeric" autocomplete="off" placeholder="Type or tap contact…"
+              style="flex:1;min-width:0;padding:10px 12px;background:#f9f9f9;border:1.5px solid #e0e0e0;border-radius:8px;font-size:18px;font-weight:600;letter-spacing:2px;min-height:42px;outline:none;font-family:var(--font)"
+              oninput="onMemberPhoneInput(this.value)" onkeydown="if(event.key==='Enter')lookupMember()">
             <button class="mbtn mbtn-clear" id="clear-member-btn">Clear</button>
           </div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
@@ -273,7 +273,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <input type="date" id="rcpt-date-input"
             style="padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;font-family:var(--font)">
           <input type="text" id="rcpt-search-input" placeholder="Search by name, phone, or receipt no..."
-            oninput="renderReceiptsList(this.value)"
+            oninput="renderReceiptsList(this.value)" onkeydown="if(event.key==='Enter')renderReceiptsList(this.value)"
             style="flex:1;min-width:180px;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font)">
           <button onclick="renderReceiptsList(document.getElementById('rcpt-search-input').value)" style="padding:9px 16px;background:#8fcea1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--font)">Apply Filter</button>
           <button id="rcpt-alldates-btn" style="padding:9px 14px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:8px;cursor:pointer;font-size:12px;font-family:var(--font)">All dates</button>
@@ -379,7 +379,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Assign Member Phone</label>
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <input type="tel" id="edit-txn-member-phone" placeholder="e.g. 91234567"
-            style="flex:1;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font)">
+            style="flex:1;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;font-family:var(--font)"
+            onkeydown="if(event.key==='Enter')lookupEditMember()">
           <button onclick="lookupEditMember()" style="padding:9px 14px;background:#8fcea1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font)">Find</button>
         </div>
         <label style="display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px">Note</label>
@@ -561,7 +562,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <span style="font-size:20px;font-weight:700;color:#555">$</span>
           <input type="number" id="cash-tendered" placeholder="0.00" min="0" step="0.10"
             style="flex:1;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:20px;font-weight:700;outline:none;font-family:var(--font);text-align:right"
-            oninput="updateChange()">
+            oninput="updateChange()" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmCashTender();}">
         </div>
         <div style="background:#f0faf4;border-radius:10px;padding:14px;margin-bottom:16px;border:1px solid #c8e6c9">
           <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2072,7 +2073,7 @@ function selectFoundMember(member){
   currentMember=member;
   memberDiscount=0; // no tier discount from rewards pass
   memberPhoneVal = np(member.phone||'');
-  var pv=document.getElementById('member-phone-val'); if(pv) pv.textContent=memberPhoneVal;
+  var pv=document.getElementById('member-phone-input'); if(pv) pv.value=memberPhoneVal;
   var mp=document.getElementById('member-phone'); if(mp) mp.value=memberPhoneVal;
   var nr=document.getElementById('member-name-results'); if(nr){ nr.style.display='none'; nr.innerHTML=''; }
   showMemberDisplay(member);
@@ -2190,7 +2191,7 @@ function switchPosTab(tab){
 
 function clearMember(){
   memberPhoneVal='';
-  var e=document.getElementById('member-phone-val'); if(e) e.textContent='';
+  var e=document.getElementById('member-phone-input'); if(e) e.value='';
   var m=document.getElementById('member-phone'); if(m) m.value='';
   currentMember=null; memberDiscount=0; clearMemberDisplay();
   var h=document.getElementById('member-history'); if(h) h.style.display='none';
@@ -3005,7 +3006,7 @@ function closeReceipt(){
   currentMember=null; memberDiscount=0;
   memberPhoneVal='';
   var mp=document.getElementById('member-phone'); if(mp) mp.value='';
-  var mpv=document.getElementById('member-phone-val'); if(mpv) mpv.textContent='';
+  var mpv=document.getElementById('member-phone-input'); if(mpv) mpv.value='';
   clearMemberDisplay();
   document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('pay-active'));
   switchPosTab('menu');
@@ -3412,8 +3413,15 @@ function showToast(msg){
 // Numpad logic
 let memberPhoneVal = '';
 function numpadUpdate(){
-  document.getElementById('member-phone-val').textContent = memberPhoneVal;
-  document.getElementById('member-phone').value = memberPhoneVal;
+  var inp=document.getElementById('member-phone-input'); if(inp && inp.value!==memberPhoneVal) inp.value = memberPhoneVal;
+  var mp=document.getElementById('member-phone'); if(mp) mp.value = memberPhoneVal;
+}
+// Manual keyboard typing in the contact field — keep digits only, in sync with the numpad.
+function onMemberPhoneInput(v){
+  v = (v||'').replace(/[^0-9]/g,'').slice(0,12);
+  memberPhoneVal = v;
+  var inp=document.getElementById('member-phone-input'); if(inp && inp.value!==v) inp.value = v;
+  var mp=document.getElementById('member-phone'); if(mp) mp.value = v;
 }
 document.addEventListener('click', function(e){
   const nb = e.target.closest('.numpad-btn');

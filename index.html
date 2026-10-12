@@ -8022,15 +8022,24 @@ function _buildOrderReceiptPDF(data){
   var isPos = data.type==='pos';
   var items=[]; try{ items = typeof data.items==='string' ? JSON.parse(data.items) : (data.items||[]); }catch(e){}
   var total=parseFloat(data.total||0), disc=parseFloat(data.discount||0);
-  var est = 90 + items.length*9 + (disc>0?10:0) + 16;
-  var doc=new window.jspdf.jsPDF({unit:'mm',format:[80, Math.max(150, est)]});
+  var est = 140 + items.length*9 + (disc>0?10:0) + 16;
+  var doc=new window.jspdf.jsPDF({unit:'mm',format:[80, Math.max(175, est)]});
   var hasF=_registerFruiceyFonts(doc);
   var BODY=hasF?'Fruicey':'helvetica';
   var FT=function(b){ doc.setFont(BODY, b?'bold':'normal'); };   // words
   var FN=function(b){ doc.setFont('helvetica', b?'bold':'normal'); };   // numbers
   var y=10,lm=6,rm=74;
   var dash=function(){ doc.setLineDashPattern([1,1],0);doc.line(lm,y,rm,y);doc.setLineDashPattern([],0); };
-  FT(true);doc.setFontSize(13);doc.text('FRUICEY',40,y,{align:'center'});y+=6;
+  var rc=document.getElementById('order-receipt-content');
+  var _addImg=function(el,maxW){
+    if(!el || !el.naturalWidth) return 0;
+    var fmt=(el.src.indexOf('image/png')>-1)?'PNG':'JPEG';
+    var w=maxW, h=w*el.naturalHeight/el.naturalWidth;
+    try{ doc.addImage(el.src,fmt,40-w/2,y,w,h); return h; }catch(e){ return 0; }
+  };
+  var logoEl=rc?rc.querySelector('img[alt="Fruicey"]'):null;
+  var lh=_addImg(logoEl,30);
+  if(lh>0){ y+=lh+2; } else { FT(true);doc.setFontSize(13);doc.text('FRUICEY',40,y,{align:'center'});y+=6; }
   FT(false);doc.setFontSize(7.5);
   doc.text('68 Jalan Jurong Kechil #01-10',40,y,{align:'center'});y+=4;
   doc.text('Singapore 596180 | UEN: 53434968D | Tel: 8509 8095',40,y,{align:'center'});y+=4;
@@ -8063,8 +8072,14 @@ function _buildOrderReceiptPDF(data){
   FT(false);doc.text('Payment',lm,y);FT(false);doc.text(String(data.payment||''),rm,y,{align:'right'});y+=4;
   if(!isPos && data.status){ FT(false);doc.text('Status',lm,y);FT(false);doc.text(String(data.status),rm,y,{align:'right'});y+=4; }
   dash();y+=4;
-  FT(false);doc.text('Thank You For Visiting Fruicey!',40,y,{align:'center'});y+=4;
-  FT(true);doc.text('www.fruicey.sg',40,y,{align:'center'});
+  FT(false);doc.setFontSize(8);doc.text('Thank You For Visiting Fruicey!',40,y,{align:'center'});y+=4;
+  FT(true);doc.text('www.fruicey.sg',40,y,{align:'center'});y+=6;
+  var qrEl=rc?rc.querySelector('img[alt="QR"]'):null;
+  if(qrEl && qrEl.naturalWidth){
+    FT(false);doc.setFontSize(8);doc.text('Join Our Rewards Pass — Free!',40,y,{align:'center'});y+=4;
+    var qh=_addImg(qrEl,24); if(qh>0){ y+=qh+3; }
+    FT(false);doc.setFontSize(7);doc.text('Scan to sign up and earn stamps',40,y,{align:'center'});
+  }
   doc.save('Fruicey-'+(idVal||'receipt')+'.pdf');
   showToast('Your receipt PDF has been downloaded');
 }

@@ -7860,12 +7860,36 @@ var VITAMINS = [
   {k:'ZN', name:'Zinc',        unit:'mg',  rda:8,    label:'8 mg',       hpb:false, group:'mineral', col:'#7a8b99', desc:'Immune defence &amp; healing'},
   {k:'FB', name:'Dietary Fibre',unit:'g',  rda:25,   label:'25 g',       hpb:false, group:'mineral', col:'#2ec5a8', desc:'Digestion &amp; gut health'}
 ];
-// Starter nutrient figures per Fruicey product (APPROX — editable; a Firestore `nutrients` field on a product overrides these).
-var FRUICEY_NUTRI = {
-  np01:{A:750}, np02:{B9:400}, np03:{C:90}, np04:{FB:8}, np05:{FE:8},
-  np06:{K:1000}, np07:{CA:300}, np08:{MG:120},
-  ju13:{C:60}, ju14:{C:70,A:40}, ju19:{A:400,C:25}, ju10:{A:300,K:450},
-  sb08:{C:90,A:50}, sb09:{C:40}, ip06:{C:60,A:30}
+// Fruicey Press nutrient profiles (300ml). Levels are given as a share of the daily need and
+// converted to figures below; fibre (fb) and any explicit amounts are in grams. Antioxidants,
+// polyphenols, enzymes, beta-carotene, vitamin K/E etc. aren't tracked nutrients, so they're omitted.
+var _LV={low:0.15,mod:0.30,modhigh:0.45,high:0.60,vhigh:0.85,ext:1.10};
+var PRESS_SPEC = {
+  // Immunity Press
+  ip01:{n:{C:'high',A:'modhigh',B9:'mod',K:'mod',FE:'mod'}, fb:2.5},   // Energy
+  ip02:{n:{C:'high',K:'modhigh'},                           fb:2.5},   // Soothe
+  ip03:{n:{C:'high',A:'modhigh',K:'mod'},                   fb:2.5},   // Restore
+  ip04:{n:{C:'high',K:'modhigh'},                           fb:1.5},   // Calm
+  ip05:{n:{C:'vhigh',A:'modhigh'},                          fb:2.5},   // Cleanse
+  ip06:{n:{C:'vhigh',A:'modhigh',K:'mod'},                  fb:1.5},   // Defence
+  ip07:{n:{C:'vhigh',A:'modhigh',K:'high'},                 fb:2.5},   // Repair
+  ip08:{n:{C:'vhigh',A:'modhigh',K:'high'},                 fb:2.5},   // Regulate
+  // Nutritional Press
+  np01:{n:{C:'vhigh',A:'high',K:'modhigh'},                 fb:2.5},   // Vita A
+  np02:{n:{C:'vhigh',A:'modhigh',K:'mod'},                  fb:2.5},   // Vita B
+  np03:{n:{C:'vhigh',A:'mod',K:'mod'},                      fb:1.5},   // Vita C
+  np04:{n:{C:'vhigh',A:'mod',K:'high'},                     fb:3.5},   // Dietary Fibre
+  np05:{n:{C:'high',A:'modhigh',K:'high',FE:'high'},        fb:2.5},   // Iron (iron inferred from spinach/broccoli base)
+  np06:{n:{C:'vhigh',B6:'modhigh',K:'high'},               fb:2.5},   // Potassium
+  np07:{n:{CA:'high',MG:'high',K:'modhigh'},               fb:7},     // Calcium (calcium inferred from almond base)
+  np08:{n:{C:'mod',MG:'high',K:'high'},                    fb:4.5},   // Magnesium
+  // Longevity Press
+  lp01:{n:{C:'high',A:'mod',K:'mod'},                      fb:2.5},   // Neuro
+  lp02:{n:{C:'vhigh',A:'vhigh'},                           fb:2.5},   // Derma
+  lp03:{n:{C:'vhigh',K:'mod'},                             fb:2.5},   // Zen
+  lp04:{n:{C:'high',A:'mod'},                              fb:2.5},   // Oral
+  lp05:{n:{C:'vhigh',K:'mod'},                             fb:2.5},   // Cardio
+  lp06:{n:{A:'vhigh',C:'mod'},                             fb:2.5}    // Vision
 };
 // Common foods (approx per typical serving) — from everyday HPB-promoted choices.
 var FOODS = [
@@ -7885,6 +7909,21 @@ var FOODS = [
   {name:'Yogurt (cup)',  nutr:{CA:250,B12:1.3}}
 ];
 function _vitaminByKey(k){ for(var i=0;i<VITAMINS.length;i++){ if(VITAMINS[i].k===k) return VITAMINS[i]; } return null; }
+// Convert the press level-specs into numeric nutrient maps (amount = share of daily need).
+function _buildPressNutri(){
+  var out={};
+  Object.keys(PRESS_SPEC).forEach(function(id){
+    var s=PRESS_SPEC[id], m={};
+    Object.keys(s.n||{}).forEach(function(k){
+      var v=_vitaminByKey(k); if(!v) return;
+      m[k]=Math.round(v.rda*(_LV[s.n[k]]||0)*100)/100;
+    });
+    if(s.fb!=null) m.FB=s.fb;
+    out[id]=m;
+  });
+  return out;
+}
+var FRUICEY_NUTRI = _buildPressNutri();
 // Each focus: its daily key nutrients (nuts) + recommended Fruicey products (real ids).
 var VITS = [
   {k:'immunity', name:'Immunity', col:'#f5a623', fn:'Strengthens your defences and keeps you resilient.',
@@ -7970,9 +8009,10 @@ function quickAddNutr(nutr, label){
 // Fruicey products that carry nutrient figures AND are on the current menu (sold).
 var _fqList=[];
 function _fruiceyNutriList(){
-  var out=[], seen={};
-  Object.keys(FRUICEY_NUTRI).forEach(function(id){ if(PRODUCT_MAP[id]){ out.push({name:PRODUCT_MAP[id].name, nutr:FRUICEY_NUTRI[id]}); seen[id]=1; } });
-  Object.keys(PRODUCT_MAP).forEach(function(id){ var p=PRODUCT_MAP[id]; if(p && p.nutrients && !seen[id]) out.push({name:p.name, nutr:p.nutrients}); });
+  var out=[];
+  Object.keys(FRUICEY_NUTRI).forEach(function(id){
+    if(PRODUCT_MAP[id]){ var cat=(PRODUCT_MAP[id].category||'').replace(' Press',''); out.push({name:PRODUCT_MAP[id].name, cat:cat, nutr:FRUICEY_NUTRI[id]}); }
+  });
   return out;
 }
 function quickAddFruicey(i){ var p=_fqList[i]; if(p) quickAddNutr(p.nutr, p.name); }

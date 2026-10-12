@@ -3493,7 +3493,9 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
 console.log('%c✅ Fruicey build: prep buffers (pickup 30m/delivery 1.5h), ack note, delivery T&Cs list (rev AW)','color:#5aab74;font-weight:bold;font-size:14px');
 
 
+var _lastOrderReceipt = null;
 function openOrderReceipt(data){
+  _lastOrderReceipt = data;
   const isPos = data.type === 'pos';
   let items = [];
   try{ items = typeof data.items==='string' ? JSON.parse(data.items) : (data.items||[]); }catch(e){}
@@ -7981,6 +7983,91 @@ function downloadProgress(){
     try{ _buildProgressPDF(); }catch(e){ showToast('Could not create the PDF'); }
   });
 }
+// Pull a Fruicey TrueType face (base64) from the page's @font-face rules, to embed in a PDF.
+function _fruiceyTTF(family){
+  try{
+    for(var i=0;i<document.styleSheets.length;i++){
+      var rules; try{ rules=document.styleSheets[i].cssRules; }catch(e){ continue; }
+      if(!rules) continue;
+      for(var j=0;j<rules.length;j++){
+        var r=rules[j];
+        if(r && r.type===5 && r.style){
+          var fam=(r.style.getPropertyValue('font-family')||'').replace(/['"]/g,'').trim();
+          if(fam===family){
+            var m=(r.style.getPropertyValue('src')||r.cssText||'').match(/base64,([A-Za-z0-9+\/=]+)/);
+            if(m) return m[1];
+          }
+        }
+      }
+    }
+  }catch(e){}
+  return null;
+}
+function _registerFruiceyFonts(doc){
+  var ok=false;
+  try{
+    var t=_fruiceyTTF('FruiceyThin'); if(t){ doc.addFileToVFS('FruiceyThin.ttf',t); doc.addFont('FruiceyThin.ttf','Fruicey','normal'); ok=true; }
+    var b=_fruiceyTTF('FruiceyBold'); if(b){ doc.addFileToVFS('FruiceyBold.ttf',b); doc.addFont('FruiceyBold.ttf','Fruicey','bold'); }
+  }catch(e){ ok=false; }
+  return ok;
+}
+function downloadOrderReceiptPDF(){
+  var data=_lastOrderReceipt; if(!data){ showToast('No receipt'); return; }
+  showToast('Preparing your PDF…');
+  _loadJsPDF(function(){
+    try{ _buildOrderReceiptPDF(data); }catch(e){ showToast('Could not create the PDF'); }
+  });
+}
+function _buildOrderReceiptPDF(data){
+  var isPos = data.type==='pos';
+  var items=[]; try{ items = typeof data.items==='string' ? JSON.parse(data.items) : (data.items||[]); }catch(e){}
+  var total=parseFloat(data.total||0), disc=parseFloat(data.discount||0);
+  var est = 90 + items.length*9 + (disc>0?10:0) + 16;
+  var doc=new window.jspdf.jsPDF({unit:'mm',format:[80, Math.max(150, est)]});
+  var hasF=_registerFruiceyFonts(doc);
+  var BODY=hasF?'Fruicey':'helvetica';
+  var FT=function(b){ doc.setFont(BODY, b?'bold':'normal'); };   // words
+  var FN=function(b){ doc.setFont('helvetica', b?'bold':'normal'); };   // numbers
+  var y=10,lm=6,rm=74;
+  var dash=function(){ doc.setLineDashPattern([1,1],0);doc.line(lm,y,rm,y);doc.setLineDashPattern([],0); };
+  FT(true);doc.setFontSize(13);doc.text('FRUICEY',40,y,{align:'center'});y+=6;
+  FT(false);doc.setFontSize(7.5);
+  doc.text('68 Jalan Jurong Kechil #01-10',40,y,{align:'center'});y+=4;
+  doc.text('Singapore 596180 | UEN: 53434968D | Tel: 8509 8095',40,y,{align:'center'});y+=4;
+  dash();y+=4;doc.setFontSize(8);
+  var idVal=data.rcptNo||data.id||'';
+  if(idVal){ FT(true);doc.text(isPos?'Receipt':'Order ID',lm,y);FN(false);doc.text(String(idVal),rm,y,{align:'right'});y+=4; }
+  FT(false);doc.text('Date',lm,y);FN(false);doc.text(String(formatDT(data.date||data.createdAt||'')),rm,y,{align:'right'});y+=4;
+  if(data.time){ FT(false);doc.text('Time',lm,y);FN(false);doc.text(String(data.time),rm,y,{align:'right'});y+=4; }
+  var memberName = data.member || (isPos ? '' : (data.name || (currentUser ? currentUser.first+' '+currentUser.last : '')));
+  if(memberName){ FT(false);doc.text('Member',lm,y);FT(false);doc.text(String(memberName),rm,y,{align:'right'});y+=4; }
+  if(!isPos){ FT(false);doc.text('Collection',lm,y);FT(false);doc.text(String(cleanCollect(data.collectTime||'')||'—'),rm,y,{align:'right'});y+=4; }
+  dash();y+=3;
+  FT(true);doc.text('No.',lm,y);doc.text('Item',lm+9,y);doc.text('Qty',lm+50,y,{align:'center'});doc.text('Amount',rm,y,{align:'right'});
+  y+=3;doc.line(lm,y,rm,y);y+=3;
+  var isOnline = isPos && ['GrabFood','FoodPanda'].includes(data.payment);
+  items.forEach(function(item,i){
+    var amt=isOnline?'$0.00':'$'+((item.price||0)*(item.qty||1)).toFixed(2);
+    var w=doc.splitTextToSize(String(item.label||item.name||''),34);
+    FN(false);doc.text(String(i+1)+'.',lm,y);
+    FT(false);doc.text(w,lm+9,y);
+    FN(false);doc.text(String(item.qty||1),lm+53,y,{align:'center'});doc.text(amt,rm,y,{align:'right'});
+    y+=w.length*4+1;
+  });
+  dash();y+=4;
+  if(disc>0){ FT(false);doc.text('Subtotal',lm,y);FN(false);doc.text('$'+(parseFloat(data.subtotal||total)).toFixed(2),rm,y,{align:'right'});y+=4;FT(false);doc.text('Discount',lm,y);FN(false);doc.text('-$'+disc.toFixed(2),rm,y,{align:'right'});y+=4; }
+  if(!isPos && parseFloat(data.deliveryFee)>0){ FT(false);doc.text('Delivery',lm,y);FN(false);doc.text('$'+parseFloat(data.deliveryFee).toFixed(2),rm,y,{align:'right'});y+=4; }
+  if(!isPos && parseFloat(data.platformFee)>0){ FT(false);doc.text('Platform fee',lm,y);FN(false);doc.text('$'+parseFloat(data.platformFee).toFixed(2),rm,y,{align:'right'});y+=4; }
+  FT(true);doc.setFontSize(10);doc.text('Total',lm,y);FN(true);doc.text('$'+total.toFixed(2),rm,y,{align:'right'});y+=5;
+  doc.setFontSize(8);
+  FT(false);doc.text('Payment',lm,y);FT(false);doc.text(String(data.payment||''),rm,y,{align:'right'});y+=4;
+  if(!isPos && data.status){ FT(false);doc.text('Status',lm,y);FT(false);doc.text(String(data.status),rm,y,{align:'right'});y+=4; }
+  dash();y+=4;
+  FT(false);doc.text('Thank You For Visiting Fruicey!',40,y,{align:'center'});y+=4;
+  FT(true);doc.text('www.fruicey.sg',40,y,{align:'center'});
+  doc.save('Fruicey-'+(idVal||'receipt')+'.pdf');
+  showToast('Your receipt PDF has been downloaded');
+}
 function _buildProgressPDF(){
   var d=_progData();
   var name=(currentUser && ((currentUser.first||'')+' '+(currentUser.last||'')).trim()) || 'Member';
@@ -8705,7 +8792,8 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="modal-box" style="max-width:380px;max-height:85vh;overflow-y:auto">
     <div class="modal-handle"></div>
     <div id="order-receipt-content" style="padding:16px"></div>
-    <div style="padding:0 16px 16px">
+    <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px">
+      <button onclick="downloadOrderReceiptPDF()" class="btn btn-primary" style="width:100%"><i class="ti ti-file-type-pdf"></i> Download PDF</button>
       <button onclick="closeOrderReceipt()" class="btn btn-secondary" style="width:100%">Close</button>
     </div>
   </div>

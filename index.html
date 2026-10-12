@@ -1066,6 +1066,18 @@ button.cal-day:active{transform:scale(.94)}
 .prog-vit-info .vi-close{position:absolute;top:7px;right:9px;border:none;background:none;font-size:17px;color:var(--text3);cursor:pointer;line-height:1}
 .prog-vit-record-head{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:14px 0 2px}
 .prog-vit-chart{margin:4px 0 2px}
+.prog-vit-list2{display:flex;flex-direction:column;margin-top:2px}
+.vwk-row{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;border-bottom:1px solid #f2f2f2;padding:10px 3px;cursor:pointer;font-family:var(--body);text-align:left;-webkit-tap-highlight-color:transparent}
+.vwk-row:active{background:#f7faf8}
+.vwk-check{width:20px;height:20px;border-radius:6px;border:1.8px solid var(--border);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+.vwk-row.on .vwk-check{border-color:transparent}
+.vwk-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.vwk-name{font-size:12.5px;color:var(--text);font-family:var(--font);line-height:1.15}
+.vwk-rda{font-size:10.5px;color:var(--text3)}
+.vwk-dots{display:flex;gap:4px;flex:none}
+.vwk-dot{width:9px;height:9px;border-radius:50%;background:#eee;border:1.5px solid #e4e4e4;box-sizing:border-box}
+.vwk-dot.today{box-shadow:0 0 0 2px rgba(143,206,161,.55)}
+.vwk-count{font-size:11px;color:var(--text3);font-family:var(--font);width:26px;text-align:right;flex:none}
 .prog-vit-row{display:flex;align-items:center;gap:9px;margin:10px 0}
 .prog-vit-row .lbl{width:94px;flex:none;font-size:11.5px;color:var(--text2);line-height:1.2}
 .prog-vit-row .lbl small{display:block;color:var(--text3);font-size:10px}
@@ -3232,28 +3244,16 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     </div>
 
     <div class="prog-wl">
-      <div class="prog-wl-head"><span id="prog-nut-head">Daily vitamins</span></div>
-      <div class="prog-vit-sub">Tap each one you had today &mdash; these are the key nutrients for your focus.</div>
-      <div id="prog-vit-chips" class="prog-vit-chips"></div>
-    </div>
-
-    <div class="prog-wl">
-      <div class="prog-wl-head">
-        <span>Your record</span>
-        <div class="prog-range" id="prog-vit-range">
-          <button type="button" class="prog-range-btn active" data-r="7" onclick="setVitRange(7)">Week</button>
-          <button type="button" class="prog-range-btn" data-r="30" onclick="setVitRange(30)">Month</button>
-        </div>
-      </div>
-      <div id="prog-vit-chart" class="prog-vit-chart"></div>
-      <div id="prog-vit-summary" class="prog-cal-summary"></div>
+      <div class="prog-wl-head"><span>Vitamins this week</span></div>
+      <div class="prog-vit-sub">Tap each vitamin you had today. The daily need beside each is the Singapore HPB adult guideline; the dots are your last 7 days.</div>
+      <div id="prog-vit-list" class="prog-vit-list2"></div>
     </div>
 
     <div class="prog-actions">
       <button type="button" class="prog-btn ghost" onclick="downloadProgress()"><i class="ti ti-file-type-pdf"></i> Download as PDF</button>
     </div>
 
-    <div class="prog-note"><i class="ti ti-device-mobile"></i><span>Your log is saved only on this device/browser &mdash; clearing your browser data or switching phones will erase it. Tap &ldquo;Download as PDF&rdquo; to keep a backup. Product picks are general wellness suggestions based on ingredients &mdash; a healthy-living guide, not medical advice.</span></div>
+    <div class="prog-note"><i class="ti ti-device-mobile"></i><span>Your log is saved only on this device/browser &mdash; clearing your browser data or switching phones will erase it. Tap &ldquo;Download as PDF&rdquo; to keep a backup. Daily needs follow Singapore HPB adult guidelines; product picks are general suggestions. A healthy-living guide, not medical advice.</span></div>
     </div>
   </div>
 </div>
@@ -7788,7 +7788,7 @@ function renderDexBody(tried){
 function _resetAccModalBox(m){ var b=m&&m.querySelector('.modal-box'); if(b){ b.style.transform=''; b.scrollTop=0; } }
 function openWalletModal(){ var m=document.getElementById('wallet-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeWalletModal(){ var m=document.getElementById('wallet-modal'); if(m) m.classList.remove('open'); }
-function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } renderFocusChips(); renderNutChips(); renderVitChart(); }
+function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } renderFocusChips(); renderVitWeek(); }
 function closeNutriModal(){ var m=document.getElementById('nutri-modal'); if(m) m.classList.remove('open'); }
 function openAccountModal(){ var m=document.getElementById('account-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeAccountModal(){ var m=document.getElementById('account-modal'); if(m) m.classList.remove('open'); }
@@ -7806,7 +7806,6 @@ function openDexProduct(pid){
 // ── MY PROGRESS (device-only tracker) ────────────────────────────────────────
 // All data lives in this browser's localStorage, keyed per member. Nothing is sent to any server.
 var _vitLog = {};          // { 'YYYY-MM-DD': ['immunity','energy', ...] }
-var _vitRange = 7;
 var _focus = 'general';
 // Nutrients tracked daily. Each focus draws from these.
 var NUTS = {
@@ -7825,6 +7824,19 @@ var NUTS = {
   PRO:{name:'Probiotics', col:'#2ec5a8'},
   LUT:{name:'Lutein', col:'#d4a017'}
 };
+// The vitamins shown in the weekly record, with Singapore HPB adult Recommended Dietary Allowances.
+var VITAMINS = [
+  {k:'A',  name:'Vitamin A',   rda:'750 mcg',    col:'#e056a0'},
+  {k:'B1', name:'Vitamin B1',  rda:'1.1 mg',     col:'#e67e22'},
+  {k:'B2', name:'Vitamin B2',  rda:'1.3 mg',     col:'#e8893a'},
+  {k:'B3', name:'Vitamin B3',  rda:'16 mg',      col:'#d98324'},
+  {k:'B6', name:'Vitamin B6',  rda:'1.3 mg',     col:'#c77d2e'},
+  {k:'B9', name:'Folate (B9)', rda:'400 mcg',    col:'#2e9e5b'},
+  {k:'B12',name:'Vitamin B12', rda:'2.4 mcg',    col:'#b5651d'},
+  {k:'C',  name:'Vitamin C',   rda:'85–105 mg', col:'#f5a623'},
+  {k:'D',  name:'Vitamin D',   rda:'2.5 mcg',    col:'#8e7cc3'}
+];
+function _vitaminByKey(k){ for(var i=0;i<VITAMINS.length;i++){ if(VITAMINS[i].k===k) return VITAMINS[i]; } return null; }
 // Each focus: its daily key nutrients (nuts) + recommended Fruicey products (real ids).
 var VITS = [
   {k:'immunity', name:'Immunity', col:'#f5a623', fn:'Strengthens your defences and keeps you resilient.',
@@ -7863,13 +7875,12 @@ function _curFocus(){ for(var i=0;i<VITS.length;i++){ if(VITS[i].k===_focus) ret
 function _progKey(){ return 'fruicey_progress_' + (currentUser ? np(currentUser.phone) : 'guest'); }
 function _progData(){ try{ return JSON.parse(localStorage.getItem(_progKey())||'{}') || {}; }catch(e){ return {}; } }
 function loadProgress(){
-  if(!document.getElementById('prog-vit-chips')) return;
+  if(!document.getElementById('prog-vit-list')) return;
   var d = _progData();
   _focus = d.focus || 'general';
   _vitLog = (d.vlog && typeof d.vlog==='object') ? d.vlog : {};
   renderFocusChips();
-  renderNutChips();
-  renderVitChart();
+  renderVitWeek();
 }
 function saveProgress(){
   if(!currentUser) return;
@@ -7877,23 +7888,18 @@ function saveProgress(){
   try{ localStorage.setItem(_progKey(), JSON.stringify(d)); }catch(e){}
 }
 function _todayStr(){ var t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); }
-function _vitName(k){ return (NUTS[k] && NUTS[k].name) || k; }
-// Tap a nutrient on/off for today.
-function toggleNut(k){
+function _vitName(k){ var v=_vitaminByKey(k); return v?v.name:((NUTS[k]&&NUTS[k].name)||k); }
+// Tap a vitamin on/off for today.
+function toggleVit(k){
   if(!currentUser){ openLogin(); return; }
   var d=_todayStr();
   var set=Array.isArray(_vitLog[d]) ? _vitLog[d].slice() : [];
   var i=set.indexOf(k);
   if(i>=0) set.splice(i,1); else set.push(k);
   if(set.length) _vitLog[d]=set; else delete _vitLog[d];
-  saveProgress(); renderNutChips(); renderVitChart();
+  saveProgress(); renderVitWeek();
 }
-function setVitRange(n){
-  _vitRange=n;
-  document.querySelectorAll('#prog-vit-range .prog-range-btn').forEach(function(b){ b.classList.toggle('active', parseInt(b.dataset.r,10)===n); });
-  renderVitChart();
-}
-// Focus chips (single-select). The chosen focus drives the nutrient checklist, the record, and the product picks.
+// Focus chips (single-select) — a lens for Fruicey product picks only; it does not change the record below.
 function renderFocusChips(){
   var wrap=document.getElementById('prog-focus-chips'), rec=document.getElementById('prog-focus-rec');
   if(!wrap) return;
@@ -7909,20 +7915,7 @@ function renderFocusChips(){
         return '<button type="button" class="rec-pick" onclick="openNutriProduct(\''+p.id+'\')">'+p.label+' <i class="ti ti-chevron-right"></i></button>';
       }).join('')+'</div>';
 }
-function selectFocus(k){ _focus=k; saveProgress(); renderFocusChips(); renderNutChips(); renderVitChart(); }
-// Daily nutrient checklist for the chosen focus — tap each one you had today.
-function renderNutChips(){
-  var wrap=document.getElementById('prog-vit-chips'); if(!wrap) return;
-  var head=document.getElementById('prog-nut-head'); var f=_curFocus();
-  if(head) head.textContent='Daily vitamins for '+f.name;
-  var today=_vitLog[_todayStr()]||[];
-  wrap.innerHTML=f.nuts.map(function(k){
-    var nu=NUTS[k]; if(!nu) return '';
-    var on=today.indexOf(k)>=0, style=on?('background:'+nu.col+';'):'';
-    return '<button type="button" class="prog-vit-chip'+(on?' on':'')+'" style="'+style+'" onclick="toggleNut(\''+k+'\')">'
-      +'<span class="dot" style="background:'+nu.col+'"></span>'+nu.name+'</button>';
-  }).join('');
-}
+function selectFocus(k){ _focus=k; saveProgress(); renderFocusChips(); }
 // Open a recommended product's page, then return to the tracker when it's closed.
 function openNutriProduct(pid){
   if(!PRODUCT_MAP[pid]){ showToast('That item isn’t on the menu right now'); return; }
@@ -7942,32 +7935,27 @@ function _vitWindow(n){
   }
   return out;
 }
-// Weekly/monthly record: % of days each of the focus's nutrients was logged.
-function renderVitChart(){
-  var wrap=document.getElementById('prog-vit-chart'), sum=document.getElementById('prog-vit-summary');
-  if(!wrap) return;
-  var f=_curFocus(), n=_vitRange, days=_vitWindow(n);
-  var anyDays=days.filter(function(ds){ return Array.isArray(_vitLog[ds]) && _vitLog[ds].length; }).length;
-  if(!anyDays){
-    wrap.innerHTML='<div style="color:#bbb;font-size:12px;padding:8px 0">Nothing logged yet &mdash; tap the vitamins you had today to start your record.</div>';
-    if(sum) sum.innerHTML=''; return;
-  }
-  var counts={}; f.nuts.forEach(function(k){ counts[k]=0; });
-  days.forEach(function(ds){ (_vitLog[ds]||[]).forEach(function(k){ if(counts[k]!=null) counts[k]++; }); });
-  wrap.innerHTML=f.nuts.map(function(k){
-    var nu=NUTS[k]; if(!nu) return '';
-    var c=counts[k], pct=Math.round(c/n*100);
-    return '<div class="prog-vit-row"><div class="lbl">'+nu.name+'</div>'
-      +'<div class="prog-vit-track"><div class="prog-vit-fill" style="width:'+pct+'%;background:'+nu.col+'"></div></div>'
-      +'<div class="pct">'+pct+'%</div></div>';
+// Unified weekly record: every vitamin, its HPB daily need, a today-toggle and the last 7 days.
+function renderVitWeek(){
+  var wrap=document.getElementById('prog-vit-list'); if(!wrap) return;
+  var days=_vitWindow(7), today=_todayStr(), todaySet=_vitLog[today]||[];
+  wrap.innerHTML=VITAMINS.map(function(v){
+    var onToday=todaySet.indexOf(v.k)>=0;
+    var count=0;
+    var dots=days.map(function(ds){
+      var hit=(_vitLog[ds]||[]).indexOf(v.k)>=0; if(hit) count++;
+      var isToday=(ds===today);
+      var st=hit?('background:'+v.col+';border-color:'+v.col):'';
+      return '<span class="vwk-dot'+(isToday?' today':'')+'" style="'+st+'"></span>';
+    }).join('');
+    var checkStyle=onToday?('background:'+v.col):'';
+    return '<button type="button" class="vwk-row'+(onToday?' on':'')+'" onclick="toggleVit(\''+v.k+'\')" aria-pressed="'+onToday+'">'
+      +'<span class="vwk-check" style="'+checkStyle+'">'+(onToday?'✓':'')+'</span>'
+      +'<span class="vwk-main"><span class="vwk-name">'+v.name+'</span><span class="vwk-rda">'+v.rda+' / day</span></span>'
+      +'<span class="vwk-dots">'+dots+'</span>'
+      +'<span class="vwk-count">'+count+'/7</span>'
+      +'</button>';
   }).join('');
-  var arr=f.nuts.map(function(k){ return {k:k, c:counts[k]}; });
-  var top=arr.slice().sort(function(a,b){ return b.c-a.c; })[0];
-  var low=arr.slice().sort(function(a,b){ return a.c-b.c; })[0];
-  var html='<span>Tracked <b>'+anyDays+'</b> / '+n+' days</span>';
-  if(top && top.c>0) html+='<span>Strongest: <b>'+NUTS[top.k].name+'</b> ('+top.c+'/'+n+')</span>';
-  if(low && low.c<top.c) html+='<span>Lowest: <b>'+NUTS[low.k].name+'</b> ('+low.c+'/'+n+')</span>';
-  if(sum) sum.innerHTML=html;
 }
 function _loadJsPDF(cb){
   if(window.jspdf && window.jspdf.jsPDF){ cb(); return; }
@@ -8099,14 +8087,17 @@ function _buildProgressPDF(){
   doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
   doc.text('Wellness focus:', m, y); doc.text(fv.name, m+130, y); y+=24;
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text(fv.name+' nutrients (last 7 days)', m, y); y+=18;
-  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(60,60,60);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(28,77,58); doc.text('Vitamins this week', m, y); y+=16;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(130,130,130);
+  doc.text('Vitamin', m, y); doc.text('HPB daily need', m+150, y); doc.text('Days hit', m+300, y); y+=5;
+  doc.setDrawColor(220,220,220); doc.setLineWidth(.5); doc.line(m, y, W-m, y); y+=14;
   (function(){
-    var days=_vitWindow(7), counts={}; fv.nuts.forEach(function(k){ counts[k]=0; });
+    var days=_vitWindow(7), counts={}; VITAMINS.forEach(function(v){ counts[v.k]=0; });
     days.forEach(function(ds){ (_vitLog[ds]||[]).forEach(function(k){ if(counts[k]!=null) counts[k]++; }); });
-    fv.nuts.forEach(function(k){
+    doc.setFontSize(11); doc.setTextColor(60,60,60);
+    VITAMINS.forEach(function(v){
       if(y>780){ doc.addPage(); y=58; }
-      doc.text(NUTS[k].name, m, y); doc.text(counts[k]+' / 7 days', m+240, y); y+=16;
+      doc.text(v.name, m, y); doc.text(String(v.rda).replace('–','-')+' / day', m+150, y); doc.text(counts[v.k]+' / 7', m+300, y); y+=16;
     });
   })();
   y+=20;
@@ -8132,7 +8123,7 @@ function _buildProgressPDF(){
   y+=24;
   if(y>720){ doc.addPage(); y=58; }
   doc.setFontSize(9); doc.setTextColor(140,140,140);
-  var disc='Product picks are general wellness suggestions based on ingredients, not medical advice. A healthy-living guide only.';
+  var disc='Daily vitamin needs follow Singapore HPB Recommended Dietary Allowances for adults; individual needs vary. Product picks are general wellness suggestions based on ingredients. A healthy-living guide, not medical advice.';
   var lines=doc.splitTextToSize(disc, W-m*2);
   doc.text(lines, m, y); y+=lines.length*12+14;
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(28,77,58);

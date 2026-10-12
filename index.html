@@ -1070,6 +1070,10 @@ button.cal-day:active{transform:scale(.94)}
 .qa-head{font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px}
 .qa-selects{display:flex;gap:8px;flex-wrap:wrap}
 .qa-sel{flex:1;min-width:150px;padding:9px 10px;border:1px solid rgba(46,158,91,.4);border-radius:9px;font-family:var(--body);font-size:12.5px;background:#fff;color:var(--text2);cursor:pointer}
+.qa-msg{display:none;margin-top:9px;background:#fff;border:1px solid var(--green);border-radius:9px;padding:8px 11px;font-size:11.5px;color:var(--green-dark);font-family:var(--body);line-height:1.45}
+.qa-msg.show{display:block}
+.qa-msg .ti{vertical-align:-1px;margin-right:3px}
+.qa-msg b{font-family:var(--font);font-weight:400}
 .prog-vit-list2{display:flex;flex-direction:column;margin-top:2px}
 .nut-group{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:16px 0 4px}
 .nut-head-l{display:flex;flex-direction:column;gap:1px;min-width:0}
@@ -7859,7 +7863,8 @@ var VITAMINS = [
 // Fruicey Press nutrient profiles (300ml). Levels are given as a share of the daily need and
 // converted to figures below; fibre (fb) and any explicit amounts are in grams. Antioxidants,
 // polyphenols, enzymes, beta-carotene, vitamin K/E etc. aren't tracked nutrients, so they're omitted.
-var _LV={low:0.15,mod:0.30,modhigh:0.45,high:0.60,vhigh:0.85,ext:1.10};
+// Share of the daily need a single 300ml press realistically contributes (kept conservative).
+var _LV={low:0.08,mod:0.15,modhigh:0.25,high:0.35,vhigh:0.50,ext:0.65};
 var PRESS_SPEC = {
   // Immunity Press
   ip01:{n:{C:'high',A:'modhigh',B9:'mod',K:'mod',FE:'mod'}, fb:2.5},   // Energy
@@ -7996,11 +8001,18 @@ function quickAddNutr(nutr, label){
   if(!currentUser){ openLogin(); return; }
   var d=_todayStr(), day=_dayObj(d), added=[];
   Object.keys(nutr||{}).forEach(function(k){
-    if(_vitaminByKey(k)){ day[k]=Math.round(((day[k]||0)+nutr[k])*100)/100; added.push(_vitaminByKey(k).name); }
+    var v=_vitaminByKey(k);
+    if(v){ day[k]=Math.round(((day[k]||0)+nutr[k])*100)/100; added.push(v.name+' +'+_fmtAmt(nutr[k])+v.unit); }
   });
   if(!added.length){ showToast('No nutrient data for '+label); return; }
   _vitLog[d]=day; saveProgress(); renderVitWeek();
-  showToast('Added '+label+' → '+added.slice(0,3).join(', ')+(added.length>3?'…':''));
+  showToast('Added '+label);
+  var msg=document.getElementById('qa-msg');
+  if(msg){
+    msg.innerHTML='<i class="ti ti-circle-check"></i> Added <b>'+label+'</b> &mdash; '+added.join(', ');
+    msg.classList.add('show');
+    clearTimeout(window._qaMsgT); window._qaMsgT=setTimeout(function(){ msg.classList.remove('show'); }, 5000);
+  }
 }
 // Fruicey products that carry nutrient figures AND are on the current menu (sold).
 var _fqList=[];
@@ -8027,7 +8039,8 @@ function renderQuickAdd(){
     +'<div class="qa-selects">'
       +(_fqList.length?'<select class="qa-sel" onchange="if(this.value!==\'\'){quickAddFruicey(+this.value);this.value=\'\';}">'+fruOpts+'</select>':'')
       +'<select class="qa-sel" onchange="if(this.value!==\'\'){quickAddFood(+this.value);this.value=\'\';}">'+foodOpts+'</select>'
-    +'</div>';
+    +'</div>'
+    +'<div id="qa-msg" class="qa-msg"></div>';
 }
 // Focus chips (single-select) — a lens for Fruicey product picks only; it does not change the record below.
 function renderFocusChips(){

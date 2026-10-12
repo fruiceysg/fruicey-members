@@ -1068,12 +1068,8 @@ button.cal-day:active{transform:scale(.94)}
 .prog-vit-chart{margin:4px 0 2px}
 .prog-quickadd{margin:2px 0 6px;background:var(--green-light);border-radius:12px;padding:11px 12px}
 .qa-head{font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px}
-.qa-row{display:flex;align-items:flex-start;gap:8px;margin-top:8px}
-.qa-lbl{flex:none;width:72px;font-size:10.5px;color:var(--text3);font-family:var(--body);padding-top:5px}
-.qa-chips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
-.qa-chip{background:#fff;border:1px solid rgba(46,158,91,.3);border-radius:999px;padding:5px 10px;font-size:11.5px;color:var(--text2);font-family:var(--body);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.qa-chip.fru{border-color:var(--green);color:var(--green-dark)}
-.qa-chip:active{transform:scale(.96)}
+.qa-selects{display:flex;gap:8px;flex-wrap:wrap}
+.qa-sel{flex:1;min-width:150px;padding:9px 10px;border:1px solid rgba(46,158,91,.4);border-radius:9px;font-family:var(--body);font-size:12.5px;background:#fff;color:var(--text2);cursor:pointer}
 .prog-vit-list2{display:flex;flex-direction:column;margin-top:2px}
 .nut-group{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:16px 0 4px}
 .nut-head-l{display:flex;flex-direction:column;gap:1px;min-width:0}
@@ -8020,13 +8016,18 @@ function quickAddFood(i){ var f=FOODS[i]; if(f) quickAddNutr(f.nutr, f.name); }
 function renderQuickAdd(){
   var el=document.getElementById('prog-quickadd'); if(!el) return;
   _fqList=_fruiceyNutriList();
-  var fru = _fqList.length ? ('<div class="qa-row"><span class="qa-lbl">Fruicey picks</span><div class="qa-chips">'
-      + _fqList.map(function(p,i){ return '<button type="button" class="qa-chip fru" onclick="quickAddFruicey('+i+')">+ '+p.name+'</button>'; }).join('')
-      + '</div></div>') : '';
-  var food = '<div class="qa-row"><span class="qa-lbl">Common foods</span><div class="qa-chips">'
-      + FOODS.map(function(f,i){ return '<button type="button" class="qa-chip" onclick="quickAddFood('+i+')">+ '+f.name+'</button>'; }).join('')
-      + '</div></div>';
-  el.innerHTML='<div class="qa-head">Quick add &mdash; fills today’s amounts automatically (approximate)</div>'+fru+food;
+  var groups={};
+  _fqList.forEach(function(p,i){ (groups[p.cat]=groups[p.cat]||[]).push({i:i,name:p.name}); });
+  var fruOpts='<option value="">+ Add a Fruicey press…</option>';
+  Object.keys(groups).forEach(function(cat){
+    fruOpts+='<optgroup label="'+cat+'">'+groups[cat].map(function(o){ return '<option value="'+o.i+'">'+o.name+'</option>'; }).join('')+'</optgroup>';
+  });
+  var foodOpts='<option value="">+ Add a common food…</option>'+FOODS.map(function(f,i){ return '<option value="'+i+'">'+f.name+'</option>'; }).join('');
+  el.innerHTML='<div class="qa-head">Quick add &mdash; auto-fills today’s amounts</div>'
+    +'<div class="qa-selects">'
+      +(_fqList.length?'<select class="qa-sel" onchange="if(this.value!==\'\'){quickAddFruicey(+this.value);this.value=\'\';}">'+fruOpts+'</select>':'')
+      +'<select class="qa-sel" onchange="if(this.value!==\'\'){quickAddFood(+this.value);this.value=\'\';}">'+foodOpts+'</select>'
+    +'</div>';
 }
 // Focus chips (single-select) — a lens for Fruicey product picks only; it does not change the record below.
 function renderFocusChips(){

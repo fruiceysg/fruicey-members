@@ -3607,6 +3607,22 @@ document.getElementById('print-btn').addEventListener('click', printReceipt);
 }
 
 // ── CREDIT DEPOSIT MANAGEMENT ────────────────────────────────────────
+// Split a deposit into paid (PayNow) vs bonus vs credit. Uses stored paid/bonus if present,
+// else reverses the top-up bonus ladder (+10% from $20, +14% from $50, +20% from $100).
+function _depBreakdown(d){
+  var credit=parseFloat(d.amount)||0;
+  var paid=(d.paid!=null)?parseFloat(d.paid):0, bonus=(d.bonus!=null)?parseFloat(d.bonus):0;
+  if(!paid){
+    var p;
+    if(credit/1.20>=100) p=credit/1.20;
+    else if(credit/1.14>=50 && credit/1.14<100) p=credit/1.14;
+    else if(credit/1.10>=20 && credit/1.10<50) p=credit/1.10;
+    else p=credit;
+    paid=Math.round(p*100)/100; bonus=Math.round((credit-paid)*100)/100;
+    if(bonus<0) bonus=0;
+  }
+  return {paid:paid, bonus:bonus, credit:credit};
+}
 async function loadPendingDeposits(){
   var list = document.getElementById('pending-deposits-list');
   list.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb">Loading...</div>';
@@ -3620,11 +3636,13 @@ async function loadPendingDeposits(){
       return;
     }
     list.innerHTML = deposits.map(function(d){
+      var b=_depBreakdown(d);
       return '<div style="background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:12px;margin-bottom:8px">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
         +'<div><b>'+d.name+'</b><span style="color:#999;font-size:11px;margin-left:6px">'+d.phone+'</span></div>'
-        +'<div style="font-size:18px;font-weight:700;color:#f39c12">$'+parseFloat(d.amount).toFixed(2)+'</div>'
+        +'<div style="text-align:right"><div style="font-size:10px;color:#999;line-height:1">credit to add</div><div style="font-size:18px;font-weight:700;color:#27ae60">$'+b.credit.toFixed(2)+'</div></div>'
         +'</div>'
+        +'<div style="font-size:12px;color:#555;margin-bottom:2px">Verify PayNow received: <b style="color:#f39c12">$'+b.paid.toFixed(2)+'</b>'+(b.bonus>0?' <span style="color:#999">&middot; bonus +$'+b.bonus.toFixed(2)+'</span>':'')+'</div>'
         +'<div style="font-size:11px;color:#999;margin-bottom:8px">Requested: '+d.createdAt+'</div>'
         +'<div style="display:flex;gap:6px">'
         +'<button onclick="approveDep(\''+d.id+'\')" style="flex:1;padding:8px;background:#27ae60;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px">✓ Approve</button>'
@@ -3652,7 +3670,7 @@ function executeConfirmAction(){ if(_confirmCallback){ _confirmCallback(); } clo
 async function approveDep(id){
   showConfirmModal(
     'Approve Deposit',
-    'Approve this credit deposit?<br><br><span style="font-size:12px;color:#888">Make sure PayNow payment was received before approving.</span>',
+    'Approve this credit deposit?<br><br><span style="font-size:12px;color:#888">Check the <b>PayNow received</b> amount on the card matches the customer\'s screenshot before approving. The <b style="color:#27ae60">credit to add</b> already includes the top-up bonus.</span>',
     'Approve', '#27ae60', '#f0faf4', '#27ae60',
     async function(){
       try{

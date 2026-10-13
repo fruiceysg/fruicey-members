@@ -1240,9 +1240,19 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 }
 
 /* PRODUCT INFO IMAGE VIEWER + ZOOM */
-.credit-preset{flex:1;padding:14px 8px;border:2px solid var(--border);border-radius:14px;background:#fff;font-family:var(--font);font-size:18px;color:var(--text);cursor:pointer;transition:all .15s}
+.credit-preset{flex:1;padding:12px 6px;border:2px solid var(--border);border-radius:14px;background:#fff;font-family:var(--font);font-size:18px;color:var(--text);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1}
+.credit-preset small{font-family:var(--body);font-size:10px;font-weight:600;color:var(--green);letter-spacing:.2px}
 .credit-preset:hover{border-color:var(--green)}
 .credit-preset.selected{border-color:var(--green);background:var(--green-light);color:var(--green);box-shadow:0 4px 12px rgba(28,77,58,.14)}
+.credit-promo{background:var(--green-light);border-radius:12px;padding:9px 12px;margin-bottom:14px}
+.credit-promo-head{font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:5px;margin-bottom:5px}
+.credit-promo-rows{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text2);font-family:var(--body)}
+.credit-promo-rows b{color:var(--green-dark);font-family:var(--font);font-weight:400}
+.credit-custom{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.credit-custom>span{font-size:12px;color:var(--text3);font-family:var(--body)}
+.credit-custom-inp{flex:1;display:flex;align-items:center;gap:4px;border:2px solid var(--border);border-radius:12px;padding:0 12px}
+.credit-custom-inp>span{color:var(--text3);font-family:var(--font)}
+.credit-custom-inp input{flex:1;border:none;outline:none;padding:11px 0;font-family:var(--font);font-size:16px;background:transparent;color:var(--text)}
 #product-info-modal .modal-box{max-width:92vw;max-height:92vh;padding:12px;display:flex;flex-direction:column;align-items:center}
 .pi-handle{width:36px;height:4px;border-radius:2px;background:#ddd;margin-bottom:8px;flex-shrink:0}
 .pi-topbar{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
@@ -8515,10 +8525,12 @@ function openAddCredit(){
   var _cm=document.querySelector('#add-credit-modal .modal-box'); if(_cm) _enableSwipeDismiss(_cm, closeAddCredit);
   if(!currentUser){ showToast('Please log in first'); return; }
   document.getElementById('credit-amount-input').value = '';
+  var _ci=document.getElementById('credit-custom-input'); if(_ci) _ci.value='';
   document.getElementById('credit-err').textContent = '';
   document.querySelectorAll('.credit-preset').forEach(function(b){ b.classList.remove('selected'); });
   var _big=document.getElementById('credit-amount-big'); if(_big) _big.textContent='$0';
   var _val=document.getElementById('credit-amount-value'); if(_val) _val.textContent='$0.00';
+  var _bl=document.getElementById('credit-bonus-line'); if(_bl) _bl.textContent='';
   document.getElementById('add-credit-modal').classList.add('open');
 }
 function _enableSwipeDismiss(boxEl, onDismiss, centered){
@@ -8577,39 +8589,55 @@ function closeAddCredit(){
   document.getElementById('credit-step-paynow').style.display = 'none';
 }
 
+// Top-up bonus ladder: pay $X, receive $X + bonus. (Credit = paid + bonus.)
+function _creditBonusRate(paid){ return paid>=100?0.20 : paid>=50?0.14 : paid>=20?0.10 : 0; }
+function _creditBonus(paid){ return Math.round(paid*_creditBonusRate(paid)*100)/100; }
+function _creditTotal(paid){ return Math.round((paid+_creditBonus(paid))*100)/100; }
+function _updateCreditDisplay(paid){
+  var big=document.getElementById('credit-amount-big'), val=document.getElementById('credit-amount-value'), bl=document.getElementById('credit-bonus-line');
+  var bonus=_creditBonus(paid), credit=_creditTotal(paid);
+  if(big) big.textContent = '$'+ (paid%1===0?paid:paid.toFixed(2));
+  if(val) val.textContent = '$'+credit.toFixed(2);
+  if(bl) bl.textContent = bonus>0 ? ('includes $'+bonus.toFixed(2)+' free bonus') : (paid>0?'top up $20+ to earn bonus credit':'');
+}
 function pickCreditAmount(amt){
+  var ci=document.getElementById('credit-custom-input'); if(ci) ci.value='';
   document.getElementById('credit-amount-input').value = amt;
   document.getElementById('credit-err').textContent = '';
-  // highlight the chosen preset
-  document.querySelectorAll('.credit-preset').forEach(function(b){
-    b.classList.toggle('selected', parseInt(b.dataset.amt)===amt);
-  });
-  // update the fun display
-  var big = document.getElementById('credit-amount-big');
-  var val = document.getElementById('credit-amount-value');
-  if(big) big.textContent = '$'+amt;
-  if(val) val.textContent = '$'+amt.toFixed(2);
+  document.querySelectorAll('.credit-preset').forEach(function(b){ b.classList.toggle('selected', parseInt(b.dataset.amt)===amt); });
+  _updateCreditDisplay(amt);
+}
+function onCustomCredit(v){
+  var amt=parseFloat(v)||0;
+  document.querySelectorAll('.credit-preset').forEach(function(b){ b.classList.remove('selected'); });
+  document.getElementById('credit-amount-input').value = amt>0 ? amt : '';
+  document.getElementById('credit-err').textContent = '';
+  _updateCreditDisplay(amt);
 }
 
 function submitCreditDeposit(){
-  const amount = parseFloat(document.getElementById('credit-amount-input').value||0);
-  if(amount < 20){ document.getElementById('credit-err').textContent = 'Please choose a top-up amount'; return; }
+  const paid = parseFloat(document.getElementById('credit-amount-input').value||0);
+  if(!paid || paid < 20){ document.getElementById('credit-err').textContent = 'Minimum top-up is $20'; return; }
   document.getElementById('credit-err').textContent = '';
-  // NOTE: no pending transaction is created here anymore — only after the customer confirms
-  // payment on the next step (submitCreditPayment). This keeps abandoned top-ups out of the POS.
+  var bonus=_creditBonus(paid), credit=_creditTotal(paid);
+  window._pendingCreditPaid = paid;
+  window._pendingCreditBonus = bonus;
+  window._pendingCreditTotal = credit;
+  // NOTE: no pending transaction is created here — only after the customer confirms payment on the next step.
   document.getElementById('credit-step-amount').style.display = 'none';
   document.getElementById('credit-step-paynow').style.display = 'block';
-  document.getElementById('credit-paynow-amount').textContent = '$'+amount.toFixed(2);
-  window._pendingCreditAmount = amount;
+  document.getElementById('credit-paynow-amount').textContent = '$'+paid.toFixed(2);
+  var rEl=document.getElementById('credit-paynow-receive'); if(rEl) rEl.textContent = '$'+credit.toFixed(2)+(bonus>0?' (incl. $'+bonus.toFixed(2)+' bonus)':'');
 }
 
 async function sendCreditWhatsApp(){
-  var amountText = document.getElementById('credit-paynow-amount').textContent || '$0.00';
-  var amount = window._pendingCreditAmount || parseFloat(amountText.replace('$','')) || 0;
+  var paid  = window._pendingCreditPaid  || parseFloat((document.getElementById('credit-paynow-amount').textContent||'0').replace('$','')) || 0;
+  var bonus = window._pendingCreditBonus != null ? window._pendingCreditBonus : _creditBonus(paid);
+  var credit= window._pendingCreditTotal || _creditTotal(paid);
   // Confirmation before we register anything in the POS
-  if(!confirm('Confirm you\'ve completed the PayNow payment of $'+amount.toFixed(2)+'?\n\nThis notifies our crew to approve your top-up. Tap Cancel if you haven\'t paid yet.')) return;
-  // Create the pending top-up now (only reaches the POS once the customer confirms payment)
-  try{ await apiPost({action:'requestDeposit', phone:currentUser.phone, amount}); }catch(e){}
+  if(!confirm('Confirm you\'ve completed the PayNow payment of $'+paid.toFixed(2)+'?\n\nYou\'ll receive $'+credit.toFixed(2)+' credit once approved. Tap Cancel if you haven\'t paid yet.')) return;
+  // Store the CREDIT TOTAL as the deposit amount so approval adds the bonus too; paid/bonus sent for the POS breakdown.
+  try{ await apiPost({action:'requestDeposit', phone:currentUser.phone, amount:credit, paid:paid, bonus:bonus}); }catch(e){}
   var msg = encodeURIComponent(
     'Hi Fruicey!\n'+
     'I\'ve made a PayNow payment to top up my Fruicey Credit.\n'+
@@ -8618,7 +8646,9 @@ async function sendCreditWhatsApp(){
     '--- Top-up details ---\n'+
     'Name: '+currentUser.first+' '+currentUser.last+'\n'+
     'Phone: '+currentUser.phone+'\n'+
-    'Credit Top-up: $'+amount.toFixed(2)+'\n'+
+    'Paid via PayNow: $'+paid.toFixed(2)+'\n'+
+    (bonus>0?('Bonus credit: $'+bonus.toFixed(2)+'\n'):'')+
+    'Total credit to receive: $'+credit.toFixed(2)+'\n'+
     '\n'+
     'Please approve my credit deposit. Thank you!'
   );
@@ -8977,20 +9007,30 @@ document.addEventListener('DOMContentLoaded', function(){
     <!-- Step 1: Enter amount -->
     <div id="credit-step-amount">
       <div class="modal-title">Add Fruicey Credit</div>
-      <div style="font-size:13px;color:var(--text3);margin-bottom:14px">Top up your Fruicey Credit via PayNow. Choose an amount below.</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:12px">Top up via PayNow and get <b style="color:var(--green-dark)">bonus credit free</b>. Choose an amount below.</div>
 
-      <!-- Fun themed amount display -->
-      <div id="credit-amount-display" style="background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:20px;padding:22px 16px;text-align:center;color:#fff;margin-bottom:16px;box-shadow:0 8px 24px rgba(28,77,58,.22);position:relative;overflow:hidden">
-        <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;opacity:.85;font-family:var(--body)">Topping up</div>
-        <div id="credit-amount-big" style="font-family:var(--font);font-size:46px;line-height:1.1;margin-top:2px">$0</div>
-        <div style="font-size:12px;opacity:.85;font-family:var(--body);margin-top:2px">= <span id="credit-amount-value">$0.00</span> Fruicey Credit</div>
+      <div class="credit-promo">
+        <div class="credit-promo-head"><i class="ti ti-gift"></i> Load more, get more</div>
+        <div class="credit-promo-rows"><span>$30 &rarr; <b>$33</b></span><span>$50 &rarr; <b>$57</b></span><span>$100 &rarr; <b>$120</b></span></div>
       </div>
 
-      <!-- Selectable presets (no manual entry) -->
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <button type="button" class="credit-preset" data-amt="20" onclick="pickCreditAmount(20)">$20</button>
-        <button type="button" class="credit-preset" data-amt="50" onclick="pickCreditAmount(50)">$50</button>
-        <button type="button" class="credit-preset" data-amt="100" onclick="pickCreditAmount(100)">$100</button>
+      <!-- Fun themed amount display -->
+      <div id="credit-amount-display" style="background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:20px;padding:20px 16px;text-align:center;color:#fff;margin-bottom:14px;box-shadow:0 8px 24px rgba(28,77,58,.22);position:relative;overflow:hidden">
+        <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;opacity:.85;font-family:var(--body)">You pay</div>
+        <div id="credit-amount-big" style="font-family:var(--font);font-size:44px;line-height:1.1;margin-top:2px">$0</div>
+        <div style="font-size:12.5px;opacity:.9;font-family:var(--body);margin-top:3px">= <b><span id="credit-amount-value">$0.00</span></b> Fruicey Credit</div>
+        <div id="credit-bonus-line" style="font-size:11px;opacity:.85;font-family:var(--body);margin-top:2px"></div>
+      </div>
+
+      <!-- Selectable presets with bonus -->
+      <div style="display:flex;gap:8px;margin-bottom:9px">
+        <button type="button" class="credit-preset" data-amt="30" onclick="pickCreditAmount(30)">$30<small>+10%</small></button>
+        <button type="button" class="credit-preset" data-amt="50" onclick="pickCreditAmount(50)">$50<small>+14%</small></button>
+        <button type="button" class="credit-preset" data-amt="100" onclick="pickCreditAmount(100)">$100<small>+20%</small></button>
+      </div>
+      <div class="credit-custom">
+        <span>Other</span>
+        <div class="credit-custom-inp"><span>$</span><input type="number" id="credit-custom-input" inputmode="decimal" min="20" step="1" placeholder="min 20" oninput="onCustomCredit(this.value)"></div>
       </div>
       <input type="hidden" id="credit-amount-input" value="">
 
@@ -9009,7 +9049,8 @@ document.addEventListener('DOMContentLoaded', function(){
         <div class="paynow-uen">UEN 53434968D</div>
       </div>
       <div class="paynow-summary">
-        <div class="paynow-sum-row paynow-sum-total"><span class="paynow-sum-label">Top-up amount</span><span class="paynow-sum-val" id="credit-paynow-amount">$0.00</span></div>
+        <div class="paynow-sum-row paynow-sum-total"><span class="paynow-sum-label">You pay now</span><span class="paynow-sum-val" id="credit-paynow-amount">$0.00</span></div>
+        <div class="paynow-sum-row" id="credit-paynow-receive-row" style="margin-top:4px;color:var(--green-dark)"><span class="paynow-sum-label">You'll receive</span><span class="paynow-sum-val" id="credit-paynow-receive">$0.00</span></div>
       </div>
       <div class="paynow-note" style="margin-top:10px;text-align:left">
         <ol style="margin:0;padding-left:20px;line-height:1.8">

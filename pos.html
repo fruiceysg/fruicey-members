@@ -2128,10 +2128,14 @@ async function lookupMember(){
   if(_foundMember){ selectFoundMember(_foundMember); _foundMember=null; }
 }
 
+// Tier discount rates (match the app): Gold 5%, Platinum 10%, Diamond 15%. Case-insensitive.
+var POS_TIER_PCT = { member:0, gold:5, platinum:10, diamond:15 };
+function _tierPct(name){ return POS_TIER_PCT[String(name||'').trim().toLowerCase()] || 0; }
+
 // Shared: load a found member into the sale (used by phone lookup AND name search)
 function selectFoundMember(member){
   currentMember=member;
-  memberDiscount=0; // no tier discount from rewards pass
+  memberDiscount=0; // set from the member's tier below (authoritative: backend getMemberTier)
   memberPhoneVal = np(member.phone||'');
   var pv=document.getElementById('member-phone-input'); if(pv) pv.value=memberPhoneVal;
   var mp=document.getElementById('member-phone'); if(mp) mp.value=memberPhoneVal;
@@ -2139,6 +2143,22 @@ function selectFoundMember(member){
   showMemberDisplay(member);
   showToast(member.first+' '+member.last+' — '+((parseInt(member.stamps)||0))+'/9 stamps');
   updateTotals();
+  applyMemberTierDiscount(member);
+}
+
+// Pull the member's current tier from the backend and apply the tier % to this sale.
+function applyMemberTierDiscount(member){
+  var phone = member && member.phone ? np(member.phone) : '';
+  if(!phone) return;
+  // If the member object already carries a tier, apply it at once (no flicker).
+  if(member.tier){ memberDiscount = _tierPct(member.tier); updateTotals(); }
+  apiGet({action:'getMemberTier', phone:phone})
+    .then(function(r){
+      var pct = _tierPct(r && r.tier);
+      // Apply only if this member is still the one attached to the sale.
+      if(currentMember && np(currentMember.phone)===phone){ memberDiscount = pct; updateTotals(); }
+    })
+    .catch(function(){});
 }
 
 // Search members by name (client-side filter over getAllStampCards)

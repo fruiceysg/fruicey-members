@@ -6553,11 +6553,20 @@ const PLATFORM_FEE = 0.50;   // flat platform fee added to every order
 // Membership tier discounts, applied AFTER the self-collect 10% — self-collect members only.
 let _memberTierName = 'Member';
 const TIER_RATE = { Gold:0.05, Platinum:0.10, Diamond:0.15, Member:0 };
+// Case-insensitive tier lookup — guards against the backend returning a different casing.
+function _tierRate(name){
+  switch(String(name||'').trim().toLowerCase()){
+    case 'gold': return 0.05;
+    case 'platinum': return 0.10;
+    case 'diamond': return 0.15;
+    default: return 0;
+  }
+}
 function checkoutDiscount(sub, isDelivery){
   // Members get their tier % off; self-collect adds a further 10% off (delivery = tier % only).
   // Final rounded to nearest 10c. The delivery fee is computed separately on the pre-discount value.
   if(!currentUser) return { discountedSub: sub, disc: 0, rate: 0 };
-  const rate = TIER_RATE[_memberTierName] || 0;
+  const rate = _tierRate(_memberTierName);
   const selfCollect = isDelivery ? 1 : 0.9;                       // self-collect: extra 10% off
   if(selfCollect === 1 && rate === 0) return { discountedSub: sub, disc: 0, rate: 0 };
   const discountedSub = Math.round(sub * selfCollect * (1 - rate) * 10) / 10;   // nearest 10 cents

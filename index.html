@@ -254,6 +254,22 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .review-card-name{font-family:var(--font);font-size:14px;color:var(--green-dark);margin-top:8px}
 .review-card-date{font-size:11px;color:var(--text3);margin-top:1px}
 .review-empty{color:var(--text3);font-size:13px;text-align:center;padding:28px 16px;width:100%;background:#ffffff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.07);box-sizing:border-box}
+.a2hs-hero{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.a2hs-hero .ti{font-size:30px}
+.a2hs-sub{text-align:center;font-size:13.5px;color:var(--text2);margin:0 0 14px;line-height:1.5}
+.a2hs-perks{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:10px}
+.a2hs-perks li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--text);line-height:1.45}
+.a2hs-perks li i{color:var(--green);font-size:18px;flex-shrink:0;margin-top:1px}
+.a2hs-steps{background:#f4f8f5;border:1px solid #e4efe8;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.a2hs-steps-h{font-family:var(--font);font-size:13px;color:var(--green-dark);margin-bottom:6px}
+.a2hs-steps ol{margin:0;padding-left:18px;font-size:13px;color:var(--text2);line-height:1.7}
+.a2hs-steps ol b{color:var(--text)}
+.a2hs-steps .ti{vertical-align:-2px;font-size:15px}
+.a2hs-later{display:block;width:100%;background:none;border:none;color:var(--text3);font-family:var(--body);font-size:13px;padding:10px 0 0;cursor:pointer}
+.nutri-mid-note{display:flex;align-items:flex-start;gap:9px;background:#fff8e9;border:1px solid #f3e3bf;border-radius:12px;padding:11px 13px;margin:2px 0 14px;font-size:12.5px;color:#8a6d2f;line-height:1.5}
+.nutri-mid-note i{font-size:18px;flex-shrink:0;margin-top:1px;color:#c99700}
+.nutri-mid-note b{color:#6f571f}
+.nutri-mid-note a{color:#c99700;font-weight:700;text-decoration:underline;cursor:pointer;white-space:nowrap}
 .review-share-btn{display:flex;align-items:center;justify-content:center;gap:7px;margin:4px auto 0;padding:11px 20px;border-radius:999px;border:1.5px solid var(--green);background:#fff;color:var(--green-dark);font-family:var(--body);font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .12s,background .15s}
 .review-share-btn i{font-size:17px}
 .review-share-btn:active{transform:scale(.97)}
@@ -3273,6 +3289,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <div id="prog-focus-chips" class="prog-focus-chips"></div>
       <div id="prog-focus-rec" class="prog-focus-rec"></div>
     </div>
+    <div class="nutri-mid-note"><i class="ti ti-device-mobile"></i><span><b>Saved on this phone only.</b> Add Fruicey to your Home Screen so your log isn&rsquo;t cleared, and tap <b>Download as PDF</b> now and then for a backup. <a onclick="showA2HS()">Show me how</a></span></div>
 
     <div class="prog-wl">
       <div class="prog-wl-head"><span>Vitamins this week</span><button type="button" class="nut-reset" onclick="resetVitToday()"><i class="ti ti-refresh"></i> Reset today</button></div>
@@ -3484,6 +3501,31 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       Wilson will review your order shortly. Once he <b>acknowledges</b> it, your order status changes to <b>Preparing</b> — that's when he starts making it. We'll keep you posted via WhatsApp.
     </div>
     <button class="btn btn-primary" onclick="document.getElementById('ack-modal').classList.remove('open')">Got it</button>
+  </div>
+</div>
+
+<!-- Add to Home Screen nudge (shown once after signup) -->
+<div class="modal-bg" id="a2hs-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="a2hs-hero"><i class="ti ti-device-mobile"></i></div>
+    <div class="modal-title" style="text-align:center;margin-bottom:6px">Add Fruicey to your Home Screen</div>
+    <div class="a2hs-sub">One tap to pop Fruicey onto your phone &mdash; then it works just like an app:</div>
+    <ul class="a2hs-perks">
+      <li><i class="ti ti-app-window"></i><span>Opens full-screen in one tap &mdash; no browser bars</span></li>
+      <li><i class="ti ti-bolt"></i><span>Faster to reach, right beside your other apps</span></li>
+      <li><i class="ti ti-shield-check"></i><span>Keeps your rewards, credit &amp; Nutri-Log saved on your phone &mdash; they won&rsquo;t get cleared</span></li>
+    </ul>
+    <div class="a2hs-steps" id="a2hs-steps-ios">
+      <div class="a2hs-steps-h">On iPhone &amp; iPad</div>
+      <ol><li>Tap the <b>Share</b> icon <i class="ti ti-share-2"></i> in Safari</li><li>Scroll down and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol>
+    </div>
+    <div class="a2hs-steps" id="a2hs-steps-android" style="display:none">
+      <div class="a2hs-steps-h">On Android</div>
+      <ol><li>Tap the <b>&#8942;</b> menu in Chrome (top-right)</li><li>Tap <b>Add to Home screen</b></li><li>Tap <b>Add</b></li></ol>
+    </div>
+    <button class="btn btn-primary" onclick="closeA2HS()">Got it</button>
+    <button type="button" class="a2hs-later" onclick="closeA2HS()">Maybe later</button>
   </div>
 </div>
 
@@ -4412,6 +4454,7 @@ document.addEventListener('DOMContentLoaded', function(){
         showToast('Welcome to Fruicey, '+currentUser.first+'!');
         startNotif();
         goTab('home');
+        maybeShowA2HS();
       } else if(res.error==='phone_exists'){ err.textContent='Phone number already registered.'; err.style.display='block'; }
       else if(res.error==='email_exists'){ err.textContent='Email already registered.'; err.style.display='block'; }
     }catch(e){ err.textContent='Connection error.'; err.style.display='block'; }
@@ -7851,6 +7894,18 @@ function renderDexBody(tried){
 function _resetAccModalBox(m){ var b=m&&m.querySelector('.modal-box'); if(b){ b.style.transform=''; b.scrollTop=0; } }
 function openWalletModal(){ var m=document.getElementById('wallet-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }
 function closeWalletModal(){ var m=document.getElementById('wallet-modal'); if(m) m.classList.remove('open'); }
+function _a2hsStandalone(){ try{ return (window.navigator.standalone===true)||window.matchMedia('(display-mode: standalone)').matches; }catch(e){ return false; } }
+function _a2hsIsIOS(){ var ua=navigator.userAgent||''; return /iphone|ipad|ipod/i.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1); }
+function _a2hsPlatform(){ var ios=_a2hsIsIOS(); var si=document.getElementById('a2hs-steps-ios'),sa=document.getElementById('a2hs-steps-android'); if(si) si.style.display=ios?'':'none'; if(sa) sa.style.display=ios?'none':''; }
+function showA2HS(){ _a2hsPlatform(); var m=document.getElementById('a2hs-modal'); if(m) m.classList.add('open'); }
+function closeA2HS(){ var m=document.getElementById('a2hs-modal'); if(m) m.classList.remove('open'); try{ localStorage.setItem('fruicey_a2hs_seen','1'); }catch(e){} }
+function maybeShowA2HS(){
+  if(_a2hsStandalone()) return;
+  try{ if(localStorage.getItem('fruicey_a2hs_seen')) return; }catch(e){}
+  if(window.matchMedia('(min-width:900px)').matches && window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  _a2hsPlatform();
+  var m=document.getElementById('a2hs-modal'); if(m) setTimeout(function(){ m.classList.add('open'); }, 1300);
+}
 function openNutriModal(){ var m=document.getElementById('nutri-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } renderFocusChips(); renderQuickAdd(); renderVitWeek(); }
 function closeNutriModal(){ var m=document.getElementById('nutri-modal'); if(m) m.classList.remove('open'); }
 function openAccountModal(){ var m=document.getElementById('account-modal'); if(m){ _resetAccModalBox(m); m.classList.add('open'); } }

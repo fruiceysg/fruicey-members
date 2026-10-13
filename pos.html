@@ -473,7 +473,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           </div>
         </div>
         <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px;margin-bottom:16px;font-size:12px;color:#795548">
-          ⚠️ This will clear today's transactions from the POS screen. All data remains saved in Google Sheets.
+          This will clear today's transactions from the POS screen. All data remains saved in Google Sheets.
         </div>
         <div id="settle-txn-count" style="font-size:12px;color:#aaa;text-align:center;margin-bottom:14px"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -1698,7 +1698,7 @@ const _origTitle = document.title;
 function startTitleFlash(msg){
   if(_titleFlashTimer) return;
   var on = true;
-  _titleFlashTimer = setInterval(function(){ document.title = on ? ('🔴 ' + msg) : _origTitle; on = !on; }, 900);
+  _titleFlashTimer = setInterval(function(){ document.title = on ? ('(!) ' + msg) : _origTitle; on = !on; }, 900);
 }
 function stopTitleFlash(){
   if(_titleFlashTimer){ clearInterval(_titleFlashTimer); _titleFlashTimer = null; }

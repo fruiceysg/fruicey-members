@@ -2933,7 +2933,7 @@ async function checkout(){
         rcptNo: sale.rcptNo||'',
         date: dateStr,
         time: timeStr,
-        items: JSON.stringify(cart.map(i=>({qty:i.qty,label:i.label,price:i.price,remark:i.remark||''}))),
+        items: JSON.stringify(cart.map(i=>({id:i.id,qty:i.qty,label:i.label,price:i.price,remark:i.remark||''}))),
         subtotal: sub.toFixed(2),
         discount: disc.toFixed(2),
         total: total.toFixed(2),

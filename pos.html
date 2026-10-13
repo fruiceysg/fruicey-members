@@ -2249,7 +2249,7 @@ function switchPosTab(tab){
   if(tab==='credit'){ loadPendingDeposits(); }
 }
 
-function clearMember(){
+function clearMember(silent){
   memberPhoneVal='';
   var e=document.getElementById('member-phone-input'); if(e) e.value='';
   var m=document.getElementById('member-phone'); if(m) m.value='';
@@ -2257,7 +2257,7 @@ function clearMember(){
   var h=document.getElementById('member-history'); if(h) h.style.display='none';
   var ni=document.getElementById('member-name-input'); if(ni) ni.value='';
   var nr=document.getElementById('member-name-results'); if(nr){ nr.style.display='none'; nr.innerHTML=''; }
-  updateTotals(); showToast('Member cleared');
+  updateTotals(); if(!silent) showToast('Member cleared');
 }
 
 // ── CATEGORIES ───────────────────────────────────────────────────────
@@ -3062,12 +3062,8 @@ function closeReceipt(){
   cart=[]; paymentMethod='';
   // Reset credit state
   resetCreditState();
-  // Auto-clear member after tender
-  currentMember=null; memberDiscount=0;
-  memberPhoneVal='';
-  var mp=document.getElementById('member-phone'); if(mp) mp.value='';
-  var mpv=document.getElementById('member-phone-input'); if(mpv) mpv.value='';
-  clearMemberDisplay();
+  // Auto-clear member after tender — full reset (phone, name search, history, display, discount)
+  clearMember(true);
   document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('pay-active'));
   switchPosTab('menu');
   renderCart();

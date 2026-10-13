@@ -973,15 +973,22 @@ button.cal-day:active{transform:scale(.94)}
 .tier-hint{font-size:12.5px;color:var(--text3);text-align:center;margin:6px 0 0;font-family:var(--body);line-height:1.4}
 /* ── Spending tracker: progress bar with a star marker ── */
 /* ── Member card: peek from the side, tap the tip to flip it out ── */
-.tiercard-stage{position:relative;width:calc(100% + 52px);margin:2px -26px;height:212px;perspective:1100px;overflow:hidden}
+.tiercard-stage{position:relative;width:100vw;margin:2px calc(50% - 50vw);height:242px;perspective:1100px;overflow:hidden}
 .tiercard-glow{position:absolute;top:50%;right:-20px;width:150px;height:150px;transform:translateY(-50%);border-radius:50%;filter:blur(42px);opacity:.45;pointer-events:none;z-index:0;transition:opacity .5s,background .5s}
-.tiercard{position:absolute;top:50%;right:0;width:min(84%,360px);aspect-ratio:540/349;z-index:1;transform-origin:right center;transform:translateY(-50%) translateX(calc(100% - 46px)) rotateY(-34deg) rotate(5deg);transition:transform .62s cubic-bezier(.2,.85,.25,1),right .62s cubic-bezier(.2,.85,.25,1),filter .45s;cursor:pointer;will-change:transform;border-radius:16px;filter:drop-shadow(-9px 9px 16px rgba(0,0,0,.24))}
+.tiercard{position:absolute;top:50%;right:0;width:min(82%,340px);aspect-ratio:540/349;z-index:1;transform-origin:right center;transform:translateY(-50%) translateX(calc(100% - 46px)) rotateY(-34deg) rotate(5deg);transition:transform .62s cubic-bezier(.2,.85,.25,1),right .62s cubic-bezier(.2,.85,.25,1),filter .45s;cursor:pointer;will-change:transform;border-radius:16px;filter:drop-shadow(-9px 9px 16px rgba(0,0,0,.24))}
 .tiercard.idle{animation:tcWiggle 3s ease-in-out infinite}
-.tiercard.open{right:calc(50% - min(42%,180px));transform:translateY(-50%) translateX(0) rotateY(0deg) rotate(-2deg) scale(1);filter:drop-shadow(0 16px 30px rgba(0,0,0,.26));animation:none}
+.tiercard.open{right:calc(50% - min(41%,170px));transform:translateY(-50%) translateX(0) rotateY(0deg) rotate(-2deg) scale(1);filter:drop-shadow(0 16px 30px rgba(0,0,0,.26));animation:none}
 .tiercard-img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
 @keyframes tcWiggle{0%,100%{transform:translateY(-50%) translateX(calc(100% - 46px)) rotateY(-34deg) rotate(5deg)}50%{transform:translateY(-50%) translateX(calc(100% - 55px)) rotateY(-29deg) rotate(3.5deg)}}
-.tiercard-hint{position:absolute;right:56px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px;font-family:var(--font);font-size:12px;color:var(--text3);white-space:nowrap;pointer-events:none;z-index:2;animation:tcHint 1.9s ease-in-out infinite}
-.tiercard-hint .ti{font-size:15px}
+.tiercard-details{position:absolute;left:0;right:48px;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 12px;z-index:2;transition:opacity .3s}
+.tiercard-stage.opened .tiercard-details{opacity:0;pointer-events:none}
+.tiercard-details .acc-profile-name{margin-top:0;font-size:21px}
+.tiercard-details .acc-profile-sub{margin-top:0}
+.tiercard-details .tier-tracker{margin:7px auto 0}
+.tiercard-details #tier-hint{margin-top:2px}
+.tiercard-hint{display:inline-flex;align-items:center;gap:4px;font-family:var(--font);font-size:11.5px;color:var(--text3);white-space:nowrap;pointer-events:none;margin-top:3px;animation:tcHintPulse 1.9s ease-in-out infinite}
+.tiercard-hint .ti{font-size:14px}
+@keyframes tcHintPulse{0%,100%{opacity:.65}50%{opacity:1}}
 .tiercard-stage.opened .tiercard-hint{opacity:0;transition:opacity .3s}
 .tiercard-share{position:absolute;left:0;right:54px;bottom:10px;margin:0 auto;width:max-content;max-width:70%;z-index:3;transition:opacity .3s}
 .tiercard-stage.opened .tiercard-share{opacity:0;pointer-events:none}
@@ -3192,16 +3199,17 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
           <img id="tiercard-img" class="tiercard-img" alt="Your Fruicey card">
           <div id="tiercard-lockmsg" class="tiercard-lockmsg"><i class="ti ti-lock"></i><div>Spend to unlock<br><b id="tiercard-lockgoal">Gold</b></div></div>
         </div>
-        <div class="tiercard-hint"><i class="ti ti-hand-finger"></i> Tap your card</div>
-        <button type="button" class="review-share-btn tiercard-share" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
+        <div class="tiercard-details">
+          <div id="tier-member-head">
+            <div class="acc-profile-name" id="acc-name">My Account</div>
+            <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span id="tier-status-label">Fruicey Member</span></div>
+          </div>
+          <div id="tier-tracker" class="tier-tracker"></div>
+          <div id="tier-hint" class="tier-hint"></div>
+          <div class="tiercard-hint">Tap your card <i class="ti ti-chevron-right"></i></div>
+        </div>
       </div>
-      <!-- Member identity + status -->
-      <div id="tier-member-head">
-        <div class="acc-profile-name" id="acc-name">My Account</div>
-        <div class="acc-profile-sub"><i class="ti ti-discount-check-filled"></i><span id="tier-status-label">Fruicey Member</span></div>
-      </div>
-      <div id="tier-tracker" class="tier-tracker"></div>
-      <div id="tier-hint" class="tier-hint"></div>
+      <button type="button" class="review-share-btn" style="margin:12px auto 2px" onclick="openReviewForm()"><i class="ti ti-camera-plus"></i> Share your experience</button>
     </div>
   </div>
 

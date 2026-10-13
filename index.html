@@ -6308,7 +6308,7 @@ function initAccModalSwipe(){
 // Event delegation for menu
 document.addEventListener('click', function(e){
   const catPill = e.target.closest('.cat-pill');
-  if(catPill){ var _nc=decodeURIComponent(catPill.dataset.cat); if(_nc!==currentCat){ playPageFlip(); } currentCat=_nc; renderCatPills(); renderProducts(); return; }
+  if(catPill){ var _nc=decodeURIComponent(catPill.dataset.cat); var _ch=(_nc!==currentCat); currentCat=_nc; if(_ch){ playPageFlip(); } renderCatPills(); renderProducts(); return; }
 
   const sizeBtn = e.target.closest('.size-btn');
   if(sizeBtn && sizeBtn.dataset.pid){
@@ -7490,15 +7490,17 @@ function _initPageTurn(){ if(_pageturn) return; try{ _pageturn=new Audio(PAGETUR
 function _pageTurnUnlock(){ _initPageTurn(); if(!_pageturn||_pageturnReady) return; try{ _pageturn.muted=true; var p=_pageturn.play(); if(p&&p.then){ p.then(function(){ _pageturn.pause(); _pageturn.currentTime=0; _pageturn.muted=false; _pageturnReady=true; }).catch(function(){ _pageturn.muted=false; }); } else { _pageturn.pause(); _pageturn.muted=false; _pageturnReady=true; } }catch(e){} }
 ['touchend','mousedown','keydown','click'].forEach(function(ev){ window.addEventListener(ev,_pageTurnUnlock,{passive:true}); });
 function playPageTurn(){ _initPageTurn(); if(!_pageturn) return; try{ _pageturn.currentTime=0; _pageturn.muted=false; var p=_pageturn.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){} }
+// Superfood Bowls run silently through the whole flow (tab → options → add to cart).
+function _inBowls(){ return currentCat === 'Superfood Bowls'; }
 // Menu category change (pill tap + swipe) — embedded page-turn (respects the sound toggle).
-function playPageFlip(){ if(!_sfxOn) return; playPageTurn(); }
+function playPageFlip(){ if(!_sfxOn || _inBowls()) return; playPageTurn(); }
 // "Next" button — bright bubble pop with a sparkle on top.
-function playNext(){ _sfxPlay(function(){
+function playNext(){ if(_inBowls()) return; _sfxPlay(function(){
   _sfxSweep(500, 940, 0, 0.09, 'sine', 0.20);
   _sfxTone(1250, 0.05, 0.06, 'sine', 0.10);
 }); }
 // Product opened from the menu — rising two-bubble bloop ("Rising bubble").
-function playBubble(){ _sfxPlay(function(){
+function playBubble(){ if(_inBowls()) return; _sfxPlay(function(){
   _sfxSweep(380, 680, 0,    0.10, 'sine', 0.18);
   _sfxSweep(680, 1020, 0.07, 0.11, 'sine', 0.12);
 }); }
@@ -7508,7 +7510,7 @@ function playBubblePop(){ _sfxPlay(function(){
   _sfxTone(1250, 0.05, 0.06, 'sine', 0.10);
 }); }
 // Light bubble for each choice tapped inside the product options
-function playPick(){ _sfxPlay(function(){
+function playPick(){ if(_inBowls()) return; _sfxPlay(function(){
   _sfxSweep(360, 640, 0, 0.09, 'sine', 0.16);
 }); }
 document.addEventListener('click', function(e){ if(e.target && e.target.closest && e.target.closest('.pd-size, .pd-drizzle')) playPick(); }, {passive:true});

@@ -1069,7 +1069,10 @@ button.cal-day:active{transform:scale(.94)}
 .prog-quickadd{margin:2px 0 6px;background:var(--green-light);border-radius:12px;padding:11px 12px}
 .qa-head{font-size:11px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px}
 .qa-selects{display:flex;gap:8px;flex-wrap:wrap}
-.qa-sel{flex:1;min-width:150px;padding:9px 10px;border:1px solid rgba(46,158,91,.4);border-radius:9px;font-family:var(--body);font-size:12.5px;background:#fff;color:var(--text2);cursor:pointer}
+.qa-sel{flex:1;min-width:150px;padding:11px 34px 11px 13px;border:1.5px solid var(--green);border-radius:12px;font-family:var(--font);font-size:12.5px;color:var(--green-dark);cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232e7d4f' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:15px;transition:border-color .15s,box-shadow .15s,background-color .15s}
+.qa-sel:focus{outline:none;border-color:var(--green-dark);background-color:var(--green-light);box-shadow:0 0 0 3px rgba(143,206,161,.35)}
+.qa-sel option{font-family:var(--body);color:var(--text)}
+.qa-sel optgroup{font-family:var(--font);color:var(--green-dark)}
 .qa-msg{display:none;margin-top:9px;background:#fff;border:1px solid var(--green);border-radius:9px;padding:8px 11px;font-size:11.5px;color:var(--green-dark);font-family:var(--body);line-height:1.45}
 .qa-msg.show{display:block}
 .qa-msg .ti{vertical-align:-1px;margin-right:3px}

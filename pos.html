@@ -468,6 +468,11 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             <span style="font-size:13px;color:#D70F64">FoodPanda</span>
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-panda">$0.00</span>
           </div>
+          <div style="font-size:11px;font-weight:600;color:#888;margin:10px 0 6px">OTHER</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
+            <span style="font-size:13px;color:#7a5cc0">Corporate Orders</span>
+            <span style="font-size:13px;font-weight:600;color:#333" id="settle-corp">$0.00</span>
+          </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px">
             <span style="font-size:14px;font-weight:700;color:#333">Grand Total</span>
             <span style="font-size:18px;font-weight:800;color:#dd8581" id="settle-total">$0.00</span>
@@ -3208,12 +3213,13 @@ function renderSalesReport(){
     });
     const appPaynow = sales.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').reduce((t,s)=>t+s.total,0);
     const appCredit = sales.filter(s=>s.payment==='App Credit').reduce((t,s)=>t+s.total,0);
-    const appTotal  = appPaynow + appCredit;
+    const appCard   = sales.filter(s=>s.payment==='App Card'||s.payment==='App Credit+Card').reduce((t,s)=>t+s.total,0);
+    const appTotal  = appPaynow + appCredit + appCard;
     const grab    = sales.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0);
     const panda   = sales.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0);
     const online  = sales.filter(s=>s.payment==='Online Shop').reduce((t,s)=>t+s.total,0);
     const total   = inStoreActive.reduce((t,s)=>t+s.total,0);
-    return {cash,card,paynow,credit,appPaynow,appCredit,appTotal,grab,panda,online,total,count:inStoreActive.length,
+    return {cash,card,paynow,credit,appPaynow,appCredit,appCard,appTotal,grab,panda,online,total,count:inStoreActive.length,
       appCount:sales.filter(s=>(s.payment||'').startsWith('App ')).length};
   }
   const d=payBreakdown(todaySales);
@@ -3237,10 +3243,11 @@ function renderSalesReport(){
         <tr style="background:#eef6ff"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1;font-weight:600" colspan="3">Fruicey App</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.appPaynow.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">App Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='App Credit').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.appCredit.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Payment Link</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='App Card'||s.payment==='App Credit+Card').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${d.appCard.toFixed(2)}</td></tr>
         <tr style="font-weight:600;background:#e8f0fe"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.appCount}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#5b7db1">$${d.appTotal.toFixed(2)}</td></tr>
-        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Payment Link <span style="color:#aaa;font-weight:400">(card)</span></td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"></td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-applink-daily" step="0.01" min="0" placeholder="0.00" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
         <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-grab-daily" step="0.01" min="0" placeholder="0.00" value="${d.grab||''}" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
         <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-panda-daily" step="0.01" min="0" placeholder="0.00" value="${d.panda||''}" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
+        <tr style="background:#f3f0ff"><td style="padding:7px 10px;border:1px solid #eee;color:#7a5cc0">Corporate Orders <span style="color:#aaa;font-weight:400">(manual)</span></td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"></td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-corp-daily" step="0.01" min="0" placeholder="0.00" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
       </table>
     </div>
     <div style="margin-bottom:16px">
@@ -3260,6 +3267,7 @@ function renderSalesReport(){
         <tr style="background:#eef6ff"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1;font-weight:600" colspan="3">Fruicey App</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='App PayNow'||s.payment==='App Credit+PayNow').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.appPaynow.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">App Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='App Credit').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.appCredit.toFixed(2)}</td></tr>
+        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Payment Link</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='App Card'||s.payment==='App Credit+Card').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.appCard.toFixed(2)}</td></tr>
         <tr style="font-weight:600;background:#e8f0fe"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.appCount}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#5b7db1">$${m.appTotal.toFixed(2)}</td></tr>
         <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.grab.toFixed(2)}</td></tr>
         <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.panda.toFixed(2)}</td></tr>
@@ -3459,7 +3467,8 @@ function dailySettlement(){
   const grab   = active.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-grab-daily')||{}).value)||0);
   const panda  = active.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-panda-daily')||{}).value)||0);
   const online = active.filter(s=>s.payment==='Online Shop').reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-online-daily')||{}).value)||0);
-  const applink = parseFloat((document.getElementById('settle-applink-daily')||{}).value)||0;
+  const appCard = active.filter(s=>s.payment==='App Card'||s.payment==='App Credit+Card').reduce((t,s)=>t+s.total,0);
+  const corp = parseFloat((document.getElementById('settle-corp-daily')||{}).value)||0;
   const mdr    = parseFloat((document.getElementById('report-mdr-daily')||{}).value)||0;
   const grandTotal = active.reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-grab-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-panda-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-online-daily')||{}).value)||0) - mdr;
   const count  = todaySales.length;
@@ -3472,7 +3481,8 @@ function dailySettlement(){
   document.getElementById('settle-credit').textContent  = '$'+credit.toFixed(2);
   document.getElementById('settle-app-paynow').textContent = '$'+appPaynow.toFixed(2);
   document.getElementById('settle-app-credit').textContent = '$'+appCredit.toFixed(2);
-  { var _al=document.getElementById('settle-applink'); if(_al) _al.textContent='$'+applink.toFixed(2); }
+  { var _al=document.getElementById('settle-applink'); if(_al) _al.textContent='$'+appCard.toFixed(2); }
+  { var _co=document.getElementById('settle-corp'); if(_co) _co.textContent='$'+corp.toFixed(2); }
   document.getElementById('settle-grab').textContent    = '$'+grab.toFixed(2);
   document.getElementById('settle-panda').textContent   = '$'+panda.toFixed(2);
   document.getElementById('settle-total').textContent   = '$'+grandTotal.toFixed(2);

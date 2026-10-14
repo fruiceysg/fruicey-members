@@ -6966,6 +6966,9 @@ async function sendWhatsApp(method){
   if(_ivePaidBtn){ _ivePaidBtn.disabled=true; }
   if(_payCardBtn){ _payCardBtn.disabled=true; }
   try{
+    if(payByCardFlow && pendingOrder && pendingOrder.payload){
+      pendingOrder.payload.payment = (pendingOrder.payload.payment === 'App Credit+PayNow') ? 'App Credit+Card' : 'App Card';
+    }
     const res = await apiPost(pendingOrder.payload);          // NOW the order is actually created
     if(!res || !res.success){
       if(res && res.error==='unauthorized'){ currentUser=null; authToken=''; try{sessionStorage.removeItem('fruicey_user');sessionStorage.removeItem('fruicey_token');}catch(e){} showToast('Your session expired — please log in again.'); openLogin(); }

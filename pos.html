@@ -100,6 +100,13 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .cart-footer{flex-shrink:0;padding:10px 12px;border-top:1px solid #eee}
 .summary-row{display:flex;justify-content:space-between;font-size:13px;color:#888;margin-bottom:4px}
 .disc-row{display:none;justify-content:space-between;font-size:13px;color:#27ae60;font-weight:500;margin-bottom:4px}
+.pos-disc-btns{display:flex;gap:6px;margin-bottom:8px}
+.pos-disc-btn{flex:1;padding:6px 3px;border:1.5px solid #e0e0e0;border-radius:var(--r);background:#fff;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font);color:#666;transition:all .15s}
+.pos-disc-btn.active{border-color:#8fcea1;background:#8fcea1;color:#fff}
+.pos-redeem-btn{width:100%;padding:7px;border:1.5px dashed #c9a24a;border-radius:var(--r);background:#fff9ec;color:#a97d14;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.prize-item{display:block;width:100%;text-align:left;padding:11px 14px;margin-bottom:7px;border:1px solid #e8e8e8;border-radius:8px;background:#fff;font-family:var(--font);font-size:13px;color:#333;cursor:pointer}
+.prize-item:active{background:#f5f5f5}
+.prize-item.clear{color:#e74c3c;border-color:#f0d0d0;text-align:center;font-size:12px}
 .total-row{display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:#111;margin:8px 0 10px}
 .pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px}
 .pay-btn{padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:var(--r);background:#fff;cursor:pointer;font-size:12px;font-weight:500;font-family:var(--font);color:#666;transition:all .15s;text-align:center}
@@ -315,8 +322,15 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       </div>
       <div class="cart-items" id="cart-items"></div>
       <div class="cart-footer">
+        <div class="pos-disc-btns">
+          <button type="button" class="pos-disc-btn" data-pct="5" onclick="setManualDisc(5,'Tenant 5% off')">Tenant 5%</button>
+          <button type="button" class="pos-disc-btn" data-pct="10" onclick="setManualDisc(10,'Staff 10% off')">Staff 10%</button>
+          <button type="button" class="pos-disc-btn" data-pct="0" onclick="setManualDisc(0,'')">No disc.</button>
+        </div>
+        <button type="button" class="pos-redeem-btn" onclick="openPrizeModal()">Redeem Wheel Prize</button>
         <div class="summary-row"><span>Subtotal</span><span id="sub-val">$0.00</span></div>
         <div class="disc-row" id="disc-row"><span id="disc-label">Discount</span><span id="disc-val"></span></div>
+        <div class="disc-row" id="redeem-row" style="color:#c9a24a"><span id="redeem-label">Reward</span><span id="redeem-val"></span></div>
         <div class="total-row"><span>Total</span><span id="total-val">$0.00</span></div>
         <div class="pay-grid">
           <button class="pay-btn" data-method="Cash"><i class="ti ti-cash"></i> Cash</button>
@@ -410,6 +424,14 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 
 
   <!-- STAFF PASSWORD MODAL -->
+  <!-- WHEEL PRIZE REDEMPTION MODAL -->
+  <div class="modal-bg" id="prize-modal">
+    <div class="modal-box">
+      <div class="modal-hdr"><span class="modal-hdr-title">Redeem Wheel Prize</span><button class="modal-close" onclick="closePrizeModal()">✕</button></div>
+      <div id="prize-list" style="padding:14px"></div>
+    </div>
+  </div>
+
   <!-- DAILY SETTLEMENT MODAL -->
   <div class="modal-bg" id="settle-modal">
     <div class="modal-box" style="max-width:340px">
@@ -1348,7 +1370,7 @@ function saveReceiptPDF(){
   showToast('Generating PDF...');
   function doPDF(){
    try{
-    var est=130 + (sale.items.length*9) + (sale.discount>0?10:0) + (sale.payment==='Cash'?10:0);
+    var est=130 + (sale.items.length*9) + (sale.discount>0?10:0) + ((sale.reward||0)>0?6:0) + ((sale.bonusStamps||0)>0?6:0) + (sale.payment==='Cash'?10:0);
     var doc=new window.jspdf.jsPDF({unit:'mm',format:[80, Math.max(170, est)]});
     var hasF=_registerFruiceyFonts(doc);
     var BODY=hasF?'Fruicey':'helvetica';
@@ -1386,8 +1408,11 @@ function saveReceiptPDF(){
       y+=w.length*4+1;
     });
     dash();y+=4;
-    if(sale.discount>0){FT(false);doc.text('Subtotal',lm,y);FN(false);doc.text('$'+sale.subtotal.toFixed(2),rm,y,{align:'right'});y+=4;FT(false);doc.text('Discount',lm,y);FN(false);doc.text('-$'+sale.discount.toFixed(2),rm,y,{align:'right'});y+=4;}
+    if(sale.discount>0||(sale.reward||0)>0){FT(false);doc.text('Subtotal',lm,y);FN(false);doc.text('$'+sale.subtotal.toFixed(2),rm,y,{align:'right'});y+=4;}
+    if(sale.discount>0){FT(false);doc.text('Discount',lm,y);FN(false);doc.text('-$'+sale.discount.toFixed(2),rm,y,{align:'right'});y+=4;}
+    if((sale.reward||0)>0){FT(false);doc.text(sale.rewardLabel||'Reward',lm,y);FN(false);doc.text('-$'+(sale.reward).toFixed(2),rm,y,{align:'right'});y+=4;}
     FT(true);doc.setFontSize(10);doc.text('Total Amount',lm,y);FN(true);doc.text('$'+sale.total.toFixed(2),rm,y,{align:'right'});y+=5;
+    if((sale.bonusStamps||0)>0){doc.setFontSize(8);FT(false);doc.text('Bonus stamps earned: +'+sale.bonusStamps,lm,y);y+=4;doc.setFontSize(10);}
     doc.setFontSize(8);
     FT(false);doc.text('Payment',lm,y);FT(false);doc.text(String(sale.payment),rm,y,{align:'right'});y+=4;
     if(sale.payment==='Cash'&&sale.cashTendered){
@@ -1454,11 +1479,13 @@ function buildReceiptLines(){
     lines.push(right('  x'+item.qty, amt));
   });
   lines.push(dashes());
-  if(sale.discount>0){
+  if(sale.discount>0||(sale.reward||0)>0){
     lines.push(right('Subtotal','$'+sale.subtotal.toFixed(2)));
-    lines.push(right('Discount','-$'+sale.discount.toFixed(2)));
+    if(sale.discount>0) lines.push(right('Discount','-$'+sale.discount.toFixed(2)));
+    if((sale.reward||0)>0) lines.push(right(sale.rewardLabel||'Reward','-$'+(sale.reward).toFixed(2)));
   }
   lines.push(right('TOTAL','$'+sale.total.toFixed(2)));
+  if((sale.bonusStamps||0)>0) lines.push(right('Bonus stamps','+'+sale.bonusStamps));
   lines.push(right('Payment', sale.payment));
   if(sale.payment==='Cash'&&sale.cashTendered!=null){
     lines.push(right('Cash','$'+(sale.cashTendered||0).toFixed(2)));
@@ -2149,6 +2176,7 @@ function _tierPct(name){ return POS_TIER_PCT[String(name||'').trim().toLowerCase
 function selectFoundMember(member){
   currentMember=member;
   memberDiscount=0; // set from the member's tier below (authoritative: backend getMemberTier)
+  window._manualDisc=false; window._manualDiscLabel=''; document.querySelectorAll('.pos-disc-btn').forEach(function(b){b.classList.remove('active');});
   memberPhoneVal = np(member.phone||'');
   var pv=document.getElementById('member-phone-input'); if(pv) pv.value=memberPhoneVal;
   var mp=document.getElementById('member-phone'); if(mp) mp.value=memberPhoneVal;
@@ -2288,6 +2316,7 @@ function clearMember(silent){
   var e=document.getElementById('member-phone-input'); if(e) e.value='';
   var m=document.getElementById('member-phone'); if(m) m.value='';
   currentMember=null; memberDiscount=0; clearMemberDisplay();
+  window._manualDisc=false; window._manualDiscLabel=''; document.querySelectorAll('.pos-disc-btn').forEach(function(b){b.classList.remove('active');});
   var h=document.getElementById('member-history'); if(h) h.style.display='none';
   var ni=document.getElementById('member-name-input'); if(ni) ni.value='';
   var nr=document.getElementById('member-name-results'); if(nr){ nr.style.display='none'; nr.innerHTML=''; }
@@ -2720,24 +2749,40 @@ function renderCart(){
   updateTotals();
 }
 
+// Order discount: member tier (round to cent) OR manual Tenant/Staff (round the payable UP to the cent).
+function _applyDisc(sub){
+  var pct=memberDiscount||0;
+  if(pct<=0) return {disc:0, total:+sub.toFixed(2)};
+  var total = window._manualDisc ? Math.ceil(sub*(100-pct)/100*100)/100 : +(sub - +(sub*pct/100).toFixed(2)).toFixed(2);
+  return {disc:+(sub-total).toFixed(2), total:total};
+}
+function setManualDisc(pct,label){
+  memberDiscount=pct; window._manualDisc = pct>0; window._manualDiscLabel = label||'';
+  document.querySelectorAll('.pos-disc-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.pct===String(pct)); });
+  updateTotals();
+}
 function updateTotals(){
   const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
-  const disc=memberDiscount>0?+(sub*memberDiscount/100).toFixed(2):0;
+  const _dr=_applyDisc(sub); const disc=_dr.disc;
   const isOnline = ONLINE_PLATFORMS.includes(paymentMethod);
-  const total = isOnline ? 0 : +(sub-disc).toFixed(2);
+  const redeem = isOnline ? 0 : Math.min(window._redeemOffset||0, _dr.total);
+  const total = isOnline ? 0 : +(_dr.total - redeem).toFixed(2);
   document.getElementById('sub-val').textContent='$'+sub.toFixed(2);
   const dr=document.getElementById('disc-row');
   if(disc>0){
     dr.style.display='flex';
-    document.getElementById('disc-label').textContent=(currentMember?currentMember.first+"'s ":'')+memberDiscount+'% off';
+    document.getElementById('disc-label').textContent = window._manualDiscLabel ? window._manualDiscLabel : ((currentMember?currentMember.first+"'s ":'')+memberDiscount+'% off');
     document.getElementById('disc-val').textContent='-$'+disc.toFixed(2);
   } else { dr.style.display='none'; }
+  var rr=document.getElementById('redeem-row');
+  if(rr){ if(redeem>0){ rr.style.display='flex'; document.getElementById('redeem-label').textContent=window._redeemLabel||'Reward'; document.getElementById('redeem-val').textContent='-$'+redeem.toFixed(2); } else { rr.style.display='none'; } }
   document.getElementById('total-val').textContent='$'+total.toFixed(2);
 }
 
 function clearCart(){
   if(cart.length && !confirm('Clear entire order?')) return;
   cart=[];currentMember=null;memberDiscount=0;paymentMethod='';
+  window._redeemOffset=0; window._redeemLabel=''; window._bonusStamps=0; window._manualDisc=false; window._manualDiscLabel=''; document.querySelectorAll('.pos-disc-btn').forEach(function(b){b.classList.remove('active');});
   document.getElementById('member-phone').value='';
   clearMemberDisplay();
   document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('pay-active'));
@@ -2884,14 +2929,46 @@ function resetCreditState(){
   if(info) info.style.display = 'none';
 }
 
+// ── WHEEL PRIZE REDEMPTION ──
+var WHEEL_PRIZES = [
+  {name:'$1 Off', type:'amt', amt:1},
+  {name:'Free Upsize (Shakes/Juices)', type:'amt', amt:1},
+  {name:'$3 Off', type:'amt', amt:3},
+  {name:'3 Bonus Stamps', type:'stamps', qty:3},
+  {name:'Free Juice/Shake (M)', type:'free'},
+  {name:'$2 Off Acai Bowl', type:'amt', amt:2},
+  {name:'Free Cold Press', type:'free'}
+];
+function openPrizeModal(){ renderPrizeList(); document.getElementById('prize-modal').classList.add('open'); }
+function closePrizeModal(){ document.getElementById('prize-modal').classList.remove('open'); }
+function renderPrizeList(){
+  var html = WHEEL_PRIZES.map(function(p,idx){ return '<button class="prize-item" onclick="selectPrize('+idx+')">'+p.name+'</button>'; }).join('');
+  html += '<button class="prize-item clear" onclick="clearReward()">Clear reward</button>';
+  document.getElementById('prize-list').innerHTML = html;
+}
+function selectPrize(idx){
+  var p=WHEEL_PRIZES[idx]; if(!p) return;
+  if(p.type==='amt'){ window._redeemOffset=p.amt; window._redeemLabel=p.name; closePrizeModal(); updateTotals(); showToast(p.name+' applied'); }
+  else if(p.type==='stamps'){ if(!currentMember||!currentMember.phone){ showToast('Attach a member first to add bonus stamps'); return; } window._bonusStamps=p.qty; closePrizeModal(); showToast(p.qty+' bonus stamps will be added on tender'); }
+  else if(p.type==='free'){ renderFreeItemPicker(); }
+}
+function renderFreeItemPicker(){
+  if(!cart.length){ showToast('Add the item to the cart first'); return; }
+  var html='<div style="font-size:12px;color:#888;margin-bottom:8px">Select the item to make free (100% off):</div>';
+  html += cart.map(function(i,idx){ return '<button class="prize-item" onclick="selectFreeItem('+idx+')">'+i.label+' &mdash; $'+(Number(i.price)||0).toFixed(2)+'</button>'; }).join('');
+  html += '<button class="prize-item clear" onclick="renderPrizeList()">Back</button>';
+  document.getElementById('prize-list').innerHTML=html;
+}
+function selectFreeItem(idx){ var i=cart[idx]; if(!i) return; window._redeemOffset=+(Number(i.price)||0).toFixed(2); window._redeemLabel='Free: '+i.label; closePrizeModal(); updateTotals(); showToast('Free '+i.label+' applied'); }
+function clearReward(){ window._redeemOffset=0; window._redeemLabel=''; window._bonusStamps=0; closePrizeModal(); updateTotals(); showToast('Reward cleared'); }
 // ── CHECKOUT ─────────────────────────────────────────────────────────
 async function checkout(){
   if(!cart.length){showToast('Cart is empty');return;}
   // If credit is active but doesn't cover full total, need another payment method
   if(posCreditPhone && posCreditBalance > 0){
     const cartTotal = cart.reduce((s,i)=>s+i.price*i.qty,0);
-    const cartDisc = memberDiscount>0?+(cartTotal*memberDiscount/100).toFixed(2):0;
-    const actualTotal = +(cartTotal-cartDisc).toFixed(2);
+    const _cr=_applyDisc(cartTotal); const cartDisc=_cr.disc;
+    const actualTotal = +(_cr.total - Math.min(window._redeemOffset||0,_cr.total)).toFixed(2);
     if(posCreditBalance < actualTotal && (!paymentMethod || paymentMethod === 'Credit')){
       showToast('Credit doesn\'t cover full total. Select a payment method for the remaining balance.');
       return;
@@ -2902,9 +2979,10 @@ async function checkout(){
   }
   if(!paymentMethod){showToast('Select a payment method');return;}
   const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
-  const disc=memberDiscount>0?+(sub*memberDiscount/100).toFixed(2):0;
+  const _dr=_applyDisc(sub); const disc=_dr.disc;
   const isOnline = ONLINE_PLATFORMS.includes(paymentMethod);
-  const total = isOnline ? 0 : +(sub-disc).toFixed(2);
+  const redeem = isOnline ? 0 : Math.min(window._redeemOffset||0, _dr.total);
+  const total = isOnline ? 0 : +(_dr.total - redeem).toFixed(2);
   const now=new Date(); const _sgt=new Date(now.getTime()+8*3600*1000);   // fixed SGT — independent of device timezone
   const dateStr=_sgt.toISOString().slice(0,10);
   const timeStr=_sgt.toISOString().slice(11,16);
@@ -2933,6 +3011,9 @@ async function checkout(){
       items:cart.map(i=>({...i})),
       subtotal:sub,
       discount:disc,
+      reward:redeem,
+      rewardLabel:(redeem>0?(window._redeemLabel||'Reward'):''),
+      bonusStamps:(window._bonusStamps||0),
       total,
       payment:paymentMethod,
       member:currentMember?currentMember.first+' '+currentMember.last:null,
@@ -2971,7 +3052,7 @@ async function checkout(){
         time: timeStr,
         items: JSON.stringify(cart.map(i=>({id:i.id,qty:i.qty,label:i.label,price:i.price,remark:i.remark||''}))),
         subtotal: sub.toFixed(2),
-        discount: disc.toFixed(2),
+        discount: (disc+redeem).toFixed(2),
         total: total.toFixed(2),
         payment: sale.payment,
         member: sale.member||'',
@@ -2993,7 +3074,7 @@ async function checkout(){
         }).catch(()=>{});
 
         // One stamp per product tendered, EXCEPT Custom Fruit (juCF) which does not earn stamps.
-        const stampQty = cart.reduce(function(s,i){ return (NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) ? s : s + (parseInt(i.qty)||1); }, 0);
+        const stampQty = cart.reduce(function(s,i){ return (NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) ? s : s + (parseInt(i.qty)||1); }, 0) + (window._bonusStamps||0);
         if(stampQty > 0){
           await apiPost({
             action:'addStampsForSale',
@@ -3048,6 +3129,7 @@ function showReceiptWithChange(sale){showReceipt(sale,sale.changeDue||0,sale.cas
 function showReceipt(sale,changeDue,cashTendered){
   changeDue=changeDue||0;cashTendered=cashTendered||0;
   var disc=sale.discount||0,total=sale.total||0,rcptNo=sale.rcptNo||genReceiptNo();
+  var reward=sale.reward||0, rewardLabel=sale.rewardLabel||'Reward', bonusStamps=sale.bonusStamps||0;
   var isO=ONLINE_PLATFORMS.includes(sale.payment),rows='';
   sale.items.forEach(function(item,i){
     var amt=isO?'$0.00':'$'+(item.price*item.qty).toFixed(2);
@@ -3070,9 +3152,11 @@ function showReceipt(sale,changeDue,cashTendered){
     +'<th style="padding:4px;font-size:10px;text-align:right;color:#888;width:56px">Amount</th>'
     +'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div style="border-top:2px dashed #ddd;margin-top:6px;padding-top:8px">'
-    +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span>Subtotal</span><span class="rnum">$'+sale.subtotal.toFixed(2)+'</span></div>':'')
+    +((disc>0||reward>0)?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span>Subtotal</span><span class="rnum">$'+sale.subtotal.toFixed(2)+'</span></div>':'')
     +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#27ae60;margin-bottom:3px"><span>Discount</span><span class="rnum">-$'+disc.toFixed(2)+'</span></div>':'')
+    +(reward>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#c9a24a;margin-bottom:3px"><span>'+rewardLabel+'</span><span class="rnum">-$'+reward.toFixed(2)+'</span></div>':'')
     +'<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;margin-bottom:6px"><span style="font-family:var(--brand)">Total Amount</span><span class="rnum" style="color:#E91E8C">$'+total.toFixed(2)+'</span></div>'
+    +(bonusStamps>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#2e8b57;margin-bottom:3px"><span>Bonus stamps earned</span><span class="rnum">+'+bonusStamps+'</span></div>':'')
     +'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span>Payment Mode</span><span style="font-weight:600">'+sale.payment+'</span></div>'
     +(sale.creditUsed?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#f39c12;margin-bottom:3px"><span>Credit Used</span><span class="rnum">-$'+(+sale.creditUsed).toFixed(2)+'</span></div>':'')
     +(sale.creditUsed&&sale.creditRemaining>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span>Balance Paid</span><span class="rnum">$'+(+sale.creditRemaining).toFixed(2)+'</span></div>':'')
@@ -3098,6 +3182,7 @@ function closeReceipt(){
     return;
   }
   cart=[]; paymentMethod='';
+  window._redeemOffset=0; window._redeemLabel=''; window._bonusStamps=0;
   // Reset credit state
   resetCreditState();
   // Auto-clear member after tender — full reset (phone, name search, history, display, discount)

@@ -71,6 +71,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .cart-panel{width:290px;background:#fff;display:flex;flex-direction:column;border-left:1px solid #e8e8e8;flex-shrink:0}
 .cart-hdr{padding:10px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .cart-hdr-title{font-size:14px;font-weight:700;color:#111}
+.cart-member{font-size:11px;font-weight:600;color:#2e8b57;display:flex;align-items:center;gap:3px;margin-top:1px}
+.cart-member .ti{font-size:12px}
 .clear-btn{padding:4px 10px;font-size:11px;border-radius:5px;border:1px solid #e0e0e0;background:none;cursor:pointer;color:#888;font-family:var(--font)}
 .cart-hdr-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cart-hdr-actions{display:flex;gap:5px;align-items:center;flex-shrink:0}
@@ -304,7 +306,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       </div></div>
       <div class="cart-panel">
       <div class="cart-hdr">
-        <span class="cart-hdr-title">Current Order</span>
+        <div class="cart-hdr-title" style="display:flex;flex-direction:column;justify-content:center;line-height:1.15"><span>Current Order</span><span id="cart-member" class="cart-member" style="display:none"></span></div>
         <div class="cart-hdr-actions">
           <button class="clear-btn held-btn" id="held-list-btn" style="display:none" onclick="openHeldModal()">Held <span id="held-count">0</span></button>
           <button class="clear-btn hold-btn" id="hold-cart-btn" onclick="holdOrder()">Hold</button>
@@ -322,7 +324,6 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button class="pay-btn" data-method="Card"><i class="ti ti-credit-card"></i> Card</button>
           <button class="pay-btn" data-method="GrabFood" style="color:#00B14F;border-color:#00B14F"><i class="ti ti-bike"></i> GrabFood</button>
           <button class="pay-btn" data-method="FoodPanda" style="color:#D70F64;border-color:#D70F64"><i class="ti ti-bike"></i> FoodPanda</button>
-          <button class="pay-btn" data-method="Online Shop" style="color:#6796ce;border-color:#6796ce"><i class="ti ti-world"></i> Online Shop</button>
           <button class="pay-btn" data-method="Credit" style="color:#f39c12;border-color:#f39c12" onclick="selectCreditPayment()"><i class="ti ti-wallet"></i> Credit</button>
         </div>
         <div id="pos-credit-info" style="display:none;background:#fef9e7;border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px"></div>
@@ -462,10 +463,6 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
             <span style="font-size:13px;color:#D70F64">FoodPanda</span>
             <span style="font-size:13px;font-weight:600;color:#333" id="settle-panda">$0.00</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid #eee">
-            <span style="font-size:13px;color:#6796ce">Online Shop</span>
-            <span style="font-size:13px;font-weight:600;color:#333" id="settle-online">$0.00</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 2px">
             <span style="font-size:14px;font-weight:700;color:#333">Grand Total</span>
@@ -1117,7 +1114,7 @@ const CAT_BG     = {'Shakes & Smoothies':'#e3f2fb','Superfood Bowls':'#e8f8ee','
 const CAT_ICONS  = {'Shakes & Smoothies':'ti-droplet','Superfood Bowls':'ti-bowl','Immunity Press':'ti-flask','Nutritional Press':'ti-pill','Juices':'ti-cup','Wellness Press':'ti-leaf','Longevity Press':'ti-heartbeat'};
 
 let cart = [], currentMember = null, memberDiscount = 0, currentCat = 'Shakes & Smoothies', paymentMethod = '';
-const ONLINE_PLATFORMS = ['GrabFood','FoodPanda','Online Shop'];
+const ONLINE_PLATFORMS = ['GrabFood','FoodPanda'];
 // Products that do NOT earn a rewards stamp. Custom Fruit (juCF) is excluded; Custom Bowl (sb00)
 // and Custom Juice (ju00) DO earn stamps like normal menu items.
 const NO_STAMP_IDS = ['juCF']; // fruitbox- ids are excluded via prefix check below
@@ -2150,6 +2147,7 @@ function selectFoundMember(member){
   showMemberDisplay(member);
   showToast(member.first+' '+member.last+' — '+((parseInt(member.stamps)||0))+'/9 stamps');
   updateTotals();
+  updateCartMember();
   applyMemberTierDiscount(member);
 }
 
@@ -2284,7 +2282,7 @@ function clearMember(silent){
   var h=document.getElementById('member-history'); if(h) h.style.display='none';
   var ni=document.getElementById('member-name-input'); if(ni) ni.value='';
   var nr=document.getElementById('member-name-results'); if(nr){ nr.style.display='none'; nr.innerHTML=''; }
-  updateTotals(); if(!silent) showToast('Member cleared');
+  updateTotals(); updateCartMember(); if(!silent) showToast('Member cleared');
 }
 
 // ── CATEGORIES ───────────────────────────────────────────────────────
@@ -2641,7 +2639,9 @@ document.addEventListener('change', function(e){
 });
 
 // ── CART ─────────────────────────────────────────────────────────────
+function updateCartMember(){ var el=document.getElementById('cart-member'); if(!el) return; if(currentMember && ((currentMember.first||'')+(currentMember.last||'')).trim()){ el.innerHTML='<i class="ti ti-user"></i> '+((currentMember.first||'')+' '+(currentMember.last||'')).trim(); el.style.display=''; } else { el.textContent=''; el.style.display='none'; } }
 function renderCart(){
+  updateCartMember();
   const el=document.getElementById('cart-items');
   if(!cart.length){
     el.innerHTML='<div class="cart-empty"><div style="margin-top:8px;font-size:13px;color:#bbb;text-align:center">Cart is empty<br><span style="font-size:11px">Tap a product to add</span></div></div>';
@@ -3236,7 +3236,6 @@ function renderSalesReport(){
         <tr style="font-weight:600;background:#e8f0fe"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${d.appCount}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#5b7db1">$${d.appTotal.toFixed(2)}</td></tr>
         <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-grab-daily" step="0.01" min="0" placeholder="0.00" value="${d.grab||''}" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
         <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-panda-daily" step="0.01" min="0" placeholder="0.00" value="${d.panda||''}" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
-        <tr style="background:#f0f5ff"><td style="padding:7px 10px;border:1px solid #eee;color:#6796ce">Online Shop</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${todaySales.filter(s=>s.payment==='Online Shop').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="settle-online-daily" step="0.01" min="0" placeholder="0.00" value="${d.online||''}" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px"></td></tr>
       </table>
     </div>
     <div style="margin-bottom:16px">
@@ -3259,7 +3258,6 @@ function renderSalesReport(){
         <tr style="font-weight:600;background:#e8f0fe"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.appCount}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#5b7db1">$${m.appTotal.toFixed(2)}</td></tr>
         <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.grab.toFixed(2)}</td></tr>
         <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.panda.toFixed(2)}</td></tr>
-        <tr style="background:#f0f5ff"><td style="padding:7px 10px;border:1px solid #eee;color:#6796ce">Online Shop</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Online Shop').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.online.toFixed(2)}</td></tr>
       </table>
     </div>`;
 
@@ -3470,7 +3468,6 @@ function dailySettlement(){
   document.getElementById('settle-app-credit').textContent = '$'+appCredit.toFixed(2);
   document.getElementById('settle-grab').textContent    = '$'+grab.toFixed(2);
   document.getElementById('settle-panda').textContent   = '$'+panda.toFixed(2);
-  document.getElementById('settle-online').textContent  = '$'+online.toFixed(2);
   document.getElementById('settle-total').textContent   = '$'+grandTotal.toFixed(2);
   document.getElementById('settle-txn-count').textContent = count+' transaction'+(count!==1?'s':'')+' today'+(voided?' ('+voided+' voided)':'');
   document.getElementById('settle-modal').classList.add('open');

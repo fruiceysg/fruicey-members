@@ -2733,7 +2733,14 @@ function renderCart(){
 function _applyDisc(sub){
   var pct=memberDiscount||0;
   if(pct<=0) return {disc:0, total:+sub.toFixed(2)};
-  var total = window._manualDisc ? Math.ceil(sub*(100-pct)/100*100)/100 : +(sub - +(sub*pct/100).toFixed(2)).toFixed(2);
+  var total;
+  if(window._manualDisc){
+    var _pay = Math.round(sub*100)*(100-pct);        // payable in 1/100-cent units
+    var _rem = _pay % 100;                            // 50 = exactly half a cent
+    total = (Math.floor(_pay/100) + (_rem>50?1:0))/100;   // >half a cent rounds up, else rounds down
+  } else {
+    total = +(sub - +(sub*pct/100).toFixed(2)).toFixed(2);
+  }
   return {disc:+(sub-total).toFixed(2), total:total};
 }
 function setManualDisc(pct,label){

@@ -2733,14 +2733,11 @@ function renderCart(){
 function _applyDisc(sub){
   var pct=memberDiscount||0;
   if(pct<=0) return {disc:0, total:+sub.toFixed(2)};
-  var total;
-  if(window._manualDisc){
-    var _pay = Math.round(sub*100)*(100-pct);        // payable in 1/100-cent units
-    var _rem = _pay % 100;                            // 50 = exactly half a cent
-    total = (Math.floor(_pay/100) + (_rem>50?1:0))/100;   // >half a cent rounds up, else rounds down
-  } else {
-    total = +(sub - +(sub*pct/100).toFixed(2)).toFixed(2);
-  }
+  // Payable in 1/100-cent units. Exactly half a cent rounds DOWN, more than half rounds UP.
+  // Same rule for member-tier discounts (Gold/Platinum/Diamond) and the manual Tenant/Staff buttons.
+  var _pay = Math.round(sub*100)*(100-pct);
+  var _rem = _pay % 100;
+  var total = (Math.floor(_pay/100) + (_rem>50?1:0))/100;
   return {disc:+(sub-total).toFixed(2), total:total};
 }
 function setManualDisc(pct,label){
@@ -2888,8 +2885,8 @@ async function selectCreditPayment(){
     if(posCreditBalance <= 0){ showToast('This member has $0 credit balance'); return; }
     // Calculate credit usage
     const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
-    const disc = memberDiscount>0?+(sub*memberDiscount/100).toFixed(2):0;
-    const total = +(sub-disc).toFixed(2);
+    const _cr=_applyDisc(sub); const disc=_cr.disc;
+    const total = _cr.total;
     posCreditUse = Math.min(posCreditBalance, total);
     const remaining = +(total - posCreditUse).toFixed(2);
     // Show credit info

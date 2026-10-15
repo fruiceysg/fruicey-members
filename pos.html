@@ -2733,11 +2733,11 @@ function renderCart(){
 function _applyDisc(sub){
   var pct=memberDiscount||0;
   if(pct<=0) return {disc:0, total:+sub.toFixed(2)};
-  // Payable in 1/100-cent units. Exactly half a cent rounds DOWN, more than half rounds UP.
+  // Payable rounded to the nearest 10 cents (last digit 0). Exactly 5 cents rounds DOWN, more than 5 cents rounds UP.
   // Same rule for member-tier discounts (Gold/Platinum/Diamond) and the manual Tenant/Staff buttons.
-  var _pay = Math.round(sub*100)*(100-pct);
-  var _rem = _pay % 100;
-  var total = (Math.floor(_pay/100) + (_rem>50?1:0))/100;
+  var _u = Math.round(sub*100)*(100-pct);   // payable in 1/100-cent units
+  var _rem = _u % 1000;                      // part below a 10-cent step (500 = exactly 5 cents)
+  var total = +((Math.floor(_u/1000) + (_rem>500?1:0))/10).toFixed(2);
   return {disc:+(sub-total).toFixed(2), total:total};
 }
 function setManualDisc(pct,label){

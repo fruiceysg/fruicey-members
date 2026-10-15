@@ -3408,14 +3408,14 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div id="lpanel-reset" style="display:none">
       <div class="modal-title">Reset password</div>
       <div id="reset-step1">
-        <p style="font-size:13px;color:var(--text2);line-height:1.5;margin:0 0 14px">Enter your phone number and we'll email a reset code to the address on your account.</p>
-        <div class="field"><label>Phone number</label><input type="tel" id="rp-phone" placeholder=""></div>
+        <p style="font-size:13px;color:var(--text2);line-height:1.5;margin:0 0 14px">Enter the email address on your account and we'll email you a reset code.</p>
+        <div class="field"><label>Email address</label><input type="email" id="rp-email" autocomplete="email" placeholder="you@example.com"></div>
         <div class="err" id="rp-err1"></div>
         <button class="btn btn-primary" id="rp-send-btn" style="margin-top:8px" onclick="doRequestReset()">Send code</button>
         <button class="btn btn-secondary" style="margin-top:8px" onclick="showLoginTab('login')">Back to log in</button>
       </div>
       <div id="reset-step2" style="display:none">
-        <p style="font-size:13px;color:var(--text2);line-height:1.5;margin:0 0 14px">If an account exists for that number, a reset code was emailed to it. Enter the code and your new password below.</p>
+        <p style="font-size:13px;color:var(--text2);line-height:1.5;margin:0 0 14px">If an account exists for that email, a reset code was sent to it. Enter the code and your new password below.</p>
         <div class="field"><label>Reset code</label><input type="text" id="rp-code" inputmode="numeric" maxlength="6" placeholder="6-digit code"></div>
         <div class="field"><label>New password</label><input type="password" id="rp-new" placeholder="Min. 6 characters"></div>
         <div class="field"><label>Confirm password</label><input type="password" id="rp-new2" placeholder="Repeat password"></div>
@@ -4286,16 +4286,16 @@ function showResetStep(n){
   document.getElementById('reset-step2').style.display = n===2?'block':'none';
 }
 async function doRequestReset(){
-  const phone=(document.getElementById('rp-phone').value||'').trim();
+  const email=(document.getElementById('rp-email').value||'').trim();
   const err=document.getElementById('rp-err1'); err.style.display='none';
-  if(!phone){ err.textContent='Enter your phone number.'; err.style.display='block'; return; }
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent='Enter a valid email address.'; err.style.display='block'; return; }
   const btn=document.getElementById('rp-send-btn'); btn.disabled=true; const t0=btn.textContent; btn.textContent='Sending\u2026';
-  try{ await apiPost({action:'requestPasswordReset', phone:np(phone)}); }catch(e){}
+  try{ await apiPost({action:'requestPasswordReset', email:email}); }catch(e){}
   btn.disabled=false; btn.textContent=t0;
   showResetStep(2);
 }
 async function doResetPassword(){
-  const phone=(document.getElementById('rp-phone').value||'').trim();
+  const email=(document.getElementById('rp-email').value||'').trim();
   const code=(document.getElementById('rp-code').value||'').trim();
   const pw=document.getElementById('rp-new').value||'';
   const pw2=document.getElementById('rp-new2').value||'';
@@ -4305,11 +4305,10 @@ async function doResetPassword(){
   if(pw!==pw2){ err.textContent='Passwords do not match.'; err.style.display='block'; return; }
   const btn=document.getElementById('rp-reset-btn'); btn.disabled=true; const t0=btn.textContent; btn.textContent='Resetting\u2026';
   let res={};
-  try{ res=await apiPost({action:'resetPassword', phone:np(phone), code:code, password:pw}); }catch(e){ res={error:'network'}; }
+  try{ res=await apiPost({action:'resetPassword', email:email, code:code, password:pw}); }catch(e){ res={error:'network'}; }
   btn.disabled=false; btn.textContent=t0;
   if(res && res.success){
     showToast('Password reset! Please log in.');
-    document.getElementById('l-phone').value=phone;
     document.getElementById('l-pass').value='';
     showLoginTab('login');
   } else if(res && res.error==='bad_code'){ err.textContent='Invalid or expired code.'; err.style.display='block'; }
@@ -4441,6 +4440,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const err   = document.getElementById('r-err');
     err.style.display='none';
     if(!first||!last||!phone||!email||!pass){ err.textContent='All fields are required.'; err.style.display='block'; return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent='Please enter a valid email address.'; err.style.display='block'; return; }
     if(!bdayDay||!bdayMonth){ err.textContent='Please enter your date of birth (DD and MM).'; err.style.display='block'; return; }
     if(bdayDay<1||bdayDay>31||bdayMonth<1||bdayMonth>12){ err.textContent='Please enter a valid date of birth.'; err.style.display='block'; return; }
     if(pass !== pass2){ err.textContent='Passwords do not match.'; err.style.display='block'; return; }

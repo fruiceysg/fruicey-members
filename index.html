@@ -1129,6 +1129,13 @@ button.cal-day:active{transform:scale(.94)}
 .qa-msg b{font-family:var(--font);font-weight:400}
 .prog-vit-list2{display:flex;flex-direction:column;margin-top:2px}
 .nut-group{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin:16px 0 4px}
+.nut-sec{border:1px solid #eee;border-radius:12px;margin:10px 0;overflow:hidden;background:#fff}
+.nut-sec-head{width:100%;display:flex;align-items:center;gap:10px;background:#fafafa;border:none;padding:12px 14px;cursor:pointer;font-family:var(--font);text-align:left}
+.nut-sec-title{font-size:13px;font-weight:700;color:var(--text)}
+.nut-sec-meta{margin-left:auto;font-size:11px;color:var(--text3)}
+.nut-sec-chev{font-size:18px;color:var(--text3);transition:transform .2s;flex-shrink:0}
+.nut-sec.open .nut-sec-chev{transform:rotate(180deg)}
+.nut-sec-body{padding:2px 12px 8px}
 .nut-reset{border:1px solid var(--border);background:#fff;border-radius:999px;padding:4px 11px;font-family:var(--body);font-size:11px;color:var(--text3);cursor:pointer;display:inline-flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent}
 .nut-reset:active{transform:scale(.96)}
 .nut-reset .ti{font-size:13px}
@@ -8214,30 +8221,55 @@ function _vitWindow(n){
   return out;
 }
 // Unified weekly record: every nutrient, its daily need, a manual amount entry and the last 7 days.
+function _nutRowHtml(v, days, today){
+  var todayAmt=_dayObj(today)[v.k]||0, onDays=0;
+  var dots=days.map(function(ds){
+    var amt=_dayObj(ds)[v.k]||0;
+    var lvl = amt<=0?0:(amt>=v.rda?2:1); if(lvl===2) onDays++;
+    var st = lvl===2?('background:'+v.col+';border-color:'+v.col) : (lvl===1?('border-color:'+v.col):'');
+    return '<span class="vwk-dot'+(ds===today?' today':'')+'" style="'+st+'"></span>';
+  }).join('');
+  return '<div class="nut-row">'
+    +'<div class="nut-top"><span class="nut-head-l"><span class="nut-name">'+v.name+'</span><span class="nut-desc">'+(v.desc||'')+'</span></span><span class="nut-target">'+v.label+(v.hpb?'':' &dagger;')+' / day</span></div>'
+    +'<div class="nut-mid">'
+      +'<input id="nut-inp-'+v.k+'" class="nut-inp" type="number" inputmode="decimal" min="0" placeholder="add '+v.unit+'" onkeydown="if(event.key===\'Enter\')addVit(\''+v.k+'\')">'
+      +'<button type="button" class="nut-add" onclick="addVit(\''+v.k+'\')">Add</button>'
+      +'<span class="nut-today">'+(todayAmt>0?('<b>'+_fmtAmt(todayAmt)+'</b> / '+v.rda+' '+v.unit+' today'):('0 / '+v.rda+' '+v.unit+' today'))+'</span>'
+      +(todayAmt>0?'<button type="button" class="nut-clr" onclick="clearVitToday(\''+v.k+'\')" aria-label="Clear today">&times;</button>':'')
+    +'</div>'
+    +'<div class="nut-week"><span class="vwk-dots">'+dots+'</span><span class="vwk-count">'+onDays+'/7 days met</span></div>'
+    +'</div>';
+}
 function renderVitWeek(){
   var wrap=document.getElementById('prog-vit-list'); if(!wrap) return;
-  var days=_vitWindow(7), today=_todayStr(), curGroup='', html='';
-  VITAMINS.forEach(function(v){
-    if(v.group!==curGroup){ curGroup=v.group; html+='<div class="nut-group">'+(curGroup==='vitamin'?'Vitamins':'Minerals &amp; fibre')+'</div>'; }
-    var todayAmt=_dayObj(today)[v.k]||0, onDays=0;
-    var dots=days.map(function(ds){
-      var amt=_dayObj(ds)[v.k]||0;
-      var lvl = amt<=0?0:(amt>=v.rda?2:1); if(lvl===2) onDays++;
-      var st = lvl===2?('background:'+v.col+';border-color:'+v.col) : (lvl===1?('border-color:'+v.col):'');
-      return '<span class="vwk-dot'+(ds===today?' today':'')+'" style="'+st+'"></span>';
-    }).join('');
-    html+='<div class="nut-row">'
-      +'<div class="nut-top"><span class="nut-head-l"><span class="nut-name">'+v.name+'</span><span class="nut-desc">'+(v.desc||'')+'</span></span><span class="nut-target">'+v.label+(v.hpb?'':' &dagger;')+' / day</span></div>'
-      +'<div class="nut-mid">'
-        +'<input id="nut-inp-'+v.k+'" class="nut-inp" type="number" inputmode="decimal" min="0" placeholder="add '+v.unit+'" onkeydown="if(event.key===\'Enter\')addVit(\''+v.k+'\')">'
-        +'<button type="button" class="nut-add" onclick="addVit(\''+v.k+'\')">Add</button>'
-        +'<span class="nut-today">'+(todayAmt>0?('<b>'+_fmtAmt(todayAmt)+'</b> / '+v.rda+' '+v.unit+' today'):('0 / '+v.rda+' '+v.unit+' today'))+'</span>'
-        +(todayAmt>0?'<button type="button" class="nut-clr" onclick="clearVitToday(\''+v.k+'\')" aria-label="Clear today">&times;</button>':'')
-      +'</div>'
-      +'<div class="nut-week"><span class="vwk-dots">'+dots+'</span><span class="vwk-count">'+onDays+'/7 days met</span></div>'
-      +'</div>';
+  if(!window._nutGroupOpen) window._nutGroupOpen={vitamin:false, mineral:false};  // collapsed by default
+  var days=_vitWindow(7), today=_todayStr();
+  var groups=[{key:'vitamin',label:'Vitamins'},{key:'mineral',label:'Minerals &amp; fibre'}];
+  var html='';
+  groups.forEach(function(g){
+    var items=VITAMINS.filter(function(v){ return v.group===g.key; });
+    if(!items.length) return;
+    var metToday=0; items.forEach(function(v){ if((_dayObj(today)[v.k]||0)>=v.rda) metToday++; });
+    var open=!!window._nutGroupOpen[g.key];
+    var rows=items.map(function(v){ return _nutRowHtml(v, days, today); }).join('');
+    html+='<div class="nut-sec'+(open?' open':'')+'" data-g="'+g.key+'">'
+      +'<button type="button" class="nut-sec-head" onclick="toggleNutGroup(\''+g.key+'\')">'
+        +'<span class="nut-sec-title">'+g.label+'</span>'
+        +'<span class="nut-sec-meta">'+metToday+'/'+items.length+' met today</span>'
+        +'<i class="ti ti-chevron-down nut-sec-chev"></i>'
+      +'</button>'
+      +'<div class="nut-sec-body" style="display:'+(open?'block':'none')+'">'+rows+'</div>'
+    +'</div>';
   });
   wrap.innerHTML=html;
+}
+function toggleNutGroup(g){
+  if(!window._nutGroupOpen) window._nutGroupOpen={};
+  window._nutGroupOpen[g]=!window._nutGroupOpen[g];
+  var sec=document.querySelector('.nut-sec[data-g="'+g+'"]'); if(!sec) return;
+  var body=sec.querySelector('.nut-sec-body');
+  if(body) body.style.display=window._nutGroupOpen[g]?'block':'none';
+  sec.classList.toggle('open', window._nutGroupOpen[g]);
 }
 function _loadJsPDF(cb){
   if(window.jspdf && window.jspdf.jsPDF){ cb(); return; }

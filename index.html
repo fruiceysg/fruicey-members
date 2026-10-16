@@ -4281,7 +4281,13 @@ function showLoginTab(t){
   if(_rp){ _rp.style.display = t==='reset'?'block':'none'; if(t==='reset') showResetStep(1); }
   if(typeof updateLoginBioBtn==='function') updateLoginBioBtn();
 }
+function clearResetFields(){
+  ['rp-email','rp-code','rp-new','rp-new2'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var e1=document.getElementById('rp-err1'); if(e1) e1.style.display='none';
+  var e2=document.getElementById('rp-err2'); if(e2) e2.style.display='none';
+}
 function showResetStep(n){
+  if(n===1) clearResetFields();   // fresh start — never keep the previous attempt's email/code/password
   document.getElementById('reset-step1').style.display = n===1?'block':'none';
   document.getElementById('reset-step2').style.display = n===2?'block':'none';
 }
@@ -4309,6 +4315,7 @@ async function doResetPassword(){
   btn.disabled=false; btn.textContent=t0;
   if(res && res.success){
     showToast('Password reset! Please log in.');
+    clearResetFields();
     document.getElementById('l-pass').value='';
     showLoginTab('login');
   } else if(res && res.error==='bad_code'){ err.textContent='Invalid or expired code.'; err.style.display='block'; }

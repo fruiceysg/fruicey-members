@@ -24,13 +24,14 @@
   window.fbStaffSignIn = function(password){
     if(!window.fauth) return Promise.resolve();
     return fauth.signInWithEmailAndPassword('staff@fruicey.app', password)
-      .then(function(){ if(typeof startOrdersListener==='function') startOrdersListener(); })
+      .then(function(){ if(typeof startOrdersListener==='function') startOrdersListener(); if(typeof startPosShopWatch==='function') startPosShopWatch(); })
       .catch(function(e){ console.warn('Firebase staff sign-in (non-blocking) failed:', e && e.code); });
   };
-  // On reload, Firebase keeps its own session — if staff is already signed in, start the listener.
+  // On reload, Firebase keeps its own session — if staff is already signed in, start the listeners.
   if(window.fauth){
     fauth.onAuthStateChanged(function(u){
       if(u && typeof startOrdersListener==='function') startOrdersListener();
+      if(u && typeof startPosShopWatch==='function') startPosShopWatch();
     });
   }
 </script>
@@ -298,6 +299,11 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div id="rcpt-search-results" style="flex:1;overflow-y:auto;padding:0 12px 12px;font-size:12px;color:#aaa;text-align:center"></div>
       </div>
       <div id="pos-view-orders" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+        <div id="order-pause-bar" style="padding:11px 12px;flex-shrink:0;display:flex;gap:10px;align-items:center;border-bottom:1px solid #eee;background:#fafafa">
+          <span id="order-pause-dot" style="width:10px;height:10px;border-radius:50%;background:#2ecc71;flex-shrink:0"></span>
+          <span id="order-pause-label" style="font-size:13px;font-weight:700;color:#333">App ordering is OPEN</span>
+          <button id="order-pause-btn" onclick="toggleAppOrders()" style="margin-left:auto;padding:7px 14px;background:#dd8581;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font)">Pause app orders</button>
+        </div>
         <div style="padding:12px;flex-shrink:0;display:flex;gap:8px;align-items:center">
           <span style="font-size:13px;font-weight:600;color:#555">Customer app orders — tap to change status</span>
           <button onclick="loadAppOrders()" style="margin-left:auto;padding:6px 12px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font)">Refresh</button>
@@ -1700,6 +1706,35 @@ function fbMirrorMember(phone, r){
 // whichever sees an order first alerts and the other never double-alarms. The poll stays on as an
 // automatic fallback: if Firebase staff sign-in ever fails, orders still come through (just slower).
 let _ordersUnsub = null;
+// ── Pause / resume customer-app ordering (shared config/shop flag read by the app) ──
+var _posOrdersOpen = true, __posShopUnsub = null;
+function startPosShopWatch(){
+  if(!window.fdb || __posShopUnsub) return;
+  __posShopUnsub = fdb.collection('config').doc('shop').onSnapshot(function(d){
+    var data = (d && d.exists) ? d.data() : null;
+    _posOrdersOpen = !data || data.ordersOpen !== false;   // default OPEN when no flag is set
+    renderPosShopStatus();
+  }, function(e){ console.warn('shop status listener', e && e.code); });
+}
+function renderPosShopStatus(){
+  var dot=document.getElementById('order-pause-dot'),
+      lbl=document.getElementById('order-pause-label'),
+      btn=document.getElementById('order-pause-btn');
+  if(dot) dot.style.background = _posOrdersOpen ? '#2ecc71' : '#e74c3c';
+  if(lbl) lbl.textContent = _posOrdersOpen ? 'App ordering is OPEN' : 'App ordering is PAUSED';
+  if(btn){ btn.textContent = _posOrdersOpen ? 'Pause app orders' : 'Resume app orders';
+           btn.style.background = _posOrdersOpen ? '#dd8581' : '#2ecc71'; }
+}
+function toggleAppOrders(){
+  if(!window.fdb){ showToast('Not connected'); return; }
+  var next = !_posOrdersOpen;
+  if(!next && !confirm('Pause app ordering? Customers won’t be able to place new orders until you resume.')) return;
+  fdb.collection('config').doc('shop').set({ ordersOpen: next, updatedAt: new Date().toISOString() }, {merge:true})
+    .then(function(){ showToast(next ? 'App ordering resumed' : 'App ordering paused'); })
+    .catch(function(){ showToast('Could not update — check connection / permissions'); });
+  // The onSnapshot listener above refreshes the bar once the write lands.
+}
+
 let _ordersListenerBaselined = false;
 function startOrdersListener(){
   if(!window.fdb || _ordersUnsub) return;

@@ -2502,6 +2502,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         </div>
         <div id="credit-split-info" style="display:none;font-size:12px;color:var(--text3);margin-top:6px"></div>
       </div>
+      <div id="orders-paused-note" style="display:none;background:#fff3cd;border:1px solid #f3e3bf;color:#8a6d2f;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:8px"></div>
       <button class="btn btn-primary" id="checkout-btn" onclick="checkout()">Place Order</button>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="closeCart()">Continue shopping</button>
     </div>
@@ -4412,6 +4413,7 @@ function updateAccountBioUI(){
 
 document.addEventListener('DOMContentLoaded', function(){
   loadProducts();   // pull the live menu from Firestore (falls back to the built-in menu)
+  startShopStatusWatch();   // live open/paused flag set from the POS
   // Login
   document.getElementById('login-btn').addEventListener('click', async function(){
     const phone = np(document.getElementById('l-phone').value.trim());
@@ -5317,6 +5319,31 @@ function startStockPoll(){
 }
 function stopStockPoll(){
   if(__stockUnsub){ __stockUnsub(); __stockUnsub = null; }
+}
+
+// ── Shop open/closed: the POS can pause app ordering; this reflects it live ──
+var _ordersOpen = true, _ordersPausedMsg = '';
+var __shopUnsub = null;
+function startShopStatusWatch(){
+  if(!window.fdb || __shopUnsub) return;
+  __shopUnsub = fdb.collection('config').doc('shop').onSnapshot(function(d){
+    var data = (d && d.exists) ? d.data() : null;
+    _ordersOpen = !data || data.ordersOpen !== false;   // default OPEN when no flag is set
+    _ordersPausedMsg = (data && data.pausedMsg) || '';
+    applyShopStatus();
+  }, function(){ /* Firestore retries automatically */ });
+}
+function applyShopStatus(){
+  var note = document.getElementById('orders-paused-note');
+  if(note){
+    note.style.display = _ordersOpen ? 'none' : 'block';
+    note.textContent = _ordersPausedMsg || 'Online ordering is paused right now. Please check back soon.';
+  }
+  var btn = document.getElementById('checkout-btn');
+  if(btn && !_placingOrder){
+    btn.disabled = !_ordersOpen;
+    btn.textContent = _ordersOpen ? 'Place Order' : 'Ordering paused';
+  }
 }
 
 // One-time: copy the current (hardcoded) catalogue into Firestore `products`, so the menu
@@ -6407,7 +6434,7 @@ function updateCartBadge(){
 }
 
 function openCart(){
-  renderCartItems(); loadUserCredit();
+  renderCartItems(); loadUserCredit(); applyShopStatus();
   document.getElementById('cart-sheet').classList.add('open');
   // Pull the member's current tier so the tier discount is accurate at checkout.
   if(currentUser){
@@ -6788,6 +6815,7 @@ function flagField(id){
 });
 async function checkout(){
   if(!cart.length){ showToast('Cart is empty'); return; }
+  if(!_ordersOpen){ showToast(_ordersPausedMsg || 'Online ordering is paused right now. Please check back soon.'); return; }
   clearFieldErrors();
   const isDelivery = collectMode==='delivery';
   if(!collectDate){ showToast('Please select a '+(isDelivery?'preferred delivery':'collection')+' date'); flagField('date-slots-container'); return; }

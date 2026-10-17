@@ -2446,6 +2446,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
       <button type="button" onclick="clearCart()" style="background:none;border:none;color:#c0554e;font-size:13px;font-weight:600;font-family:var(--body);cursor:pointer;padding:4px 2px;display:flex;align-items:center;gap:4px"><i class="ti ti-trash" style="font-size:15px"></i>Clear cart</button>
     </div>
     <div id="cart-items"></div>
+    <div id="orders-paused-note" style="display:none;background:#fff3cd;border:1px solid #f3e3bf;color:#8a6d2f;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;margin:10px 0"></div>
     <div class="checkout-section">
       <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">How would you like your order?</div>
       <div class="madeto-note"><i class="ti ti-leaf"></i>All items are freshly made to order — please allow a little prep time.</div>
@@ -2502,7 +2503,6 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
         </div>
         <div id="credit-split-info" style="display:none;font-size:12px;color:var(--text3);margin-top:6px"></div>
       </div>
-      <div id="orders-paused-note" style="display:none;background:#fff3cd;border:1px solid #f3e3bf;color:#8a6d2f;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:8px"></div>
       <button class="btn btn-primary" id="checkout-btn" onclick="checkout()">Place Order</button>
       <button class="btn btn-secondary" style="margin-top:8px" onclick="closeCart()">Continue shopping</button>
     </div>

@@ -129,6 +129,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .btn-export{background:#27ae60;color:#fff;border:none;flex:1;min-width:110px;padding:9px;border-radius:var(--r);cursor:pointer;font-size:12px;font-family:var(--font);font-weight:500}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:9px 18px;border-radius:var(--r);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
+/* Desktop/tablet: stretch the category tabs to fill the full row width (no empty gap on the right). */
+@media(min-width:641px){ #cat-tabs .cat-tab{flex:1 1 0} }
 @media(max-width:640px){
   .layout{flex-direction:column-reverse}
   .cart-panel{width:100%;border-left:none;border-top:1px solid #e8e8e8;max-height:60dvh}

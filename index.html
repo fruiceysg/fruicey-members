@@ -5355,6 +5355,9 @@ function applyShopStatus(){
     btn.disabled = !_ordersOpen;
     btn.textContent = _ordersOpen ? 'Place Order' : 'Ordering paused';
   }
+  // If the cart is open, refresh the date options so newly-closed dates drop out live.
+  var cs = document.getElementById('cart-sheet');
+  if(cs && cs.classList.contains('open') && typeof renderTimeSlots==='function') renderTimeSlots();
 }
 
 // One-time: copy the current (hardcoded) catalogue into Firestore `products`, so the menu
@@ -6522,6 +6525,7 @@ function renderTimeSlots(){
   for(let d=startDay; dates.length<7 && d<startDay+21; d++){
     const dt = new Date(); dt.setDate(dt.getDate() + d);
     if(dt.getDay() === 0) continue;                          // Sunday closed
+    if(_dateClosed(ymdLocal(dt))) continue;                  // scheduled closure
     const top = d===0 ? 'Today' : d===1 ? 'Tomorrow' : dayNames[dt.getDay()];
     dates.push({ val: ymdLocal(dt), top: top, num: dt.getDate() });
   }
@@ -6559,8 +6563,14 @@ function renderTimeSlots(){
 }
 
 // ── "Other dates" themed calendar (min = today+lead, max = end of next month, Sundays closed) ──
+// A date the shop has scheduled as closed (from the POS) — unavailable for collection/delivery.
+function _dateClosed(iso){
+  var d = _shopData;
+  return !!(d && d.closeFrom && d.closeTo && iso >= d.closeFrom && iso <= d.closeTo);
+}
 function _dateSelectable(iso){
   if(!iso || iso < _calMinStr || iso > _calMaxStr) return false;
+  if(_dateClosed(iso)) return false;                   // scheduled closure
   return new Date(iso + 'T00:00:00').getDay() !== 0;   // Sunday closed
 }
 function _ym(y,m){ return y*12 + m; }

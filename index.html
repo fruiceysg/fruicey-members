@@ -5322,16 +5322,27 @@ function stopStockPoll(){
 }
 
 // ── Shop open/closed: the POS can pause app ordering; this reflects it live ──
-var _ordersOpen = true, _ordersPausedMsg = '';
+var _ordersOpen = true, _ordersPausedMsg = '', _shopData = null;
 var __shopUnsub = null;
+function _sgtDateStr(){ return new Date(Date.now()+8*3600*1000).toISOString().slice(0,10); }
 function startShopStatusWatch(){
   if(!window.fdb || __shopUnsub) return;
   __shopUnsub = fdb.collection('config').doc('shop').onSnapshot(function(d){
-    var data = (d && d.exists) ? d.data() : null;
-    _ordersOpen = !data || data.ordersOpen !== false;   // default OPEN when no flag is set
-    _ordersPausedMsg = (data && data.pausedMsg) || '';
-    applyShopStatus();
+    _shopData = (d && d.exists) ? d.data() : null;
+    recomputeShopStatus();
   }, function(){ /* Firestore retries automatically */ });
+}
+// Effective status = manual pause OR today falling inside a scheduled closed date range (SGT).
+function recomputeShopStatus(){
+  var data = _shopData;
+  var manualOpen = !data || data.ordersOpen !== false;
+  var today = _sgtDateStr();
+  var inClosed = !!(data && data.closeFrom && data.closeTo && today >= data.closeFrom && today <= data.closeTo);
+  _ordersOpen = manualOpen && !inClosed;
+  _ordersPausedMsg = (data && data.pausedMsg)
+    || (inClosed ? ((data && data.closedMsg) || 'We’re closed for orders during this period. Please check back soon.') : '')
+    || '';
+  applyShopStatus();
 }
 function applyShopStatus(){
   var note = document.getElementById('orders-paused-note');
@@ -5427,6 +5438,7 @@ function loadProducts(){
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState !== 'visible') return;
   fetchStock();   // re-check stock on every return to foreground, so the menu is current when opened
+  if(typeof recomputeShopStatus==='function') recomputeShopStatus();   // re-evaluate scheduled closure (date may have rolled over)
   if(currentUser && _notifTimer) notifPoll();   // catch up on order status right after returning
 });
 

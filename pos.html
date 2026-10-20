@@ -306,6 +306,17 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <span id="order-pause-label" style="font-size:13px;font-weight:700;color:#333">App ordering is OPEN</span>
           <button id="order-pause-btn" onclick="toggleAppOrders()" style="margin-left:auto;padding:7px 14px;background:#dd8581;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font)">Pause app orders</button>
         </div>
+        <div id="order-schedule-bar" style="padding:10px 12px;flex-shrink:0;border-bottom:1px solid #eee;display:flex;flex-direction:column;gap:7px">
+          <div style="font-size:12px;font-weight:700;color:#333">Schedule a closure (app orders off for a date range)</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:#555">
+            <label style="display:flex;align-items:center;gap:4px">From <input type="date" id="close-from" style="font-family:var(--font);font-size:12px;padding:4px 6px;border:1px solid #e0e0e0;border-radius:6px"></label>
+            <label style="display:flex;align-items:center;gap:4px">To <input type="date" id="close-to" style="font-family:var(--font);font-size:12px;padding:4px 6px;border:1px solid #e0e0e0;border-radius:6px"></label>
+            <button onclick="saveClosure()" style="padding:6px 12px;background:#dd8581;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font)">Save</button>
+            <button onclick="clearClosure()" style="padding:6px 12px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font)">Clear</button>
+          </div>
+          <input type="text" id="close-msg" placeholder="Message shown to customers (optional)" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1px solid #e0e0e0;border-radius:6px">
+          <div id="close-current" style="font-size:11px;color:#888"></div>
+        </div>
         <div style="padding:12px;flex-shrink:0;display:flex;gap:8px;align-items:center">
           <span style="font-size:13px;font-weight:600;color:#555">Customer app orders — tap to change status</span>
           <button onclick="loadAppOrders()" style="margin-left:auto;padding:6px 12px;background:#f5f5f5;color:#555;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font)">Refresh</button>
@@ -1709,23 +1720,58 @@ function fbMirrorMember(phone, r){
 // automatic fallback: if Firebase staff sign-in ever fails, orders still come through (just slower).
 let _ordersUnsub = null;
 // ── Pause / resume customer-app ordering (shared config/shop flag read by the app) ──
-var _posOrdersOpen = true, __posShopUnsub = null;
+var _posOrdersOpen = true, __posShopUnsub = null, _posShopData = null;
+function _posSgtDate(){ return new Date(Date.now()+8*3600*1000).toISOString().slice(0,10); }
+function _fmtDMY(ds){ if(!ds) return ''; var p=ds.split('-'); return p.length===3 ? (p[2]+'/'+p[1]+'/'+p[0]) : ds; }
 function startPosShopWatch(){
   if(!window.fdb || __posShopUnsub) return;
   __posShopUnsub = fdb.collection('config').doc('shop').onSnapshot(function(d){
-    var data = (d && d.exists) ? d.data() : null;
-    _posOrdersOpen = !data || data.ordersOpen !== false;   // default OPEN when no flag is set
+    _posShopData = (d && d.exists) ? d.data() : null;
+    _posOrdersOpen = !_posShopData || _posShopData.ordersOpen !== false;   // manual pause state
     renderPosShopStatus();
   }, function(e){ console.warn('shop status listener', e && e.code); });
 }
 function renderPosShopStatus(){
+  var data=_posShopData;
+  var today=_posSgtDate();
+  var inClosed = !!(data && data.closeFrom && data.closeTo && today>=data.closeFrom && today<=data.closeTo);
+  var effectiveOpen = _posOrdersOpen && !inClosed;
   var dot=document.getElementById('order-pause-dot'),
       lbl=document.getElementById('order-pause-label'),
       btn=document.getElementById('order-pause-btn');
-  if(dot) dot.style.background = _posOrdersOpen ? '#2ecc71' : '#e74c3c';
-  if(lbl) lbl.textContent = _posOrdersOpen ? 'App ordering is OPEN' : 'App ordering is PAUSED';
+  if(dot) dot.style.background = effectiveOpen ? '#2ecc71' : '#e74c3c';
+  if(lbl) lbl.textContent = effectiveOpen ? 'App ordering is OPEN'
+                          : inClosed ? ('App ordering is CLOSED (scheduled '+_fmtDMY(data.closeFrom)+'–'+_fmtDMY(data.closeTo)+')')
+                          : 'App ordering is PAUSED';
   if(btn){ btn.textContent = _posOrdersOpen ? 'Pause app orders' : 'Resume app orders';
            btn.style.background = _posOrdersOpen ? '#dd8581' : '#2ecc71'; }
+  var cf=document.getElementById('close-from'), ct=document.getElementById('close-to'), cm=document.getElementById('close-msg'), cc=document.getElementById('close-current');
+  if(cf && document.activeElement!==cf) cf.value = (data && data.closeFrom) || '';
+  if(ct && document.activeElement!==ct) ct.value = (data && data.closeTo) || '';
+  if(cm && document.activeElement!==cm) cm.value = (data && data.closedMsg) || '';
+  if(cc){
+    if(data && data.closeFrom && data.closeTo){
+      cc.textContent = (inClosed ? 'Currently closed' : 'Closure scheduled') + ': '+_fmtDMY(data.closeFrom)+' – '+_fmtDMY(data.closeTo) + (data.closedMsg ? ' · “'+data.closedMsg+'”' : '');
+      cc.style.color = inClosed ? '#e74c3c' : '#888';
+    } else { cc.textContent='No closure scheduled.'; cc.style.color='#aaa'; }
+  }
+}
+function saveClosure(){
+  if(!window.fdb){ showToast('Not connected'); return; }
+  var from=(document.getElementById('close-from')||{}).value||'';
+  var to=(document.getElementById('close-to')||{}).value||'';
+  var msg=((document.getElementById('close-msg')||{}).value||'').trim();
+  if(!from||!to){ showToast('Pick both From and To dates'); return; }
+  if(to<from){ showToast('“To” date must be on or after “From”'); return; }
+  fdb.collection('config').doc('shop').set({ closeFrom:from, closeTo:to, closedMsg:msg, updatedAt:new Date().toISOString() }, {merge:true})
+    .then(function(){ showToast('Closure scheduled'); })
+    .catch(function(){ showToast('Could not save — check connection / permissions'); });
+}
+function clearClosure(){
+  if(!window.fdb){ showToast('Not connected'); return; }
+  fdb.collection('config').doc('shop').set({ closeFrom:'', closeTo:'', closedMsg:'', updatedAt:new Date().toISOString() }, {merge:true})
+    .then(function(){ showToast('Scheduled closure cleared'); })
+    .catch(function(){ showToast('Could not clear — check connection / permissions'); });
 }
 function toggleAppOrders(){
   if(!window.fdb){ showToast('Not connected'); return; }

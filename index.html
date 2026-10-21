@@ -3541,6 +3541,23 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
   </div>
 </div>
 
+<!-- Post-login nudge: offer fingerprint / Face ID sign-in -->
+<div class="modal-bg" id="bio-nudge-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="a2hs-hero"><i class="ti ti-fingerprint"></i></div>
+    <div class="modal-title" style="text-align:center;margin-bottom:6px">Turn on quick sign-in</div>
+    <div class="a2hs-sub">Use your fingerprint or Face ID to log in next time &mdash; no password to type:</div>
+    <ul class="a2hs-perks">
+      <li><i class="ti ti-bolt"></i><span>One tap to sign in &mdash; faster every visit</span></li>
+      <li><i class="ti ti-lock"></i><span>Your fingerprint / Face ID stays on your device &mdash; we never see it</span></li>
+      <li><i class="ti ti-user-check"></i><span>Only you can open your rewards &amp; credit</span></li>
+    </ul>
+    <button class="btn btn-primary" onclick="bioNudgeEnable()">Enable quick sign-in</button>
+    <button type="button" class="a2hs-later" onclick="closeBioNudge()">Not now</button>
+  </div>
+</div>
+
 <!-- Order placed → notify Wilson on WhatsApp (button opens WhatsApp on a fresh tap, no blank tab) -->
 <div class="modal-bg" id="order-placed-modal">
   <div class="modal-box">
@@ -4435,6 +4452,7 @@ document.addEventListener('DOMContentLoaded', function(){
         showToast('Welcome back, '+currentUser.first+'!');
         startNotif();
         goTab(currentScreen!=='home'?currentScreen:'home');
+        maybeOfferBio();   // nudge to turn on fingerprint / Face ID sign-in
       } else if(res.error==='not_found'){ err.textContent='Phone number not registered.'; err.style.display='block'; }
       else if(res.error==='wrong_password'){ err.textContent='Incorrect password.'; err.style.display='block'; }
       else if(res.error==='too_many_attempts'){ err.textContent='Too many attempts. Please wait a few minutes and try again.'; err.style.display='block'; }
@@ -8014,6 +8032,17 @@ function _a2hsIsIOS(){ var ua=navigator.userAgent||''; return /iphone|ipad|ipod/
 function _a2hsPlatform(){ var ios=_a2hsIsIOS(); var si=document.getElementById('a2hs-steps-ios'),sa=document.getElementById('a2hs-steps-android'); if(si) si.style.display=ios?'':'none'; if(sa) sa.style.display=ios?'none':''; }
 function showA2HS(){ _a2hsPlatform(); var m=document.getElementById('a2hs-modal'); if(m) m.classList.add('open'); }
 function closeA2HS(){ var m=document.getElementById('a2hs-modal'); if(m) m.classList.remove('open'); try{ localStorage.setItem('fruicey_a2hs_seen','1'); }catch(e){} }
+// Offer fingerprint / Face ID sign-in after login, if the device supports it and it's not already on.
+function closeBioNudge(){ var m=document.getElementById('bio-nudge-modal'); if(m) m.classList.remove('open'); }
+async function bioNudgeEnable(){ closeBioNudge(); if(typeof appBioEnrollUI==='function') await appBioEnrollUI(); }
+function maybeOfferBio(){
+  try{
+    if(typeof _bioSupported!=='function' || !_bioSupported()) return;     // device can't do it
+    if(typeof _appBioEnrolled==='function' && _appBioEnrolled()) return;  // already enabled
+    var m=document.getElementById('bio-nudge-modal');
+    if(m) setTimeout(function(){ m.classList.add('open'); }, 900);        // let the welcome toast land first
+  }catch(e){}
+}
 function maybeShowA2HS(){
   if(_a2hsStandalone()) return;
   try{ if(localStorage.getItem('fruicey_a2hs_seen')) return; }catch(e){}

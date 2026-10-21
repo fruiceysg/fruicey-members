@@ -5530,7 +5530,7 @@ function renderProducts(){
     }
     if(PREORDER_IDS.has(p.id)){
       const ribbon = document.createElement('div');
-      ribbon.style.cssText = 'position:absolute;top:14px;right:-24px;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:3px 26px;transform:rotate(45deg);letter-spacing:.5px;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
+      ribbon.style.cssText = 'position:absolute;top:8px;right:8px;background:var(--green);color:#fff;font-size:9px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:999px;z-index:6;box-shadow:0 1px 3px rgba(0,0,0,.2)';
       ribbon.textContent = 'PRE-ORDER';
       card.appendChild(ribbon);
     }

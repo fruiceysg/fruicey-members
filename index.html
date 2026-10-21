@@ -5476,6 +5476,8 @@ function addSimpleBowl(pid){
   saveCart(); updateCartBadge();
   showToast(p.name + ' added to cart');
 }
+// Shakes & Smoothies that carry a PROTEIN label (matched by name, case-insensitive).
+const PROTEIN_NAMES = new Set(['recovery','recharge','refuel','boost','powerhouse']);
 function renderProducts(){
   const prods = CATALOGUE[currentCat];
   const grid  = document.getElementById('product-grid');
@@ -5531,6 +5533,12 @@ function renderProducts(){
       ribbon.style.cssText = 'position:absolute;top:14px;right:-24px;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:3px 26px;transform:rotate(45deg);letter-spacing:.5px;z-index:5;box-shadow:0 1px 3px rgba(0,0,0,.2)';
       ribbon.textContent = 'PRE-ORDER';
       card.appendChild(ribbon);
+    }
+    if(isShake && PROTEIN_NAMES.has((p.name||'').trim().toLowerCase())){
+      const pb = document.createElement('div');
+      pb.style.cssText = 'position:absolute;top:8px;right:8px;background:var(--green);color:#fff;font-size:9px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:999px;z-index:6;box-shadow:0 1px 3px rgba(0,0,0,.2)';
+      pb.textContent = 'PROTEIN';
+      card.appendChild(pb);
     }
     if(!isAvail){
       const badge = document.createElement('div');

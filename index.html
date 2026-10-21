@@ -7442,6 +7442,24 @@ const WHEEL_SEGMENTS = [
   {name:'Free Cold Press',color:'#F783AC',reward:'Redeem a free Pressed Juice',desc:'Any Immunity Press.'},
 ];
 const TOTAL_SEGS = WHEEL_SEGMENTS.length;
+// Wheel odds. Higher weight = more likely. $3 Off + Free Cold Press are kept low so the pair
+// lands about once every 5-6 spins (~18% combined). Tweak any number to retune; they don't need
+// to sum to 100. It's pure probability (no fixed counter), so the pattern never looks obvious.
+const WHEEL_WEIGHTS = {
+  '$1 Off': 17,
+  'Free Upsize on Shakes/Juices': 17,
+  '$3 Off': 9,
+  '3 Bonus Stamps': 16,
+  'Free Juice/Shake': 12,
+  '$2 Off Acai Bowl': 16,
+  'Free Cold Press': 9
+};
+function _pickWeightedSeg(){
+  var total=0, w=WHEEL_SEGMENTS.map(function(s){ var x=WHEEL_WEIGHTS[s.name]; if(x==null)x=1; total+=x; return x; });
+  var r=Math.random()*total;
+  for(var i=0;i<w.length;i++){ r-=w[i]; if(r<0) return i; }
+  return w.length-1;
+}
 
 function buildMiniWheel(){
   const canvas = document.getElementById('mini-wheel');
@@ -7495,11 +7513,18 @@ function spinMiniWheel(){
   const btn=document.getElementById('mini-spin-btn');
   if(btn){btn.disabled=true;btn.textContent='Spinning...';}
   wheelSpinning=true;
-  const extra=5+Math.random()*3, stop=Math.random()*2*Math.PI;
+  const SEG=2*Math.PI/TOTAL_SEGS;
+  const startA=currentAngle;
+  // Weighted outcome: choose the winning wedge by weight, then aim the wheel to stop on it.
+  const targetIdx=_pickWeightedSeg();
+  const landFrac=0.22+Math.random()*0.56;                       // random spot inside the wedge (not dead-centre)
+  const desiredN=((2*Math.PI)-((targetIdx+landFrac)*SEG))%(2*Math.PI);
+  const _dn=(desiredN%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+  const stop=((_dn-startA)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+  const extra=5+Math.floor(Math.random()*3);                    // full turns for the spin feel
   const total=extra*2*Math.PI+stop, dur=SPIN_CLIP_MS;   // spin lasts exactly as long as the sound clip
   startSpinSound();
-  const start=performance.now(), startA=currentAngle;
-  const SEG=2*Math.PI/TOTAL_SEGS;
+  const start=performance.now();
   function ease(t){ if(t<.2)return t*t*5; const u=(t-.2)/.8; return .2+.8*(1-Math.pow(1-u,2)); }
   function animate(now){
     const p=Math.min((now-start)/dur,1);

@@ -400,6 +400,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       </div>
       <div class="sales-footer">
         <button class="btn-export" id="export-btn" style="background:#6796ce">Export Daily</button>
+        <input type="month" id="export-month-sel" title="Month to export" style="border:1px solid #ccc;border-radius:6px;padding:6px 6px;font-size:12px;font-family:var(--font)">
         <button class="btn-export" id="export-monthly-btn" style="background:#99d1b4">Export Monthly</button>
         <button class="btn-export" id="export-products-btn" style="background:#f0da75;color:#333">Export Products</button>
         <button class="btn-export" id="settle-btn" style="background:#dd8581">Daily Settlement</button>
@@ -3364,6 +3365,7 @@ function renderSalesReport(){
   const todaySales=salesLog.filter(s=>s.date===today);
   const month=today.slice(0,7);
   const monthSales=salesLog.filter(s=>s.date&&s.date.startsWith(month));
+  var _ems=document.getElementById('export-month-sel'); if(_ems && !_ems.value) _ems.value=month;
 
   // Payment breakdown helper
   function payBreakdown(sales){
@@ -3395,8 +3397,9 @@ function renderSalesReport(){
     const grab    = sales.filter(s=>s.payment==='GrabFood').reduce((t,s)=>t+s.total,0);
     const panda   = sales.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0);
     const online  = sales.filter(s=>s.payment==='Online Shop').reduce((t,s)=>t+s.total,0);
+    const corp    = sales.filter(s=>s.payment==='Corporate').reduce((t,s)=>t+s.total,0);
     const total   = inStoreActive.reduce((t,s)=>t+s.total,0);
-    return {cash,card,paynow,credit,appPaynow,appCredit,appCard,appTotal,grab,panda,online,total,count:inStoreActive.length,
+    return {cash,card,paynow,credit,appPaynow,appCredit,appCard,appTotal,grab,panda,online,corp,total,count:inStoreActive.length,
       appCount:sales.filter(s=>(s.payment||'').startsWith('App ')).length};
   }
   const d=payBreakdown(todaySales);
@@ -3437,7 +3440,6 @@ function renderSalesReport(){
         </tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Cash</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Cash'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.cash.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">Card</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Card'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.card.toFixed(2)}</td></tr>
-        <tr><td style="padding:7px 10px;border:1px solid #eee;color:#e74c3c;padding-left:20px">— MDR</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"></td><td style="padding:7px 10px;text-align:right;border:1px solid #eee"><input type="number" id="report-mdr-monthly" step="0.01" min="0" placeholder="0.00" style="width:70px;text-align:right;border:1px solid #ddd;border-radius:4px;padding:3px 6px;font-size:12px;color:#e74c3c"></td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee">PayNow</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='PayNow'&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.paynow.toFixed(2)}</td></tr>
         <tr><td style="padding:7px 10px;border:1px solid #eee;color:#f39c12">Credit</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>(s.payment==='Credit'||(s.payment||'').startsWith('Credit+'))&&!s.voided).length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.credit.toFixed(2)}</td></tr>
         <tr style="font-weight:700;background:#f0faf4"><td style="padding:7px 10px;border:1px solid #eee">In-store Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.count}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#8fcea1">$${m.total.toFixed(2)}</td></tr>
@@ -3448,6 +3450,7 @@ function renderSalesReport(){
         <tr style="font-weight:600;background:#e8f0fe"><td style="padding:7px 10px;border:1px solid #eee;color:#5b7db1">App Total</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${m.appCount}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee;color:#5b7db1">$${m.appTotal.toFixed(2)}</td></tr>
         <tr style="background:#fff8f0"><td style="padding:7px 10px;border:1px solid #eee;color:#00B14F">GrabFood</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='GrabFood').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.grab.toFixed(2)}</td></tr>
         <tr style="background:#fff0f7"><td style="padding:7px 10px;border:1px solid #eee;color:#D70F64">FoodPanda</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='FoodPanda').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.panda.toFixed(2)}</td></tr>
+        <tr style="background:#f3f0ff"><td style="padding:7px 10px;border:1px solid #eee;color:#7a5cc0">Corporate Orders</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">${monthSales.filter(s=>s.payment==='Corporate').length}</td><td style="padding:7px 10px;text-align:right;border:1px solid #eee">$${m.corp.toFixed(2)}</td></tr>
       </table>
     </div>`;
 
@@ -3604,9 +3607,10 @@ function exportSalesCSV(){
 }
 
 function exportMonthlyCSV(){
-  const month=new Date(new Date().getTime()+8*3600*1000).toISOString().slice(0,7);
+  var _sel=document.getElementById('export-month-sel');
+  const month=(_sel&&_sel.value) ? _sel.value : new Date(new Date().getTime()+8*3600*1000).toISOString().slice(0,7);
   const monthly=salesLog.filter(s=>s.date&&s.date.startsWith(month));
-  if(!monthly.length){showToast('No sales this month');return;}
+  if(!monthly.length){showToast('No sales found for '+month);return;}
   const rows=[['Date','Time','Items','Subtotal','Discount','Total','Payment','Member']];
   monthly.forEach(s=>rows.push([s.date,s.time,s.items.map(i=>i.qty+'x '+i.label).join(' | '),s.subtotal.toFixed(2),s.discount.toFixed(2),s.total.toFixed(2),s.payment,s.member||'']));
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');

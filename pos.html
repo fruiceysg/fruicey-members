@@ -2012,6 +2012,23 @@ async function updateAppOrderStatus(orderId, newStatus){
             });
           }catch(e){ console.log('POSSales sync failed (settlement)',e); }
 
+          // (a2) Record member spend (totalSpend + visitCount + lastVisit) — members only, any collection type.
+          if(o.phone){
+            try{
+              var _spendItems = '';
+              try{ var _a = (typeof o.items==='string') ? JSON.parse(o.items) : (o.items||[]);
+                   _spendItems = _a.map(function(i){ return (i.qty||1)+'x '+(i.label||i.name||''); }).join(', '); }catch(e){}
+              await apiPost({
+                action:'recordMemberSpend',
+                phone: np(o.phone),
+                amount: (parseFloat(o.total)||0).toFixed(2),
+                items: _spendItems,
+                date: sgt.toISOString().slice(0,10),
+                rcptNo: 'app_'+orderId
+              });
+            }catch(e){ console.log('recordMemberSpend (app order) failed',e); }
+          }
+
           // (b) Award stamps — members only, self-pickup only. Independent of (a).
           try{
             const ctype = o.collectType || '';

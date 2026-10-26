@@ -3578,9 +3578,8 @@ function exportProductsCSV(){
   const rows=[['Product','Qty Sold','Revenue ($)']];
   sorted.forEach(([name,d])=>rows.push([name,d.qty,d.revenue.toFixed(2)]));
   rows.push(['TOTAL',sorted.reduce((s,[,d])=>s+d.qty,0),sorted.reduce((s,[,d])=>s+d.revenue,0).toFixed(2)]);
-  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='products-'+label+'.csv';a.click();showToast('Exported products for '+label);
+  _saveXlsx([{name:'Products '+label, rows:rows}], 'products-'+label+'.xlsx');
+  showToast('Exported products for '+label);
 }
 async function exportSalesCSV(){
   const today = new Date(); const sgt = new Date(today.getTime()+8*3600*1000);
@@ -3604,11 +3603,9 @@ async function exportSalesCSV(){
     (parseFloat(s.subtotal)||0).toFixed(2), (parseFloat(s.discount)||0).toFixed(2), (parseFloat(s.total)||0).toFixed(2),
     s.payment||'', s.member||'', s.memberPhone||'', s.note||'', (s.voided===true||s.voided==='true')?'YES':''
   ]));
-  await _appendSettlementRows(rows, {date:dateStr});
-  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='fruicey-sales-'+dateStr+'.csv'; a.click();
+  var _settle = await _settlementRows({date:dateStr});
+  var _sheets=[{name:'Sales '+dateStr, rows:rows}]; if(_settle.length) _sheets.push({name:'Settlement', rows:_settle});
+  _saveXlsx(_sheets, 'fruicey-sales-'+dateStr+'.xlsx');
   showToast('Exported '+filtered.length+' transactions for '+dateStr);
 }
 
@@ -3632,10 +3629,9 @@ async function exportMonthlyCSV(){
   if(!monthly.length){ showToast('No sales found for '+month); return; }
   const rows=[['Date','Time','Items','Subtotal','Discount','Total','Payment','Member']];
   monthly.forEach(s=>rows.push([s.date,s.time,(Array.isArray(s.items)?s.items:[]).map(i=>(i.qty||1)+'x '+(i.label||'')).join(' | '),(s.subtotal||0).toFixed(2),(s.discount||0).toFixed(2),(s.total||0).toFixed(2),s.payment||'',s.member||'']));
-  await _appendSettlementRows(rows, {month:month});
-  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='fruicey-monthly-'+month+'.csv';a.click();
+  var _settle = await _settlementRows({month:month});
+  var _sheets=[{name:month+' Sales', rows:rows}]; if(_settle.length) _sheets.push({name:'Settlement', rows:_settle});
+  _saveXlsx(_sheets, 'fruicey-monthly-'+month+'.xlsx');
   showToast('Exported '+month+' ('+monthly.length+' rows)');
 }
 
@@ -3717,27 +3713,42 @@ async function confirmSettle(){
   closeSettleModal(); renderSalesReport();
   showToast('Day closed! $'+total.toFixed(2)+' total.');
 }
-// Append a saved-settlement summary block to an export's rows (daily: {date}, monthly: {month}).
-async function _appendSettlementRows(rows, params){
+// Build the saved-settlement summary as its own sheet (daily: {date}, monthly: {month}).
+async function _settlementRows(params){
   try{
     var r = await apiGet(Object.assign({action:'getSettlements'}, params));
     var list = (r&&r.settlements)||[];
-    if(!list.length) return;
+    if(!list.length) return [];
     var cols=['cash','paynow','card','credit','appPaynow','appCredit','appLink','grab','panda','corporate','mdr','inStoreTotal','appTotal','grandTotal'];
-    rows.push([]); rows.push(['=== SETTLEMENT ===']);
-    rows.push(['Date','Cash','PayNow','Card','Credit','App PayNow','App Credit','App Link','GrabFood','FoodPanda','Corporate','MDR','In-store Total','App Total','Grand Total','Txns']);
+    var out=[['Date','Cash','PayNow','Card','Credit','App PayNow','App Credit','App Link','GrabFood','FoodPanda','Corporate','MDR','In-store Total','App Total','Grand Total','Txns']];
     var tot={}; cols.forEach(function(c){ tot[c]=0; }); var totTxn=0;
     list.forEach(function(x){
       var row=[x.date];
-      cols.forEach(function(c){ var v=parseFloat(x[c])||0; tot[c]+=v; row.push(v.toFixed(2)); });
+      cols.forEach(function(c){ var v=parseFloat(x[c])||0; tot[c]+=v; row.push(+v.toFixed(2)); });
       var tx=parseInt(x.txnCount)||0; totTxn+=tx; row.push(tx);
-      rows.push(row);
+      out.push(row);
     });
-    if(list.length>1){
-      var trow=['TOTAL']; cols.forEach(function(c){ trow.push(tot[c].toFixed(2)); }); trow.push(totTxn);
-      rows.push(trow);
-    }
-  }catch(e){}
+    if(list.length>1){ var trow=['TOTAL']; cols.forEach(function(c){ trow.push(+tot[c].toFixed(2)); }); trow.push(totTxn); out.push(trow); }
+    return out;
+  }catch(e){ return []; }
+}
+// Load SheetJS on demand and write a real .xlsx (one tab per {name, rows}).
+function _loadXLSX(cb){
+  if(window.XLSX){ cb(); return; }
+  var sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  sc.onload=function(){ cb(); };
+  sc.onerror=function(){ showToast('Could not load the Excel tool \u2014 check connection'); };
+  document.head.appendChild(sc);
+}
+function _saveXlsx(sheets, filename){
+  _loadXLSX(function(){
+    try{
+      var wb=XLSX.utils.book_new();
+      sheets.forEach(function(sh){ var ws=XLSX.utils.aoa_to_sheet(sh.rows||[]); XLSX.utils.book_append_sheet(wb, ws, String(sh.name||'Sheet').slice(0,31)); });
+      XLSX.writeFile(wb, filename);
+    }catch(e){ showToast('Could not create the Excel file'); }
+  });
 }
 
 

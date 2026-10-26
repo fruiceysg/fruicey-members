@@ -3560,16 +3560,24 @@ function renderSalesReport(){
   }).join('');
 }
 
-function exportProductsCSV(){
+async function exportProductsCSV(){
   const sgt = new Date(new Date().getTime()+8*3600*1000);
   const todayStr = sgt.toISOString().slice(0,10);
   const monthStr = todayStr.slice(0,7);
-  const choice = prompt('Export products sold:\n1 = Today ('+todayStr+')\n2 = This month ('+monthStr+')\n\nEnter 1 or 2:','1');
+  const choice = prompt('Export products sold:\n1 = Today ('+todayStr+')\n2 = This month ('+monthStr+')\nOr type a past month as YYYY-MM (or a day as YYYY-MM-DD).','2');
   if(!choice) return;
-  let filtered, label;
-  if(choice.trim()==='1'){ filtered=salesLog.filter(s=>s.date===todayStr); label=todayStr; }
-  else if(choice.trim()==='2'){ filtered=salesLog.filter(s=>s.date&&s.date.startsWith(monthStr)); label=monthStr; }
-  else { showToast('Invalid choice'); return; }
+  var c=choice.trim(), params, label;
+  if(c==='1'){ params={date:todayStr}; label=todayStr; }
+  else if(c==='2'){ params={month:monthStr}; label=monthStr; }
+  else if(/^\d{4}-\d{2}$/.test(c)){ params={month:c}; label=c; }
+  else if(/^\d{4}-\d{2}-\d{2}$/.test(c)){ params={date:c}; label=c; }
+  else { showToast('Enter 1, 2, or a month as YYYY-MM'); return; }
+  showToast('Fetching '+label+'…');
+  var filtered=[];
+  try{
+    var res=await apiGet(Object.assign({action:'getPOSSales'}, params));
+    filtered=((res&&res.sales)||[]).map(function(x){ try{ x.items=(typeof x.items==='string')?JSON.parse(x.items):(x.items||[]); }catch(e){ x.items=[]; } x.voided=(x.voided===true||x.voided==='true'); return x; });
+  }catch(e){ showToast('Could not fetch '+label); return; }
   if(!filtered.length){ showToast('No sales for '+label); return; }
   const tally={};
   filtered.filter(s=>!s.voided).forEach(s=>{(s.items||[]).forEach(i=>{const key=i.label||i.name||'Unknown';if(!tally[key])tally[key]={qty:0,revenue:0};tally[key].qty+=i.qty||1;tally[key].revenue+=(i.price||0)*(i.qty||1);});});

@@ -3062,7 +3062,7 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="card" style="font-size:12.5px;color:var(--text2);line-height:1.5">
       <div class="card-title" style="font-size:15px;margin-bottom:12px">Terms & Conditions</div>
       <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">How to earn a stamp</div>Purchase or self-collect any product in store. One stamp per menu product, issued automatically into your account. Not valid for subscriptions, corporate or bulk orders.</div>
-      <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Reward</div>Complete 9 stamps to earn 1 sure-win wheel spin.</div>
+      <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Reward</div>Complete 9 stamps to earn 1 sure-win slot spin.</div>
       <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Prizes</div>Must be redeemed in store. Not transferable or exchangeable for cash.</div>
       <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Redemption</div>Free products are applied to the item(s) of the lowest value in the transaction.</div>
       <div style="margin-bottom:11px"><div style="font-weight:700;color:var(--text);margin-bottom:2px">Non-transferable</div>Stamps are strictly personal and non-transferable.</div>
@@ -7505,7 +7505,7 @@ function _pickWeightedSeg(){
 // Jackpot prize (Free Cold Press) shows the Fruicey mascot/stamp; the other six use fruit icons.
 const SLOT_CELL  = 66;                 // px: one symbol cell = 1/3 of the reel window (matches .slot-cell height)
 const SLOT_STOPS = [30, 36, 42];       // top-cell index each reel stops on (middle row = stop+1); staggered L->R
-const SLOT_DURS  = [2800, 3600, 4400]; // ms per reel — slower spin
+const SLOT_DURS  = [3600, 4700, 5800]; // ms per reel — slower spin
 function _appleSVG(c){ return '<svg viewBox="0 0 64 64">'
   +'<rect x="30.6" y="7" width="2.8" height="10" rx="1.4" fill="#7a4a24"/>'
   +'<path d="M31 16 C 28 9, 23 7, 17 8 C 21 11, 24 14, 28 18 Z" fill="#6bbf3f"/>'

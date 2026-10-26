@@ -7540,7 +7540,7 @@ const SLOT_VBASE  = 1850;     // px/sec reel speed
 const SLOT_MIN_SPIN_MS = 500; // reels must spin at least this long before a tap can stop them
 const SLOT_AUTOSTOP_MS = 6000;// if the player never taps, the reels slow-stop on their own after this
 const SLOT_STAGGER = 450;     // gap between each reel settling (left -> right)
-const SLOT_SETTLE_DUR = 900, SLOT_SETTLE_DUR_LAST = 1300;
+const SLOT_SETTLE_DUR = 1600, SLOT_SETTLE_DUR_LAST = 2300;
 function _appleSVG(c){ return '<svg viewBox="0 0 64 64">'
   +'<rect x="30.6" y="7" width="2.8" height="10" rx="1.4" fill="#7a4a24"/>'
   +'<path d="M31 16 C 28 9, 23 7, 17 8 C 21 11, 24 14, 28 18 Z" fill="#6bbf3f"/>'
@@ -7696,7 +7696,7 @@ function _slotFrame(ts){
       allStopped=false;
       R.offset += SLOT_VBASE*dt;
       if(_SLOT.triggered && ts>=R.settleStartAt){
-        var minTo=R.offset + period*1.6;
+        var minTo=R.offset + period*2.4;
         var k=Math.ceil((minTo - alignRem)/period);
         R.to=alignRem + k*period; R.from=R.offset; R.sAt=ts; R.dur=(r===2?SLOT_SETTLE_DUR_LAST:SLOT_SETTLE_DUR);
         R.phase='settling';
@@ -7704,7 +7704,7 @@ function _slotFrame(ts){
       _applyReel(R);
     } else if(R.phase==='settling'){
       allStopped=false;
-      var t=Math.min(1,(ts-R.sAt)/R.dur), e=1-Math.pow(1-t,3);   // easeOutCubic -> natural stop
+      var t=Math.min(1,(ts-R.sAt)/R.dur), e=1-Math.pow(1-t,4);   // easeOutQuart -> long, gentle glide to a full stop
       R.offset=R.from+(R.to-R.from)*e; _applyReel(R);
       if(t>=1){ R.phase='stopped'; R.offset=R.to; _applyReel(R); }
     }

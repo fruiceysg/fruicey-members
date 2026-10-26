@@ -3022,20 +3022,27 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div id="rewards-wheel" style="display:none">
       <div class="card" style="text-align:center">
         <style>
-.slot-machine{background:linear-gradient(#c0151e,#7d0b12);border-radius:20px;padding:16px 14px;margin:0 auto 16px;max-width:300px;border:3px solid #ffd43b;box-shadow:0 10px 26px rgba(0,0,0,.28),inset 0 2px 5px rgba(255,255,255,.22)}
+.slot-machine{position:relative;background:linear-gradient(#c0151e,#7d0b12);border-radius:20px;padding:16px 48px 16px 14px;margin:0 auto 16px;max-width:300px;border:3px solid #ffd43b;box-shadow:0 10px 26px rgba(0,0,0,.28),inset 0 2px 5px rgba(255,255,255,.22)}
 .slot-reels{position:relative;display:flex;gap:8px;justify-content:center;background:#2a0407;border-radius:12px;padding:10px;box-shadow:inset 0 3px 10px rgba(0,0,0,.6)}
-.slot-reel{position:relative;width:78px;height:198px;overflow:hidden;border-radius:9px;background:linear-gradient(#ffffff,#f0f0f0);box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
-.slot-reel::before,.slot-reel::after{content:"";position:absolute;left:0;right:0;height:56px;z-index:3;pointer-events:none}
+.slot-reel{position:relative;width:66px;height:216px;overflow:hidden;border-radius:9px;background:linear-gradient(#ffffff,#f0f0f0);box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
+.slot-reel::before,.slot-reel::after{content:"";position:absolute;left:0;right:0;height:60px;z-index:3;pointer-events:none}
 .slot-reel::before{top:0;background:linear-gradient(rgba(255,255,255,.72),rgba(255,255,255,0))}
 .slot-reel::after{bottom:0;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.72))}
 .slot-strip{display:flex;flex-direction:column;will-change:transform}
-.slot-cell{height:66px;flex:0 0 66px;display:flex;align-items:center;justify-content:center}
-.slot-cell img,.slot-cell svg{width:48px;height:48px;object-fit:contain;display:block;transition:transform .2s}
+.slot-cell{height:72px;flex:0 0 72px;display:flex;align-items:center;justify-content:center}
+.slot-cell img,.slot-cell svg{width:58px;height:58px;object-fit:contain;display:block;transition:transform .2s}
 .slot-cell.hit img,.slot-cell.hit svg{animation:slotPop .5s ease 2}
-@keyframes slotPop{50%{transform:scale(1.2)}}
+@keyframes slotPop{50%{transform:scale(1.18)}}
 .slot-payline-top,.slot-payline-bot{position:absolute;left:7px;right:7px;height:3px;z-index:4;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,212,59,.9),transparent);opacity:.35;transition:opacity .25s}
-.slot-payline-top{top:76px}.slot-payline-bot{top:142px}
+.slot-payline-top{top:82px}.slot-payline-bot{top:154px}
 .slot-reels.win-line .slot-payline-top,.slot-reels.win-line .slot-payline-bot{opacity:1;box-shadow:0 0 8px rgba(255,212,59,.9)}
+.slot-lever{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:184px;cursor:pointer;z-index:6;-webkit-tap-highlight-color:transparent}
+.slot-lever .lv-track{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;width:7px;height:120px;border-radius:4px;background:rgba(0,0,0,.30)}
+.slot-lever .lv-mount{position:absolute;left:50%;transform:translateX(-50%);bottom:4px;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe08a,#c9960f);box-shadow:inset 0 1px 2px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.4)}
+.slot-lever .lv-arm{position:absolute;left:50%;bottom:16px;width:8px;height:112px;margin-left:-4px;background:linear-gradient(#f4f4f4,#9a9a9a);border-radius:5px;transform-origin:bottom center;transition:transform .48s cubic-bezier(.34,1.45,.5,1)}
+.slot-lever .lv-ball{position:absolute;top:-17px;left:50%;transform:translateX(-50%);width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a8a,#c0151e 72%);box-shadow:0 3px 6px rgba(0,0,0,.45),inset 0 2px 3px rgba(255,255,255,.4)}
+.slot-lever.pulling .lv-arm{transform:translateY(52px)}
+.slot-lever.disabled{opacity:.45;cursor:default}
 </style>
         <div class="babydoll" style="font-size:22px;color:var(--green);margin-bottom:4px">Fruicey Slot Machine</div>
         <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Congratulations! Tap Spin the Slot and match 3 on the middle row.</div>
@@ -3045,6 +3052,11 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
             <div class="slot-reel"><div class="slot-strip" id="slot-strip-1"></div></div>
             <div class="slot-reel"><div class="slot-strip" id="slot-strip-2"></div></div>
             <div class="slot-payline-top"></div><div class="slot-payline-bot"></div>
+          </div>
+          <div class="slot-lever" id="slot-lever" onclick="pullLever()" role="button" aria-label="Pull the handle to spin">
+            <div class="lv-track"></div>
+            <div class="lv-arm"><div class="lv-ball"></div></div>
+            <div class="lv-mount"></div>
           </div>
         </div>
         <button class="btn btn-primary" id="mini-spin-btn" onclick="spinMiniWheel()" style="display:block;width:fit-content;max-width:100%;margin:6px auto;padding:10px 28px;border-radius:22px;font-size:18px;letter-spacing:.5px">Spin the Slot!</button>
@@ -7503,7 +7515,7 @@ function _pickWeightedSeg(){
 // ── SLOT MACHINE (replaces the spin wheel; SAME 7 prizes, SAME weighted odds) ──
 // 3x3 reels; three matching symbols on the MIDDLE row = that prize.
 // Jackpot prize (Free Cold Press) shows the Fruicey mascot/stamp; the other six use fruit icons.
-const SLOT_CELL  = 66;                 // px: one symbol cell = 1/3 of the reel window (matches .slot-cell height)
+const SLOT_CELL  = 72;                 // px: one symbol cell = 1/3 of the reel window (matches .slot-cell height)
 const SLOT_STOPS = [30, 36, 42];       // top-cell index each reel stops on (middle row = stop+1); staggered L->R
 const SLOT_DURS  = [3600, 4700, 5800]; // ms per reel — slower spin
 function _appleSVG(c){ return '<svg viewBox="0 0 64 64">'
@@ -7556,6 +7568,7 @@ function _fillStrip(stripEl, len, targetIdx, targetPos){
 }
 function buildMiniWheel(){   // name kept for existing callers: set the reels to a resting state
   var reels=document.getElementById('slot-reels'); if(reels) reels.classList.remove('win-line');
+  var lv=document.getElementById('slot-lever'); if(lv) lv.classList.remove('disabled','pulling');
   for(var r=0;r<3;r++){
     var strip=document.getElementById('slot-strip-'+r);
     if(!strip) continue;
@@ -7579,6 +7592,7 @@ function spinMiniWheel(){
   wheelSpinning=true;
   var resEl=document.getElementById('mini-wheel-result'); if(resEl) resEl.style.display='none';
   var reels=document.getElementById('slot-reels'); if(reels) reels.classList.remove('win-line');
+  var lv=document.getElementById('slot-lever'); if(lv) lv.classList.add('disabled');
   // Same weighted outcome as the old wheel: pick the winning prize, then land all 3 middle cells on it.
   const targetIdx=_pickWeightedSeg();
   startSpinSound();
@@ -7609,6 +7623,14 @@ function spinMiniWheel(){
     showMiniResult(seg);
     autoSaveMiniPrize(seg);
   }, finishMs);
+}
+
+// Side handle: pulling it is the same as pressing the Spin button.
+function pullLever(){
+  if(wheelSpinning||hasSpun) return;
+  var lv=document.getElementById('slot-lever');
+  if(lv){ lv.classList.add('pulling'); setTimeout(function(){ if(lv) lv.classList.remove('pulling'); }, 470); }
+  spinMiniWheel();
 }
 
 // ── Sound effects: synthesized chimes (no audio files; works offline). ──

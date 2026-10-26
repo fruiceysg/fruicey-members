@@ -3021,13 +3021,29 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <!-- Spin wheel section -->
     <div id="rewards-wheel" style="display:none">
       <div class="card" style="text-align:center">
-        <div class="babydoll" style="font-size:22px;color:var(--green);margin-bottom:4px">Spin the Fruicey Wheel!</div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Congratulations! Spin to find out your prize.</div>
-        <div style="position:relative;width:260px;height:260px;margin:0 auto 14px">
-          <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid #e6ab1f;z-index:10;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))"></div>
-          <canvas id="mini-wheel" width="520" height="520" style="width:260px;height:260px;border-radius:50%;box-shadow:0 10px 26px rgba(0,0,0,.28),0 2px 6px rgba(0,0,0,.2)"></canvas>
+        <style>
+.slot-machine{background:linear-gradient(#c0151e,#7d0b12);border-radius:20px;padding:16px 14px;margin:0 auto 16px;max-width:300px;border:3px solid #ffd43b;box-shadow:0 10px 26px rgba(0,0,0,.28),inset 0 2px 5px rgba(255,255,255,.22)}
+.slot-reels{position:relative;display:flex;gap:8px;justify-content:center;background:#2a0407;border-radius:12px;padding:10px;box-shadow:inset 0 3px 10px rgba(0,0,0,.6)}
+.slot-reel{position:relative;width:78px;height:88px;overflow:hidden;border-radius:9px;background:linear-gradient(#ffffff,#f0f0f0);box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
+.slot-reel::before,.slot-reel::after{content:"";position:absolute;left:0;right:0;height:22px;z-index:3;pointer-events:none}
+.slot-reel::before{top:0;background:linear-gradient(rgba(0,0,0,.16),transparent)}
+.slot-reel::after{bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.16))}
+.slot-strip{display:flex;flex-direction:column;will-change:transform}
+.slot-cell{height:88px;flex:0 0 88px;display:flex;align-items:center;justify-content:center}
+.slot-cell img,.slot-cell svg{width:62px;height:62px;object-fit:contain;display:block}
+.slot-reel.win{animation:slotWin .5s ease 2}
+@keyframes slotWin{50%{box-shadow:inset 0 0 0 3px #ffd43b,0 0 16px rgba(255,212,59,.9)}}
+</style>
+        <div class="babydoll" style="font-size:22px;color:var(--green);margin-bottom:4px">Fruicey Lucky Slots</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Congratulations! Tap SPIN and match 3 to reveal your prize.</div>
+        <div class="slot-machine">
+          <div class="slot-reels">
+            <div class="slot-reel"><div class="slot-strip" id="slot-strip-0"></div></div>
+            <div class="slot-reel"><div class="slot-strip" id="slot-strip-1"></div></div>
+            <div class="slot-reel"><div class="slot-strip" id="slot-strip-2"></div></div>
+          </div>
         </div>
-        <button class="btn btn-primary" id="mini-spin-btn" onclick="spinMiniWheel()" style="display:block;width:fit-content;max-width:100%;margin:6px auto;padding:10px 22px;border-radius:22px;font-size:18px">Spin the Wheel!</button>
+        <button class="btn btn-primary" id="mini-spin-btn" onclick="spinMiniWheel()" style="display:block;width:fit-content;max-width:100%;margin:6px auto;padding:10px 28px;border-radius:22px;font-size:18px;letter-spacing:1px">SPIN</button>
         <div id="mini-wheel-result" style="display:none;margin-top:14px;border-radius:12px;padding:14px;color:#fff;text-align:center;overflow-wrap:anywhere;word-break:break-word">
           <div class="babydoll" style="font-size:22px;margin-bottom:6px" id="mini-result-name"></div>
           <div style="font-size:15px;font-weight:600;opacity:.95;margin-bottom:7px" id="mini-result-reward"></div>
@@ -7480,44 +7496,68 @@ function _pickWeightedSeg(){
   return w.length-1;
 }
 
-function buildMiniWheel(){
-  const canvas = document.getElementById('mini-wheel');
-  if(!canvas) return;
-  const ctx=canvas.getContext('2d'), size=canvas.width, cx=size/2, cy=size/2, r=size/2-size*0.04;
-  const SEG=2*Math.PI/TOTAL_SEGS;
-  ctx.clearRect(0,0,size,size);
-  WHEEL_SEGMENTS.forEach((seg,i)=>{
-    const sa=currentAngle+i*SEG-Math.PI/2, ea=sa+SEG;
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,sa,ea); ctx.closePath();
-    ctx.fillStyle=seg.color; ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=2; ctx.stroke();
-    ctx.save(); ctx.translate(cx,cy); ctx.rotate(sa+SEG/2); ctx.textAlign='right';
-    ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=3;
-    const fSize=size*0.038; ctx.font=`bold ${fSize}px -apple-system,sans-serif`;
-    const words=seg.name.split(' '), lines=[], maxW=r*0.72; let line='';
-    words.forEach(w=>{ const t=line?line+' '+w:w; if(ctx.measureText(t).width<=maxW){line=t;}else{if(line)lines.push(line);line=w;} });
-    if(line)lines.push(line);
-    const lh=fSize*1.2, startY=-lines.length*lh/2+lh*0.8;
-    lines.forEach((l,li)=>ctx.fillText(l,r-14,startY+li*lh));
-    ctx.restore();
-  });
-  // ── Red & white striped frame (like the canopy) + pegs ──
-  var _fr=(r+size/2)/2, _fw=(size/2-r), _NS=28, _sw=2*Math.PI/_NS;
-  for(var _si=0;_si<_NS;_si++){
-    var _sa=currentAngle+_si*_sw-Math.PI/2;
-    ctx.beginPath(); ctx.arc(cx,cy,_fr,_sa,_sa+_sw);
-    ctx.strokeStyle=(_si%2===0)?'#d7322d':'#ffffff'; ctx.lineWidth=_fw*1.15; ctx.stroke();
+// ── LUCKY SLOTS (replaces the spin wheel; SAME 7 prizes, SAME weighted odds) ──
+// Each prize maps to one reel symbol; 3 matching symbols on the payline = that prize.
+// Jackpot prize (Free Cold Press) shows the Fruicey mascot/stamp image; the other six use fruit icons.
+const SLOT_CELL  = 88;               // px: one symbol cell = reel window height (matches .slot-reel height)
+const SLOT_STOPS = [28, 33, 38];     // how deep each reel travels before stopping (staggered L->R)
+const SLOT_DURS  = [1500, 2000, 2500]; // ms per reel; last one ~matches the spin sound clip
+function _appleSVG(c){ return '<svg viewBox="0 0 64 64">'
+  +'<rect x="30.6" y="7" width="2.8" height="10" rx="1.4" fill="#7a4a24"/>'
+  +'<path d="M31 16 C 28 9, 23 7, 17 8 C 21 11, 24 14, 28 18 Z" fill="#6bbf3f"/>'
+  +'<path d="M32 15 C 19 9, 7 18, 9 34 C 10.5 47, 20 57, 27 55.4 C 30 54.7, 34 54.7, 37 55.4 C 44 57, 53.5 47, 55 34 C 57 18, 45 9, 32 15 Z" fill="'+c+'"/>'
+  +'<ellipse cx="22" cy="27" rx="4.5" ry="7" fill="rgba(255,255,255,.33)"/>'
+  +'</svg>'; }
+function _orangeSVG(){ return '<svg viewBox="0 0 64 64">'
+  +'<path d="M31 15 C 28 10, 23 9, 18 11 C 22 13, 25 16, 28 19 Z" fill="#6bbf3f"/>'
+  +'<circle cx="32" cy="35" r="23" fill="#fb8c00"/>'
+  +'<circle cx="32" cy="35" r="23" fill="none" stroke="#e06f00" stroke-width="2.4"/>'
+  +'<ellipse cx="23" cy="28" rx="5.5" ry="7.5" fill="rgba(255,255,255,.28)"/>'
+  +'</svg>'; }
+function _bananaSVG(){ return '<svg viewBox="0 0 64 64">'
+  +'<path d="M13 16 C 15 42, 35 55, 52 49 C 55 48, 56 50.4, 54 52 C 36 62, 10 47, 9 18 C 8.8 15, 12.6 13.4, 13 16 Z" fill="#fdd835" stroke="#e0b900" stroke-width="1.6"/>'
+  +'<path d="M52 49 l6 -1.5 -2.5 5 Z" fill="#7a5320"/>'
+  +'<path d="M12.6 15 l1.4 -5 3.4 3.4 Z" fill="#7a5320"/>'
+  +'</svg>'; }
+function _kiwiSVG(){ var s='<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="#7a5a2a"/><circle cx="32" cy="32" r="21" fill="#aecb45"/><circle cx="32" cy="32" r="6.5" fill="#f3f7e4"/>';
+  var pts=[[45,32],[41.2,41.2],[32,45],[22.8,41.2],[19,32],[22.8,22.8],[32,19],[41.2,22.8]];
+  for(var i=0;i<pts.length;i++){ s+='<ellipse cx="'+pts[i][0]+'" cy="'+pts[i][1]+'" rx="1.3" ry="2.3" fill="#36371a"/>'; }
+  return s+'</svg>'; }
+function _avocadoSVG(){ return '<svg viewBox="0 0 64 64">'
+  +'<path d="M32 6 C 20 6, 15 20, 17 34 C 19 50, 26 58, 32 58 C 38 58, 45 50, 47 34 C 49 20, 44 6, 32 6 Z" fill="#2f5d1e"/>'
+  +'<path d="M32 11 C 23 11, 19 22, 21 34 C 23 48, 28 54, 32 54 C 36 54, 41 48, 43 34 C 45 22, 41 11, 32 11 Z" fill="#cfe08a"/>'
+  +'<circle cx="32" cy="38" r="9" fill="#8a5a2a"/>'
+  +'</svg>'; }
+// Index-aligned to WHEEL_SEGMENTS: 0 $1 Off, 1 Free Upsize, 2 $3 Off, 3 Bonus Stamps,
+// 4 Free Juice/Shake, 5 $2 Off Acai, 6 Free Cold Press (JACKPOT = mascot).
+const SLOT_ART = [
+  {svg:_appleSVG('#e53935')},   // red apple
+  {svg:_appleSVG('#8bc34a')},   // green apple
+  {svg:_orangeSVG()},           // orange
+  {svg:_bananaSVG()},           // banana
+  {svg:_kiwiSVG()},             // kiwi
+  {svg:_avocadoSVG()},          // avocado
+  {mascot:true}                 // Fruicey mascot (jackpot)
+];
+function _slotSymHTML(idx){ return (SLOT_ART[idx] && SLOT_ART[idx].mascot) ? ('<img src="'+MASCOT+'" alt="jackpot">') : SLOT_ART[idx].svg; }
+function _fillStrip(stripEl, len, targetIdx, targetPos){
+  if(!stripEl) return;
+  var html='';
+  for(var i=0;i<len;i++){
+    var sym=(i===targetPos)?targetIdx:Math.floor(Math.random()*TOTAL_SEGS);
+    html+='<div class="slot-cell">'+_slotSymHTML(sym)+'</div>';
   }
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.lineWidth=size*0.004; ctx.stroke();
-  for(var _pi=0;_pi<TOTAL_SEGS;_pi++){
-    var _pa=currentAngle+_pi*SEG-Math.PI/2;
-    var _px=cx+Math.cos(_pa)*_fr, _py=cy+Math.sin(_pa)*_fr;
-    ctx.beginPath(); ctx.arc(_px,_py,size*0.016,0,2*Math.PI);
-    ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#c0392b'; ctx.lineWidth=size*0.004; ctx.stroke();
+  stripEl.innerHTML=html;
+}
+function buildMiniWheel(){   // name kept for existing callers: set the reels to a resting state
+  for(var r=0;r<3;r++){
+    var strip=document.getElementById('slot-strip-'+r);
+    if(!strip) continue;
+    if(strip.parentNode) strip.parentNode.classList.remove('win');
+    strip.style.transition='none';
+    strip.style.transform='translateY(0)';
+    _fillStrip(strip, 6, -1, -1);   // random faces, no forced target
   }
-  ctx.beginPath(); ctx.arc(cx,cy,size*0.095,0,2*Math.PI); ctx.fillStyle='#d7322d'; ctx.fill();
-  ctx.beginPath(); ctx.arc(cx,cy,size*0.07,0,2*Math.PI); ctx.fillStyle='#fff'; ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,.12)'; ctx.lineWidth=size*0.005; ctx.stroke();
 }
 
 /* Reward-wheel spin sound: the full click-slow-down clip, played once; the spin is timed to match it (embedded) */
@@ -7530,38 +7570,36 @@ function stopSpinSound(){ try{ if(_spinAudio){ _spinAudio.pause(); _spinAudio.cu
 function spinMiniWheel(){
   if(wheelSpinning||hasSpun) return;
   const btn=document.getElementById('mini-spin-btn');
-  if(btn){btn.disabled=true;btn.textContent='Spinning...';}
+  if(btn){ btn.disabled=true; btn.textContent='Spinning...'; }
   wheelSpinning=true;
-  const SEG=2*Math.PI/TOTAL_SEGS;
-  const startA=currentAngle;
-  // Weighted outcome: choose the winning wedge by weight, then aim the wheel to stop on it.
+  var resEl=document.getElementById('mini-wheel-result'); if(resEl) resEl.style.display='none';
+  // Same weighted outcome as the old wheel: pick the winning prize, then land all 3 reels on it.
   const targetIdx=_pickWeightedSeg();
-  const landFrac=0.22+Math.random()*0.56;                       // random spot inside the wedge (not dead-centre)
-  const desiredN=((2*Math.PI)-((targetIdx+landFrac)*SEG))%(2*Math.PI);
-  const _dn=(desiredN%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
-  const stop=((_dn-startA)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
-  const extra=5+Math.floor(Math.random()*3);                    // full turns for the spin feel
-  const total=extra*2*Math.PI+stop, dur=SPIN_CLIP_MS;   // spin lasts exactly as long as the sound clip
   startSpinSound();
-  const start=performance.now();
-  function ease(t){ if(t<.2)return t*t*5; const u=(t-.2)/.8; return .2+.8*(1-Math.pow(1-u,2)); }
-  function animate(now){
-    const p=Math.min((now-start)/dur,1);
-    currentAngle=startA+total*ease(p);
-    buildMiniWheel();
-    if(p<1){requestAnimationFrame(animate);}
-    else{
-      wheelSpinning=false;
-      const TWO_PI=2*Math.PI, n=((currentAngle%TWO_PI)+TWO_PI)%TWO_PI;
-      const wi=Math.floor(((TWO_PI-n)%TWO_PI)/SEG)%TOTAL_SEGS;
-      const seg=WHEEL_SEGMENTS[wi];
-      hasSpun=true;
-      if(btn){btn.disabled=true;btn.textContent='Already spun!';}
-      showMiniResult(seg);
-      autoSaveMiniPrize(seg);
-    }
+  for(let r=0;r<3;r++){
+    const strip=document.getElementById('slot-strip-'+r);
+    if(!strip) continue;
+    if(strip.parentNode) strip.parentNode.classList.remove('win');
+    const stop=SLOT_STOPS[r];
+    _fillStrip(strip, stop+4, targetIdx, stop);   // winning symbol sits at the stop cell
+    strip.style.transition='none';
+    strip.style.transform='translateY(0)';
+    void strip.offsetHeight;                       // force reflow so the reset applies first
+    (function(sEl,dur,dist){ requestAnimationFrame(function(){
+      sEl.style.transition='transform '+dur+'ms cubic-bezier(.11,.68,.21,1)';
+      sEl.style.transform='translateY(-'+dist+'px)';
+    }); })(strip, SLOT_DURS[r], stop*SLOT_CELL);
   }
-  requestAnimationFrame(animate);
+  const finishMs=SLOT_DURS[SLOT_DURS.length-1]+140;
+  setTimeout(function(){
+    stopSpinSound();
+    hasSpun=true; wheelSpinning=false;
+    for(var r=0;r<3;r++){ var sEl=document.getElementById('slot-strip-'+r); if(sEl&&sEl.parentNode) sEl.parentNode.classList.add('win'); }
+    if(btn){ btn.disabled=true; btn.textContent='Already spun!'; }
+    const seg=WHEEL_SEGMENTS[targetIdx];
+    showMiniResult(seg);
+    autoSaveMiniPrize(seg);
+  }, finishMs);
 }
 
 // ── Sound effects: synthesized chimes (no audio files; works offline). ──

@@ -400,7 +400,6 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       </div>
       <div class="sales-footer">
         <button class="btn-export" id="export-btn" style="background:#6796ce">Export Daily</button>
-        <input type="month" id="export-month-sel" title="Month to export" style="border:1px solid #ccc;border-radius:6px;padding:6px 6px;font-size:12px;font-family:var(--font)">
         <button class="btn-export" id="export-monthly-btn" style="background:#99d1b4">Export Monthly</button>
         <button class="btn-export" id="export-products-btn" style="background:#f0da75;color:#333">Export Products</button>
         <button class="btn-export" id="settle-btn" style="background:#dd8581">Daily Settlement</button>
@@ -525,9 +524,12 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           This will clear today's transactions from the POS screen. All data remains saved in Google Sheets.
         </div>
         <div id="settle-txn-count" style="font-size:12px;color:#aaa;text-align:center;margin-bottom:14px"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button onclick="closeSettleModal()" class="btn-print">Cancel</button>
-          <button onclick="confirmSettle()" class="btn-done" style="background:#dd8581">Close Day</button>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button onclick="saveSettlementRecord()" class="btn-done" style="background:#6796ce">Save settlement</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button onclick="closeSettleModal()" class="btn-print">Cancel</button>
+            <button onclick="confirmSettle()" class="btn-done" style="background:#dd8581">Close Day</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3365,7 +3367,6 @@ function renderSalesReport(){
   const todaySales=salesLog.filter(s=>s.date===today);
   const month=today.slice(0,7);
   const monthSales=salesLog.filter(s=>s.date&&s.date.startsWith(month));
-  var _ems=document.getElementById('export-month-sel'); if(_ems && !_ems.value) _ems.value=month;
 
   // Payment breakdown helper
   function payBreakdown(sales){
@@ -3581,24 +3582,29 @@ function exportProductsCSV(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download='products-'+label+'.csv';a.click();showToast('Exported products for '+label);
 }
-function exportSalesCSV(){
-  // Show date picker modal
+async function exportSalesCSV(){
   const today = new Date(); const sgt = new Date(today.getTime()+8*3600*1000);
   const todayStr = sgt.toISOString().slice(0,10);
   const input = prompt('Export sales for date (YYYY-MM-DD):', todayStr);
   if(!input) return;
   const dateStr = input.trim();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ showToast('Invalid date format'); return; }
-  const filtered = salesLog.filter(s=>s.date===dateStr);
+  showToast('Fetching '+dateStr+'\u2026');
+  var filtered=[];
+  try{
+    var res=await apiGet({action:'getPOSSales', date:dateStr});
+    filtered=((res&&res.sales)||[]).map(function(x){ try{ x.items=(typeof x.items==='string')?JSON.parse(x.items):(x.items||[]); }catch(e){ x.items=[]; } return x; });
+  }catch(e){ showToast('Could not fetch '+dateStr); return; }
   if(!filtered.length){ showToast('No sales found for '+dateStr); return; }
   const rows=[['Date','Time','Receipt','Items','Remarks','Subtotal','Discount','Total','Payment','Member','MemberPhone','Note','Voided']];
   filtered.forEach(s=>rows.push([
     s.date, s.time, s.rcptNo||'',
-    s.items.map(i=>i.qty+'x '+i.label).join(' | '),
-    s.items.filter(i=>i.remark).map(i=>i.label+': '+i.remark).join(' | '),
-    s.subtotal.toFixed(2), s.discount.toFixed(2), s.total.toFixed(2),
-    s.payment, s.member||'', s.memberPhone||'', s.note||'', s.voided?'YES':''
+    (Array.isArray(s.items)?s.items:[]).map(i=>(i.qty||1)+'x '+(i.label||'')).join(' | '),
+    (Array.isArray(s.items)?s.items:[]).filter(i=>i.remark).map(i=>i.label+': '+i.remark).join(' | '),
+    (parseFloat(s.subtotal)||0).toFixed(2), (parseFloat(s.discount)||0).toFixed(2), (parseFloat(s.total)||0).toFixed(2),
+    s.payment||'', s.member||'', s.memberPhone||'', s.note||'', (s.voided===true||s.voided==='true')?'YES':''
   ]));
+  await _appendSettlementRows(rows, {date:dateStr});
   const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
@@ -3606,17 +3612,31 @@ function exportSalesCSV(){
   showToast('Exported '+filtered.length+' transactions for '+dateStr);
 }
 
-function exportMonthlyCSV(){
-  var _sel=document.getElementById('export-month-sel');
-  const month=(_sel&&_sel.value) ? _sel.value : new Date(new Date().getTime()+8*3600*1000).toISOString().slice(0,7);
-  const monthly=salesLog.filter(s=>s.date&&s.date.startsWith(month));
-  if(!monthly.length){showToast('No sales found for '+month);return;}
+async function exportMonthlyCSV(){
+  var _def=new Date(new Date().getTime()+8*3600*1000).toISOString().slice(0,7);
+  var month=prompt('Export which month?  (YYYY-MM)', _def);
+  if(month===null) return;
+  month=(month||'').trim();
+  if(!/^\d{4}-\d{2}$/.test(month)){ showToast('Enter the month as YYYY-MM, e.g. 2026-09'); return; }
+  // Fetch that exact month from the server (getPOSSales reads the month's tab), so past months export too.
+  showToast('Fetching '+month+'\u2026');
+  var monthly=[];
+  try{
+    var res=await apiGet({action:'getPOSSales', month:month});
+    monthly=((res&&res.sales)||[]).map(function(x){
+      try{ x.items = (typeof x.items==='string') ? JSON.parse(x.items) : (x.items||[]); }catch(e){ x.items=[]; }
+      x.total=parseFloat(x.total||0); x.subtotal=parseFloat(x.subtotal||0); x.discount=parseFloat(x.discount||0);
+      return x;
+    });
+  }catch(e){ showToast('Could not fetch '+month+' from the server'); return; }
+  if(!monthly.length){ showToast('No sales found for '+month); return; }
   const rows=[['Date','Time','Items','Subtotal','Discount','Total','Payment','Member']];
-  monthly.forEach(s=>rows.push([s.date,s.time,s.items.map(i=>i.qty+'x '+i.label).join(' | '),s.subtotal.toFixed(2),s.discount.toFixed(2),s.total.toFixed(2),s.payment,s.member||'']));
+  monthly.forEach(s=>rows.push([s.date,s.time,(Array.isArray(s.items)?s.items:[]).map(i=>(i.qty||1)+'x '+(i.label||'')).join(' | '),(s.subtotal||0).toFixed(2),(s.discount||0).toFixed(2),(s.total||0).toFixed(2),s.payment||'',s.member||'']));
+  await _appendSettlementRows(rows, {month:month});
   const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download='fruicey-monthly-'+month+'.csv';a.click();
-  showToast('Monthly report exported!');
+  showToast('Exported '+month+' ('+monthly.length+' rows)');
 }
 
 function dailySettlement(){
@@ -3654,6 +3674,15 @@ function dailySettlement(){
   const grandTotal = active.reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-grab-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-panda-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-online-daily')||{}).value)||0) + corp - mdr;
   const count  = todaySales.length;
   const voided = todaySales.filter(s=>s.voided).length;
+  window._settleData = {
+    date: today,
+    cash: +(cash+splitCash).toFixed(2), paynow: +(paynow+splitPaynow).toFixed(2), card: +(card+splitCard).toFixed(2),
+    credit: +credit.toFixed(2), appPaynow: +appPaynow.toFixed(2), appCredit: +appCredit.toFixed(2), appLink: +appCard.toFixed(2),
+    grab: +grab.toFixed(2), panda: +panda.toFixed(2), corporate: +corp.toFixed(2), mdr: +mdr.toFixed(2),
+    inStoreTotal: +(active.reduce(function(t,s){return t+s.total;},0)).toFixed(2),
+    appTotal: +(appPaynow+appCredit+appCard).toFixed(2),
+    grandTotal: +grandTotal.toFixed(2), txnCount: count
+  };
   document.getElementById('settle-date-label').textContent = today;
   document.getElementById('settle-cash').textContent    = '$'+(cash+splitCash).toFixed(2);
   document.getElementById('settle-paynow').textContent  = '$'+(paynow+splitPaynow).toFixed(2);
@@ -3671,13 +3700,44 @@ function dailySettlement(){
   document.getElementById('settle-modal').classList.add('open');
 }
 function closeSettleModal(){ document.getElementById('settle-modal').classList.remove('open'); }
-function confirmSettle(){
+async function saveSettlementRecord(){
+  if(!window._settleData){ showToast('Open Daily Settlement first'); return false; }
+  try{
+    var r = await apiPost(Object.assign({action:'saveSettlement'}, window._settleData));
+    if(r && r.success){ showToast('Settlement saved for '+window._settleData.date); return true; }
+    showToast('Could not save settlement \u2014 check connection'); return false;
+  }catch(e){ showToast('Could not save settlement \u2014 check connection'); return false; }
+}
+async function confirmSettle(){
   const _now=new Date(); const _sgt=new Date(_now.getTime()+8*3600*1000);
   const today=_sgt.toISOString().split('T')[0];
   const total = salesLog.filter(s=>s.date===today&&!s.voided).reduce((t,s)=>t+s.total,0);
+  await saveSettlementRecord();   // persist the day's figures before clearing the screen
   salesLog=salesLog.filter(s=>s.date!==today);
   closeSettleModal(); renderSalesReport();
   showToast('Day closed! $'+total.toFixed(2)+' total.');
+}
+// Append a saved-settlement summary block to an export's rows (daily: {date}, monthly: {month}).
+async function _appendSettlementRows(rows, params){
+  try{
+    var r = await apiGet(Object.assign({action:'getSettlements'}, params));
+    var list = (r&&r.settlements)||[];
+    if(!list.length) return;
+    var cols=['cash','paynow','card','credit','appPaynow','appCredit','appLink','grab','panda','corporate','mdr','inStoreTotal','appTotal','grandTotal'];
+    rows.push([]); rows.push(['=== SETTLEMENT ===']);
+    rows.push(['Date','Cash','PayNow','Card','Credit','App PayNow','App Credit','App Link','GrabFood','FoodPanda','Corporate','MDR','In-store Total','App Total','Grand Total','Txns']);
+    var tot={}; cols.forEach(function(c){ tot[c]=0; }); var totTxn=0;
+    list.forEach(function(x){
+      var row=[x.date];
+      cols.forEach(function(c){ var v=parseFloat(x[c])||0; tot[c]+=v; row.push(v.toFixed(2)); });
+      var tx=parseInt(x.txnCount)||0; totTxn+=tx; row.push(tx);
+      rows.push(row);
+    });
+    if(list.length>1){
+      var trow=['TOTAL']; cols.forEach(function(c){ trow.push(tot[c].toFixed(2)); }); trow.push(totTxn);
+      rows.push(trow);
+    }
+  }catch(e){}
 }
 
 

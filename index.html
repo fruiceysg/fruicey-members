@@ -7590,11 +7590,18 @@ function showSlotLegend(){ renderSlotLegend(); var m=document.getElementById('sl
 function closeSlotLegend(){ var m=document.getElementById('slot-legend-modal'); if(m) m.classList.remove('open'); }
 function _fillStrip(stripEl, len, targetIdx, targetPos){
   if(!stripEl) return;
-  var html='';
+  var syms=[], prev=-1;
   for(var i=0;i<len;i++){
-    var sym=(i===targetPos)?targetIdx:Math.floor(Math.random()*TOTAL_SEGS);
-    html+='<div class="slot-cell">'+_slotSymHTML(sym)+'</div>';
+    var sym;
+    if(i===targetPos){ sym=targetIdx; }                // forced winning symbol on the payline cell
+    else{
+      do{ sym=Math.floor(Math.random()*TOTAL_SEGS); }
+      while(sym===prev || (i+1===targetPos && sym===targetIdx)); // never repeat the cell above, and never match the forced target just below
+    }
+    syms.push(sym); prev=sym;
   }
+  var html='';
+  for(var j=0;j<syms.length;j++){ html+='<div class="slot-cell">'+_slotSymHTML(syms[j])+'</div>'; }
   stripEl.innerHTML=html;
 }
 function buildMiniWheel(){   // name kept for existing callers: set the reels to a resting state

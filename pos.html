@@ -1606,15 +1606,16 @@ function drawInvoicePdf(doc, inv, logo){
   });
   // ── Big heading ──
   F(true); doc.setTextColor(gD[0],gD[1],gD[2]);
-  doc.setFontSize(94); doc.text('HELLO', ML, 60);
-  doc.setFontSize(23); doc.text('I AM YOUR INVOICE', ML, 74);
+  doc.setFontSize(120); doc.text('HELLO', ML, 52);
+  doc.setFontSize(23); doc.text('I AM YOUR INVOICE', ML, 70);
   // ── Ref / date / bill-to ──
   F(false); doc.setFontSize(11); doc.setTextColor(0,0,0);
-  doc.text('Billing Invoice Ref: '+inv.ref, ML, 86);
-  doc.text(inv.dateStr, ML, 92);
-  if(inv.billTo){ F(true); doc.text('Bill to: ', ML, 99); F(false); doc.text(String(inv.billTo), ML+16, 99); }
+  doc.text('Billing Invoice Ref: '+inv.ref, ML, 82);
+  doc.text(inv.dateStr, ML, 88);
+  if(inv.billTo){ F(true); doc.text('Bill to: ', ML, 95); F(false); doc.text(String(inv.billTo), ML+16, 95); }
   // ── Table header bars ──
-  var HY=105, BH=8;
+  // ── Table header ──
+  var HY=100, BH=8;
   var cI=[ML,30], cD=[48,82], cQ=[132,26], cP=[160,34];
   function bar(x,w,col){ doc.setFillColor(col[0],col[1],col[2]); doc.rect(x,HY,w,BH,'F'); }
   bar(cI[0],cI[1],gD); bar(cD[0],cD[1],gB); bar(cQ[0],cQ[1],gB); bar(cP[0],cP[1],gB);
@@ -1624,47 +1625,60 @@ function drawInvoicePdf(doc, inv, logo){
   doc.text('DESCRIPTION', cD[0]+3, ty);
   doc.text('QTY', cQ[0]+cQ[1]/2, ty, {align:'center'});
   doc.text('PRICE', cP[0]+cP[1]-3, ty, {align:'right'});
-  // ── Item rows ──
-  var y=HY+BH+7; F(false); doc.setFontSize(10); doc.setTextColor(0,0,0);
-  (inv.items||[]).forEach(function(it,i){
-    var lines=doc.splitTextToSize(String(it.desc||''), cD[1]-4);
-    doc.text(String(i+1)+'.', cI[0]+3, y);
-    doc.text(lines, cD[0]+3, y);
+
+  var items=inv.items||[], del=inv.delivery||{}, locArr=del.location||[];
+  var hasDel=!!(del.note||del.date||del.time||locArr.length);
+  var delLines=hasDel?(1+(del.note?1:0)+(del.date?1:0)+(del.time?1:0)+(locArr.length||0)):0;
+  var delH=hasDel?(2+delLines*5):0;
+  var BOTTOM=287, GTH=24, PH2=24, ACC=3, GAP=8;
+  var blocksH=GTH+4+PH2+ACC;                       // grand-total + payment + accent
+  var itemsTop=HY+BH+6;
+  var nI=Math.max(1, items.length);
+  var itemsBudget=(BOTTOM-blocksH-GAP-delH)-itemsTop;   // vertical room for the item rows on one page
+  var rowH=Math.max(4.4, Math.min(8, itemsBudget/nI)); // shrink rows if there are many products
+  var itFont=Math.max(7.5, Math.min(10.5, rowH*1.25));
+  var y=itemsTop + rowH*0.6;
+  F(false); doc.setTextColor(0,0,0);
+  items.forEach(function(it,i){
+    doc.setFontSize(itFont);
+    var desc=String(it.desc||''), maxW=cD[1]-4, fs=itFont;
+    doc.setFontSize(fs);
+    while(fs>6.5 && doc.getTextWidth(desc)>maxW){ fs-=0.5; doc.setFontSize(fs); }
+    doc.setFontSize(itFont); doc.text(String(i+1)+'.', cI[0]+3, y);
+    doc.setFontSize(fs); doc.text(desc, cD[0]+3, y);
+    doc.setFontSize(itFont);
     doc.text(String(it.qty), cQ[0]+cQ[1]/2, y, {align:'center'});
     doc.text(money(it.price), cP[0]+cP[1]-3, y, {align:'right'});
-    y += Math.max(lines.length*5, 6) + 3;
+    y += rowH;
   });
-  // ── Delivery block ──
-  y += 6;
-  if(inv.delivery && (inv.delivery.date||inv.delivery.time||(inv.delivery.location||[]).length||inv.delivery.note)){
-    F(true); doc.setFontSize(10); doc.text('Delivery', cI[0]+3, y);
-    F(false); var dx=cD[0]+3, lx=cD[0]+3, vx=cD[0]+22, dy=y;
-    if(inv.delivery.note){ doc.text(String(inv.delivery.note), dx, dy); dy+=5.5; }
-    function dl(lab,val){ F(true); doc.text(lab, lx, dy); F(false); doc.text(String(val), vx, dy); dy+=5.2; }
-    if(inv.delivery.date) dl('Date:', inv.delivery.date);
-    var loc=inv.delivery.location||[];
-    if(loc.length){ F(true); doc.text('Location:', lx, dy); F(false); doc.text(String(loc[0]), vx, dy); dy+=5.2;
-      for(var j=1;j<loc.length;j++){ doc.text(String(loc[j]), vx, dy); dy+=5.2; } }
-    if(inv.delivery.time) dl('Time:', inv.delivery.time);
-    y=Math.max(y, dy)+4;
+
+  // ── Delivery ──
+  if(hasDel){
+    y+=2; F(true); doc.setFontSize(10); doc.setTextColor(0,0,0); doc.text('Delivery', cI[0]+3, y);
+    F(false); var lx=cD[0]+3, vx=cD[0]+22, dy=y;
+    if(del.note){ doc.text(String(del.note), lx, dy); dy+=5; }
+    function dl(lab,val){ F(true); doc.text(lab,lx,dy); F(false); doc.text(String(val),vx,dy); dy+=5; }
+    if(del.date) dl('Date:', del.date);
+    if(locArr.length){ F(true); doc.text('Location:', lx, dy); F(false); doc.text(String(locArr[0]), vx, dy); dy+=5;
+      for(var j=1;j<locArr.length;j++){ doc.text(String(locArr[j]), vx, dy); dy+=5; } }
+    if(del.time) dl('Time:', del.time);
+    y=Math.max(y, dy);
   }
-  // ── Grand Total band ──
-  if(y<198) y=198;
-  var GTY=y, GTH=24;
+
+  // ── Grand Total + Payment, right after the content (no forced gap), clamped to the page ──
+  var GTY=y+GAP; if(GTY+blocksH>BOTTOM) GTY=BOTTOM-blocksH;
   doc.setFillColor(gD[0],gD[1],gD[2]); doc.rect(ML,GTY,134,GTH,'F');
   doc.setFillColor(grey[0],grey[1],grey[2]); doc.rect(152,GTY,42,GTH,'F');
   F(true); doc.setFontSize(10); doc.setTextColor(80,80,80); doc.text('Grand Total:', 190, GTY+9, {align:'right'});
   doc.setFontSize(16); doc.setTextColor(gD[0],gD[1],gD[2]); doc.text(money(inv.grandTotal), 190, GTY+18, {align:'right'});
-  // ── Payment band ──
-  var PY=GTY+GTH+4, PH2=24;
+  var PY=GTY+GTH+4;
   doc.setFillColor(gL[0],gL[1],gL[2]); doc.rect(ML,PY,178,PH2,'F');
   doc.setTextColor(40,40,40);
   F(true); doc.setFontSize(9); doc.text('Payment Terms:', ML+5, PY+7);
   F(false); var tl=doc.splitTextToSize(String(inv.payTerms||''), 86); doc.text(tl, ML+5, PY+12.5);
   F(true); doc.text('Payment mode:', 120, PY+7); F(false); doc.text(String(inv.payMode||''), 120, PY+12);
   F(true); doc.text('Payment status:', 120, PY+18); F(false); doc.text(String(inv.payStatus||''), 120, PY+23);
-  // ── Bottom accent ──
-  doc.setFillColor(gD[0],gD[1],gD[2]); doc.rect(ML, PY+PH2+3, 178, 3, 'F');
+  doc.setFillColor(gD[0],gD[1],gD[2]); doc.rect(ML, PY+PH2+3, 178, ACC, 'F');
   return doc;
 }
 
@@ -1805,6 +1819,7 @@ async function saveCorporateOrder(){
     if(window.fdb){ await fdb.collection('corporateOrders').doc(id).set(rec); }
     showToast('Corporate order saved & recorded');
     corpLines=[]; renderCorpLines();
+    try{ cart=[]; if(typeof renderCart==='function') renderCart(); }catch(e){}
     ['corp-billto','corp-deldate','corp-delloc','corp-deltime'].forEach(function(i){ var e=document.getElementById(i); if(e) e.value=''; });
     switchCorpSub('records');
   }catch(e){ showToast('Could not save - check connection'); }

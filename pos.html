@@ -345,6 +345,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div style="flex:1;overflow-y:auto;padding:14px">
           <div id="corp-new">
             <div class="corp-sec-title">Products &amp; pricing</div>
+            <button onclick="corpImportCart()" class="btn-done" style="background:#6796ce;width:100%;margin-bottom:6px;padding:11px;font-size:14px">Import current order from Menu cart</button>
+            <div style="font-size:11px;color:#999;margin-bottom:8px;text-align:center">Build the order on the Menu tab (tap products, adjust prices), then import it here \u2014 or add products below.</div>
             <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
               <select id="corp-prod" class="inv-in" style="flex:1;min-width:170px"></select>
               <input id="corp-prod-qty" type="number" min="1" value="1" class="inv-in" style="width:66px">
@@ -1773,18 +1775,17 @@ async function saveCorporateOrder(){
   var d=sgt.getUTCDate(), mo=sgt.getUTCMonth(), y=sgt.getUTCFullYear();
   function p2(x){ return (x<10?'0':'')+x; }
   var dateStr=sgt.toISOString().slice(0,10), timeStr=sgt.toISOString().slice(11,16);
-  var seq=1;
-  try{ if(window.fdb){ var _cq=await fdb.collection('corporateOrders').where('date','==',dateStr).get(); seq=(_cq.size||0)+1; } }catch(e){}
-  var ref=p2(d)+p2(mo+1)+String(y).slice(2)+'-'+p2(seq);
+  var rcptNo=(typeof genReceiptNo==='function')?genReceiptNo():('FR'+Date.now());
+  var ref=rcptNo;
   var id='corp_'+Date.now();
   var items=corpLines.map(function(l){ return {id:'corp', label:(l.name||'Item'), qty:Number(l.qty)||1, price:+Number(l.price).toFixed(2), remark:''}; });
-  var rec={ id:id, ref:ref, createdAt:new Date().toISOString(), date:dateStr, time:timeStr, billTo:billTo,
+  var rec={ id:id, ref:ref, rcptNo:rcptNo, createdAt:new Date().toISOString(), date:dateStr, time:timeStr, billTo:billTo,
     delNote:g('corp-delnote'), delDate:g('corp-deldate'), delLoc:g('corp-delloc'), delTime:g('corp-deltime'),
     payMode:g('corp-paymode'), payTerms:g('corp-payterms'), payStatus:g('corp-paystatus'),
     items:items, total:+total.toFixed(2) };
   var btn=document.getElementById('corp-save-btn'); if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
   try{
-    await apiPost({ action:'addPOSSale', id:id, rcptNo:'', date:dateStr, time:timeStr,
+    await apiPost({ action:'addPOSSale', id:id, rcptNo:rcptNo, date:dateStr, time:timeStr,
       items: JSON.stringify(items.map(function(i){return {id:i.id,qty:i.qty,label:i.label,price:i.price,remark:''};})),
       subtotal: total.toFixed(2), discount:'0.00', total: total.toFixed(2), payment:'Corporate',
       member: billTo||'', memberPhone:'' });
@@ -1814,8 +1815,10 @@ function renderCorpRecords(){
       +'<div style="display:flex;align-items:center;gap:8px"><b style="font-size:13px;color:#333">'+(r.billTo||'(no customer)')+'</b>'
       +'<span style="margin-left:auto;font-weight:800;color:#339966">$'+(Number(r.total)||0).toFixed(2)+'</span></div>'
       +'<div style="font-size:11px;color:#888;margin-top:2px">Ref '+(r.ref||'')+' &middot; '+(r.date||'')+' '+(r.time||'')+' &middot; '+((r.items&&r.items.length)||0)+' item(s)</div>'
-      +'<button onclick="corpExportInvoice(\''+r.id+'\')" style="margin-top:8px;padding:7px 14px;background:#339966;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font)">Export Invoice (PDF)</button>'
-      +'</div>';
+      +'<div style="display:flex;gap:8px;margin-top:8px">'
+      +'<button onclick="corpExportInvoice(\''+r.id+'\')" style="flex:1;padding:7px 14px;background:#339966;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font)">Export Invoice (PDF)</button>'
+      +'<button onclick="corpDeleteRecord(\''+r.id+'\')" style="padding:7px 12px;background:#fff;color:#e74c3c;border:1.5px solid #f3c6c2;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font)">Delete</button>'
+      +'</div></div>';
   }).join('');
 }
 function corpExportInvoice(id){
@@ -1834,6 +1837,19 @@ function corpExportInvoice(id){
       drawInvoicePdf(doc, inv, _invLogo()); doc.save('Invoice_'+(inv.ref||'fruicey')+'.pdf'); showToast('Invoice PDF saved!');
     }catch(e){ showToast('Could not create the invoice'); }
   });
+}
+async function corpDeleteRecord(id){
+  if(!confirm('Delete this corporate order record?\n\nThis removes it from the tab. It does NOT undo the sale already recorded in your sheet \u2014 void that separately if needed.')) return;
+  try{ if(window.fdb) await fdb.collection('corporateOrders').doc(id).delete(); }
+  catch(e){ showToast('Delete failed - check connection'); return; }
+  _corpRecords=_corpRecords.filter(function(r){ return r.id!==id; });
+  renderCorpRecords(); showToast('Record deleted');
+}
+function corpImportCart(){
+  if(!cart || !cart.length){ showToast('Menu cart is empty'); return; }
+  if(corpLines.length && !confirm('Replace the current list with the '+cart.length+' item(s) from the Menu cart?')) return;
+  corpLines = cart.map(function(i){ return {name:i.label, qty:Number(i.qty)||1, price:Number(i.price)||0}; });
+  renderCorpLines(); showToast('Imported '+corpLines.length+' item(s) from cart');
 }
 function sendReceiptEmailPDF(){
   var email=document.getElementById('share-email').value.trim();

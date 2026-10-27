@@ -1592,7 +1592,7 @@ function saveReceiptPDF(){
 //         payMode, payTerms, payStatus }   logo = { dataUri, fmt, aspect } | null
 function drawInvoicePdf(doc, inv, logo){
   var ML=16, right=194, money=function(n){ return '$'+(Number(n)||0).toFixed(2); };
-  var gD=[51,153,102], gB=[0,255,0], grey=[192,192,192], gL=[204,255,204];
+  var gD=[51,153,102], gB=[204,255,204], grey=[192,192,192], gL=[204,255,204];
   var F=function(b){ doc.setFont('Fruicey', b?'bold':'normal'); };
   // ── Logo + address (top-right, never cropped) ──
   var addrY=18;
@@ -1619,9 +1619,10 @@ function drawInvoicePdf(doc, inv, logo){
   var cI=[ML,30], cD=[48,82], cQ=[132,26], cP=[160,34];
   function bar(x,w,col){ doc.setFillColor(col[0],col[1],col[2]); doc.rect(x,HY,w,BH,'F'); }
   bar(cI[0],cI[1],gD); bar(cD[0],cD[1],gB); bar(cQ[0],cQ[1],gB); bar(cP[0],cP[1],gB);
-  F(true); doc.setFontSize(9); doc.setTextColor(255,255,255);
+  F(true); doc.setFontSize(9);
   var ty=HY+5.6;
-  doc.text('ITEM', cI[0]+3, ty);
+  doc.setTextColor(255,255,255); doc.text('ITEM', cI[0]+3, ty);
+  doc.setTextColor(51,153,102);
   doc.text('DESCRIPTION', cD[0]+3, ty);
   doc.text('QTY', cQ[0]+cQ[1]/2, ty, {align:'center'});
   doc.text('PRICE', cP[0]+cP[1]-3, ty, {align:'right'});
@@ -1918,9 +1919,9 @@ function renderCorpPreview(){
     +(billTo?('<br><b>Bill to:</b> '+_corpEsc(billTo)):'')+'</div>'
     +'<div style="display:flex;gap:3px;margin-top:10px;font-size:9px;font-weight:700;color:#fff">'
       +'<div style="width:42px;background:#339966;padding:3px 5px;border-radius:2px">ITEM</div>'
-      +'<div style="flex:1;background:#00ff00;padding:3px 5px;border-radius:2px">DESCRIPTION</div>'
-      +'<div style="width:30px;background:#00ff00;padding:3px 2px;border-radius:2px;text-align:center">QTY</div>'
-      +'<div style="width:48px;background:#00ff00;padding:3px 5px;border-radius:2px;text-align:right">PRICE</div></div>'
+      +'<div style="flex:1;background:#ccffcc;color:#339966;padding:3px 5px;border-radius:2px">DESCRIPTION</div>'
+      +'<div style="width:30px;background:#ccffcc;color:#339966;padding:3px 2px;border-radius:2px;text-align:center">QTY</div>'
+      +'<div style="width:48px;background:#ccffcc;color:#339966;padding:3px 5px;border-radius:2px;text-align:right">PRICE</div></div>'
     +'<table style="width:100%;border-collapse:collapse;font-size:10px;margin-top:4px">'+rows+'</table>'
     +delHtml
     +'<div style="display:flex;margin-top:14px"><div style="flex:1;background:#339966;border-radius:4px 0 0 4px"></div>'

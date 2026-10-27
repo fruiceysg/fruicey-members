@@ -1606,7 +1606,7 @@ function drawInvoicePdf(doc, inv, logo){
   });
   // ── Big heading ──
   F(true); doc.setTextColor(gD[0],gD[1],gD[2]);
-  doc.setFontSize(120); doc.text('HELLO', ML, 52);
+  doc.setFontSize(120); doc.text('HELLO', ML-3.6, 52);
   doc.setFontSize(23); doc.text('I AM YOUR INVOICE', ML, 70);
   // ── Ref / date / bill-to ──
   F(false); doc.setFontSize(11); doc.setTextColor(0,0,0);
@@ -1631,7 +1631,7 @@ function drawInvoicePdf(doc, inv, logo){
   var delLines=hasDel?(1+(del.note?1:0)+(del.date?1:0)+(del.time?1:0)+(locArr.length||0)):0;
   var delH=hasDel?(2+delLines*5):0;
   var BOTTOM=287, GTH=24, PH2=24, ACC=3, GAP=8;
-  var blocksH=GTH+4+PH2+ACC;                       // grand-total + payment + accent
+  var blocksH=GTH+PH2+ACC;                       // grand-total + payment + accent
   var itemsTop=HY+BH+6;
   var nI=Math.max(1, items.length);
   var itemsBudget=(BOTTOM-blocksH-GAP-delH)-itemsTop;   // vertical room for the item rows on one page
@@ -1668,17 +1668,17 @@ function drawInvoicePdf(doc, inv, logo){
   // ── Grand Total + Payment, right after the content (no forced gap), clamped to the page ──
   var GTY=y+GAP; if(GTY+blocksH>BOTTOM) GTY=BOTTOM-blocksH;
   doc.setFillColor(gD[0],gD[1],gD[2]); doc.rect(ML,GTY,134,GTH,'F');
-  doc.setFillColor(grey[0],grey[1],grey[2]); doc.rect(152,GTY,42,GTH,'F');
+  doc.setFillColor(grey[0],grey[1],grey[2]); doc.rect(ML+134,GTY,44,GTH,'F');
   F(true); doc.setFontSize(10); doc.setTextColor(80,80,80); doc.text('Grand Total:', 190, GTY+9, {align:'right'});
   doc.setFontSize(16); doc.setTextColor(gD[0],gD[1],gD[2]); doc.text(money(inv.grandTotal), 190, GTY+18, {align:'right'});
-  var PY=GTY+GTH+4;
+  var PY=GTY+GTH;
   doc.setFillColor(gL[0],gL[1],gL[2]); doc.rect(ML,PY,178,PH2,'F');
   doc.setTextColor(40,40,40);
   F(true); doc.setFontSize(9); doc.text('Payment Terms:', ML+5, PY+7);
   F(false); var tl=doc.splitTextToSize(String(inv.payTerms||''), 86); doc.text(tl, ML+5, PY+12.5);
   F(true); doc.text('Payment mode:', 120, PY+7); F(false); doc.text(String(inv.payMode||''), 120, PY+12);
   F(true); doc.text('Payment status:', 120, PY+18); F(false); doc.text(String(inv.payStatus||''), 120, PY+23);
-  doc.setFillColor(gD[0],gD[1],gD[2]); doc.rect(ML, PY+PH2+3, 178, ACC, 'F');
+  doc.setFillColor(gD[0],gD[1],gD[2]); doc.rect(ML, PY+PH2, 178, ACC, 'F');
   return doc;
 }
 

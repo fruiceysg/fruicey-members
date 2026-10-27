@@ -113,6 +113,10 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .corp-subtab-active{border-color:#339966;background:#339966;color:#fff}
 .corp-sec-title{font-size:13px;font-weight:800;color:#339966;margin:4px 0 8px;font-family:var(--brand)}
 .corp-line{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.corp-cols{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.corp-form-col{flex:1 1 300px;min-width:280px}
+.corp-preview-col{flex:1 1 330px;min-width:300px;position:sticky;top:0}
+#corp-preview{background:#fff;border:1px solid #e8e8e8;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.07);padding:18px;overflow:hidden}
 .pos-redeem-btn{width:100%;padding:7px;border:1.5px solid #e0e0e0;border-radius:var(--r);background:#fff;color:#666;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:all .15s}
 .prize-item{display:block;width:100%;text-align:left;padding:11px 14px;margin-bottom:7px;border:1px solid #e8e8e8;border-radius:8px;background:#fff;font-family:var(--font);font-size:13px;color:#333;cursor:pointer}
 .prize-item:active{background:#f5f5f5}
@@ -344,9 +348,11 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         </div>
         <div style="flex:1;overflow-y:auto;padding:14px">
           <div id="corp-new">
+            <div class="corp-cols">
+            <div class="corp-form-col" oninput="renderCorpPreview()">
             <div class="corp-sec-title">Products &amp; pricing</div>
             <button onclick="corpImportCart()" class="btn-done" style="background:#6796ce;width:100%;margin-bottom:6px;padding:11px;font-size:14px">Import current order from Menu cart</button>
-            <div style="font-size:11px;color:#999;margin-bottom:8px;text-align:center">Build the order on the Menu tab (tap products, adjust prices), then import it here \u2014 or add products below.</div>
+            <div style="font-size:11px;color:#999;margin-bottom:8px;text-align:center">Build the order on the Menu tab (tap products, adjust prices), then import it here, or add products below.</div>
             <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
               <select id="corp-prod" class="inv-in" style="flex:1;min-width:170px"></select>
               <input id="corp-prod-qty" type="number" min="1" value="1" class="inv-in" style="width:66px">
@@ -356,16 +362,22 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
             <div id="corp-lines" style="margin-bottom:6px"></div>
             <div style="display:flex;justify-content:flex-end;align-items:baseline;font-size:16px;font-weight:800;color:#339966;margin:6px 0 18px">Total:&nbsp;<span id="corp-total">$0.00</span></div>
             <div class="corp-sec-title">Invoice &amp; delivery details</div>
-            <label class="inv-lb">Bill to</label><input id="corp-billto" class="inv-in" placeholder="e.g. Oasis Primary School">
+            <label class="inv-lb">Bill to</label><input id="corp-billto" class="inv-in">
             <label class="inv-lb">Delivery note</label><input id="corp-delnote" class="inv-in" value="Delivery inclusive.">
-            <label class="inv-lb">Delivery date</label><input id="corp-deldate" class="inv-in" placeholder="e.g. 29th July (Wednesday)">
-            <label class="inv-lb">Delivery address / location (one line each)</label><textarea id="corp-delloc" class="inv-in" rows="3" placeholder="Oasis Primary School&#10;71 Edgefield Plains&#10;Singapore 828716"></textarea>
-            <label class="inv-lb">Delivery time</label><input id="corp-deltime" class="inv-in" placeholder="e.g. 1 to 1:30pm">
+            <label class="inv-lb">Delivery date</label><input id="corp-deldate" class="inv-in">
+            <label class="inv-lb">Delivery address / location (one line each)</label><textarea id="corp-delloc" class="inv-in" rows="3"></textarea>
+            <label class="inv-lb">Delivery time</label><input id="corp-deltime" class="inv-in">
             <label class="inv-lb">Payment mode</label><input id="corp-paymode" class="inv-in" value="Vendors@gov">
             <label class="inv-lb">Payment terms</label><input id="corp-payterms" class="inv-in" value="30 days credit term from date of delivery.">
             <label class="inv-lb">Payment status</label><input id="corp-paystatus" class="inv-in" value="Processing">
             <button id="corp-save-btn" onclick="saveCorporateOrder()" class="btn-done" style="background:#339966;width:100%;margin-top:16px;padding:13px;font-size:15px">Save &amp; Tender Corporate Order</button>
             <div style="font-size:11px;color:#999;margin-top:8px;text-align:center">Records the real total as a Corporate sale (for settlement) and saves the order so you can export its invoice anytime.</div>
+            </div>
+            <div class="corp-preview-col">
+              <div class="corp-sec-title">Live preview</div>
+              <div id="corp-preview"></div>
+            </div>
+            </div>
           </div>
           <div id="corp-records" style="display:none">
             <div style="display:flex;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:#888">Saved corporate orders</span><button onclick="loadCorporateOrders()" style="margin-left:auto;padding:5px 11px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font)">Refresh</button></div>
@@ -1719,6 +1731,7 @@ function switchCorpSub(which){
   if(a) a.classList.toggle('corp-subtab-active', which==='new');
   if(b) b.classList.toggle('corp-subtab-active', which==='records');
   if(which==='records') loadCorporateOrders();
+  if(which==='new') renderCorpPreview();
 }
 function renderCorpProductOptions(){
   var sel=document.getElementById('corp-prod'); if(!sel || sel.dataset.ready) return;
@@ -1758,7 +1771,7 @@ function renderCorpLines(){
       +'<button onclick="corpRemoveLine('+i+')" style="border:none;background:none;color:#e74c3c;cursor:pointer;font-size:17px;line-height:1">&times;</button>'
       +'</div>';
   }).join('');
-  corpUpdTotal();
+  corpUpdTotal(); renderCorpPreview();
 }
 function corpUpdTotal(){
   var t=0; corpLines.forEach(function(l,i){ var lt=(Number(l.qty)||0)*(Number(l.price)||0); t+=lt; var e=document.querySelector('.corp-lt-'+i); if(e) e.textContent='$'+lt.toFixed(2); });
@@ -1850,6 +1863,58 @@ function corpImportCart(){
   if(corpLines.length && !confirm('Replace the current list with the '+cart.length+' item(s) from the Menu cart?')) return;
   corpLines = cart.map(function(i){ return {name:i.label, qty:Number(i.qty)||1, price:Number(i.price)||0}; });
   renderCorpLines(); showToast('Imported '+corpLines.length+' item(s) from cart');
+}
+function _corpEsc(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderCorpPreview(){
+  var el=document.getElementById('corp-preview'); if(!el) return;
+  var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  var billTo=g('corp-billto'), delNote=g('corp-delnote'), delDate=g('corp-deldate'), delTime=g('corp-deltime'),
+      payMode=g('corp-paymode'), payTerms=g('corp-payterms'), payStatus=g('corp-paystatus');
+  var loc=String(g('corp-delloc')||'').split(/\n+/).map(function(x){return x.trim();}).filter(Boolean);
+  var total=0, rows='';
+  corpLines.forEach(function(l,i){
+    var lt=(Number(l.qty)||0)*(Number(l.price)||0); total+=lt;
+    rows+='<tr><td style="padding:3px 2px;color:#555;vertical-align:top">'+(i+1)+'.</td>'
+      +'<td style="padding:3px 4px;vertical-align:top">'+_corpEsc(l.name||'')+'</td>'
+      +'<td style="padding:3px 2px;text-align:center;vertical-align:top">'+(Number(l.qty)||0)+'</td>'
+      +'<td style="padding:3px 2px;text-align:right;vertical-align:top">$'+lt.toFixed(2)+'</td></tr>';
+  });
+  if(!rows) rows='<tr><td colspan="4" style="padding:10px 2px;color:#bbb;text-align:center">No products yet</td></tr>';
+  var logo=document.getElementById('fruicey-logo');
+  var logoHtml = (logo&&logo.src) ? '<img src="'+logo.src+'" style="height:32px;float:right;margin-left:8px">' : '';
+  var n=new Date(), sgt=new Date(n.getTime()+8*3600*1000);
+  var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dateStr=_invOrdinal(sgt.getUTCDate())+' '+MON[sgt.getUTCMonth()]+' '+sgt.getUTCFullYear();
+  var delHtml='';
+  if(delNote||delDate||loc.length||delTime){
+    delHtml='<div style="margin-top:10px;font-size:10px;color:#333;display:flex">'
+      +'<div style="width:58px;font-weight:700;font-family:var(--brand)">Delivery</div><div style="flex:1">';
+    if(delNote) delHtml+=_corpEsc(delNote)+'<br>';
+    if(delDate) delHtml+='<b>Date:</b> '+_corpEsc(delDate)+'<br>';
+    if(loc.length) delHtml+='<b>Location:</b> '+loc.map(_corpEsc).join('<br>')+'<br>';
+    if(delTime) delHtml+='<b>Time:</b> '+_corpEsc(delTime);
+    delHtml+='</div></div>';
+  }
+  el.innerHTML=
+    '<div style="overflow:hidden">'+logoHtml
+    +'<div style="font-family:var(--brand);color:#339966;font-size:46px;line-height:.92;font-weight:700">HELLO</div>'
+    +'<div style="font-family:var(--brand);color:#339966;font-size:18px;margin-top:2px">I AM YOUR INVOICE</div></div>'
+    +'<div style="font-size:10px;color:#333;margin-top:10px;line-height:1.6">Billing Invoice Ref: <i style="color:#aaa">(assigned on save)</i><br>'+dateStr
+    +(billTo?('<br><b>Bill to:</b> '+_corpEsc(billTo)):'')+'</div>'
+    +'<div style="display:flex;gap:3px;margin-top:10px;font-size:9px;font-weight:700;color:#fff">'
+      +'<div style="width:42px;background:#339966;padding:3px 5px;border-radius:2px">ITEM</div>'
+      +'<div style="flex:1;background:#00ff00;padding:3px 5px;border-radius:2px">DESCRIPTION</div>'
+      +'<div style="width:30px;background:#00ff00;padding:3px 2px;border-radius:2px;text-align:center">QTY</div>'
+      +'<div style="width:48px;background:#00ff00;padding:3px 5px;border-radius:2px;text-align:right">PRICE</div></div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:10px;margin-top:4px">'+rows+'</table>'
+    +delHtml
+    +'<div style="display:flex;margin-top:14px"><div style="flex:1;background:#339966;border-radius:4px 0 0 4px"></div>'
+      +'<div style="width:42%;background:#c0c0c0;border-radius:0 4px 4px 0;padding:8px 10px;text-align:right">'
+      +'<div style="font-size:10px;color:#555;font-weight:700">Grand Total:</div>'
+      +'<div style="font-size:16px;color:#339966;font-weight:800">$'+total.toFixed(2)+'</div></div></div>'
+    +'<div style="background:#ccffcc;border-radius:4px;margin-top:6px;padding:8px 10px;display:flex;gap:10px;font-size:9.5px;color:#333">'
+      +'<div style="flex:1"><b>Payment Terms:</b><br>'+_corpEsc(payTerms)+'</div>'
+      +'<div style="flex:1"><b>Payment mode:</b> '+_corpEsc(payMode)+'<br><b>Payment status:</b> '+_corpEsc(payStatus)+'</div></div>';
 }
 function sendReceiptEmailPDF(){
   var email=document.getElementById('share-email').value.trim();

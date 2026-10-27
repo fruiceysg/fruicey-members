@@ -1592,15 +1592,15 @@ function drawInvoicePdf(doc, inv, logo){
   });
   // ── Big heading ──
   F(true); doc.setTextColor(gD[0],gD[1],gD[2]);
-  doc.setFontSize(56); doc.text('HELLO', ML, 50);
-  doc.setFontSize(23); doc.text('I AM YOUR INVOICE', ML, 65);
+  doc.setFontSize(94); doc.text('HELLO', ML, 60);
+  doc.setFontSize(23); doc.text('I AM YOUR INVOICE', ML, 74);
   // ── Ref / date / bill-to ──
   F(false); doc.setFontSize(11); doc.setTextColor(0,0,0);
-  doc.text('Billing Invoice Ref: '+inv.ref, ML, 77);
-  doc.text(inv.dateStr, ML, 83);
-  if(inv.billTo){ F(true); doc.text('Bill to: ', ML, 90); F(false); doc.text(String(inv.billTo), ML+16, 90); }
+  doc.text('Billing Invoice Ref: '+inv.ref, ML, 86);
+  doc.text(inv.dateStr, ML, 92);
+  if(inv.billTo){ F(true); doc.text('Bill to: ', ML, 99); F(false); doc.text(String(inv.billTo), ML+16, 99); }
   // ── Table header bars ──
-  var HY=96, BH=8;
+  var HY=105, BH=8;
   var cI=[ML,30], cD=[48,82], cQ=[132,26], cP=[160,34];
   function bar(x,w,col){ doc.setFillColor(col[0],col[1],col[2]); doc.rect(x,HY,w,BH,'F'); }
   bar(cI[0],cI[1],gD); bar(cD[0],cD[1],gB); bar(cQ[0],cQ[1],gB); bar(cP[0],cP[1],gB);
@@ -1772,8 +1772,10 @@ async function saveCorporateOrder(){
   var n=new Date(), sgt=new Date(n.getTime()+8*3600*1000);
   var d=sgt.getUTCDate(), mo=sgt.getUTCMonth(), y=sgt.getUTCFullYear();
   function p2(x){ return (x<10?'0':'')+x; }
-  var ref=p2(d)+p2(mo+1)+String(y).slice(2);
   var dateStr=sgt.toISOString().slice(0,10), timeStr=sgt.toISOString().slice(11,16);
+  var seq=1;
+  try{ if(window.fdb){ var _cq=await fdb.collection('corporateOrders').where('date','==',dateStr).get(); seq=(_cq.size||0)+1; } }catch(e){}
+  var ref=p2(d)+p2(mo+1)+String(y).slice(2)+'-'+p2(seq);
   var id='corp_'+Date.now();
   var items=corpLines.map(function(l){ return {id:'corp', label:(l.name||'Item'), qty:Number(l.qty)||1, price:+Number(l.price).toFixed(2), remark:''}; });
   var rec={ id:id, ref:ref, createdAt:new Date().toISOString(), date:dateStr, time:timeStr, billTo:billTo,

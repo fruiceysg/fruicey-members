@@ -107,6 +107,12 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .pos-misc-btn{flex:1;padding:6px 3px;border:1.5px solid #e0e0e0;border-radius:var(--r);background:#fff;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font);color:#666;transition:all .15s}
 .misc-quick{flex:1;padding:9px 6px;border:1.5px solid #e0e0e0;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);color:#555}
 .misc-quick:hover{border-color:#c9a24a;color:#b07d0a}
+.inv-lb{font-size:12px;font-weight:600;color:#555;display:block;margin:10px 0 4px}
+.inv-in{width:100%;padding:9px 11px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:var(--font);outline:none;box-sizing:border-box}
+.corp-subtab{padding:5px 12px;border:1.5px solid #e0e0e0;border-radius:16px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);color:#666}
+.corp-subtab-active{border-color:#339966;background:#339966;color:#fff}
+.corp-sec-title{font-size:13px;font-weight:800;color:#339966;margin:4px 0 8px;font-family:var(--brand)}
+.corp-line{display:flex;gap:6px;align-items:center;margin-bottom:6px}
 .pos-redeem-btn{width:100%;padding:7px;border:1.5px solid #e0e0e0;border-radius:var(--r);background:#fff;color:#666;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:all .15s}
 .prize-item{display:block;width:100%;text-align:left;padding:11px 14px;margin-bottom:7px;border:1px solid #e8e8e8;border-radius:8px;background:#fff;font-family:var(--font);font-size:13px;color:#333;cursor:pointer}
 .prize-item:active{background:#f5f5f5}
@@ -245,6 +251,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <button class="pos-tab" id="pos-tab-member" onclick="switchPosTab('member')">Member</button>
         <button class="pos-tab" id="pos-tab-receipts" onclick="switchPosTab('receipts')">Receipts</button>
         <button class="pos-tab" id="pos-tab-orders" onclick="switchPosTab('orders')" style="position:relative">App Orders<span id="app-orders-dot" style="display:none;position:absolute;top:4px;right:4px;width:9px;height:9px;background:#e74c3c;border-radius:50%;box-shadow:0 0 0 2px #fff"></span></button>
+        <button class="pos-tab" id="pos-tab-corporate" onclick="switchPosTab('corporate')">Corporate</button>
         <button class="pos-tab" id="pos-tab-credit" onclick="switchPosTab('credit')" style="position:relative">Credit<span id="credit-dot" style="display:none;position:absolute;top:4px;right:4px;width:9px;height:9px;background:#f39c12;border-radius:50%;box-shadow:0 0 0 2px #fff"></span></button>
       </div>
       <div id="pos-view-menu" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0">
@@ -327,6 +334,43 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         </div>
         <div id="app-orders-list" style="flex:1;overflow-y:auto;padding:0 12px 12px;font-size:12px;color:#aaa;text-align:center"></div>
       </div>
+      <div id="pos-view-corporate" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+        <div style="padding:12px;flex-shrink:0;display:flex;gap:8px;align-items:center;border-bottom:1px solid #eee">
+          <span style="font-size:13px;font-weight:700;color:#333">Corporate Orders</span>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button id="corp-sub-new" class="corp-subtab corp-subtab-active" onclick="switchCorpSub('new')">New Order</button>
+            <button id="corp-sub-records" class="corp-subtab" onclick="switchCorpSub('records')">Records</button>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:14px">
+          <div id="corp-new">
+            <div class="corp-sec-title">Products &amp; pricing</div>
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+              <select id="corp-prod" class="inv-in" style="flex:1;min-width:170px"></select>
+              <input id="corp-prod-qty" type="number" min="1" value="1" class="inv-in" style="width:66px">
+              <button onclick="corpAddProduct()" class="btn-done" style="background:#339966;padding:9px 14px">Add</button>
+              <button onclick="corpAddCustom()" class="btn-print" style="padding:9px 14px">Custom line</button>
+            </div>
+            <div id="corp-lines" style="margin-bottom:6px"></div>
+            <div style="display:flex;justify-content:flex-end;align-items:baseline;font-size:16px;font-weight:800;color:#339966;margin:6px 0 18px">Total:&nbsp;<span id="corp-total">$0.00</span></div>
+            <div class="corp-sec-title">Invoice &amp; delivery details</div>
+            <label class="inv-lb">Bill to</label><input id="corp-billto" class="inv-in" placeholder="e.g. Oasis Primary School">
+            <label class="inv-lb">Delivery note</label><input id="corp-delnote" class="inv-in" value="Delivery inclusive.">
+            <label class="inv-lb">Delivery date</label><input id="corp-deldate" class="inv-in" placeholder="e.g. 29th July (Wednesday)">
+            <label class="inv-lb">Delivery address / location (one line each)</label><textarea id="corp-delloc" class="inv-in" rows="3" placeholder="Oasis Primary School&#10;71 Edgefield Plains&#10;Singapore 828716"></textarea>
+            <label class="inv-lb">Delivery time</label><input id="corp-deltime" class="inv-in" placeholder="e.g. 1 to 1:30pm">
+            <label class="inv-lb">Payment mode</label><input id="corp-paymode" class="inv-in" value="Vendors@gov">
+            <label class="inv-lb">Payment terms</label><input id="corp-payterms" class="inv-in" value="30 days credit term from date of delivery.">
+            <label class="inv-lb">Payment status</label><input id="corp-paystatus" class="inv-in" value="Processing">
+            <button id="corp-save-btn" onclick="saveCorporateOrder()" class="btn-done" style="background:#339966;width:100%;margin-top:16px;padding:13px;font-size:15px">Save &amp; Tender Corporate Order</button>
+            <div style="font-size:11px;color:#999;margin-top:8px;text-align:center">Records the real total as a Corporate sale (for settlement) and saves the order so you can export its invoice anytime.</div>
+          </div>
+          <div id="corp-records" style="display:none">
+            <div style="display:flex;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:#888">Saved corporate orders</span><button onclick="loadCorporateOrders()" style="margin-left:auto;padding:5px 11px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--font)">Refresh</button></div>
+            <div id="corp-records-list" style="font-size:12px;color:#aaa;text-align:center">Loading...</div>
+          </div>
+        </div>
+      </div>
       <div id="pos-view-credit" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
         <div style="padding:12px;flex-shrink:0;display:flex;gap:8px;align-items:center">
           <span style="font-size:13px;font-weight:600;color:#555">Pending Credit Deposits</span>
@@ -372,6 +416,8 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
   </div>
   </div>
 
+  <img id="fruicey-logo" alt="Fruicey" width="300" height="120" src="data:image/jpeg;base64,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" style="display:none">
+
   <!-- HELD ORDERS MODAL -->
   <div class="held-modal" id="held-modal" onclick="if(event.target===this)closeHeldModal()">
     <div class="held-box">
@@ -386,6 +432,7 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
       <div class="modal-hdr"><span class="modal-hdr-title">Receipt</span><button class="modal-close" id="close-receipt-btn">✕</button></div>
       <div class="modal-body">
         <div id="receipt-content"></div>
+        <button id="invoice-btn" onclick="openInvoiceForm()" style="display:none;width:100%;margin-top:14px;padding:12px;background:#339966;color:#fff;border:none;border-radius:var(--r);cursor:pointer;font-size:14px;font-weight:700;font-family:var(--font)">Generate Invoice (PDF)</button>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px">
           <button class="btn-print" id="print-btn">Print</button>
           <button onclick="openShareModal()" style="padding:11px;background:#fff;border:1.5px solid #8fcea1;border-radius:var(--r);cursor:pointer;font-size:13px;font-family:var(--font);color:#5aab74;font-weight:600">Share</button>
@@ -709,6 +756,37 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <button onclick="closeMiscModal()" class="btn-print">Cancel</button>
           <button onclick="addMisc()" class="btn-done" style="background:#c9a24a">Add to Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOICE DETAILS MODAL -->
+  <div class="modal-bg" id="invoice-form-modal">
+    <div class="modal-box" style="max-width:380px;max-height:86vh;overflow:auto">
+      <div class="modal-hdr"><span class="modal-hdr-title">Invoice Details</span><button class="modal-close" onclick="closeInvoiceForm()">x</button></div>
+      <div class="modal-body">
+        <div id="inv-ref-label" style="font-size:12px;font-weight:700;color:#339966;margin-bottom:6px"></div>
+        <div style="font-size:11px;color:#999;margin-bottom:10px">Items, quantities, prices and the grand total come from this order automatically.</div>
+        <label class="inv-lb">Bill to</label>
+        <input id="inv-billto" class="inv-in" placeholder="e.g. Oasis Primary School">
+        <label class="inv-lb">Delivery note</label>
+        <input id="inv-delnote" class="inv-in">
+        <label class="inv-lb">Delivery date</label>
+        <input id="inv-deldate" class="inv-in" placeholder="e.g. 29th July (Wednesday)">
+        <label class="inv-lb">Delivery location (one line each)</label>
+        <textarea id="inv-delloc" class="inv-in" rows="3" placeholder="Oasis Primary School&#10;71 Edgefield Plains&#10;Singapore 828716"></textarea>
+        <label class="inv-lb">Delivery time</label>
+        <input id="inv-deltime" class="inv-in" placeholder="e.g. 1 to 1:30pm">
+        <label class="inv-lb">Payment mode</label>
+        <input id="inv-paymode" class="inv-in">
+        <label class="inv-lb">Payment terms</label>
+        <input id="inv-payterms" class="inv-in">
+        <label class="inv-lb">Payment status</label>
+        <input id="inv-paystatus" class="inv-in">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
+          <button onclick="closeInvoiceForm()" class="btn-print">Cancel</button>
+          <button onclick="generateInvoice()" class="btn-done" style="background:#339966">Generate PDF</button>
         </div>
       </div>
     </div>
@@ -1494,6 +1572,266 @@ function saveReceiptPDF(){
   s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
   s.onload=doPDF; s.onerror=function(){showToast('PDF library failed — check your connection');};
   document.head.appendChild(s);
+}
+// drawInvoicePdf(doc, inv, logo) — doc: jsPDF A4 'mm'; fonts registered under family 'Fruicey'.
+// inv = { ref, dateStr, billTo, items:[{desc,qty,price}], delivery:{note,date,location[],time},
+//         payMode, payTerms, payStatus }   logo = { dataUri, fmt, aspect } | null
+function drawInvoicePdf(doc, inv, logo){
+  var ML=16, right=194, money=function(n){ return '$'+(Number(n)||0).toFixed(2); };
+  var gD=[51,153,102], gB=[0,255,0], grey=[192,192,192], gL=[204,255,204];
+  var F=function(b){ doc.setFont('Fruicey', b?'bold':'normal'); };
+  // ── Logo + address (top-right, never cropped) ──
+  var addrY=18;
+  if(logo && logo.dataUri){
+    var LW=40, LH=LW/(logo.aspect||2.5), LX=right-LW, LY=14;
+    try{ doc.addImage(logo.dataUri, logo.fmt||'JPEG', LX, LY, LW, LH); addrY=LY+LH+5; }catch(e){}
+  }
+  F(false); doc.setFontSize(8.5); doc.setTextColor(90,90,90);
+  ['68 Jalan Jurong Kechil #01-10','Singapore 596180','UEN: 53434968D','hey@fruicey.sg'].forEach(function(l,i){
+    doc.text(l, right, addrY+i*4.6, {align:'right'});
+  });
+  // ── Big heading ──
+  F(true); doc.setTextColor(gD[0],gD[1],gD[2]);
+  doc.setFontSize(56); doc.text('HELLO', ML, 50);
+  doc.setFontSize(23); doc.text('I AM YOUR INVOICE', ML, 65);
+  // ── Ref / date / bill-to ──
+  F(false); doc.setFontSize(11); doc.setTextColor(0,0,0);
+  doc.text('Billing Invoice Ref: '+inv.ref, ML, 77);
+  doc.text(inv.dateStr, ML, 83);
+  if(inv.billTo){ F(true); doc.text('Bill to: ', ML, 90); F(false); doc.text(String(inv.billTo), ML+16, 90); }
+  // ── Table header bars ──
+  var HY=96, BH=8;
+  var cI=[ML,30], cD=[48,82], cQ=[132,26], cP=[160,34];
+  function bar(x,w,col){ doc.setFillColor(col[0],col[1],col[2]); doc.rect(x,HY,w,BH,'F'); }
+  bar(cI[0],cI[1],gD); bar(cD[0],cD[1],gB); bar(cQ[0],cQ[1],gB); bar(cP[0],cP[1],gB);
+  F(true); doc.setFontSize(9); doc.setTextColor(255,255,255);
+  var ty=HY+5.6;
+  doc.text('ITEM', cI[0]+3, ty);
+  doc.text('DESCRIPTION', cD[0]+3, ty);
+  doc.text('QTY', cQ[0]+cQ[1]/2, ty, {align:'center'});
+  doc.text('PRICE', cP[0]+cP[1]-3, ty, {align:'right'});
+  // ── Item rows ──
+  var y=HY+BH+7; F(false); doc.setFontSize(10); doc.setTextColor(0,0,0);
+  (inv.items||[]).forEach(function(it,i){
+    var lines=doc.splitTextToSize(String(it.desc||''), cD[1]-4);
+    doc.text(String(i+1)+'.', cI[0]+3, y);
+    doc.text(lines, cD[0]+3, y);
+    doc.text(String(it.qty), cQ[0]+cQ[1]/2, y, {align:'center'});
+    doc.text(money(it.price), cP[0]+cP[1]-3, y, {align:'right'});
+    y += Math.max(lines.length*5, 6) + 3;
+  });
+  // ── Delivery block ──
+  y += 6;
+  if(inv.delivery && (inv.delivery.date||inv.delivery.time||(inv.delivery.location||[]).length||inv.delivery.note)){
+    F(true); doc.setFontSize(10); doc.text('Delivery', cI[0]+3, y);
+    F(false); var dx=cD[0]+3, lx=cD[0]+3, vx=cD[0]+22, dy=y;
+    if(inv.delivery.note){ doc.text(String(inv.delivery.note), dx, dy); dy+=5.5; }
+    function dl(lab,val){ F(true); doc.text(lab, lx, dy); F(false); doc.text(String(val), vx, dy); dy+=5.2; }
+    if(inv.delivery.date) dl('Date:', inv.delivery.date);
+    var loc=inv.delivery.location||[];
+    if(loc.length){ F(true); doc.text('Location:', lx, dy); F(false); doc.text(String(loc[0]), vx, dy); dy+=5.2;
+      for(var j=1;j<loc.length;j++){ doc.text(String(loc[j]), vx, dy); dy+=5.2; } }
+    if(inv.delivery.time) dl('Time:', inv.delivery.time);
+    y=Math.max(y, dy)+4;
+  }
+  // ── Grand Total band ──
+  if(y<198) y=198;
+  var GTY=y, GTH=24;
+  doc.setFillColor(gD[0],gD[1],gD[2]); doc.rect(ML,GTY,134,GTH,'F');
+  doc.setFillColor(grey[0],grey[1],grey[2]); doc.rect(152,GTY,42,GTH,'F');
+  F(true); doc.setFontSize(10); doc.setTextColor(80,80,80); doc.text('Grand Total:', 190, GTY+9, {align:'right'});
+  doc.setFontSize(16); doc.setTextColor(gD[0],gD[1],gD[2]); doc.text(money(inv.grandTotal), 190, GTY+18, {align:'right'});
+  // ── Payment band ──
+  var PY=GTY+GTH+4, PH2=24;
+  doc.setFillColor(gL[0],gL[1],gL[2]); doc.rect(ML,PY,178,PH2,'F');
+  doc.setTextColor(40,40,40);
+  F(true); doc.setFontSize(9); doc.text('Payment Terms:', ML+5, PY+7);
+  F(false); var tl=doc.splitTextToSize(String(inv.payTerms||''), 86); doc.text(tl, ML+5, PY+12.5);
+  F(true); doc.text('Payment mode:', 120, PY+7); F(false); doc.text(String(inv.payMode||''), 120, PY+12);
+  F(true); doc.text('Payment status:', 120, PY+18); F(false); doc.text(String(inv.payStatus||''), 120, PY+23);
+  // ── Bottom accent ──
+  doc.setFillColor(gD[0],gD[1],gD[2]); doc.rect(ML, PY+PH2+3, 178, 3, 'F');
+  return doc;
+}
+
+function _invOrdinal(d){ var sfx=['th','st','nd','rd'], v=d%100; return d+(sfx[(v-20)%10]||sfx[v]||sfx[0]); }
+function _ensureJsPDF(cb){
+  if(window.jspdf && window.jspdf.jsPDF){ cb(); return; }
+  var sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  sc.onload=cb; sc.onerror=function(){ showToast('PDF library failed - check connection'); };
+  document.head.appendChild(sc);
+}
+function openInvoiceForm(){
+  if(!_lastSale){ showToast('No order to invoice'); return; }
+  var n=new Date(), sgt=new Date(n.getTime()+8*3600*1000);
+  var d=sgt.getUTCDate(), mo=sgt.getUTCMonth(), y=sgt.getUTCFullYear();
+  var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function p2(x){ return (x<10?'0':'')+x; }
+  window._invRef = p2(d)+p2(mo+1)+String(y).slice(2);
+  window._invDate = _invOrdinal(d)+' '+MON[mo]+' '+y;
+  var set=function(id,v){ var el=document.getElementById(id); if(el) el.value=v; };
+  document.getElementById('inv-ref-label').textContent='Invoice Ref: '+window._invRef+'   ·   '+window._invDate;
+  set('inv-billto', (_lastSale && _lastSale.member) ? _lastSale.member : '');
+  set('inv-delnote','Delivery inclusive.'); set('inv-deldate',''); set('inv-delloc',''); set('inv-deltime','');
+  set('inv-paymode','Vendors@gov'); set('inv-payterms','30 days credit term from date of delivery.'); set('inv-paystatus','Processing');
+  document.getElementById('invoice-form-modal').classList.add('open');
+}
+function closeInvoiceForm(){ document.getElementById('invoice-form-modal').classList.remove('open'); }
+function generateInvoice(){
+  if(!_lastSale){ showToast('No order'); return; }
+  var g=function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
+  var items=(_lastSale.items||[]).map(function(it){
+    var desc=String(it.n||it.label||''); if(it.r) desc+=' - '+it.r;
+    var qty=Number(it.q||it.qty||1), unit=Number(it.p||it.price||0);
+    return {desc:desc, qty:qty, price:+(unit*qty).toFixed(2)};
+  });
+  var grand=items.reduce(function(a,it){ return a+it.price; },0);
+  var loc=g('inv-delloc').split(/\n+/).map(function(x){return x.trim();}).filter(Boolean);
+  var inv={ ref:window._invRef||'', dateStr:window._invDate||'', billTo:g('inv-billto'),
+    items:items, grandTotal:+grand.toFixed(2),
+    delivery:{ note:g('inv-delnote'), date:g('inv-deldate'), location:loc, time:g('inv-deltime') },
+    payMode:g('inv-paymode'), payTerms:g('inv-payterms'), payStatus:g('inv-paystatus') };
+  showToast('Generating invoice...');
+  _ensureJsPDF(function(){
+    try{
+      var doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+      _registerFruiceyFonts(doc);
+      drawInvoicePdf(doc, inv, _invLogo());
+      doc.save('Invoice_'+(inv.ref||_lastSale.date||'fruicey')+'.pdf');
+      showToast('Invoice PDF saved!'); closeInvoiceForm();
+    }catch(e){ showToast('Could not create the invoice'); }
+  });
+}
+function _invLogo(){
+  var le=document.querySelector('#receipt-content img[alt="Fruicey"]') || document.getElementById('fruicey-logo');
+  if(le && le.src){ return {dataUri:le.src, fmt:(le.src.indexOf('image/png')>-1?'PNG':'JPEG'), aspect:(le.naturalWidth&&le.naturalHeight)?(le.naturalWidth/le.naturalHeight):2.5}; }
+  return null;
+}
+// ───────── CORPORATE ORDERS TAB ─────────
+var corpLines=[], _corpRecords=[];
+function switchCorpSub(which){
+  document.getElementById('corp-new').style.display = which==='new'?'block':'none';
+  document.getElementById('corp-records').style.display = which==='records'?'block':'none';
+  var a=document.getElementById('corp-sub-new'), b=document.getElementById('corp-sub-records');
+  if(a) a.classList.toggle('corp-subtab-active', which==='new');
+  if(b) b.classList.toggle('corp-subtab-active', which==='records');
+  if(which==='records') loadCorporateOrders();
+}
+function renderCorpProductOptions(){
+  var sel=document.getElementById('corp-prod'); if(!sel || sel.dataset.ready) return;
+  var html='<option value="">- Select a product -</option>';
+  Object.keys(CATALOGUE).forEach(function(cat){
+    html+='<optgroup label="'+cat+'">';
+    CATALOGUE[cat].forEach(function(pr){
+      (pr.sizes||[{l:'',p:0}]).forEach(function(sz){
+        var nm=pr.name+(sz.l?(' ('+sz.l+')'):'');
+        html+='<option value="'+encodeURIComponent(nm)+'|'+(sz.p||0)+'">'+nm+' - $'+(Number(sz.p)||0).toFixed(2)+'</option>';
+      });
+    });
+    html+='</optgroup>';
+  });
+  sel.innerHTML=html; sel.dataset.ready='1';
+}
+function corpAddProduct(){
+  var sel=document.getElementById('corp-prod'), v=sel.value; if(!v){ showToast('Pick a product'); return; }
+  var parts=v.split('|'), nm=decodeURIComponent(parts[0]), price=parseFloat(parts[1])||0;
+  var qty=parseInt(document.getElementById('corp-prod-qty').value)||1;
+  corpLines.push({name:nm, qty:qty, price:price});
+  document.getElementById('corp-prod-qty').value='1'; sel.value='';
+  renderCorpLines();
+}
+function corpAddCustom(){ corpLines.push({name:'', qty:1, price:0}); renderCorpLines(); }
+function corpRemoveLine(i){ corpLines.splice(i,1); renderCorpLines(); }
+function renderCorpLines(){
+  var el=document.getElementById('corp-lines'); if(!el) return;
+  if(!corpLines.length){ el.innerHTML='<div style="font-size:12px;color:#bbb;padding:8px 0">No products added yet.</div>'; var t0=document.getElementById('corp-total'); if(t0) t0.textContent='$0.00'; return; }
+  el.innerHTML=corpLines.map(function(l,i){
+    return '<div class="corp-line">'
+      +'<input class="inv-in" style="flex:1;min-width:110px" value="'+String(l.name||'').replace(/"/g,'&quot;')+'" oninput="corpLines['+i+'].name=this.value" placeholder="Item description">'
+      +'<input class="inv-in" type="number" min="1" style="width:64px" value="'+l.qty+'" oninput="corpLines['+i+'].qty=parseInt(this.value)||1;corpUpdTotal()">'
+      +'<span style="color:#aaa;font-size:12px">&times;$</span>'
+      +'<input class="inv-in" type="number" min="0" step="0.01" style="width:78px" value="'+Number(l.price).toFixed(2)+'" oninput="corpLines['+i+'].price=parseFloat(this.value)||0;corpUpdTotal()">'
+      +'<span class="corp-lt-'+i+'" style="width:66px;text-align:right;font-weight:700;font-size:13px">$'+(l.qty*l.price).toFixed(2)+'</span>'
+      +'<button onclick="corpRemoveLine('+i+')" style="border:none;background:none;color:#e74c3c;cursor:pointer;font-size:17px;line-height:1">&times;</button>'
+      +'</div>';
+  }).join('');
+  corpUpdTotal();
+}
+function corpUpdTotal(){
+  var t=0; corpLines.forEach(function(l,i){ var lt=(Number(l.qty)||0)*(Number(l.price)||0); t+=lt; var e=document.querySelector('.corp-lt-'+i); if(e) e.textContent='$'+lt.toFixed(2); });
+  var te=document.getElementById('corp-total'); if(te) te.textContent='$'+t.toFixed(2);
+  return t;
+}
+async function saveCorporateOrder(){
+  if(!corpLines.length){ showToast('Add at least one product'); return; }
+  var total=corpUpdTotal();
+  if(total<=0 && !confirm('Total is $0.00. Continue?')) return;
+  var g=function(id){ var e=document.getElementById(id); return e?(e.value||'').trim():''; };
+  var billTo=g('corp-billto');
+  var n=new Date(), sgt=new Date(n.getTime()+8*3600*1000);
+  var d=sgt.getUTCDate(), mo=sgt.getUTCMonth(), y=sgt.getUTCFullYear();
+  function p2(x){ return (x<10?'0':'')+x; }
+  var ref=p2(d)+p2(mo+1)+String(y).slice(2);
+  var dateStr=sgt.toISOString().slice(0,10), timeStr=sgt.toISOString().slice(11,16);
+  var id='corp_'+Date.now();
+  var items=corpLines.map(function(l){ return {id:'corp', label:(l.name||'Item'), qty:Number(l.qty)||1, price:+Number(l.price).toFixed(2), remark:''}; });
+  var rec={ id:id, ref:ref, createdAt:new Date().toISOString(), date:dateStr, time:timeStr, billTo:billTo,
+    delNote:g('corp-delnote'), delDate:g('corp-deldate'), delLoc:g('corp-delloc'), delTime:g('corp-deltime'),
+    payMode:g('corp-paymode'), payTerms:g('corp-payterms'), payStatus:g('corp-paystatus'),
+    items:items, total:+total.toFixed(2) };
+  var btn=document.getElementById('corp-save-btn'); if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
+  try{
+    await apiPost({ action:'addPOSSale', id:id, rcptNo:'', date:dateStr, time:timeStr,
+      items: JSON.stringify(items.map(function(i){return {id:i.id,qty:i.qty,label:i.label,price:i.price,remark:''};})),
+      subtotal: total.toFixed(2), discount:'0.00', total: total.toFixed(2), payment:'Corporate',
+      member: billTo||'', memberPhone:'' });
+    if(window.fdb){ await fdb.collection('corporateOrders').doc(id).set(rec); }
+    showToast('Corporate order saved & recorded');
+    corpLines=[]; renderCorpLines();
+    ['corp-billto','corp-deldate','corp-delloc','corp-deltime'].forEach(function(i){ var e=document.getElementById(i); if(e) e.value=''; });
+    switchCorpSub('records');
+  }catch(e){ showToast('Could not save - check connection'); }
+  if(btn){ btn.disabled=false; btn.textContent='Save & Tender Corporate Order'; }
+}
+async function loadCorporateOrders(){
+  var box=document.getElementById('corp-records-list'); if(!box) return;
+  box.innerHTML='Loading...';
+  try{
+    if(!window.fdb){ box.innerHTML='<div style="color:#bbb">Offline</div>'; return; }
+    var snap=await fdb.collection('corporateOrders').orderBy('createdAt','desc').limit(100).get();
+    _corpRecords=[]; snap.forEach(function(doc){ _corpRecords.push(doc.data()); });
+    renderCorpRecords();
+  }catch(e){ box.innerHTML='<div style="color:#e74c3c;text-align:left">Could not load. If this is the first time, add the Firestore rule for <b>corporateOrders</b> (see notes).</div>'; }
+}
+function renderCorpRecords(){
+  var box=document.getElementById('corp-records-list'); if(!box) return;
+  if(!_corpRecords.length){ box.innerHTML='<div style="color:#bbb;padding:10px">No corporate orders yet.</div>'; return; }
+  box.innerHTML=_corpRecords.map(function(r){
+    return '<div style="text-align:left;border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:8px;background:#fafafa">'
+      +'<div style="display:flex;align-items:center;gap:8px"><b style="font-size:13px;color:#333">'+(r.billTo||'(no customer)')+'</b>'
+      +'<span style="margin-left:auto;font-weight:800;color:#339966">$'+(Number(r.total)||0).toFixed(2)+'</span></div>'
+      +'<div style="font-size:11px;color:#888;margin-top:2px">Ref '+(r.ref||'')+' &middot; '+(r.date||'')+' '+(r.time||'')+' &middot; '+((r.items&&r.items.length)||0)+' item(s)</div>'
+      +'<button onclick="corpExportInvoice(\''+r.id+'\')" style="margin-top:8px;padding:7px 14px;background:#339966;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font)">Export Invoice (PDF)</button>'
+      +'</div>';
+  }).join('');
+}
+function corpExportInvoice(id){
+  var r=null; for(var i=0;i<_corpRecords.length;i++){ if(_corpRecords[i].id===id){ r=_corpRecords[i]; break; } }
+  if(!r){ showToast('Record not found'); return; }
+  var items=(r.items||[]).map(function(it){ var q=Number(it.qty)||1, u=Number(it.price)||0; return {desc:it.label||'', qty:q, price:+(u*q).toFixed(2)}; });
+  var loc=String(r.delLoc||'').split(/\n+/).map(function(x){return x.trim();}).filter(Boolean);
+  var dateLabel=r.date||'';
+  try{ var pp=String(r.date||'').split('-'); if(pp.length===3){ var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; dateLabel=_invOrdinal(parseInt(pp[2]))+' '+MON[parseInt(pp[1])-1]+' '+pp[0]; } }catch(e){}
+  var inv={ ref:r.ref||'', dateStr:dateLabel, billTo:r.billTo||'', items:items, grandTotal:+(Number(r.total)||0).toFixed(2),
+    delivery:{ note:r.delNote||'', date:r.delDate||'', location:loc, time:r.delTime||'' },
+    payMode:r.payMode||'', payTerms:r.payTerms||'', payStatus:r.payStatus||'' };
+  showToast('Generating invoice...');
+  _ensureJsPDF(function(){
+    try{ var doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'}); _registerFruiceyFonts(doc);
+      drawInvoicePdf(doc, inv, _invLogo()); doc.save('Invoice_'+(inv.ref||'fruicey')+'.pdf'); showToast('Invoice PDF saved!');
+    }catch(e){ showToast('Could not create the invoice'); }
+  });
 }
 function sendReceiptEmailPDF(){
   var email=document.getElementById('share-email').value.trim();
@@ -2418,7 +2756,7 @@ function clearMemberDisplay(){document.getElementById('member-result').style.dis
 var currentPosTab = 'menu';
 function switchPosTab(tab){
   currentPosTab = tab;
-  ['menu','member','receipts','orders','credit'].forEach(function(t){
+  ['menu','member','receipts','orders','corporate','credit'].forEach(function(t){
     var view = document.getElementById('pos-view-'+t);
     var btn  = document.getElementById('pos-tab-'+t);
     if(view) view.style.display = t===tab?'flex':'none';
@@ -2428,6 +2766,7 @@ function switchPosTab(tab){
   if(tab==='menu'){ loadStock(); }
   if(tab==='orders'){ loadAppOrders(); }
   if(tab==='credit'){ loadPendingDeposits(); }
+  if(tab==='corporate'){ renderCorpProductOptions(); renderCorpLines(); loadCorporateOrders(); }
 }
 
 function clearMember(silent){
@@ -3320,6 +3659,7 @@ function showReceipt(sale,changeDue,cashTendered){
     +'<div style="font-size:9px;color:#aaa">Scan to sign up and earn stamps</div></div>';
   document.getElementById('receipt-content').innerHTML=html;
   document.getElementById('receipt-modal').classList.add('open');
+  var _ib=document.getElementById('invoice-btn'); if(_ib) _ib.style.display=(sale.payment==='Corporate')?'block':'none';
   sale.rcptNo=rcptNo; _lastSale=sale;
   // Tender sound on a freshly generated receipt (not when viewing a past receipt).
   if(typeof _viewingHistoricalReceipt==='undefined' || !_viewingHistoricalReceipt){ playKaching(); }
@@ -3728,9 +4068,11 @@ function dailySettlement(){
   const panda  = active.filter(s=>s.payment==='FoodPanda').reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-panda-daily')||{}).value)||0);
   const online = active.filter(s=>s.payment==='Online Shop').reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-online-daily')||{}).value)||0);
   const appCard = active.filter(s=>s.payment==='App Card'||s.payment==='App Credit+Card').reduce((t,s)=>t+s.total,0);
-  const corp = parseFloat((document.getElementById('settle-corp-daily')||{}).value)||0;
+  const corpManual = parseFloat((document.getElementById('settle-corp-daily')||{}).value)||0;
+  const corpAuto = active.filter(s=>s.payment==='Corporate').reduce((t,s)=>t+s.total,0);   // real totals now recorded by the Corporate Orders tab
+  const corp = +(corpAuto + corpManual).toFixed(2);
   const mdr    = parseFloat((document.getElementById('report-mdr-daily')||{}).value)||0;
-  const grandTotal = active.reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-grab-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-panda-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-online-daily')||{}).value)||0) + corp - mdr;
+  const grandTotal = active.reduce((t,s)=>t+s.total,0) + (parseFloat((document.getElementById('settle-grab-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-panda-daily')||{}).value)||0) + (parseFloat((document.getElementById('settle-online-daily')||{}).value)||0) + corpManual - mdr;
   const count  = todaySales.length;
   const voided = todaySales.filter(s=>s.voided).length;
   window._settleData = {
@@ -3738,7 +4080,7 @@ function dailySettlement(){
     cash: +(cash+splitCash).toFixed(2), paynow: +(paynow+splitPaynow).toFixed(2), card: +(card+splitCard).toFixed(2),
     credit: +credit.toFixed(2), appPaynow: +appPaynow.toFixed(2), appCredit: +appCredit.toFixed(2), appLink: +appCard.toFixed(2),
     grab: +grab.toFixed(2), panda: +panda.toFixed(2), corporate: +corp.toFixed(2), mdr: +mdr.toFixed(2),
-    inStoreTotal: +(active.reduce(function(t,s){return t+s.total;},0)).toFixed(2),
+    inStoreTotal: +(active.reduce(function(t,s){return t+s.total;},0) - corpAuto).toFixed(2),
     appTotal: +(appPaynow+appCredit+appCard).toFixed(2),
     grandTotal: +grandTotal.toFixed(2), txnCount: count
   };

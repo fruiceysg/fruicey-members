@@ -113,6 +113,17 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
 .corp-subtab-active{border-color:#339966;background:#339966;color:#fff}
 .corp-sec-title{font-size:13px;font-weight:800;color:#339966;margin:4px 0 8px;font-family:var(--brand)}
 .corp-line{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.ui-dialog-bg{display:none;position:fixed;inset:0;z-index:4000;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.45)}
+.ui-dialog-bg.open{display:flex}
+.ui-dialog-box{background:#fff;border-radius:16px;max-width:360px;width:100%;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.3);animation:ui-pop .18s ease;font-family:var(--font)}
+@keyframes ui-pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.ui-dialog-title{font-family:var(--brand);font-size:18px;color:#2e7d50;margin-bottom:8px;text-align:center}
+.ui-dialog-msg{font-size:14px;color:#444;line-height:1.55;text-align:center;margin-bottom:16px}
+.ui-dialog-input{width:100%;padding:11px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px;font-family:var(--font);outline:none;margin-bottom:16px;box-sizing:border-box}
+.ui-dialog-btns{display:flex;gap:8px;justify-content:center}
+.ui-dialog-btn{flex:1;padding:11px;border-radius:22px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;border:none}
+.ui-dialog-cancel{background:#f0f0f0;color:#666}
+.ui-dialog-ok{background:#339966;color:#fff}
 .corp-cols{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
 .corp-form-col{flex:1 1 300px;min-width:280px}
 .corp-preview-col{flex:1 1 330px;min-width:300px;position:sticky;top:0;order:-1}
@@ -431,6 +442,19 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
   </div>
 
   <img id="fruicey-logo" alt="Fruicey" width="300" height="120" src="data:image/jpeg;base64,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" style="display:none">
+
+  <!-- THEMED DIALOG -->
+  <div class="ui-dialog-bg" id="ui-dialog">
+    <div class="ui-dialog-box">
+      <div class="ui-dialog-title" id="ui-dialog-title"></div>
+      <div class="ui-dialog-msg" id="ui-dialog-msg"></div>
+      <input class="ui-dialog-input" id="ui-dialog-input" style="display:none">
+      <div class="ui-dialog-btns">
+        <button class="ui-dialog-btn ui-dialog-cancel" id="ui-dialog-cancel">Cancel</button>
+        <button class="ui-dialog-btn ui-dialog-ok" id="ui-dialog-ok">OK</button>
+      </div>
+    </div>
+  </div>
 
   <!-- HELD ORDERS MODAL -->
   <div class="held-modal" id="held-modal" onclick="if(event.target===this)closeHeldModal()">
@@ -895,10 +919,10 @@ function updateBioLoginBtn(){
   try{ hasSession = !!(localStorage.getItem('fruicey_staff') && localStorage.getItem('fruicey_staff_token')); }catch(e){}
   btn.style.display = (_bioSupported() && _bioEnrolled() && hasSession) ? 'block' : 'none';
 }
-function maybeOfferBioEnroll(){
+async function maybeOfferBioEnroll(){
   if(!_bioSupported() || _bioEnrolled()) return;
   setTimeout(async function(){
-    if(confirm('Enable fingerprint login on this device?')){
+    if(await uiConfirm('Enable fingerprint login on this device?')){
       var ok = await enrollBiometric();
       showToast(ok ? 'Fingerprint login enabled' : 'Could not set up fingerprint');
     }
@@ -1043,8 +1067,8 @@ function closePwModal(){
   if(resolve) resolve(false);
 }
 
-function doLogout(){
-  if(!confirm('Log out of POS?')) return;
+async function doLogout(){
+  if(!(await uiConfirm('Log out of POS?'))) return;
   loggedInStaff = null; staffToken = '';
   sessionStorage.removeItem('fruicey_staff');
   sessionStorage.removeItem('fruicey_staff_token');
@@ -1795,7 +1819,7 @@ function corpUpdTotal(){
 async function saveCorporateOrder(){
   if(!corpLines.length){ showToast('Add at least one product'); return; }
   var total=corpUpdTotal();
-  if(total<=0 && !confirm('Total is $0.00. Continue?')) return;
+  if(total<=0 && !(await uiConfirm('Total is $0.00. Continue?'))) return;
   var g=function(id){ var e=document.getElementById(id); return e?(e.value||'').trim():''; };
   var billTo=g('corp-billto');
   var n=new Date(), sgt=new Date(n.getTime()+8*3600*1000);
@@ -1867,15 +1891,15 @@ function corpExportInvoice(id){
   });
 }
 async function corpDeleteRecord(id){
-  if(!confirm('Delete this corporate order record?\n\nThis removes it from the tab. It does NOT undo the sale already recorded in your sheet \u2014 void that separately if needed.')) return;
+  if(!(await uiConfirm('Delete this corporate order record?\n\nThis removes it from the tab. It does NOT undo the sale already recorded in your sheet \u2014 void that separately if needed.'))) return;
   try{ if(window.fdb) await fdb.collection('corporateOrders').doc(id).delete(); }
   catch(e){ showToast('Delete failed - check connection'); return; }
   _corpRecords=_corpRecords.filter(function(r){ return r.id!==id; });
   renderCorpRecords(); showToast('Record deleted');
 }
-function corpImportCart(){
+async function corpImportCart(){
   if(!cart || !cart.length){ showToast('Menu cart is empty'); return; }
-  if(corpLines.length && !confirm('Replace the current list with the '+cart.length+' item(s) from the Menu cart?')) return;
+  if(corpLines.length && !(await uiConfirm('Replace the current list with the '+cart.length+' item(s) from the Menu cart?'))) return;
   corpLines = cart.map(function(i){ return {name:i.label, qty:Number(i.qty)||1, price:Number(i.price)||0}; });
   renderCorpLines(); showToast('Imported '+corpLines.length+' item(s) from cart');
 }
@@ -1931,6 +1955,30 @@ function renderCorpPreview(){
       +'<div style="flex:1"><b>Payment Terms:</b><br>'+_corpEsc(payTerms)+'</div>'
       +'<div style="flex:1"><b>Payment mode:</b> '+_corpEsc(payMode)+'<br><b>Payment status:</b> '+_corpEsc(payStatus)+'</div></div>';
 }
+function _uiDialog(opts){
+  return new Promise(function(resolve){
+    var ov=document.getElementById('ui-dialog'); if(!ov){ resolve(opts.type==='prompt'?null:(opts.type==='alert'?undefined:false)); return; }
+    var esc=function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); };
+    document.getElementById('ui-dialog-title').textContent = opts.title || (opts.type==='alert'?'Notice':opts.type==='prompt'?'Enter value':'Please confirm');
+    document.getElementById('ui-dialog-msg').innerHTML = esc(opts.message);
+    var inp=document.getElementById('ui-dialog-input');
+    if(opts.type==='prompt'){ inp.style.display='block'; inp.value=opts.defaultValue||''; } else { inp.style.display='none'; inp.value=''; }
+    var cancelBtn=document.getElementById('ui-dialog-cancel'), okBtn=document.getElementById('ui-dialog-ok');
+    cancelBtn.style.display=(opts.type==='alert')?'none':'inline-block';
+    cancelBtn.textContent=opts.cancelText||'Cancel'; okBtn.textContent=opts.okText||'OK';
+    function done(val){ ov.classList.remove('open'); okBtn.onclick=null; cancelBtn.onclick=null; inp.onkeydown=null; ov.onclick=null; resolve(val); }
+    okBtn.onclick=function(){ done(opts.type==='prompt'?inp.value:true); };
+    cancelBtn.onclick=function(){ done(opts.type==='prompt'?null:false); };
+    ov.onclick=function(e){ if(e.target===ov) done(opts.type==='prompt'?null:(opts.type==='alert'?undefined:false)); };
+    inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); done(inp.value); } else if(e.key==='Escape'){ done(null); } };
+    ov.classList.add('open');
+    setTimeout(function(){ try{ if(opts.type==='prompt'){ inp.focus(); inp.select(); } else okBtn.focus(); }catch(e){} }, 50);
+  });
+}
+function uiAlert(m,o){ o=o||{}; return _uiDialog({type:'alert',message:m,title:o.title,okText:o.okText}); }
+function uiConfirm(m,o){ o=o||{}; return _uiDialog({type:'confirm',message:m,title:o.title,okText:o.okText,cancelText:o.cancelText}); }
+function uiPrompt(m,def,o){ o=o||{}; return _uiDialog({type:'prompt',message:m,defaultValue:def,title:o.title,okText:o.okText,cancelText:o.cancelText}); }
+try{ window.alert=function(m){ uiAlert(m); }; }catch(e){}
 function sendReceiptEmailPDF(){
   var email=document.getElementById('share-email').value.trim();
   if(!email){showToast('Enter email');return;}
@@ -2247,10 +2295,10 @@ function clearClosure(){
     .then(function(){ showToast('Scheduled closure cleared'); })
     .catch(function(){ showToast('Could not clear — check connection / permissions'); });
 }
-function toggleAppOrders(){
+async function toggleAppOrders(){
   if(!window.fdb){ showToast('Not connected'); return; }
   var next = !_posOrdersOpen;
-  if(!next && !confirm('Pause app ordering? Customers won’t be able to place new orders until you resume.')) return;
+  if(!next && !(await uiConfirm('Pause app ordering? Customers won’t be able to place new orders until you resume.'))) return;
   fdb.collection('config').doc('shop').set({ ordersOpen: next, updatedAt: new Date().toISOString() }, {merge:true})
     .then(function(){ showToast(next ? 'App ordering resumed' : 'App ordering paused'); })
     .catch(function(){ showToast('Could not update — check connection / permissions'); });
@@ -2642,9 +2690,7 @@ function renderReceiptsList(query){
       var dateInp = document.getElementById('rcpt-date-input');
       var dateFilter = dateInp ? dateInp.value : '';
     
-      var traceHtml = '<div style="font-size:9px;color:#bbb;text-align:left;padding:4px 2px;font-family:monospace;border-bottom:1px dashed #eee;margin-bottom:6px">'
-        +'call#'+_rcptRenderCount+' | raw="'+rawQuery+'" | query="'+query+'" | date="'+dateFilter+'" | salesLog.length='+salesLog.length
-        +'</div>';
+      var traceHtml = '';
     
       var list = salesLog.filter(function(s){
         if(dateFilter){
@@ -3063,7 +3109,7 @@ function mergeFirestoreNewProducts(){
 }
 
 // ── EVENT DELEGATION (fixes onclick in sandbox) ───────────────────────
-document.addEventListener('click', function(e){
+document.addEventListener('click', async function(e){
   // Category tab
   const catTab = e.target.closest('.cat-tab');
   if(catTab && catTab.dataset.cat){
@@ -3084,33 +3130,33 @@ document.addEventListener('click', function(e){
   if(sizeBtn && sizeBtn.dataset.pid){
     // Custom Juice — show price + remark input
     if(sizeBtn.dataset.pid === 'ju00'){
-      const priceStr = prompt('Custom Juice — Enter price ($):','');
+      const priceStr = await uiPrompt('Custom Juice — Enter price ($):','');
       if(!priceStr) return;
       const customPrice = parseFloat(priceStr);
       if(isNaN(customPrice)||customPrice<0){ showToast('Invalid price'); return; }
-      const remark = prompt('Enter juice description (e.g. Watermelon + Mango):','') || '';
+      const remark = await uiPrompt('Enter juice description (e.g. Watermelon + Mango):','') || '';
       const label = remark ? 'Custom: '+remark : 'Custom Juice';
       cart.push({id:'ju00', name:'Custom Juice', size:'', label:label, price:customPrice, qty:1, remark:remark});
       renderCart(); return;
     }
     // Custom Fruit — show price + remark input
     if(sizeBtn.dataset.pid === 'juCF'){
-      const priceStr = prompt('Custom Fruit — Enter price ($):','');
+      const priceStr = await uiPrompt('Custom Fruit — Enter price ($):','');
       if(!priceStr) return;
       const customPrice = parseFloat(priceStr);
       if(isNaN(customPrice)||customPrice<0){ showToast('Invalid price'); return; }
-      const remark = prompt('Enter fruit description (e.g. Sliced Dragon Fruit):','') || '';
+      const remark = await uiPrompt('Enter fruit description (e.g. Sliced Dragon Fruit):','') || '';
       const label = remark ? 'Custom Fruit: '+remark : 'Custom Fruit';
       cart.push({id:'juCF', name:'Custom Fruit', size:'', label:label, price:customPrice, qty:1, remark:remark});
       renderCart(); return;
     }
     // Custom Bowl — show price + description input
     if(sizeBtn.dataset.pid === 'sb00'){
-      const priceStr = prompt('Custom Bowl — Enter price ($):','');
+      const priceStr = await uiPrompt('Custom Bowl — Enter price ($):','');
       if(!priceStr) return;
       const customPrice = parseFloat(priceStr);
       if(isNaN(customPrice)||customPrice<0){ showToast('Invalid price'); return; }
-      const remark = prompt('Enter bowl description (e.g. Acai + Granola):','') || '';
+      const remark = await uiPrompt('Enter bowl description (e.g. Acai + Granola):','') || '';
       const label = remark ? 'Custom Bowl: '+remark : 'Custom Bowl';
       cart.push({id:'sb00', name:'Custom Bowl', size:'', label:label, price:customPrice, qty:1, remark:remark});
       renderCart(); return;
@@ -3360,8 +3406,8 @@ function updateTotals(){
   document.getElementById('total-val').textContent='$'+total.toFixed(2);
 }
 
-function clearCart(){
-  if(cart.length && !confirm('Clear entire order?')) return;
+async function clearCart(){
+  if(cart.length && !(await uiConfirm('Clear entire order?'))) return;
   cart=[];currentMember=null;memberDiscount=0;paymentMethod='';
   window._redeemOffset=0; window._redeemLabel=''; window._bonusStamps=0; window._manualDisc=false; window._manualDiscLabel=''; document.querySelectorAll('.pos-disc-btn').forEach(function(b){b.classList.remove('active');});
   document.getElementById('member-phone').value='';
@@ -3432,11 +3478,11 @@ function renderHeldList(){
       + '</div>';
   }).join('');
 }
-function resumeHeld(id){
+async function resumeHeld(id){
   var idx = heldOrders.findIndex(function(h){ return h.id===id; });
   if(idx<0) return;
   if(cart.length){
-    if(!confirm('You have an order in progress. Hold it and open the selected one?')) return;
+    if(!(await uiConfirm('You have an order in progress. Hold it and open the selected one?'))) return;
     heldOrders.push(_snapshotCurrent());   // park current so nothing is lost (appended, selected index unchanged)
   }
   var h = heldOrders.splice(idx,1)[0];
@@ -3459,8 +3505,8 @@ function resumeHeld(id){
   closeHeldModal();
   showToast('Order resumed');
 }
-function deleteHeld(id){
-  if(!confirm('Delete this held order?')) return;
+async function deleteHeld(id){
+  if(!(await uiConfirm('Delete this held order?'))) return;
   heldOrders = heldOrders.filter(function(h){ return h.id!==id; });
   _saveHeld();
   renderHeldList();
@@ -4057,7 +4103,7 @@ async function exportProductsCSV(){
   const sgt = new Date(new Date().getTime()+8*3600*1000);
   const todayStr = sgt.toISOString().slice(0,10);
   const monthStr = todayStr.slice(0,7);
-  const choice = prompt('Export products sold:\n1 = Today ('+todayStr+')\n2 = This month ('+monthStr+')\nOr type a past month as YYYY-MM (or a day as YYYY-MM-DD).','2');
+  const choice = await uiPrompt('Export products sold:\n1 = Today ('+todayStr+')\n2 = This month ('+monthStr+')\nOr type a past month as YYYY-MM (or a day as YYYY-MM-DD).','2');
   if(!choice) return;
   var c=choice.trim(), params, label;
   if(c==='1'){ params={date:todayStr}; label=todayStr; }
@@ -4085,7 +4131,7 @@ async function exportProductsCSV(){
 async function exportSalesCSV(){
   const today = new Date(); const sgt = new Date(today.getTime()+8*3600*1000);
   const todayStr = sgt.toISOString().slice(0,10);
-  const input = prompt('Export sales for date (YYYY-MM-DD):', todayStr);
+  const input = await uiPrompt('Export sales for date (YYYY-MM-DD):', todayStr);
   if(!input) return;
   const dateStr = input.trim();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ showToast('Invalid date format'); return; }
@@ -4112,7 +4158,7 @@ async function exportSalesCSV(){
 
 async function exportMonthlyCSV(){
   var _def=new Date(new Date().getTime()+8*3600*1000).toISOString().slice(0,7);
-  var month=prompt('Export which month?  (YYYY-MM)', _def);
+  var month=await uiPrompt('Export which month?  (YYYY-MM)', _def);
   if(month===null) return;
   month=(month||'').trim();
   if(!/^\d{4}-\d{2}$/.test(month)){ showToast('Enter the month as YYYY-MM, e.g. 2026-09'); return; }
@@ -4366,14 +4412,14 @@ window.addEventListener('online', function(){ if(Object.keys(_stockPending).leng
 document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible' && Object.keys(_stockPending).length) flushStockPending(null, true); });
 function initPOSListeners(){
 // Double-click a product card to mark it out of stock
-document.getElementById('product-grid').addEventListener('dblclick', function(e){
+document.getElementById('product-grid').addEventListener('dblclick', async function(e){
   const card = e.target.closest('.product-card');
   if(!card || e.target.closest('.stock-toggle-btn')) return;
   const pid = card.dataset.pid;
   if(!pid) return;
   const isAvail = stockStatus[pid] !== false;
   if(isAvail){
-    if(confirm('Mark "'+(PRODUCT_MAP[pid]||{name:pid}).name+'" as out of stock?')){
+    if(await uiConfirm('Mark "'+(PRODUCT_MAP[pid]||{name:pid}).name+'" as out of stock?')){
       toggleStock(pid, false);
     }
   }

@@ -1582,7 +1582,7 @@ function saveReceiptPDF(){
     });
     dash();y+=4;
     if(sale.discount>0||(sale.reward||0)>0){FT(false);doc.text('Subtotal',lm,y);FN(false);doc.text('$'+sale.subtotal.toFixed(2),rm,y,{align:'right'});y+=4;}
-    if(sale.discount>0){FT(false);doc.text('Discount',lm,y);FN(false);doc.text('-$'+sale.discount.toFixed(2),rm,y,{align:'right'});y+=4;}
+    if(sale.discount>0){FT(false);doc.text(sale.discountLabel||'Discount',lm,y);FN(false);doc.text('-$'+sale.discount.toFixed(2),rm,y,{align:'right'});y+=4;}
     if((sale.reward||0)>0){FT(false);doc.text(sale.rewardLabel||'Reward',lm,y);FN(false);doc.text('-$'+(sale.reward).toFixed(2),rm,y,{align:'right'});y+=4;}
     FT(true);doc.setFontSize(10);doc.text('Total Amount',lm,y);FN(true);doc.text('$'+sale.total.toFixed(2),rm,y,{align:'right'});y+=5;
     if((sale.bonusStamps||0)>0){doc.setFontSize(8);FT(false);doc.text('Bonus stamps earned: +'+sale.bonusStamps,lm,y);y+=4;doc.setFontSize(10);}
@@ -2022,7 +2022,7 @@ function buildReceiptLines(){
   lines.push(dashes());
   if(sale.discount>0||(sale.reward||0)>0){
     lines.push(right('Subtotal','$'+sale.subtotal.toFixed(2)));
-    if(sale.discount>0) lines.push(right('Discount','-$'+sale.discount.toFixed(2)));
+    if(sale.discount>0) lines.push(right(sale.discountLabel||'Discount','-$'+sale.discount.toFixed(2)));
     if((sale.reward||0)>0) lines.push(right(sale.rewardLabel||'Reward','-$'+(sale.reward).toFixed(2)));
   }
   lines.push(right('TOTAL','$'+sale.total.toFixed(2)));
@@ -2772,6 +2772,17 @@ async function lookupMember(){
 // Tier discount rates (match the app): Gold 5%, Platinum 10%, Diamond 15%. Case-insensitive.
 var POS_TIER_PCT = { member:0, gold:5, platinum:10, diamond:15 };
 function _tierPct(name){ return POS_TIER_PCT[String(name||'').trim().toLowerCase()] || 0; }
+// Discount label for receipts: manual (Tenant/Staff) label, or the member's tier, e.g. "Gold member disc (5%)".
+function _discLabelLive(){
+  if(window._manualDiscLabel) return window._manualDiscLabel;
+  if(memberDiscount>0){
+    var t=(currentMember && currentMember.tier) ? String(currentMember.tier).trim() : '';
+    if(!t){ t = memberDiscount===5?'Gold':memberDiscount===10?'Platinum':memberDiscount===15?'Diamond':''; }
+    if(t) t = t.charAt(0).toUpperCase()+t.slice(1).toLowerCase();
+    return (t?t+' member disc':'Member disc')+' ('+memberDiscount+'%)';
+  }
+  return 'Discount';
+}
 
 // Shared: load a found member into the sale (used by phone lookup AND name search)
 function selectFoundMember(member){
@@ -3644,6 +3655,7 @@ async function checkout(){
       items:cart.map(i=>({...i})),
       subtotal:sub,
       discount:disc,
+      discountLabel:(disc>0?_discLabelLive():''),
       reward:redeem,
       rewardLabel:(redeem>0?(window._redeemLabel||'Reward'):''),
       bonusStamps:(window._bonusStamps||0),
@@ -3686,6 +3698,7 @@ async function checkout(){
         items: JSON.stringify(cart.map(i=>({id:i.id,qty:i.qty,label:i.label,price:i.price,remark:i.remark||''}))),
         subtotal: sub.toFixed(2),
         discount: (disc+redeem).toFixed(2),
+        discountLabel: sale.discountLabel||'',
         total: total.toFixed(2),
         payment: sale.payment,
         member: sale.member||'',
@@ -3786,7 +3799,7 @@ function showReceipt(sale,changeDue,cashTendered){
     +'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div style="border-top:2px dashed #ddd;margin-top:6px;padding-top:8px">'
     +((disc>0||reward>0)?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px"><span>Subtotal</span><span class="rnum">$'+sale.subtotal.toFixed(2)+'</span></div>':'')
-    +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#27ae60;margin-bottom:3px"><span>Discount</span><span class="rnum">-$'+disc.toFixed(2)+'</span></div>':'')
+    +(disc>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#27ae60;margin-bottom:3px"><span>'+(sale.discountLabel||'Discount')+'</span><span class="rnum">-$'+disc.toFixed(2)+'</span></div>':'')
     +(reward>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#c9a24a;margin-bottom:3px"><span>'+rewardLabel+'</span><span class="rnum">-$'+reward.toFixed(2)+'</span></div>':'')
     +'<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;margin-bottom:6px"><span style="font-family:var(--brand)">Total Amount</span><span class="rnum" style="color:#E91E8C">$'+total.toFixed(2)+'</span></div>'
     +(bonusStamps>0?'<div style="display:flex;justify-content:space-between;font-size:11px;color:#2e8b57;margin-bottom:3px"><span>Bonus stamps earned</span><span class="rnum">+'+bonusStamps+'</span></div>':'')

@@ -2772,6 +2772,18 @@ async function lookupMember(){
 // Tier discount rates (match the app): Gold 5%, Platinum 10%, Diamond 15%. Case-insensitive.
 var POS_TIER_PCT = { member:0, gold:5, platinum:10, diamond:15 };
 function _tierPct(name){ return POS_TIER_PCT[String(name||'').trim().toLowerCase()] || 0; }
+function _tierMeta(tier){
+  var t=String(tier||'').trim().toLowerCase();
+  if(t==='diamond')  return {name:'Diamond',  pct:15, color:'#2f8fb0', bg:'#e3f4fa'};
+  if(t==='platinum') return {name:'Platinum', pct:10, color:'#5f6b78', bg:'#edf0f3'};
+  if(t==='gold')     return {name:'Gold',     pct:5,  color:'#a9791a', bg:'#fbf1d2'};
+  return {name:'Member', pct:0, color:'#777777', bg:'#eeeeee'};
+}
+function _tierBadge(tier){
+  var m=_tierMeta(tier);
+  var label = m.pct>0 ? (m.name+' \u00b7 '+m.pct+'% off') : m.name;
+  return '<span style="display:inline-block;padding:1px 8px;border-radius:999px;font-size:10px;font-weight:700;background:'+m.bg+';color:'+m.color+';white-space:nowrap">'+label+'</span>';
+}
 // Discount label for receipts: manual (Tenant/Staff) label, or the member's tier, e.g. "Gold member disc (5%)".
 function _discLabelLive(){
   if(window._manualDiscLabel) return window._manualDiscLabel;
@@ -2805,12 +2817,12 @@ function applyMemberTierDiscount(member){
   var phone = member && member.phone ? np(member.phone) : '';
   if(!phone) return;
   // If the member object already carries a tier, apply it at once (no flicker).
-  if(member.tier){ memberDiscount = _tierPct(member.tier); updateTotals(); }
+  if(member.tier){ memberDiscount = _tierPct(member.tier); if(currentMember) currentMember.tier=member.tier; updateTotals(); updateCartMember(); }
   apiGet({action:'getMemberTier', phone:phone})
     .then(function(r){
       var pct = _tierPct(r && r.tier);
       // Apply only if this member is still the one attached to the sale.
-      if(currentMember && np(currentMember.phone)===phone){ memberDiscount = pct; updateTotals(); }
+      if(currentMember && np(currentMember.phone)===phone){ memberDiscount = pct; if(r&&r.tier) currentMember.tier=r.tier; updateTotals(); updateCartMember(); var _mr=document.getElementById('member-result'); if(_mr && _mr.style.display!=='none') showMemberDisplay(currentMember); }
     })
     .catch(function(){});
 }
@@ -2875,6 +2887,7 @@ function showMemberDisplay(m){
     +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+first+' '+last+'</div>'
     +'<div style="font-size:11px;color:#888">'+(m.phone||'')+'</div>'
     +'<div style="font-size:11px;color:#8fcea1;margin-top:2px">'+stamps+'/9 stamps'+(completed>0?' · '+completed+' completed':'')+'</div>'
+    +'<div style="margin-top:4px">'+_tierBadge(m.tier)+'</div>'
     +(stamps>=9?'<div style="font-size:11px;color:#e67e22;font-weight:700">Card complete!</div>':'')
     +'</div></div>';
   // Load purchase history from localStorage
@@ -3290,7 +3303,7 @@ document.addEventListener('change', function(e){
 });
 
 // ── CART ─────────────────────────────────────────────────────────────
-function updateCartMember(){ var el=document.getElementById('cart-member'); if(!el) return; if(currentMember && ((currentMember.first||'')+(currentMember.last||'')).trim()){ el.innerHTML='<i class="ti ti-user"></i> '+((currentMember.first||'')+' '+(currentMember.last||'')).trim(); el.style.display=''; } else { el.textContent=''; el.style.display='none'; } }
+function updateCartMember(){ var el=document.getElementById('cart-member'); if(!el) return; if(currentMember && ((currentMember.first||'')+(currentMember.last||'')).trim()){ el.innerHTML='<i class="ti ti-user"></i> '+((currentMember.first||'')+' '+(currentMember.last||'')).trim()+' '+_tierBadge(currentMember.tier); el.style.display=''; } else { el.textContent=''; el.style.display='none'; } }
 function renderCart(){
   updateCartMember();
   const el=document.getElementById('cart-items');

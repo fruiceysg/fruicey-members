@@ -3622,8 +3622,8 @@ function renderFreeItemPicker(){
   html += '<button class="prize-item clear" onclick="renderPrizeList()">Back</button>';
   document.getElementById('prize-list').innerHTML=html;
 }
-function selectFreeItem(idx){ var i=cart[idx]; if(!i) return; window._redeemOffset=+(Number(i.price)||0).toFixed(2); window._redeemLabel='Free: '+i.label; closePrizeModal(); updateTotals(); showToast('Free '+i.label+' applied'); }
-function clearReward(){ window._redeemOffset=0; window._redeemLabel=''; window._bonusStamps=0; closePrizeModal(); updateTotals(); showToast('Reward cleared'); }
+function selectFreeItem(idx){ var i=cart[idx]; if(!i) return; i._freeRedeem=true; window._redeemOffset=+(Number(i.price)||0).toFixed(2); window._redeemLabel='Free: '+i.label; closePrizeModal(); updateTotals(); showToast('Free '+i.label+' applied'); }
+function clearReward(){ window._redeemOffset=0; window._redeemLabel=''; window._bonusStamps=0; cart.forEach(function(it){ if(it) delete it._freeRedeem; }); closePrizeModal(); updateTotals(); showToast('Reward cleared'); }
 // ── CHECKOUT ─────────────────────────────────────────────────────────
 async function checkout(){
   if(!cart.length){showToast('Cart is empty');return;}
@@ -3739,7 +3739,7 @@ async function checkout(){
         }).catch(()=>{});
 
         // One stamp per product tendered, EXCEPT Custom Fruit (juCF) which does not earn stamps.
-        const stampQty = cart.reduce(function(s,i){ return (NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) ? s : s + (parseInt(i.qty)||1); }, 0) + (window._bonusStamps||0);
+        const stampQty = cart.reduce(function(s,i){ if(NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) return s; var units=(parseInt(i.qty)||1) - (i._freeRedeem?1:0); return s + Math.max(0, units); }, 0) + (window._bonusStamps||0);
         if(stampQty > 0){
           await apiPost({
             action:'addStampsForSale',

@@ -1836,7 +1836,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <footer class="home-footer">
     <div>Born in Singapore</div>
     <div>&copy; 2026 Fruicey Singapore</div>
-    <div class="home-footer-tag">Refreshing Ideas<br>Powered by Fresh Start</div>
+    <div class="home-footer-tag">Refreshing ideas, Fresh possibilities<br>Powered by Nextfoundry</div>
   </footer>
 </div>
 
@@ -8743,7 +8743,7 @@ function _buildProgressPDF(){
   var lines=doc.splitTextToSize(disc, W-m*2);
   doc.text(lines, m, y); y+=lines.length*12+14;
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(28,77,58);
-  doc.text('Refreshing Ideas, Powered by Fresh Start', m, y);
+  doc.text(['Refreshing ideas, Fresh possibilities','Powered by Nextfoundry'], m, y);
   doc.save('fruicey-nutri-progress-'+new Date().toISOString().slice(0,10)+'.pdf');
   showToast('Your progress PDF has been downloaded');
 }

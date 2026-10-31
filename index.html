@@ -1804,20 +1804,16 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
     <div class="home-reviews" id="home-reviews"></div>
   </div>
 
-  <div class="marquee marquee-joinbelow" aria-label="Honestly Healthy, Hygiene, Fresh Made, Always Learning, Not an Outsourced Wellness, It's Personal">
+  <div class="marquee marquee-joinbelow" aria-label="Honestly Healthy & Hygiene, Freshly Made, Learning Daily, Not an Outsourced Wellness">
     <div class="marquee-track" aria-hidden="true">
-      <span class="marquee-item">Honestly Healthy</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">Hygiene</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">Fresh Made</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">Always Learning</span><span class="marquee-sep">&bull;</span>
+      <span class="marquee-item">Honestly Healthy &amp; Hygiene</span><span class="marquee-sep">&bull;</span>
+      <span class="marquee-item">Freshly Made</span><span class="marquee-sep">&bull;</span>
+      <span class="marquee-item">Learning Daily</span><span class="marquee-sep">&bull;</span>
       <span class="marquee-item">Not an Outsourced Wellness</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">It&rsquo;s Personal</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">Honestly Healthy</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">Hygiene</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">Fresh Made</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">Always Learning</span><span class="marquee-sep">&bull;</span>
+      <span class="marquee-item">Honestly Healthy &amp; Hygiene</span><span class="marquee-sep">&bull;</span>
+      <span class="marquee-item">Freshly Made</span><span class="marquee-sep">&bull;</span>
+      <span class="marquee-item">Learning Daily</span><span class="marquee-sep">&bull;</span>
       <span class="marquee-item">Not an Outsourced Wellness</span><span class="marquee-sep">&bull;</span>
-      <span class="marquee-item">It&rsquo;s Personal</span><span class="marquee-sep">&bull;</span>
     </div>
   </div>
 
@@ -1840,7 +1836,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <footer class="home-footer">
     <div>Born in Singapore</div>
     <div>&copy; 2026 Fruicey Singapore</div>
-    <div class="home-footer-tag">Refreshing Ideas, Fruicey Powered</div>
+    <div class="home-footer-tag">Refreshing Ideas, Powered by Fresh Start</div>
   </footer>
 </div>
 
@@ -8042,12 +8038,16 @@ async function redeemPotPrize(prizeId){
   if(!confirm('Redeem this prize now? Only tap once our crew has given you your prize in store.')) return;
   try{
     const res=await apiPost({action:'redeemPrize',phone:np(currentUser.phone),prizeId:prizeId});
-    if(res.success) showToast('Prize redeemed!');
+    if(res.success){
+      if(res.stampsAdded>0) showToast(res.stampsAdded+' stamp'+(res.stampsAdded>1?'s':'')+' added to your card!');
+      else showToast('Prize redeemed!');
+    }
     else if(res.error==='prize_expired') showToast('This prize has expired.');
     else showToast('Could not redeem. Please try again.');
   }catch(e){ showToast('Connection error.'); }
   const updated=await apiGet({action:'getStampCard',phone:np(currentUser.phone)}).catch(()=>null);
   if(updated&&updated.member) stampMember=updated.member;
+  loadRewards();                       // re-render the visible stamp card (shows the added stamps)
   renderPotOfGold(currentUser.phone);
   updatePotBadgeApp(currentUser.phone);
 }
@@ -8743,7 +8743,7 @@ function _buildProgressPDF(){
   var lines=doc.splitTextToSize(disc, W-m*2);
   doc.text(lines, m, y); y+=lines.length*12+14;
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(28,77,58);
-  doc.text('Refreshing Ideas, Fruicey Powered', m, y);
+  doc.text('Refreshing Ideas, Powered by Fresh Start', m, y);
   doc.save('fruicey-nutri-progress-'+new Date().toISOString().slice(0,10)+'.pdf');
   showToast('Your progress PDF has been downloaded');
 }

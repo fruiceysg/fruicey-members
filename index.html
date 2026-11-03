@@ -4875,10 +4875,16 @@ function fbSetTab(tab){
   document.querySelectorAll('#scr-fruitbox .fb-tab').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===tab); });
   var footer = document.querySelector('#scr-fruitbox .fb-footer');
   if(footer) footer.style.display = tab==='personalised' ? 'flex' : 'none';   // footer belongs to the builder only
+  if(tab==='personalised') requestAnimationFrame(fbHiwReset);   // steps carousel always starts at step 1
   window.scrollTo(0,0);
 }
 
 // "How it works" steps carousel (personalised box)
+function fbHiwReset(){
+  var t=document.getElementById('fb-hiw-track'); if(!t) return;
+  t.scrollLeft=0;
+  document.querySelectorAll('#fb-hiw-dots .fb-hiw-dot').forEach(function(d,idx){ d.classList.toggle('active', idx===0); });
+}
 function fbHiwGo(i){
   var t=document.getElementById('fb-hiw-track'); if(!t||!t.children[i]) return;
   t.scrollTo({ left: t.children[i].offsetLeft - t.offsetLeft, behavior:'smooth' });

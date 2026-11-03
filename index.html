@@ -474,6 +474,19 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 .fb-body{padding:16px 16px 110px}
 .fb-intro{font-size:13px;color:var(--text2);line-height:1.6;margin:4px 4px 16px;text-align:center}
 .fb-hero-img{width:100%;height:auto;border-radius:12px;display:block;margin:4px 0 16px}
+/* Personalised-box "How it works" steps carousel */
+.fb-hiw{border:1px solid var(--border);border-radius:var(--r);padding:16px 14px 14px;margin:0 0 16px;background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.fb-hiw-h{font-family:var(--font);font-size:22px;color:var(--green-dark);margin:0 0 12px;letter-spacing:.3px}
+.fb-hiw-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+.fb-hiw-track::-webkit-scrollbar{display:none}
+.fb-hiw-step{flex:0 0 86%;scroll-snap-align:center;border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff;position:relative;box-sizing:border-box}
+.fb-hiw-num{position:absolute;top:10px;left:10px;width:30px;height:30px;border-radius:50%;background:var(--green-dark);color:#fff;font-family:var(--num);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.fb-hiw-img{width:100%;height:160px;object-fit:contain;border-radius:10px;display:block;margin:6px 0 12px;background:var(--green-light)}
+.fb-hiw-step-t{font-family:var(--font);font-size:17px;color:var(--green-dark);text-align:center;margin:0 0 6px}
+.fb-hiw-step-d{font-family:var(--body);font-size:13px;color:#555;text-align:center;line-height:1.5;margin:0}
+.fb-hiw-dots{display:flex;justify-content:center;gap:7px;margin-top:12px}
+.fb-hiw-dot{width:9px;height:9px;border-radius:50%;background:#d9e5df;border:none;padding:0;cursor:pointer;transition:background .2s,width .2s}
+.fb-hiw-dot.active{background:var(--green-dark);width:22px;border-radius:999px}
 .fb-box-row{display:flex;gap:12px;margin-bottom:16px}
 .fb-box-opt{flex:1;background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:14px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--body);transition:all .15s}
 .fb-box-opt.active{border-color:var(--green)}
@@ -2180,6 +2193,35 @@ Whether you&rsquo;re sipping a clarity blend, exploring our vibrant retail space
     <div class="fb-illus">Images are for illustration purposes only</div>
     <div id="fb-tab-personalised">
     <img class="fb-hero-img" src="fruitbox-hero.jpg" alt="Fruicey Fruit Box" loading="lazy" onerror="this.style.display='none'">
+
+    <div class="fb-hiw">
+      <h3 class="fb-hiw-h">How it works</h3>
+      <div class="fb-hiw-track" id="fb-hiw-track" onscroll="fbHiwSync()">
+        <div class="fb-hiw-step">
+          <div class="fb-hiw-num">1</div>
+          <img class="fb-hiw-img" src="howitworks-1.jpg" alt="Choose your box" loading="lazy" onerror="this.style.visibility='hidden'">
+          <div class="fb-hiw-step-t">Choose Your Box</div>
+          <p class="fb-hiw-step-d">Pick the Fruicey Box (16 slots) or the Jumbo Box (32 slots) to suit the occasion.</p>
+        </div>
+        <div class="fb-hiw-step">
+          <div class="fb-hiw-num">2</div>
+          <img class="fb-hiw-img" src="howitworks-2.jpg" alt="Fill with your fruits" loading="lazy" onerror="this.style.visibility='hidden'">
+          <div class="fb-hiw-step-t">Fill With Your Fruits</div>
+          <p class="fb-hiw-step-d">Choose your favourite seasonal fruits for every slot, and pop in a cold press for $1 off.</p>
+        </div>
+        <div class="fb-hiw-step">
+          <div class="fb-hiw-num">3</div>
+          <img class="fb-hiw-img" src="howitworks-3.jpg" alt="Checkout and enjoy" loading="lazy" onerror="this.style.visibility='hidden'">
+          <div class="fb-hiw-step-t">Checkout &amp; Enjoy</div>
+          <p class="fb-hiw-step-d">We hand-pack it fresh. Self-collect in store or have it delivered to your door.</p>
+        </div>
+      </div>
+      <div class="fb-hiw-dots" id="fb-hiw-dots">
+        <button class="fb-hiw-dot active" onclick="fbHiwGo(0)" aria-label="Step 1"></button>
+        <button class="fb-hiw-dot" onclick="fbHiwGo(1)" aria-label="Step 2"></button>
+        <button class="fb-hiw-dot" onclick="fbHiwGo(2)" aria-label="Step 3"></button>
+      </div>
+    </div>
 
     <div class="fb-box-row">
       <button class="fb-box-opt active" data-box="16" onclick="fbSetBox('16')">
@@ -4834,6 +4876,18 @@ function fbSetTab(tab){
   var footer = document.querySelector('#scr-fruitbox .fb-footer');
   if(footer) footer.style.display = tab==='personalised' ? 'flex' : 'none';   // footer belongs to the builder only
   window.scrollTo(0,0);
+}
+
+// "How it works" steps carousel (personalised box)
+function fbHiwGo(i){
+  var t=document.getElementById('fb-hiw-track'); if(!t||!t.children[i]) return;
+  t.scrollTo({ left: t.children[i].offsetLeft - t.offsetLeft, behavior:'smooth' });
+}
+function fbHiwSync(){
+  var t=document.getElementById('fb-hiw-track'); if(!t||!t.children.length) return;
+  var w=t.children[0].offsetWidth+12;   // card width + gap
+  var i=Math.max(0, Math.min(t.children.length-1, Math.round(t.scrollLeft/w)));
+  document.querySelectorAll('#fb-hiw-dots .fb-hiw-dot').forEach(function(d,idx){ d.classList.toggle('active', idx===i); });
 }
 
 // Ready gifts — a fruitbox- id makes them follow every fruit-box rule

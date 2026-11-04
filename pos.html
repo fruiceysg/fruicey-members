@@ -1580,6 +1580,7 @@ function saveReceiptPDF(){
       FT(false);doc.text(w,lm+9,y);
       FN(false);doc.text(String(item.qty),lm+53,y,{align:'center'});doc.text(amt,rm,y,{align:'right'});
       y+=w.length*4+1;
+      if(item.remark){ doc.setFontSize(6.5);doc.setTextColor(120,120,120);FT(false);var rw=doc.splitTextToSize('- '+String(item.remark),42);doc.text(rw,lm+9,y);y+=rw.length*3+1;doc.setFontSize(8);doc.setTextColor(0,0,0); }
     });
     dash();y+=4;
     if(sale.discount>0||(sale.reward||0)>0||(sale.bdayFree||0)>0){FT(false);doc.text('Subtotal',lm,y);FN(false);doc.text('$'+sale.subtotal.toFixed(2),rm,y,{align:'right'});y+=4;}
@@ -2019,6 +2020,7 @@ function buildReceiptLines(){
   sale.items.forEach(function(item, i){
     var amt = isO ? '$0.00' : '$'+(item.price*item.qty).toFixed(2);
     lines.push((i+1)+'. '+(item.label||'').slice(0,W-3));
+    if(item.remark){ lines.push('   - '+String(item.remark).slice(0,W-4)); }
     lines.push(right('  x'+item.qty, amt));
   });
   lines.push(dashes());

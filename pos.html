@@ -418,7 +418,6 @@ body{font-family:var(--font);background:#f0f2f5;color:#111;height:100dvh;display
           <button type="button" class="pos-misc-btn" onclick="openMiscModal()">+ Misc</button>
           <button type="button" class="pos-disc-btn" data-pct="5" onclick="setManualDisc(5,'Tenant 5% off')">Tenant 5%</button>
           <button type="button" class="pos-disc-btn" data-pct="10" onclick="setManualDisc(10,'Staff 10% off')">Staff 10%</button>
-          <button type="button" class="pos-disc-btn" data-pct="0" onclick="setManualDisc(0,'')">No disc.</button>
         </div>
         <button type="button" class="pos-redeem-btn" onclick="openPrizeModal()">Redeem Wheel Prize</button>
         <button type="button" class="pos-redeem-btn" id="bday-free-btn" style="display:none;background:#fff0f7;border-color:#d6418c;color:#d6418c" onclick="openBdayPicker()">🎂 Choose Birthday Free Item</button>
@@ -3442,8 +3441,17 @@ function _applyDisc(sub){
   return {disc:+(sub-total).toFixed(2), total:total};
 }
 function setManualDisc(pct,label){
-  memberDiscount=pct; window._manualDisc = pct>0; window._manualDiscLabel = label||'';
-  document.querySelectorAll('.pos-disc-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.pct===String(pct)); });
+  var btn=document.querySelector('.pos-disc-btn[data-pct="'+pct+'"]');
+  var isActive = btn && btn.classList.contains('active');
+  if(isActive){
+    // Tap an active button again to de-apply it — revert to the attached member's tier discount (or none).
+    window._manualDisc=false; window._manualDiscLabel='';
+    memberDiscount = (currentMember && currentMember.tier) ? _tierPct(currentMember.tier) : 0;
+    document.querySelectorAll('.pos-disc-btn').forEach(function(b){ b.classList.remove('active'); });
+  } else {
+    memberDiscount=pct; window._manualDisc=true; window._manualDiscLabel=label||'';
+    document.querySelectorAll('.pos-disc-btn').forEach(function(b){ b.classList.toggle('active', b===btn); });
+  }
   updateTotals();
 }
 // ── MISC: add a card charge / topping / custom line (positive amount) to the order ──

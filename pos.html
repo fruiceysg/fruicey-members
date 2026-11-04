@@ -2561,7 +2561,7 @@ async function updateAppOrderStatus(orderId, newStatus){
               let stampItems = [];
               try{ stampItems = typeof o.items==='string' ? JSON.parse(o.items) : (o.items||[]); }catch(e){}
               // One stamp per product, EXCEPT Custom Fruit (juCF) which does not earn stamps.
-              const stampQty = stampItems.reduce(function(s,i){ return (NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) ? s : s + (parseInt(i.qty)||1); }, 0);
+              const stampQty = stampItems.reduce(function(s,i){ return (NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'')==='misc' || i.misc || String(i.id||'').indexOf('fruitbox-')===0) ? s : s + (parseInt(i.qty)||1); }, 0);
               if(stampQty > 0){
                 let handled = false;
                 try{
@@ -3799,7 +3799,7 @@ async function checkout(){
         // One stamp per product tendered, EXCEPT Custom Fruit (juCF) which does not earn stamps.
         // A redeemed free item and the birthday-free item don't earn a stamp; Diamond members earn
         // double stamps during their birthday month.
-        var _earned = cart.reduce(function(s,i,ix){ if(NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'').indexOf('fruitbox-')===0) return s; var units=(parseInt(i.qty)||1) - (i._freeRedeem?1:0) - ((bfree.idx===ix)?1:0); return s + Math.max(0, units); }, 0);
+        var _earned = cart.reduce(function(s,i,ix){ if(NO_STAMP_IDS.indexOf(String(i.id))!==-1 || String(i.id||'')==='misc' || i.misc || String(i.id||'').indexOf('fruitbox-')===0) return s; var units=(parseInt(i.qty)||1) - (i._freeRedeem?1:0) - ((bfree.idx===ix)?1:0); return s + Math.max(0, units); }, 0);
         if(window._bdayDoubleStamps) _earned = _earned*2;
         const stampQty = _earned + (window._bonusStamps||0);
         if(stampQty > 0){

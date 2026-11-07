@@ -9703,7 +9703,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </div>
 
 <!-- AI CHAT WIDGET (embeds the self-contained widget; it resizes via postMessage) -->
-<iframe id="fq-embed" src="https://fruiceysg.github.io/fruicey-chat/?v=2" title="Fruicey Assistant" allow="clipboard-write"></iframe>
+<iframe id="fq-embed" src="https://fruiceysg.github.io/fruicey-chat/?v=3" title="Fruicey Assistant" allow="clipboard-write"></iframe>
 
 <!-- FULLSCREEN BUTTON -->
 <button id="lang-btn" class="notranslate" onclick="toggleLangMenu(event)" title="Language"><i class="ti ti-language"></i></button>
@@ -9856,6 +9856,19 @@ document.addEventListener('DOMContentLoaded', function(){
 
   function init(){ updateUI(); if(cur!=='en'){ everTranslated=true; apply(); } else { connect(); } }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+
+<!-- Relay the current language to the AI chatbot iframe (cross-origin, so it listens for this message) -->
+<script>
+(function(){
+  function sendLang(){
+    var f=document.getElementById('fq-embed');
+    if(f && f.contentWindow){ try{ f.contentWindow.postMessage({type:'fq-lang', lang:(window.__lang||'en')}, '*'); }catch(e){} }
+  }
+  if(window.onLangChange) window.onLangChange(sendLang);   // fires whenever the language switches
+  var f=document.getElementById('fq-embed');
+  if(f) f.addEventListener('load', sendLang);              // also sync once the chatbot finishes loading
 })();
 </script>
 </body>

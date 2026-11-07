@@ -4369,7 +4369,7 @@ function _runImgQueue(){
 // Fill any .loader-spinner with staggered letter spans: h a r v e s t i n g . . .
 function fillHarvest(root){
   var scope = root || document;
-  var word = (function(){ var L=(window.__lang)||(function(){try{return localStorage.getItem('fruicey_lang');}catch(e){return null;}})()||'en'; return L==='zh'?'采收中...':L==='ja'?'収穫中...':'harvesting...'; })();
+  var word = (function(){ var L=(window.__lang)||'en'; return L==='zh'?'采收中...':L==='ja'?'収穫中...':'harvesting...'; })();
   scope.querySelectorAll('.loader-spinner').forEach(function(sp){
     if(sp.dataset.filled) return;
     sp.dataset.filled = '1';
@@ -9725,7 +9725,7 @@ document.addEventListener('DOMContentLoaded', function(){
 <script>
 (function(){
   var LANG_KEY='fruicey_lang';
-  var cur='en'; try{ cur=localStorage.getItem(LANG_KEY)||'en'; }catch(e){}
+  var cur='en';   // English is always the default on every load/refresh; the choice is not restored across visits
   window.__lang=cur;
   var DICT=window.I18N||{zh:{},ja:{}};
   var ATTRS=['placeholder','title','aria-label'];

@@ -9815,6 +9815,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if(node.nodeType===3){ if(!skip(node.parentNode)) doText(node); }
         else if(node.nodeType===1){ if(skip(node)) continue; walkText(node); walkAttrs(node); }
       }
+      if(cur==='zh') applyImgLang(cur);   // swap any newly-rendered images too
     } finally { applying=false; connect(); }
   }
 
@@ -9837,11 +9838,36 @@ document.addEventListener('DOMContentLoaded', function(){
     for(var i=0;i<btns.length;i++) btns[i].classList.toggle('active', btns[i].getAttribute('data-lang')===cur);
   }
 
+  // ── Per-language IMAGE swapping (text baked into .jpg graphics) ──────────────
+  // For a local image feature1.jpg, Chinese loads feature1-zh.jpg IF it exists,
+  // otherwise it silently keeps the English image. Preloaded first, so no flicker
+  // and no broken image when a translated file hasn't been uploaded. (Japanese is
+  // intentionally left on the English images for now.)
+  function _imgEnglishBase(src){ var m=src.match(/^(.*?)(?:-(?:zh|ja))?(\.jpg)(\?.*)?$/i); return m ? (m[1]+m[2]) : src; }
+  function applyImgLang(lang){
+    var imgs=document.getElementsByTagName('img');
+    for(var i=0;i<imgs.length;i++){
+      var im=imgs[i], cur0=im.getAttribute('src')||'';
+      if(!im.__i18nBase){
+        if(!/\.jpg(\?.*)?$/i.test(cur0)) continue;                     // only .jpg files
+        if(/^(https?:)?\/\//i.test(cur0) || cur0.indexOf('data:')===0) continue;  // skip external / inline
+        im.__i18nBase=_imgEnglishBase(cur0);
+      }
+      var base=im.__i18nBase;
+      if(lang==='zh'){
+        (function(el,zh){ var pre=new Image(); pre.onload=function(){ if(window.__lang==='zh' && el.getAttribute('src')!==zh) el.setAttribute('src',zh); }; pre.src=zh; })(im, base.replace(/(\.jpg)$/i,'-zh$1'));
+      } else {
+        if(im.getAttribute('src')!==base) im.setAttribute('src',base);   // English (and, for now, Japanese)
+      }
+    }
+  }
+  window.applyImgLang=applyImgLang;
+
   window.onLangChange=function(fn){ (window.__i18nHooks=window.__i18nHooks||[]).push(fn); };
   window.setLang=function(lang){
     cur=lang; window.__lang=lang; everTranslated=true;
     try{ localStorage.setItem(LANG_KEY,lang); }catch(e){}
-    apply(); closeLangMenu();
+    apply(); applyImgLang(cur); closeLangMenu();
     var hk=window.__i18nHooks||[]; for(var i=0;i<hk.length;i++){ try{ hk[i](cur); }catch(e){} }
   };
   window.toggleLangMenu=function(e){ if(e){e.stopPropagation();} var m=document.getElementById('lang-menu'); if(m) m.classList.toggle('open'); };

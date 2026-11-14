@@ -2849,8 +2849,10 @@ function applyMemberTierDiscount(member){
 
 // Search members by name (client-side filter over getAllStampCards)
 async function lookupMemberByName(){
-  const q=(document.getElementById('member-name-input').value||'').trim().toLowerCase();
-  if(!q){ showToast('Enter a name'); return; }
+  const norm=function(s){ return (s||'').toLowerCase().replace(/\s+/g,''); };   // case- & space-insensitive
+  const raw=(document.getElementById('member-name-input').value||'').trim();
+  if(!raw){ showToast('Enter a name'); return; }
+  const q=norm(raw);
   const btn=document.getElementById('name-search-btn'); const old=btn.textContent; btn.textContent='...'; btn.disabled=true;
   let _single=null;
   try{
@@ -2858,8 +2860,8 @@ async function lookupMemberByName(){
     if(res && res.error){ showToast('Member search failed: '+res.error); const box0=document.getElementById('member-name-results'); if(box0){box0.style.display='none';} btn.textContent=old; btn.disabled=false; return; }
     const all=(res&&res.members)?res.members:[];
     const matches=all.filter(function(m){
-      const full=((m.first||'')+' '+(m.last||'')).toLowerCase();
-      return full.indexOf(q)!==-1 || (m.first||'').toLowerCase().indexOf(q)!==-1 || (m.last||'').toLowerCase().indexOf(q)!==-1;
+      const full=norm((m.first||'')+(m.last||''));
+      return full.indexOf(q)!==-1 || norm(m.first).indexOf(q)!==-1 || norm(m.last).indexOf(q)!==-1;
     });
     const box=document.getElementById('member-name-results');
     if(matches.length===0){ if(box){box.style.display='none';box.innerHTML='';} showToast('No member found'); }

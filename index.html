@@ -56,6 +56,21 @@
 }
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style id="zh-font">
+/* Chinese display font (Yixin Dotted) — applied only when 中文 is selected */
+@font-face{
+  font-family:'YixinDotted';
+  src:url('Yixin_Dotted.woff2') format('woff2'), url('Yixin_Dotted.ttf') format('truetype');
+  font-weight:normal; font-style:normal; font-display:swap;
+}
+:root[lang="zh"] body, :root[lang="zh"] body *{
+  font-family:'YixinDotted','PingFang SC','Microsoft YaHei',sans-serif !important;
+}
+/* keep the Tabler icon glyphs on their own font (don't let the Chinese font override them) */
+:root[lang="zh"] .ti,
+:root[lang="zh"] [class^="ti-"],
+:root[lang="zh"] [class*=" ti-"]{ font-family:'tabler-icons' !important; }
+</style>
 <!-- Firebase (Firestore) — live backend, running alongside Apps Script during migration -->
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>

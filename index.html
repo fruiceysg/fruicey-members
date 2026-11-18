@@ -160,6 +160,11 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .nav-tab.active{color:var(--green)}
 .nav-tab i{font-size:36px}
 .nav-tab span{font-size:12.5px;font-weight:500}
+/* Light blink hint on a bottom-nav tab when its matching home feature hits mid-screen */
+@keyframes navHintPulse{0%,100%{opacity:.5}50%{opacity:1;color:var(--green)}}
+.nav-tab.nav-hint{animation:navHintPulse 1.7s ease-in-out infinite}
+.nav-tab.nav-hint.active{animation:none}
+@media (prefers-reduced-motion:reduce){.nav-tab.nav-hint{animation:none}}
 .nav-burger{display:none}
 
 /* SCREENS */
@@ -625,13 +630,14 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 /* MENU */
 .cat-tabs{display:flex;overflow-x:auto;padding:10px 16px;gap:8px;background:#fff;border-bottom:1px solid var(--border);scrollbar-width:none}
 /* Swipe-to-flip-pages hint arrows — phone only, slow blink, don't block taps/swipes */
-.swipe-hint{position:fixed;top:60%;transform:translateY(-50%);z-index:40;pointer-events:none;
-  width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;
-  background:rgba(0,0,0,.16);color:#fff;font-size:22px;line-height:1;
+.swipe-hint{position:fixed;top:50%;transform:translateY(-50%);z-index:40;pointer-events:none;
+  color:var(--green);font-size:30px;line-height:1;display:none;
+  text-shadow:0 1px 3px rgba(255,255,255,.55);
   animation:swipeHintBlink 3.4s ease-in-out infinite}
-.swipe-hint-left{left:6px}
-.swipe-hint-right{right:6px}
-.swipe-hint.hide{display:none}
+body:has(#scr-menu.active) .swipe-hint{display:block}
+.swipe-hint-left{left:8px}
+.swipe-hint-right{right:8px}
+.swipe-hint.hide{display:none!important}
 @keyframes swipeHintBlink{0%,100%{opacity:.04}50%{opacity:.5}}
 @media (prefers-reduced-motion:reduce){.swipe-hint{animation:none;opacity:.3}}
 @media (min-width:900px){.swipe-hint{display:none!important}}
@@ -1544,6 +1550,11 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <button class="nav-tab nav-burger" onclick="openDrawer()" aria-label="More"><i class="ti ti-menu-2"></i><span>More</span></button>
 </nav>
 
+<!-- Phone-only swipe hint: slow-blinking chevrons pinned to the viewport middle (body-level so a
+     screen transform can't make them scroll). Shown only while the Menu screen is active. -->
+<div id="swipe-hint-left"  class="swipe-hint swipe-hint-left notranslate"  aria-hidden="true"><i class="ti ti-chevron-left"></i></div>
+<div id="swipe-hint-right" class="swipe-hint swipe-hint-right notranslate" aria-hidden="true"><i class="ti ti-chevron-right"></i></div>
+
 <!-- ═══ HOME ═══ -->
 <div class="screen" id="scr-home">
 
@@ -2137,9 +2148,6 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <div id="cat-tabs" class="cat-tabs"></div>
   </div><!-- /home-topbar -->
   <div id="product-grid" class="product-grid"></div>
-  <!-- Phone-only hint: swipe left/right to flip menu pages (categories) -->
-  <div id="swipe-hint-left"  class="swipe-hint swipe-hint-left notranslate"  aria-hidden="true"><i class="ti ti-chevron-left"></i></div>
-  <div id="swipe-hint-right" class="swipe-hint swipe-hint-right notranslate" aria-hidden="true"><i class="ti ti-chevron-right"></i></div>
 </div>
 
 <!-- ═══ STORY ═══ -->
@@ -9519,6 +9527,31 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }, {passive:true});
 });
+
+// ── HOME → BOTTOM-NAV HINT ───────────────────────────────────
+// When a home feature scrolls to the middle of the screen, lightly blink the bottom-nav
+// tab it leads to, hinting where to tap: Shakes & Smoothies feature → Menu, Rewards feature
+// → Rewards. The -50%/-50% rootMargin collapses the observer root to the viewport's centre
+// line, so a tab hints exactly while its feature crosses mid-screen and stops when it leaves.
+(function(){
+  function initNavHints(){
+    if(!('IntersectionObserver' in window)) return;
+    var map=[ {el:document.querySelector('.feat1'), tab:document.getElementById('nav-menu')},
+              {el:document.querySelector('.feat3'), tab:document.getElementById('nav-rewards')} ]
+            .filter(function(m){ return m.el && m.tab; });
+    if(!map.length) return;
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(ent){
+        var m=map.find(function(x){ return x.el===ent.target; });
+        if(!m) return;
+        m.tab.classList.toggle('nav-hint', ent.isIntersecting);
+      });
+    }, { rootMargin:'-50% 0px -50% 0px', threshold:0 });
+    map.forEach(function(m){ io.observe(m.el); });
+  }
+  if(document.readyState!=='loading') initNavHints();
+  else document.addEventListener('DOMContentLoaded', initNavHints);
+})();
 
 // ── Gifts tab image carousels (tappable dots + scroll sync) ──
 function initGiftCarousels(){

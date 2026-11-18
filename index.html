@@ -624,6 +624,17 @@ body.has-cart #fq-embed:not(.open){bottom:calc(var(--nav) + 60px)}
 
 /* MENU */
 .cat-tabs{display:flex;overflow-x:auto;padding:10px 16px;gap:8px;background:#fff;border-bottom:1px solid var(--border);scrollbar-width:none}
+/* Swipe-to-flip-pages hint arrows — phone only, slow blink, don't block taps/swipes */
+.swipe-hint{position:fixed;top:60%;transform:translateY(-50%);z-index:40;pointer-events:none;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:50%;
+  background:rgba(0,0,0,.26);color:#fff;font-size:22px;line-height:1;
+  animation:swipeHintBlink 1.9s ease-in-out infinite}
+.swipe-hint-left{left:6px}
+.swipe-hint-right{right:6px}
+.swipe-hint.hide{display:none}
+@keyframes swipeHintBlink{0%,100%{opacity:.1}50%{opacity:.85}}
+@media (prefers-reduced-motion:reduce){.swipe-hint{animation:none;opacity:.45}}
+@media (min-width:900px){.swipe-hint{display:none!important}}
 .menu-promo-banner{font-family:var(--font);text-align:center;background:var(--green);color:#fff;padding:9px 16px;font-size:15px;line-height:1.25;letter-spacing:.3px}
 .topup-banner{cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;-webkit-tap-highlight-color:transparent}
 .topup-banner b{font-weight:400;text-decoration:underline;text-underline-offset:2px}
@@ -2126,6 +2137,9 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <div id="cat-tabs" class="cat-tabs"></div>
   </div><!-- /home-topbar -->
   <div id="product-grid" class="product-grid"></div>
+  <!-- Phone-only hint: swipe left/right to flip menu pages (categories) -->
+  <div id="swipe-hint-left"  class="swipe-hint swipe-hint-left notranslate"  aria-hidden="true"><i class="ti ti-chevron-left"></i></div>
+  <div id="swipe-hint-right" class="swipe-hint swipe-hint-right notranslate" aria-hidden="true"><i class="ti ti-chevron-right"></i></div>
 </div>
 
 <!-- ═══ STORY ═══ -->
@@ -5610,6 +5624,16 @@ function renderCatPills(){
   // Auto-scroll active pill into view
   const active = el.querySelector('.cat-pill.active');
   if(active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  _updateSwipeHints();
+}
+// Show the swipe arrows only where a flip is possible: hide left on the first category,
+// right on the last. Runs on every category change (via renderCatPills) and on init.
+function _updateSwipeHints(){
+  var l=document.getElementById('swipe-hint-left'), r=document.getElementById('swipe-hint-right');
+  if(!l||!r) return;
+  var idx=CATS.indexOf(currentCat);
+  l.classList.toggle('hide', idx<=0);
+  r.classList.toggle('hide', idx>=CATS.length-1);
 }
 
 // "No options" products: single size, no pop-up — tapping the card adds straight to the cart.

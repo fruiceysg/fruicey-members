@@ -9536,15 +9536,23 @@ document.addEventListener('DOMContentLoaded', function(){
 (function(){
   function initNavHints(){
     if(!('IntersectionObserver' in window)) return;
-    var map=[ {el:document.querySelector('.feat1'), tab:document.getElementById('nav-menu')},
-              {el:document.querySelector('.feat3'), tab:document.getElementById('nav-rewards')} ]
+    var navMenu=document.getElementById('nav-menu'), navRewards=document.getElementById('nav-rewards');
+    var map=[ {el:document.querySelector('.feat1'), tab:navMenu},     // Shakes & Smoothies → Menu
+              {el:document.querySelector('.feat2'), tab:navMenu},     // Fresh Presses → Menu
+              {el:document.querySelector('.feat6'), tab:navMenu},     // Superfood Bowls → Menu
+              {el:document.querySelector('.feat3'), tab:navRewards} ] // Rewards sign-up → Rewards
             .filter(function(m){ return m.el && m.tab; });
     if(!map.length) return;
+    // Several features can point at the same tab (feat1/feat2/feat6 → Menu), so track each
+    // feature's centre state and light a tab when ANY of its features is mid-screen. This
+    // avoids one feature leaving the centre switching the hint off while another is entering.
+    var state = new Map();                         // feature el → currently centred?
+    var tabs  = map.map(function(m){ return m.tab; });
     var io=new IntersectionObserver(function(entries){
-      entries.forEach(function(ent){
-        var m=map.find(function(x){ return x.el===ent.target; });
-        if(!m) return;
-        m.tab.classList.toggle('nav-hint', ent.isIntersecting);
+      entries.forEach(function(ent){ state.set(ent.target, ent.isIntersecting); });
+      tabs.forEach(function(tab){
+        var on = map.some(function(m){ return m.tab===tab && state.get(m.el); });
+        tab.classList.toggle('nav-hint', on);
       });
     }, { rootMargin:'-50% 0px -50% 0px', threshold:0 });
     map.forEach(function(m){ io.observe(m.el); });

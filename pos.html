@@ -4682,6 +4682,46 @@ document.addEventListener('click', function(e){
   }
 });
 
+/* ------------------------------------------------------------------ *
+ * Desktop "Enter to confirm" for pop-ups.
+ * When a simple confirm-style modal is open, pressing Enter clicks its
+ * primary (.btn-done) button — e.g. Edit Item price, Add Misc Charge,
+ * Cash Payment, Receipt Lookup, Staff Verification, Confirm dialogs.
+ *
+ * Deliberately left out:
+ *  - settle-modal / prize-modal : destructive or dynamic actions
+ *  - invoice-form-modal / edit-txn-modal : multi-field forms (Enter mid-typing
+ *    shouldn't submit); their own fields keep any existing Enter handlers
+ *  - receipt/sales/share : view-only, no single confirm button
+ * Also skips textareas, buttons (so a focused Cancel still works), and any
+ * input that already handles Enter itself — so nothing fires twice.
+ * ------------------------------------------------------------------ */
+(function(){
+  var ENTER_SKIP_MODALS = {
+    'settle-modal':1, 'prize-modal':1, 'invoice-form-modal':1,
+    'edit-txn-modal':1, 'receipt-modal':1, 'sales-modal':1, 'share-modal':1
+  };
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' || e.isComposing || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    var open = document.querySelectorAll('.modal-bg.open');
+    if(!open.length) return;
+    var modal = open[open.length - 1];               // top-most open pop-up
+    if(ENTER_SKIP_MODALS[modal.id]) return;
+    var t = e.target;
+    if(t){
+      var tag = t.tagName;
+      if(tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'A') return;        // let these behave natively
+      if((tag === 'INPUT' || tag === 'SELECT') && t.hasAttribute('onkeydown')) return; // already handles Enter
+    }
+    var dones = modal.querySelectorAll('.btn-done');
+    if(dones.length !== 1) return;                    // none or ambiguous → do nothing
+    var btn = dones[0];
+    if(btn.disabled || btn.offsetParent === null) return;  // not clickable / hidden
+    e.preventDefault();
+    btn.click();
+  });
+})();
+
 </script>
 </body>
 </html>

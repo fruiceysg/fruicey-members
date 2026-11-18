@@ -1428,23 +1428,86 @@ async function saveEditTxn(){
     const ok = await requireStaffAuth('void this transaction');
     if(!ok) return;
   }
-  salesLog[editTxnIndex].note   = note;
-  salesLog[editTxnIndex].voided = voided;
+  const sale = salesLog[editTxnIndex];
+  // Did this sale already have a member BEFORE this edit? This gates the one-time rewards
+  // award below so spend/stamps are never credited twice for the same sale.
+  const hadMemberBefore = !!(sale.memberPhone && String(sale.memberPhone).trim());
+  // Was it already voided before this edit? Gates the one-time rewards REVERSAL below.
+  const wasVoidedBefore = !!sale.voided;
+  sale.note   = note;
+  sale.voided = voided;
   // Update member if provided
   const newMemberPhone = document.getElementById('edit-txn-member-phone');
   if(newMemberPhone && newMemberPhone.value.trim()){
     const ph = np(newMemberPhone.value.trim());
-    salesLog[editTxnIndex].memberPhone = ph;
-    salesLog[editTxnIndex].member = document.getElementById('edit-txn-member-name').textContent !== 'None'
+    sale.memberPhone = ph;
+    sale.member = document.getElementById('edit-txn-member-name').textContent !== 'None'
       ? document.getElementById('edit-txn-member-name').textContent : ph;
   }
-  // edit synced to Sheets only
   // Sync change to Sheets
-  const txn = salesLog[editTxnIndex];
-  apiPost({action:'editPOSSale', id:txn.id, note:note, voided:voided, member:salesLog[editTxnIndex].member||'', memberPhone:salesLog[editTxnIndex].memberPhone||''})
+  apiPost({action:'editPOSSale', id:sale.id, note:note, voided:voided, member:sale.member||'', memberPhone:sale.memberPhone||''})
     .catch(e=>console.log('Sheets sync error:',e));
+
+  // ── Retro-credit rewards when a member is attached AFTER the sale (the "forgot to add the
+  // member at checkout" fix). Runs ONLY on first attach (no member before) and never for a
+  // voided sale, so it mirrors a normal checkout exactly once. recordMemberSpend is NOT
+  // idempotent — the first-attach guard is what stops double spend; addStampsForSale is also
+  // deduped by receipt as a safety net. Base stamps only: birthday-double, bonus and
+  // redeemed-free adjustments from the original order are not reconstructed here.
+  let awardMsg = '';
+  if(!hadMemberBefore && !voided && sale.memberPhone){
+    const ph = np(sale.memberPhone);
+    const items = sale.items || [];
+    // One stamp per product, EXCEPT Custom Fruit (juCF), misc charges and fruit-box items.
+    const stampQty = items.reduce(function(s,i){
+      const id = String(i.id||'');
+      if(NO_STAMP_IDS.indexOf(id)!==-1 || id==='misc' || i.misc || id.indexOf('fruitbox-')===0) return s;
+      return s + (parseInt(i.qty)||1);
+    }, 0);
+    try{
+      // Spend first, then stamps — both edit the member's StampCards row, so run them
+      // sequentially to avoid a lost-update race.
+      await apiPost({ action:'recordMemberSpend', phone:ph,
+        amount:(parseFloat(sale.total)||0).toFixed(2),
+        items:items.map(i=>i.qty+'x '+i.label).join(', '),
+        date:sale.date||'', rcptNo:sale.rcptNo||'' }).catch(()=>{});
+      if(stampQty > 0){
+        const r = await apiPost({ action:'addStampsForSale', phone:ph, qty:stampQty, rcptNo:sale.rcptNo||'' });
+        if(r && r.success){
+          try{ fbMirrorMember(ph, r); }catch(e){}
+          awardMsg = r.duplicate
+            ? ' · stamps already credited'
+            : ' · '+stampQty+' stamp'+(stampQty>1?'s':'')+' credited ('+r.stamps+'/9)';
+        }
+      }
+    }catch(e){ console.log('retro-award error:', e); }
+  }
+
+  // ── Reverse rewards when a member sale is VOIDED. Runs only on the transition to voided
+  // (not a re-save of an already-void sale) and only when a member is attached. The backend
+  // is keyed by receipt and idempotent, so it never double-reverses. Reverses stamps + spend
+  // the sale granted; it does not undo a wheel spin the member may already have taken.
+  if(voided && !wasVoidedBefore && sale.memberPhone){
+    const ph = np(sale.memberPhone);
+    try{
+      const r = await apiPost({ action:'voidStampsForSale', phone:ph, rcptNo:sale.rcptNo||'' });
+      if(r && r.success){
+        try{ fbMirrorMember(ph, r); }catch(e){}
+        const rs = parseInt(r.reversedStamps)||0, rsp = parseFloat(r.reversedSpend)||0;
+        if(rs>0 || rsp>0){
+          awardMsg = ' · reversed '
+            + (rs>0 ? rs+' stamp'+(rs>1?'s':'') : '')
+            + (rs>0 && rsp>0 ? ' & ' : '')
+            + (rsp>0 ? '$'+rsp.toFixed(2)+' spend' : '');
+        }
+      } else if(r && r.error === 'no_receipt'){
+        awardMsg = ' · (no receipt # — adjust member stamps manually)';
+      }
+    }catch(e){ console.log('void-reversal error:', e); }
+  }
+
   closeEditTxn();
-  showToast(voided ? 'Transaction voided' : 'Transaction updated');
+  showToast((voided ? 'Transaction voided' : 'Transaction updated')+awardMsg);
   renderSalesReport();
 }
 

@@ -9900,7 +9900,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if(node.nodeType===3){ if(!skip(node.parentNode)) doText(node); }
         else if(node.nodeType===1){ if(skip(node)) continue; walkText(node); walkAttrs(node); }
       }
-      if(cur==='zh') applyImgLang(cur);   // swap any newly-rendered images too
+      if(cur==='zh'||cur==='ja') applyImgLang(cur);   // swap any newly-rendered images too
     } finally { applying=false; connect(); }
   }
 
@@ -9924,10 +9924,10 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   // ── Per-language IMAGE swapping (text baked into .jpg graphics) ──────────────
-  // For a local image feature1.jpg, Chinese loads feature1-zh.jpg IF it exists,
-  // otherwise it silently keeps the English image. Preloaded first, so no flicker
-  // and no broken image when a translated file hasn't been uploaded. (Japanese is
-  // intentionally left on the English images for now.)
+  // For a local image feature1.jpg, Chinese loads feature1-zh.jpg and Japanese loads
+  // feature1-ja.jpg IF that file exists; otherwise it silently keeps the English image.
+  // Preloaded first, so there's no flicker and no broken image when a translated file
+  // hasn't been uploaded yet — you can upload the -ja files gradually.
   function _imgEnglishBase(src){ var m=src.match(/^(.*?)(?:-(?:zh|ja))?(\.jpg)(\?.*)?$/i); return m ? (m[1]+m[2]) : src; }
   function applyImgLang(lang){
     var imgs=document.getElementsByTagName('img');
@@ -9939,10 +9939,11 @@ document.addEventListener('DOMContentLoaded', function(){
         im.__i18nBase=_imgEnglishBase(cur0);
       }
       var base=im.__i18nBase;
-      if(lang==='zh'){
-        (function(el,zh){ var pre=new Image(); pre.onload=function(){ if(window.__lang==='zh' && el.getAttribute('src')!==zh) el.setAttribute('src',zh); }; pre.src=zh; })(im, base.replace(/(\.jpg)$/i,'-zh$1'));
+      if(lang==='zh' || lang==='ja'){
+        // Preload the translated file; only swap in if it actually loads (file exists).
+        (function(el,translated,lg){ var pre=new Image(); pre.onload=function(){ if(window.__lang===lg && el.getAttribute('src')!==translated) el.setAttribute('src',translated); }; pre.src=translated; })(im, base.replace(/(\.jpg)$/i,'-'+lang+'$1'), lang);
       } else {
-        if(im.getAttribute('src')!==base) im.setAttribute('src',base);   // English (and, for now, Japanese)
+        if(im.getAttribute('src')!==base) im.setAttribute('src',base);   // English
       }
     }
   }

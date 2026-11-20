@@ -165,6 +165,14 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .nav-tab.nav-hint,.site-menu-btn.nav-hint{animation:navHintPulse 1.7s ease-in-out infinite}
 .nav-tab.nav-hint.active{animation:none}
 @media (prefers-reduced-motion:reduce){.nav-tab.nav-hint,.site-menu-btn.nav-hint{animation:none}}
+/* Bobbing arrow pointing at the top-left burger, shown only while the burger is hinting (phone) */
+#burger-arrow{position:fixed;top:44px;left:52px;z-index:101;pointer-events:none;display:none;
+  color:var(--green);font-size:24px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));
+  animation:burgerArrowBob 1s ease-in-out infinite}
+body:has(#site-burger.nav-hint) #burger-arrow{display:block}
+@keyframes burgerArrowBob{0%,100%{transform:translate(7px,7px);opacity:.7}50%{transform:translate(-2px,-2px);opacity:1}}
+@media (prefers-reduced-motion:reduce){#burger-arrow{animation:none}}
+@media (min-width:900px){#burger-arrow{display:none!important}}
 .nav-burger{display:none}
 
 /* SCREENS */
@@ -1554,6 +1562,9 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
      screen transform can't make them scroll). Shown only while the Menu screen is active. -->
 <div id="swipe-hint-left"  class="swipe-hint swipe-hint-left notranslate"  aria-hidden="true"><i class="ti ti-chevron-left"></i></div>
 <div id="swipe-hint-right" class="swipe-hint swipe-hint-right notranslate" aria-hidden="true"><i class="ti ti-chevron-right"></i></div>
+
+<!-- Bobbing arrow that points to the top-left burger while it's hinting -->
+<div id="burger-arrow" class="notranslate" aria-hidden="true"><i class="ti ti-arrow-up-left"></i></div>
 
 <!-- ═══ HOME ═══ -->
 <div class="screen" id="scr-home">

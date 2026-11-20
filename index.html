@@ -1564,7 +1564,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 <div id="swipe-hint-right" class="swipe-hint swipe-hint-right notranslate" aria-hidden="true"><i class="ti ti-chevron-right"></i></div>
 
 <!-- Bobbing arrow that points to the top-left burger while it's hinting -->
-<div id="burger-arrow" class="notranslate" aria-hidden="true"><i class="ti ti-arrow-up-left"></i></div>
+<div id="burger-arrow" class="notranslate" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M4.5 4.5 L12 5.9 L8.4 8.4 L19 19 L7.6 8.1 L5.9 12 Z"/></svg></div>
 
 <!-- ═══ HOME ═══ -->
 <div class="screen" id="scr-home">
@@ -9555,26 +9555,47 @@ document.addEventListener('DOMContentLoaded', function(){
     var map=[ {el:document.querySelector('.feat1'), tab:navMenu},     // Shakes & Smoothies → Menu
               {el:document.querySelector('.feat2'), tab:navMenu},     // Fresh Presses → Menu
               {el:document.querySelector('.feat6'), tab:navMenu},     // Superfood Bowls → Menu
-              {el:document.querySelector('.feat3'), tab:navRewards},  // Rewards sign-up → Rewards
               {el:document.querySelector('.feat8'), tab:navMore},     // Subscribe Healthy Now → More (desktop)
               {el:document.querySelector('.feat8'), tab:siteBurger},  // Subscribe Healthy Now → header burger (phone)
               {el:document.querySelector('.feat9'), tab:navMore},     // Fruit Boxes & Gifts → More (desktop)
               {el:document.querySelector('.feat9'), tab:siteBurger} ] // Fruit Boxes & Gifts → header burger (phone)
             .filter(function(m){ return m.el && m.tab; });
-    if(!map.length) return;
     // Several features can point at the same tab (feat1/feat2/feat6 → Menu), so track each
     // feature's centre state and light a tab when ANY of its features is mid-screen. This
     // avoids one feature leaving the centre switching the hint off while another is entering.
-    var state = new Map();                         // feature el → currently centred?
-    var tabs  = map.map(function(m){ return m.tab; });
-    var io=new IntersectionObserver(function(entries){
-      entries.forEach(function(ent){ state.set(ent.target, ent.isIntersecting); });
-      tabs.forEach(function(tab){
-        var on = map.some(function(m){ return m.tab===tab && state.get(m.el); });
-        tab.classList.toggle('nav-hint', on);
-      });
-    }, { rootMargin:'-50% 0px -50% 0px', threshold:0 });
-    map.forEach(function(m){ io.observe(m.el); });
+    if(map.length){
+      var state = new Map();                         // feature el → currently centred?
+      var tabs  = map.map(function(m){ return m.tab; });
+      var io=new IntersectionObserver(function(entries){
+        entries.forEach(function(ent){ state.set(ent.target, ent.isIntersecting); });
+        tabs.forEach(function(tab){
+          var on = map.some(function(m){ return m.tab===tab && state.get(m.el); });
+          tab.classList.toggle('nav-hint', on);
+        });
+      }, { rootMargin:'-50% 0px -50% 0px', threshold:0 });
+      map.forEach(function(m){ io.observe(m.el); });
+    }
+
+    // Rewards: HELD across a span — stays lit from when feat3 (Sign Up Now) reaches mid-screen
+    // right through the end of the feature4 image below it, instead of only while one feature is
+    // dead-centre. Driven by scroll position so there's no gap between the two blocks.
+    var rFeat3=document.querySelector('.feat3');
+    var rFeat4=document.querySelector('img[src="feature4.jpg"]');
+    var rEnd=(rFeat4 && rFeat4.closest('.top-banner-box')) || rFeat4 || rFeat3;
+    if(navRewards && rFeat3 && rEnd){
+      var rafPending=false;
+      var updateRewardsHold=function(){
+        rafPending=false;
+        var midY=window.innerHeight/2;
+        var a=rFeat3.getBoundingClientRect(), b=rEnd.getBoundingClientRect();
+        // on while the viewport middle sits between feat3's top and feature4's bottom
+        var on=(a.top<=midY) && (b.bottom>=midY) && b.height>0;
+        navRewards.classList.toggle('nav-hint', on);
+      };
+      window.addEventListener('scroll', function(){ if(!rafPending){ rafPending=true; requestAnimationFrame(updateRewardsHold); } }, {passive:true});
+      window.addEventListener('resize', updateRewardsHold);
+      updateRewardsHold();
+    }
   }
   if(document.readyState!=='loading') initNavHints();
   else document.addEventListener('DOMContentLoaded', initNavHints);

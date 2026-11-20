@@ -1547,7 +1547,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <button class="nav-tab" id="nav-orders"  onclick="goTab('orders')">  <i class="ti ti-receipt"></i> <span>Orders</span></button>
   <button class="nav-tab" id="nav-rewards" onclick="goTab('rewards')"> <i class="ti ti-star"></i>    <span>Rewards</span></button>
   <button class="nav-tab" id="nav-account" onclick="goTab('account')"> <i class="ti ti-user"></i>    <span>Account</span></button>
-  <button class="nav-tab nav-burger" onclick="openDrawer()" aria-label="More"><i class="ti ti-menu-2"></i><span>More</span></button>
+  <button class="nav-tab nav-burger" id="nav-more" onclick="openDrawer()" aria-label="More"><i class="ti ti-menu-2"></i><span>More</span></button>
 </nav>
 
 <!-- Phone-only swipe hint: slow-blinking chevrons pinned to the viewport middle (body-level so a
@@ -9536,11 +9536,14 @@ document.addEventListener('DOMContentLoaded', function(){
 (function(){
   function initNavHints(){
     if(!('IntersectionObserver' in window)) return;
-    var navMenu=document.getElementById('nav-menu'), navRewards=document.getElementById('nav-rewards');
+    var navMenu=document.getElementById('nav-menu'), navRewards=document.getElementById('nav-rewards'),
+        navMore=document.getElementById('nav-more');
     var map=[ {el:document.querySelector('.feat1'), tab:navMenu},     // Shakes & Smoothies → Menu
               {el:document.querySelector('.feat2'), tab:navMenu},     // Fresh Presses → Menu
               {el:document.querySelector('.feat6'), tab:navMenu},     // Superfood Bowls → Menu
-              {el:document.querySelector('.feat3'), tab:navRewards} ] // Rewards sign-up → Rewards
+              {el:document.querySelector('.feat3'), tab:navRewards},  // Rewards sign-up → Rewards
+              {el:document.querySelector('.feat8'), tab:navMore},     // Subscribe Healthy Now → More (drawer)
+              {el:document.querySelector('.feat9'), tab:navMore} ]    // Fruit Boxes & Gifts → More (drawer)
             .filter(function(m){ return m.el && m.tab; });
     if(!map.length) return;
     // Several features can point at the same tab (feat1/feat2/feat6 → Menu), so track each

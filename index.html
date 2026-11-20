@@ -162,9 +162,9 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .nav-tab span{font-size:12.5px;font-weight:500}
 /* Light blink hint on a bottom-nav tab when its matching home feature hits mid-screen */
 @keyframes navHintPulse{0%,100%{opacity:.5}50%{opacity:1;color:var(--green)}}
-.nav-tab.nav-hint{animation:navHintPulse 1.7s ease-in-out infinite}
+.nav-tab.nav-hint,.site-menu-btn.nav-hint{animation:navHintPulse 1.7s ease-in-out infinite}
 .nav-tab.nav-hint.active{animation:none}
-@media (prefers-reduced-motion:reduce){.nav-tab.nav-hint{animation:none}}
+@media (prefers-reduced-motion:reduce){.nav-tab.nav-hint,.site-menu-btn.nav-hint{animation:none}}
 .nav-burger{display:none}
 
 /* SCREENS */
@@ -1562,7 +1562,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <div class="home-topbar">
   <!-- Top site header: menu button + logo -->
   <header class="site-header">
-    <button class="site-menu-btn" onclick="openDrawer()" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
+    <button class="site-menu-btn" id="site-burger" onclick="openDrawer()" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
     <img class="site-logo" id="home-logo" alt="Fruicey">
   </header>
 
@@ -9537,13 +9537,18 @@ document.addEventListener('DOMContentLoaded', function(){
   function initNavHints(){
     if(!('IntersectionObserver' in window)) return;
     var navMenu=document.getElementById('nav-menu'), navRewards=document.getElementById('nav-rewards'),
-        navMore=document.getElementById('nav-more');
+        navMore=document.getElementById('nav-more'), siteBurger=document.getElementById('site-burger');
+    // feat8/feat9 open drawer pages, so they hint the burger. On phones that's the top header
+    // burger (#site-burger); on desktop it's the side-nav "More" tab (#nav-more). We target both
+    // so whichever one is actually visible blinks.
     var map=[ {el:document.querySelector('.feat1'), tab:navMenu},     // Shakes & Smoothies → Menu
               {el:document.querySelector('.feat2'), tab:navMenu},     // Fresh Presses → Menu
               {el:document.querySelector('.feat6'), tab:navMenu},     // Superfood Bowls → Menu
               {el:document.querySelector('.feat3'), tab:navRewards},  // Rewards sign-up → Rewards
-              {el:document.querySelector('.feat8'), tab:navMore},     // Subscribe Healthy Now → More (drawer)
-              {el:document.querySelector('.feat9'), tab:navMore} ]    // Fruit Boxes & Gifts → More (drawer)
+              {el:document.querySelector('.feat8'), tab:navMore},     // Subscribe Healthy Now → More (desktop)
+              {el:document.querySelector('.feat8'), tab:siteBurger},  // Subscribe Healthy Now → header burger (phone)
+              {el:document.querySelector('.feat9'), tab:navMore},     // Fruit Boxes & Gifts → More (desktop)
+              {el:document.querySelector('.feat9'), tab:siteBurger} ] // Fruit Boxes & Gifts → header burger (phone)
             .filter(function(m){ return m.el && m.tab; });
     if(!map.length) return;
     // Several features can point at the same tab (feat1/feat2/feat6 → Menu), so track each

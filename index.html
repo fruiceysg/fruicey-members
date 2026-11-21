@@ -165,17 +165,14 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .nav-tab.nav-hint,.site-menu-btn.nav-hint{animation:navHintPulse 1.7s ease-in-out infinite}
 .nav-tab.nav-hint.active{animation:none}
 @media (prefers-reduced-motion:reduce){.nav-tab.nav-hint,.site-menu-btn.nav-hint{animation:none}}
-/* Tap-hint arrow attached to a feature's own button — bounces toward it while that feature
-   is centred on screen, so the cue is right where the eye is looking. */
-.tap-arrow{position:absolute;left:calc(100% + 7px);top:50%;transform:translateY(-50%);
-  pointer-events:none;opacity:0;color:var(--green);width:30px;height:30px;line-height:0;
-  filter:drop-shadow(0 1px 2px rgba(255,255,255,.85)) drop-shadow(0 2px 4px rgba(0,0,0,.3));
-  transition:opacity .25s ease}
-.tap-arrow svg{display:block;width:100%;height:100%}
-.feat9-btns button.feat9-btn{position:relative}
-.feature-wrap.feat-centered .feat-cta .tap-arrow{opacity:1;animation:tapArrowBounce .8s ease-in-out infinite}
-@keyframes tapArrowBounce{0%,100%{transform:translate(0,-50%)}50%{transform:translate(-9px,-50%)}}
-@media (prefers-reduced-motion:reduce){.feature-wrap.feat-centered .feat-cta .tap-arrow{animation:none;opacity:1}}
+/* Glow on a feature's own button while that feature is centred on screen — the cue sits
+   right where the eye is looking. Applies only to the tagged .glow-cta buttons. */
+.feature-wrap.feat-centered .glow-cta{animation:ctaGlow 1.15s ease-in-out infinite}
+@keyframes ctaGlow{
+  0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.22)}
+  50%{box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 22px 7px rgba(123,206,161,.9),0 4px 14px rgba(0,0,0,.28)}
+}
+@media (prefers-reduced-motion:reduce){.feature-wrap.feat-centered .glow-cta{animation:none;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 18px 5px rgba(123,206,161,.8),0 4px 14px rgba(0,0,0,.28)}}
 .nav-burger{display:none}
 
 /* SCREENS */
@@ -1845,7 +1842,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
   <div class="top-banner-box feature-wrap feat3">
     <div class="feat3-slide">
       <img src="feature3.jpg" alt="Fruicey feature 3" loading="eager">
-      <button class="feat-cta feat-cta-centerleft" onclick="goTab('rewards')">Sign Up Now</button>
+      <button class="feat-cta feat-cta-centerleft glow-cta" onclick="goTab('rewards')">Sign Up Now</button>
     </div>
   </div>
 
@@ -1869,7 +1866,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 
   <div class="top-banner-box feature-wrap feat8">
     <img src="feature8.jpg" alt="Fruicey feature 8" loading="eager">
-    <button class="feat-cta feat8-btn" onclick="openSubscriptions()">Subscribe Healthy Now<span class="tap-arrow notranslate" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4.5 12 L11.3 6.6 L9 9.6 L18.5 12 L9 14.4 L11.3 17.4 Z"/></svg></span></button>
+    <button class="feat-cta feat8-btn glow-cta" onclick="openSubscriptions()">Subscribe Healthy Now</button>
   </div>
 
   <!-- Customer reviews carousel -->
@@ -1900,7 +1897,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
     <img src="feature9.jpg" alt="Fruicey feature 9" loading="eager">
     <div class="feat9-btns">
       <button class="feat-cta feat9-inquire" onclick="window.location.href='mailto:wilson@fruicey.sg?subject=Enquiry'">Inquire</button>
-      <button class="feat-cta feat9-btn" onclick="openFruitBox()">Fruit Boxes &amp; Gifts<span class="tap-arrow notranslate" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4.5 12 L11.3 6.6 L9 9.6 L18.5 12 L9 14.4 L11.3 17.4 Z"/></svg></span></button>
+      <button class="feat-cta feat9-btn glow-cta" onclick="openFruitBox()">Fruit Boxes &amp; Gifts</button>
     </div>
   </div>
 
@@ -9577,6 +9574,10 @@ document.addEventListener('DOMContentLoaded', function(){
         });
       }, { rootMargin:'-50% 0px -50% 0px', threshold:0 });
       map.forEach(function(m){ io.observe(m.el); });
+      // Also watch feat3 purely for the button glow (its Rewards tab is driven by the hold below,
+      // so feat3 is intentionally NOT in `map`). The callback toggles .feat-centered on every
+      // observed element, which is all the glow needs.
+      var f3glow=document.querySelector('.feat3'); if(f3glow) io.observe(f3glow);
     }
 
     // Rewards: HELD across a span — stays lit from when feat3 (Sign Up Now) reaches mid-screen

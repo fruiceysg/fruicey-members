@@ -9605,6 +9605,28 @@ document.addEventListener('DOMContentLoaded', function(){
   else document.addEventListener('DOMContentLoaded', initNavHints);
 })();
 
+// ── Keep the swipe-hint arrows pinned to the TRUE visible centre ──────────────
+// On phones the browser's address bar collapses/expands on scroll, which changes the
+// viewport height and makes a `top:50%` fixed element drift. We pin the arrows to the
+// visual-viewport centre instead (accounts for the toolbar + any pinch-zoom), so they
+// stay put while scrolling. Falls back to the CSS top:50% where visualViewport is absent.
+(function(){
+  var vv = window.visualViewport;
+  if(!vv) return;
+  function pin(){
+    var L=document.getElementById('swipe-hint-left'), R=document.getElementById('swipe-hint-right');
+    if(!L||!R) return;
+    var mid = Math.round(vv.offsetTop + vv.height/2);
+    L.style.top = mid+'px'; R.style.top = mid+'px';
+  }
+  var pending=false;
+  function req(){ if(!pending){ pending=true; requestAnimationFrame(function(){ pending=false; pin(); }); } }
+  vv.addEventListener('resize', req);
+  vv.addEventListener('scroll', req);
+  window.addEventListener('scroll', req, {passive:true});
+  if(document.readyState!=='loading') pin(); else document.addEventListener('DOMContentLoaded', pin);
+})();
+
 // ── Gifts tab image carousels (tappable dots + scroll sync) ──
 function initGiftCarousels(){
   document.querySelectorAll('.fb-gift-carousel').forEach(function(car){

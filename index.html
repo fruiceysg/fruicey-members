@@ -165,14 +165,17 @@ body{font-family:var(--body);background:#f5f5f7;color:var(--text);min-height:100
 .nav-tab.nav-hint,.site-menu-btn.nav-hint{animation:navHintPulse 1.7s ease-in-out infinite}
 .nav-tab.nav-hint.active{animation:none}
 @media (prefers-reduced-motion:reduce){.nav-tab.nav-hint,.site-menu-btn.nav-hint{animation:none}}
-/* Bobbing arrow pointing at the top-left burger, shown only while the burger is hinting (phone) */
-#burger-arrow{position:fixed;top:44px;left:52px;z-index:101;pointer-events:none;display:none;
-  color:var(--green);font-size:24px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));
-  animation:burgerArrowBob 1s ease-in-out infinite}
-body:has(#site-burger.nav-hint) #burger-arrow{display:block}
-@keyframes burgerArrowBob{0%,100%{transform:translate(7px,7px);opacity:.7}50%{transform:translate(-2px,-2px);opacity:1}}
-@media (prefers-reduced-motion:reduce){#burger-arrow{animation:none}}
-@media (min-width:900px){#burger-arrow{display:none!important}}
+/* Tap-hint arrow attached to a feature's own button — bounces toward it while that feature
+   is centred on screen, so the cue is right where the eye is looking. */
+.tap-arrow{position:absolute;left:calc(100% + 7px);top:50%;transform:translateY(-50%);
+  pointer-events:none;opacity:0;color:var(--green);width:30px;height:30px;line-height:0;
+  filter:drop-shadow(0 1px 2px rgba(255,255,255,.85)) drop-shadow(0 2px 4px rgba(0,0,0,.3));
+  transition:opacity .25s ease}
+.tap-arrow svg{display:block;width:100%;height:100%}
+.feat9-btns button.feat9-btn{position:relative}
+.feature-wrap.feat-centered .feat-cta .tap-arrow{opacity:1;animation:tapArrowBounce .8s ease-in-out infinite}
+@keyframes tapArrowBounce{0%,100%{transform:translate(0,-50%)}50%{transform:translate(-9px,-50%)}}
+@media (prefers-reduced-motion:reduce){.feature-wrap.feat-centered .feat-cta .tap-arrow{animation:none;opacity:1}}
 .nav-burger{display:none}
 
 /* SCREENS */
@@ -1563,9 +1566,6 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 <div id="swipe-hint-left"  class="swipe-hint swipe-hint-left notranslate"  aria-hidden="true"><i class="ti ti-chevron-left"></i></div>
 <div id="swipe-hint-right" class="swipe-hint swipe-hint-right notranslate" aria-hidden="true"><i class="ti ti-chevron-right"></i></div>
 
-<!-- Bobbing arrow that points to the top-left burger while it's hinting -->
-<div id="burger-arrow" class="notranslate" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M4.5 4.5 L12 5.9 L8.4 8.4 L19 19 L7.6 8.1 L5.9 12 Z"/></svg></div>
-
 <!-- ═══ HOME ═══ -->
 <div class="screen" id="scr-home">
 
@@ -1869,7 +1869,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
 
   <div class="top-banner-box feature-wrap feat8">
     <img src="feature8.jpg" alt="Fruicey feature 8" loading="eager">
-    <button class="feat-cta feat8-btn" onclick="openSubscriptions()">Subscribe Healthy Now</button>
+    <button class="feat-cta feat8-btn" onclick="openSubscriptions()">Subscribe Healthy Now<span class="tap-arrow notranslate" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4.5 12 L11.3 6.6 L9 9.6 L18.5 12 L9 14.4 L11.3 17.4 Z"/></svg></span></button>
   </div>
 
   <!-- Customer reviews carousel -->
@@ -1900,7 +1900,7 @@ body:has(.modal-bg.open) .acc-logout-fixed,body:has(.cart-sheet.open) .acc-logou
     <img src="feature9.jpg" alt="Fruicey feature 9" loading="eager">
     <div class="feat9-btns">
       <button class="feat-cta feat9-inquire" onclick="window.location.href='mailto:wilson@fruicey.sg?subject=Enquiry'">Inquire</button>
-      <button class="feat-cta feat9-btn" onclick="openFruitBox()">Fruit Boxes &amp; Gifts</button>
+      <button class="feat-cta feat9-btn" onclick="openFruitBox()">Fruit Boxes &amp; Gifts<span class="tap-arrow notranslate" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4.5 12 L11.3 6.6 L9 9.6 L18.5 12 L9 14.4 L11.3 17.4 Z"/></svg></span></button>
     </div>
   </div>
 
@@ -9567,7 +9567,10 @@ document.addEventListener('DOMContentLoaded', function(){
       var state = new Map();                         // feature el → currently centred?
       var tabs  = map.map(function(m){ return m.tab; });
       var io=new IntersectionObserver(function(entries){
-        entries.forEach(function(ent){ state.set(ent.target, ent.isIntersecting); });
+        entries.forEach(function(ent){
+          state.set(ent.target, ent.isIntersecting);
+          ent.target.classList.toggle('feat-centered', ent.isIntersecting);  // drives the on-button tap arrow
+        });
         tabs.forEach(function(tab){
           var on = map.some(function(m){ return m.tab===tab && state.get(m.el); });
           tab.classList.toggle('nav-hint', on);

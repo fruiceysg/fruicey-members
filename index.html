@@ -4412,11 +4412,11 @@ function _runImgQueue(){
 }
 
 // Fill any .loader-spinner with staggered letter spans: h a r v e s t i n g . . .
-function fillHarvest(root){
+function fillHarvest(root, force){
   var scope = root || document;
   var word = (function(){ var L=(window.__lang)||'en'; return L==='zh'?'采收中...':L==='ja'?'収穫中...':'harvesting...'; })();
   scope.querySelectorAll('.loader-spinner').forEach(function(sp){
-    if(sp.dataset.filled) return;
+    if(sp.dataset.filled && !force) return;   // force = re-translate even an already-filled loader
     sp.dataset.filled = '1';
     sp.innerHTML = '';
     for(var i=0;i<word.length;i++){
@@ -4427,7 +4427,12 @@ function fillHarvest(root){
     }
   });
 }
-document.addEventListener('DOMContentLoaded', function(){ fillHarvest(); });
+document.addEventListener('DOMContentLoaded', function(){
+  fillHarvest();
+  // Re-translate every loader (incl. pre-built, hidden ones) whenever the language switches,
+  // so a loader shown later reads 采收中… / 収穫中… instead of a stale English "harvesting…".
+  if(window.onLangChange) window.onLangChange(function(){ fillHarvest(document, true); });
+});
 
 function showTabLoader(containerId){
   const el = document.getElementById(containerId);
